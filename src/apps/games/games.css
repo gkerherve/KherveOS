@@ -1,0 +1,101 @@
+/* Web games: a slim bar over the game's own page, and the screens shown
+   while its server starts. Colours only come from the theme variables. */
+
+.game-app {
+  min-width: 0;
+}
+
+.game-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 30px;
+  padding: 0 4px 0 10px;
+  font-size: 12px;
+  color: var(--k-muted);
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  flex: none;
+  user-select: none;
+}
+.game-bar-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--k-text);
+  white-space: nowrap;
+}
+.game-bar-addr {
+  flex: 1;
+  min-width: 0;
+  margin-left: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--k-mono);
+  font-size: 11px;
+}
+.game-bar .k-icon-btn {
+  width: 26px;
+  height: 24px;
+  color: var(--k-muted);
+}
+.game-bar .k-icon-btn:hover:not(:disabled) {
+  color: var(--k-text);
+}
+
+.game-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--k-bg);
+}
+.game-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+/* Covers the frame until the game's page has loaded */
+.game-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.game-starting {
+  gap: 12px;
+}
+.game-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  background: var(--k-accent);
+  box-shadow: var(--k-shadow);
+}
+.game-starting-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.game-small {
+  font-size: 12px;
+}
+.game-card {
+  width: min(520px, 100%);
+}
+.game-card p {
+  overflow-wrap: anywhere;
+}
+.game-log {
+  max-height: 220px;
+  font-size: 11px;
+}

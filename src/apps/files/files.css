@@ -1,0 +1,231 @@
+.fm-app {
+  outline: none;
+}
+.fm-toolbar {
+  gap: 2px;
+}
+.fm-crumbs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin: 0 6px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.fm-crumb-wrap {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+.fm-crumb {
+  border: none;
+  background: transparent;
+  color: var(--k-muted);
+  padding: 3px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fm-crumb:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.fm-crumb.current {
+  color: var(--k-text);
+  font-weight: 600;
+}
+.fm-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 8px;
+  width: 150px;
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+  background: var(--k-bg);
+  color: var(--k-muted);
+}
+.fm-search:focus-within {
+  border-color: var(--k-accent);
+}
+.fm-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--k-text);
+  width: 100%;
+  min-width: 0;
+}
+.fm-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.fm-sidebar {
+  width: 170px;
+  flex: none;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--k-surface);
+  border-right: 1px solid var(--k-border);
+  overflow: auto;
+}
+.fm-sidebar .k-place.drop,
+.fm-row.drop,
+.fm-tile.drop {
+  background: var(--k-selection);
+  box-shadow: inset 0 0 0 2px var(--k-accent);
+}
+.fm-usage {
+  margin-top: auto;
+  padding: 10px 8px 2px;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.fm-main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  position: relative;
+}
+.fm-main.drop {
+  box-shadow: inset 0 0 0 2px var(--k-accent);
+}
+.fm-empty {
+  margin-top: 40px;
+}
+
+/* list view */
+.fm-list {
+  min-width: 520px;
+  padding: 0 6px 8px;
+}
+.fm-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 150px 90px 140px;
+  align-items: center;
+  height: 30px;
+  border-radius: 6px;
+  cursor: default;
+  user-select: none;
+}
+.fm-row:not(.fm-head):hover {
+  background: var(--k-button-hover);
+}
+.fm-row.selected,
+.fm-row.selected:hover {
+  background: var(--k-selection);
+}
+.fm-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--k-bg);
+  border-bottom: 1px solid var(--k-border);
+  border-radius: 0;
+  height: 30px;
+  margin-bottom: 4px;
+}
+.fm-col {
+  padding: 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--k-muted);
+  font-size: 12.5px;
+}
+button.fm-col {
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  height: 100%;
+  font-weight: 600;
+  font-size: 12px;
+}
+button.fm-col:hover,
+button.fm-col.sorted {
+  color: var(--k-text);
+}
+.fm-head .fm-kind {
+  font-weight: 600;
+  font-size: 12px;
+}
+.fm-sort-arrow {
+  font-size: 8px;
+  margin-left: 5px;
+}
+.fm-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--k-text);
+  font-size: 13px;
+}
+.fm-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* icon view */
+.fm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 6px;
+  padding: 10px;
+}
+.fm-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px 8px;
+  border-radius: 10px;
+  user-select: none;
+  cursor: default;
+}
+.fm-tile:hover {
+  background: var(--k-button-hover);
+}
+.fm-tile.selected {
+  background: var(--k-selection);
+}
+.fm-tile-icon {
+  width: 64px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+}
+.fm-thumb {
+  max-width: 64px;
+  max-height: 56px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  object-fit: contain;
+}
+.fm-tile-name {
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.3;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+@media (max-width: 640px) {
+  .fm-sidebar {
+    display: none;
+  }
+  .fm-search {
+    width: 100px;
+  }
+}

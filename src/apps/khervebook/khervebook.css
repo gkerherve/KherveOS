@@ -1,0 +1,687 @@
+/* KherveBook. Colours come only from the theme variables (--k-*).
+   Light / dark specifics are scoped by [data-dark] like global.css, so a
+   window kept light inside a dark OS (data-dark="0") gets the light values. */
+
+:root,
+[data-dark='0'] {
+  --nb-page: color-mix(in srgb, var(--k-surface) 72%, var(--k-bg));
+  --nb-card: var(--k-bg);
+  --nb-input: color-mix(in srgb, var(--k-alt) 80%, var(--k-bg));
+  --nb-line: color-mix(in srgb, var(--k-border) 78%, var(--k-bg));
+  --nb-shadow: 0 1px 2px color-mix(in srgb, var(--k-text) 6%, transparent), 0 2px 8px color-mix(in srgb, var(--k-text) 3%, transparent);
+}
+
+[data-dark='1'] {
+  --nb-page: color-mix(in srgb, var(--k-bg) 68%, var(--k-desk));
+  --nb-card: color-mix(in srgb, var(--k-text) 4%, var(--k-bg));
+  --nb-input: color-mix(in srgb, var(--k-desk) 22%, var(--k-bg));
+  --nb-line: color-mix(in srgb, var(--k-border) 85%, var(--k-bg));
+  --nb-shadow: 0 1px 3px color-mix(in srgb, var(--k-desk) 55%, transparent);
+}
+
+.nb-app {
+  container-type: inline-size;
+}
+
+/* ------------------------------------------------------------------ toolbar */
+
+.nb-toolbar {
+  flex-wrap: wrap;
+  gap: 2px;
+  row-gap: 2px;
+}
+.nb-toolbar .k-sep {
+  margin: 0 5px;
+}
+.nb-tb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 6px;
+  border: none;
+  border-radius: var(--k-radius-sm);
+  background: transparent;
+  color: var(--k-text);
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  flex: none;
+}
+.nb-tb-btn.labeled {
+  padding: 0 9px 0 7px;
+}
+.nb-tb-btn:hover:not(:disabled) {
+  background: var(--k-button-hover);
+}
+.nb-tb-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.nb-tb-btn.primary {
+  background: var(--k-accent);
+  color: var(--k-accent-text);
+  margin-right: 2px;
+}
+.nb-tb-btn.primary:hover:not(:disabled) {
+  background: var(--k-accent);
+  filter: brightness(1.08);
+}
+.nb-tb-btn svg {
+  flex: none;
+}
+@container (max-width: 860px) {
+  .nb-tb-label.optional {
+    display: none;
+  }
+  .nb-tb-btn.labeled:has(.optional) {
+    padding: 0 6px;
+  }
+}
+
+.nb-type-select.k-input {
+  width: auto;
+  height: 28px;
+  padding: 0 4px 0 8px;
+  margin-right: 4px;
+  font-size: 12.5px;
+  background: var(--k-bg);
+}
+
+.nb-kernel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px 0 9px;
+  border: 1px solid var(--k-border);
+  border-radius: 999px;
+  background: var(--k-bg);
+  color: var(--k-text);
+  font-size: 11.5px;
+  white-space: nowrap;
+  cursor: default;
+  flex: none;
+}
+.nb-kernel.startable {
+  cursor: pointer;
+}
+.nb-kernel.startable:hover {
+  border-color: var(--k-accent);
+}
+.nb-kernel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--k-muted);
+  opacity: 0.6;
+}
+.nb-kernel-state {
+  color: var(--k-muted);
+}
+.nb-kernel.idle .nb-kernel-dot {
+  background: var(--k-success);
+  opacity: 1;
+}
+.nb-kernel.busy .nb-kernel-dot {
+  background: var(--k-accent);
+  opacity: 1;
+  animation: nb-pulse 1s ease-in-out infinite;
+}
+.nb-kernel.starting .nb-kernel-dot {
+  background: var(--k-warning);
+  opacity: 1;
+  animation: nb-pulse 1s ease-in-out infinite;
+}
+.nb-kernel.dead .nb-kernel-dot {
+  background: var(--k-danger);
+  opacity: 1;
+}
+@keyframes nb-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* --------------------------------------------------------------------- page */
+
+.nb-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--nb-page);
+}
+.nb-page {
+  --nb-gutter: 82px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 24px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+@container (max-width: 620px) {
+  .nb-page {
+    --nb-gutter: 64px;
+    padding: 16px 10px 80px;
+  }
+  .nb-page .nb-prompt {
+    font-size: 10.5px;
+  }
+}
+.nb-loading {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--k-muted);
+}
+
+/* -------------------------------------------------------------------- cells */
+
+.nb-cell {
+  position: relative;
+  padding: 10px 16px 10px 0;
+  background: var(--nb-card);
+  border: 1px solid var(--nb-line);
+  border-radius: 12px;
+  box-shadow: var(--nb-shadow);
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+/* The selection bar on the left edge. */
+.nb-cell::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 3px;
+  background: transparent;
+  transition: background 0.12s;
+}
+.nb-cell:hover {
+  border-color: color-mix(in srgb, var(--k-accent) 22%, var(--nb-line));
+}
+.nb-cell.selected {
+  border-color: color-mix(in srgb, var(--k-accent) 42%, var(--nb-line));
+}
+.nb-cell.selected::before {
+  background: color-mix(in srgb, var(--k-accent) 70%, transparent);
+}
+/* Edit mode: the cell's editor has the focus. */
+.nb-cell:has(.cm-focused) {
+  border-color: var(--k-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-accent) 16%, transparent), var(--nb-shadow);
+}
+.nb-cell:has(.cm-focused)::before {
+  background: var(--k-accent);
+}
+.nb-cell.queued::before {
+  background: color-mix(in srgb, var(--k-accent) 35%, transparent);
+}
+.nb-cell.running::before {
+  background: var(--k-accent);
+  animation: nb-pulse 1.1s ease-in-out infinite;
+}
+
+.nb-row {
+  display: grid;
+  grid-template-columns: var(--nb-gutter) minmax(0, 1fr);
+  align-items: start;
+}
+.nb-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nb-prompt {
+  padding: 8px 12px 0 0;
+  text-align: right;
+  font: 12px/20px var(--k-mono);
+  color: var(--k-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+.nb-prompt.in {
+  color: color-mix(in srgb, var(--k-accent) 75%, var(--k-muted));
+}
+.nb-cell.running .nb-prompt.in,
+.nb-cell.queued .nb-prompt.in {
+  color: var(--k-accent);
+  font-weight: 600;
+}
+.nb-prompt.out {
+  padding-top: 4px;
+  color: var(--k-syn-def);
+}
+.nb-prompt.kind {
+  padding-top: 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.nb-cell:hover .nb-prompt.kind,
+.nb-cell.selected .nb-prompt.kind {
+  opacity: 0.75;
+}
+
+/* Floating cell toolbar on the selected cell. */
+.nb-cell-tools {
+  position: absolute;
+  top: -14px;
+  right: 14px;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  gap: 1px;
+  padding: 2px;
+  background: var(--nb-card);
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  box-shadow: var(--nb-shadow);
+}
+.nb-cell.selected .nb-cell-tools {
+  display: flex;
+}
+.nb-cell-tools .k-icon-btn {
+  width: 26px;
+  height: 22px;
+  color: var(--k-muted);
+}
+.nb-cell-tools .k-icon-btn:hover {
+  color: var(--k-text);
+}
+
+/* ------------------------------------------------------------------- editor */
+
+.nb-input {
+  min-width: 0;
+  background: var(--nb-input);
+  border: 1px solid var(--nb-line);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.12s;
+}
+.nb-cell:has(.cm-focused) .nb-input {
+  border-color: color-mix(in srgb, var(--k-accent) 35%, var(--nb-line));
+}
+.nb-app .nb-input .cm-editor,
+.nb-app .nb-input .cm-gutters {
+  background: transparent;
+}
+.nb-app .nb-input .cm-scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.nb-app .nb-input .cm-content {
+  padding: 7px 0;
+}
+.nb-app .nb-input .cm-line {
+  padding: 0 12px;
+}
+.nb-markdown .nb-input .cm-scroller,
+.nb-latex .nb-input .cm-scroller {
+  font-size: 13px;
+}
+
+.nb-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 2px;
+  color: var(--k-muted);
+  font-size: 12px;
+}
+
+/* ---------------------------------------------------------------- markdown */
+
+.nb-md {
+  padding: 4px 4px 2px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.nb-md > :first-child {
+  margin-top: 0;
+}
+.nb-md > :last-child {
+  margin-bottom: 0;
+}
+.nb-md h1,
+.nb-md h2,
+.nb-md h3,
+.nb-md h4,
+.nb-md h5,
+.nb-md h6 {
+  margin: 1em 0 0.4em;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.nb-md h1 {
+  font-size: 1.8em;
+}
+.nb-md h2 {
+  font-size: 1.42em;
+}
+.nb-md h3 {
+  font-size: 1.2em;
+}
+.nb-md h4 {
+  font-size: 1.05em;
+}
+.nb-md h5,
+.nb-md h6 {
+  font-size: 1em;
+  color: var(--k-muted);
+}
+.nb-md p,
+.nb-md ul,
+.nb-md ol,
+.nb-md blockquote,
+.nb-md pre,
+.nb-md table {
+  margin: 0.6em 0;
+}
+.nb-md ul,
+.nb-md ol {
+  padding-left: 1.6em;
+}
+.nb-md li + li {
+  margin-top: 0.15em;
+}
+.nb-md a {
+  color: var(--k-link);
+  text-decoration: none;
+}
+.nb-md a:hover {
+  text-decoration: underline;
+}
+.nb-md code {
+  font-size: 0.86em;
+}
+.nb-md pre {
+  padding: 10px 12px;
+  background: var(--nb-input);
+  border: 1px solid var(--nb-line);
+  border-radius: 8px;
+  font: 12.5px/1.5 var(--k-mono);
+  overflow: auto;
+}
+.nb-md pre code {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+.nb-md blockquote {
+  padding: 0.1em 1em;
+  border-left: 3px solid color-mix(in srgb, var(--k-accent) 40%, var(--k-border));
+  color: var(--k-muted);
+}
+.nb-md table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.nb-md th,
+.nb-md td {
+  padding: 5px 12px;
+  border: 1px solid var(--k-border);
+}
+.nb-md th {
+  background: var(--nb-input);
+  font-weight: 600;
+}
+.nb-md hr {
+  margin: 1.2em 0;
+  border: none;
+  border-top: 1px solid var(--k-border);
+}
+.nb-md img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+.nb-md img.nb-img-missing {
+  min-width: 48px;
+  min-height: 24px;
+  outline: 1px dashed var(--k-danger);
+}
+.nb-md input[type='checkbox'] {
+  margin: 0 0.4em 0 0;
+  vertical-align: middle;
+}
+.nb-md .katex {
+  font-size: 1.08em;
+}
+.nb-md .katex-display,
+.nb-math-block {
+  margin: 0.6em 0;
+  padding: 2px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.nb-math-block .katex-display {
+  margin: 0;
+}
+.nb-math-error {
+  padding: 0 3px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--k-danger) 9%, transparent);
+  color: var(--k-danger);
+  font-family: var(--k-mono);
+  font-size: 0.88em;
+  cursor: help;
+}
+.nb-placeholder {
+  padding: 4px 0;
+  color: var(--k-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------------- LaTeX */
+
+.nb-tex {
+  padding: 4px 0;
+  font-size: 15px;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.nb-tex .katex-display {
+  margin: 0.25em 0;
+}
+.nb-tex.preview {
+  padding-top: 8px;
+  border-top: 1px dashed var(--nb-line);
+}
+.nb-tex.nb-placeholder {
+  font-size: 13px;
+  text-align: left;
+}
+.nb-tex-mixed {
+  display: inline-block;
+  padding: 0.3em 0;
+}
+.nb-tex-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--k-danger) 8%, transparent);
+  color: var(--k-danger);
+  font-size: 12.5px;
+}
+.nb-tex-error svg {
+  flex: none;
+  margin-top: 2px;
+}
+.nb-tex-error pre {
+  margin: 6px 0 0;
+  color: var(--k-text);
+  font: 12px/1.45 var(--k-mono);
+  white-space: pre-wrap;
+}
+.nb-tex-error.preview {
+  padding: 2px 0;
+  background: transparent;
+  color: var(--k-muted);
+}
+
+/* ----------------------------------------------------------------- outputs */
+
+.nb-outputs {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nb-out {
+  min-width: 0;
+  margin: 0;
+}
+pre.nb-out {
+  padding: 4px 2px;
+  color: var(--k-text);
+  font: 12.5px/1.5 var(--k-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.nb-stream {
+  max-height: 520px;
+  overflow: auto;
+}
+pre.nb-stream.stderr {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--k-danger) 7%, transparent);
+  color: color-mix(in srgb, var(--k-danger) 70%, var(--k-text));
+}
+pre.nb-error {
+  max-height: 520px;
+  overflow: auto;
+  padding: 8px 12px;
+  border-left: 3px solid var(--k-danger);
+  border-radius: 4px 8px 8px 4px;
+  background: color-mix(in srgb, var(--k-danger) 8%, transparent);
+}
+.nb-ename {
+  color: var(--k-danger);
+  font-weight: 700;
+}
+.nb-tip {
+  color: var(--k-muted);
+  font-style: italic;
+}
+.nb-image img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+/* ----------------------------------------------------------- add / status */
+
+.nb-add-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+.nb-add-row:hover {
+  opacity: 1;
+}
+.nb-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 13px 0 10px;
+  border: 1px dashed var(--k-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--k-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.nb-add-btn:hover {
+  border-color: var(--k-accent);
+  background: color-mix(in srgb, var(--k-accent) 6%, transparent);
+  color: var(--k-accent);
+}
+
+.nb-statusbar .nb-sb-file {
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nb-statusbar .nb-sb-msg {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  color: var(--k-text);
+}
+
+/* -------------------------------------------------------- shortcuts dialog */
+
+.nb-keys {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  white-space: normal;
+}
+.nb-keys h4 {
+  margin: 0 0 4px;
+  color: var(--k-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.nb-keys table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.nb-keys td {
+  padding: 3px 0;
+  vertical-align: top;
+}
+.nb-keys td:first-child {
+  width: 1%;
+  padding-right: 14px;
+  white-space: nowrap;
+}
+.nb-keys kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--k-border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--k-alt);
+  font: 11.5px var(--k-mono);
+}
+.nb-keys-note {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 12px;
+}

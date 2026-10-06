@@ -1,0 +1,17 @@
+{
+  "name": "KherveOS",
+  "short_name": "KherveOS",
+  "description": "An OS for the people: the Kherve Tools desktop in your browser. Free and open source.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
+  "background_color": "#0e0909",
+  "theme_color": "#171012",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/kherveos.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

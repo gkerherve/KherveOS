@@ -1,0 +1,36 @@
+/* Terminal app. The xterm.js canvas gets its colours from theme.ts. The
+   window is translucent (see .k-window.translucent), so nothing here paints a
+   background: the blurred desktop shows through. */
+
+.term-app {
+  background: transparent;
+}
+
+.term-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 6px 2px 2px 10px;
+  background: transparent;
+  cursor: text;
+}
+
+/* No padding here: the fit addon measures this box. */
+.term-host {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.term-host .xterm {
+  height: 100%;
+}
+
+/* xterm paints its scroll area with an opaque copy of the background colour;
+   keep it clear so the see-through window shows. */
+.term-host .xterm,
+.term-host .xterm .xterm-viewport,
+.term-host .xterm .xterm-screen {
+  background-color: transparent !important;
+}

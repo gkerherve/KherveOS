@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+*.log
+server/.venv/
+server/data/
+__pycache__/
+.pytest_cache/
+.idea/
+.claude/settings.local.json

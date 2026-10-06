@@ -1,0 +1,412 @@
+/* Browser: tab strip, toolbar, hint bar, pages and the start page.
+   Colours only come from the theme variables. */
+
+.br-app {
+  min-width: 0;
+}
+
+/* -------------------------------------------------------------------- tabs */
+
+.br-tabstrip {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 36px;
+  padding: 0 6px;
+  background: var(--k-chrome);
+  box-shadow: inset 0 -1px 0 var(--k-border); /* the active tab paints over it */
+  flex: none;
+  user-select: none;
+}
+.br-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.br-tabs::-webkit-scrollbar {
+  display: none;
+}
+.br-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 1 210px;
+  min-width: 64px;
+  height: 30px;
+  padding: 0 4px 0 10px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: var(--k-muted);
+  font-size: 12.5px;
+  cursor: default;
+}
+.br-tab:hover {
+  background: color-mix(in srgb, var(--k-button-hover) 70%, transparent);
+  color: var(--k-text);
+}
+.br-tab.active {
+  background: var(--k-bg);
+  border-color: var(--k-border);
+  color: var(--k-text);
+}
+.br-tab-icon {
+  width: 16px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--k-muted);
+}
+.br-tab.active .br-tab-icon {
+  color: var(--k-accent);
+}
+.br-tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.br-tab-close {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+  opacity: 0;
+}
+.br-tab:hover .br-tab-close,
+.br-tab.active .br-tab-close,
+.br-tab-close:focus-visible {
+  opacity: 1;
+}
+.br-tab-close:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.br-newtab {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 3px;
+  color: var(--k-muted);
+}
+.br-newtab:hover {
+  color: var(--k-text);
+}
+
+/* ---------------------------------------------------------------- toolbar */
+
+.br-toolbar {
+  gap: 2px;
+  padding: 4px 6px;
+  background: var(--k-bg);
+}
+.br-address {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  margin: 0 4px;
+  padding: 0 12px;
+  border-radius: 15px;
+  border: 1px solid transparent;
+  background: var(--k-alt);
+  transition: background 0.12s, border-color 0.12s;
+}
+.br-address:hover {
+  border-color: var(--k-border);
+}
+.br-address:focus-within {
+  background: var(--k-bg);
+  border-color: var(--k-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-accent) 22%, transparent);
+}
+.br-address-icon {
+  flex: none;
+  color: var(--k-muted);
+}
+.br-address-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--k-text);
+  font-size: 13px;
+}
+.br-address-input::placeholder {
+  color: var(--k-placeholder);
+}
+.br-address.moved .br-address-input {
+  color: var(--k-muted);
+  font-style: italic;
+}
+
+/* --------------------------------------------------------------- hint bar */
+
+.br-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 2px 6px 2px 12px;
+  font-size: 12px;
+  color: var(--k-muted);
+  background: var(--k-surface);
+  border-bottom: 1px solid var(--k-border);
+  flex: none;
+}
+.br-hint-icon {
+  flex: none;
+  color: var(--k-accent);
+}
+.br-hint-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.br-hint-link {
+  padding: 2px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.br-hint-close {
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  color: var(--k-muted);
+}
+
+/* ------------------------------------------------------------------ pages */
+
+.br-pages {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--k-bg);
+}
+.br-page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.br-page > * {
+  flex: 1;
+  min-height: 0;
+}
+.br-page.br-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+.br-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.br-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+.br-progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 35%;
+  background: var(--k-accent);
+  animation: br-progress 1.2s ease-in-out infinite;
+}
+@keyframes br-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+/* Blocked site, missing file */
+.br-message h2 {
+  max-width: 520px;
+  margin: 14px 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+.br-message p {
+  max-width: 480px;
+  margin: 0 0 20px;
+  line-height: 1.55;
+}
+.br-message-icon {
+  color: var(--k-muted);
+}
+.br-big-btn {
+  height: 38px;
+  padding: 0 20px;
+  margin-bottom: 6px;
+  border-radius: 19px;
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------------- start page */
+
+.br-start {
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  background: var(--k-bg);
+}
+.br-start-inner {
+  margin: auto; /* centred, and still scrollable when the window is small */
+  width: 100%;
+  max-width: 680px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.br-start-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--k-accent) 14%, var(--k-bg));
+  color: var(--k-accent);
+}
+.br-search {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 6px 0 16px;
+  border-radius: 23px;
+  border: 1px solid var(--k-border);
+  background: var(--k-surface);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--k-text) 10%, transparent);
+}
+.br-search:focus-within {
+  border-color: var(--k-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-accent) 22%, transparent);
+}
+.br-search-icon {
+  flex: none;
+  color: var(--k-muted);
+}
+.br-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--k-text);
+  font-size: 15px;
+}
+.br-search-input::placeholder {
+  color: var(--k-placeholder);
+}
+.br-search-engine {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 10px 0 12px;
+  flex: none;
+  border: none;
+  border-radius: 17px;
+  background: var(--k-button);
+  color: var(--k-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.br-search-engine:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.br-favs {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+}
+.br-fav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--k-border);
+  background: var(--k-surface);
+  color: var(--k-text);
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.12s, border-color 0.12s;
+}
+.br-fav:hover {
+  background: var(--k-button-hover);
+  border-color: color-mix(in srgb, var(--k-accent) 40%, var(--k-border));
+}
+.br-fav:focus-visible {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 2px;
+}
+.br-fav-icon {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 4px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--k-accent) 14%, var(--k-bg));
+  color: var(--k-accent);
+}
+.br-fav-name {
+  font-weight: 600;
+}
+.br-fav-hint {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11.5px;
+  color: var(--k-muted);
+}
+.br-start-note {
+  max-width: 520px;
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--k-muted);
+}

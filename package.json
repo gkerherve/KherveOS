@@ -1,0 +1,49 @@
+{
+  "name": "kherveos",
+  "private": true,
+  "version": "0.1.0",
+  "description": "KherveOS — an OS for the people: the Kherve Tools desktop in your browser. Free and open source.",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "preview": "vite preview",
+    "server:setup": "python3 -m venv server/.venv && server/.venv/bin/pip install -q -r server/requirements.txt",
+    "server": "cd server && .venv/bin/python -m kherveos_server",
+    "dev:all": "concurrently -k -n os,server -c blue,green \"npm:dev\" \"npm:server\""
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.13",
+    "@lezer/highlight": "^1.2.5",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "codemirror": "^6.0.2",
+    "dompurify": "^3.4.16",
+    "katex": "^0.19.0",
+    "lucide-react": "^1.52.0",
+    "marked": "^18.1.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^10.0.5",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.3"
+  }
+}
