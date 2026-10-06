@@ -48,6 +48,12 @@ Still open in stage 1:
       `src/apps/khervebook/` and finish/test it.
 
 ### 2. PDF and Git services → KhervePDF, KherveRef, KhervePY
+
+In progress (2026-10-07 00:00): sub-agents were building the PDF service +
+KhervePDF, and the Git service + git CORS proxy + KhervePY. Libraries installed:
+`mupdf`, `isomorphic-git`, `buffer`. App entries and server stubs exist
+(`gitproxy.py`, `refs.py`). If their work is uncommitted, check it (typecheck,
+tests, browser), finish it and commit. KherveRef comes after the PDF service.
 - [ ] PDF service: MuPDF.js (npm `mupdf`, AGPL like the PyMuPDF the desktop apps
       use) in a worker — render, text, search, annotations, page operations, forms.
 - [ ] Git service: isomorphic-git over the virtual drive; GitHub through a small
@@ -58,6 +64,10 @@ Still open in stage 1:
 - [ ] KhervePY (`../khervePY`) — CodeMirror editor, Pyodide run, Git panel
 
 ### 3. LaTeX service → KherveTeX, KherveNote, KherveSlide
+
+In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
+(`server/kherveos_server/latex.py` with tectonic from Homebrew, client
+`src/os/services/latex.ts`) and KherveTeX (TipTap + fflate installed).
 - [ ] LaTeX compile on the KherveOS server (`tectonic`, as the desktop apps use),
       endpoint `/api/latex/compile`; WASM engine later for offline
 - [ ] KherveTeX (`../KherveTeX`, package `khervedoc`)
