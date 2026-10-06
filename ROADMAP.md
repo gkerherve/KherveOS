@@ -91,5 +91,12 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
   a server. Messages: unread badge on the Dock icon. Deployment.
 
 ## Log
+- 2026-10-07 00:10 — Usage limit reached. Applications menu (Dock, bottom-left: Office /
+  Science / Development / Internet / Tools / Games submenus) committed; its submenu fix
+  (portal) is type-checked but not yet seen in the browser — check it first. The four
+  sub-agents (KherveBook parity, PDF+KhervePDF, Git+KhervePY, LaTeX+KherveTeX) were
+  stopped mid-work: their partial, UNCOMMITTED changes are in src/apps/khervebook,
+  src/apps/khervepdf, src/apps/khervepy, src/apps/khervetex, src/os/services, and the
+  server modules latex.py/gitproxy.py. Review, finish (or restart) and commit each.
 - 2026-10-06 — Stage 1 built and pushed; KherveBook examples exported; theme
   settled (black + green).

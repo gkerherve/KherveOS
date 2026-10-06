@@ -192,8 +192,8 @@
   cursor: default;
 }
 
-/* menus that drop from the menu bar: white like the bar, green Aqua-style highlight */
-.k-topbar ~ .k-menu {
+/* every menu (menu bar, Applications, right-click): white like the classic Mac, green Aqua-style highlight */
+.k-menu {
   background: rgba(250, 250, 250, 0.96);
   color: #000;
   border: 1px solid rgba(0, 0, 0, 0.22);
@@ -204,33 +204,33 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
-.k-topbar ~ .k-menu .k-menu-item {
+.k-menu .k-menu-item {
   border-radius: 0;
   height: 22px;
   padding: 0 16px 0 8px;
 }
-.k-topbar ~ .k-menu .k-menu-item:hover,
-.k-topbar ~ .k-menu .k-menu-item.active {
+.k-menu .k-menu-item:hover,
+.k-menu .k-menu-item.active {
   background: linear-gradient(180deg, #74d98e 0%, #34b257 50%, #24a148 51%, #1b8d3c 100%);
   color: #fff;
 }
-.k-topbar ~ .k-menu .k-menu-icon,
-.k-topbar ~ .k-menu .k-menu-shortcut,
-.k-topbar ~ .k-menu .k-menu-chevron {
+.k-menu .k-menu-icon,
+.k-menu .k-menu-shortcut,
+.k-menu .k-menu-chevron {
   color: #6b6b6b;
 }
-.k-topbar ~ .k-menu .k-menu-item:hover .k-menu-icon,
-.k-topbar ~ .k-menu .k-menu-item:hover .k-menu-shortcut,
-.k-topbar ~ .k-menu .k-menu-item:hover .k-menu-chevron {
+.k-menu .k-menu-item:hover .k-menu-icon,
+.k-menu .k-menu-item:hover .k-menu-shortcut,
+.k-menu .k-menu-item:hover .k-menu-chevron {
   color: rgba(255, 255, 255, 0.92);
 }
-.k-topbar ~ .k-menu .k-menu-item.danger {
+.k-menu .k-menu-item.danger {
   color: #c4211a;
 }
-.k-topbar ~ .k-menu .k-menu-item.danger:hover {
+.k-menu .k-menu-item.danger:hover {
   color: #fff;
 }
-.k-topbar ~ .k-menu .k-menu-sep {
+.k-menu .k-menu-sep {
   background: #d9d9d9;
   margin: 4px 0;
 }

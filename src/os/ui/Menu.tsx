@@ -1,6 +1,7 @@
 // Shared drop-down menu list, used by menu bars and right-click menus.
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Check, ChevronRight } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -9,6 +10,8 @@ export type MenuItem =
   | {
       label: string
       icon?: LucideIcon
+      /** A picture shown instead of `icon` (e.g. an app's icon). */
+      image?: ReactNode
       shortcut?: string
       onClick?: () => void
       disabled?: boolean
@@ -24,9 +27,12 @@ interface MenuListProps {
   x: number
   y: number
   minWidth?: number
+  /** Open upwards: `y` is where the menu's bottom edge goes. */
+  above?: boolean
+  className?: string
 }
 
-export function MenuList({ items, onClose, x, y, minWidth = 180 }: MenuListProps) {
+export function MenuList({ items, onClose, x, y, minWidth = 180, above = false, className }: MenuListProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ x, y })
   const [openSub, setOpenSub] = useState<number | null>(null)
@@ -38,14 +44,14 @@ export function MenuList({ items, onClose, x, y, minWidth = 180 }: MenuListProps
     const r = el.getBoundingClientRect()
     setPos({
       x: Math.max(4, Math.min(x, window.innerWidth - r.width - 4)),
-      y: Math.max(4, Math.min(y, window.innerHeight - r.height - 4)),
+      y: above ? Math.max(4, y - r.height) : Math.max(4, Math.min(y, window.innerHeight - r.height - 4)),
     })
-  }, [x, y])
+  }, [x, y, above])
 
   return (
     <div
       ref={ref}
-      className="k-menu"
+      className={`k-menu${className ? ` ${className}` : ''}`}
       role="menu"
       style={{ left: pos.x, top: pos.y, minWidth }}
       onContextMenu={(e) => e.preventDefault()}
@@ -75,8 +81,8 @@ export function MenuList({ items, onClose, x, y, minWidth = 180 }: MenuListProps
               item.onClick?.()
             }}
           >
-            <span className="k-menu-icon">
-              {item.checked ? <Check size={14} /> : Icon ? <Icon size={14} /> : null}
+            <span className={`k-menu-icon${item.image ? ' image' : ''}`}>
+              {item.checked ? <Check size={14} /> : item.image ? item.image : Icon ? <Icon size={14} /> : null}
             </span>
             <span className="k-menu-label">{item.label}</span>
             {item.shortcut && <span className="k-menu-shortcut">{item.shortcut}</span>}
@@ -84,14 +90,19 @@ export function MenuList({ items, onClose, x, y, minWidth = 180 }: MenuListProps
           </div>
         )
       })}
-      {openSub !== null && typeof items[openSub] === 'object' && (items[openSub] as { submenu?: MenuItem[] }).submenu && (
-        <MenuList
-          items={(items[openSub] as { submenu: MenuItem[] }).submenu}
-          onClose={onClose}
-          x={subPos.x}
-          y={subPos.y}
-        />
-      )}
+      {/* Submenus render at page level: a menu's blur effect would otherwise make
+          their fixed position relative to the menu instead of the screen. */}
+      {openSub !== null && typeof items[openSub] === 'object' && (items[openSub] as { submenu?: MenuItem[] }).submenu &&
+        createPortal(
+          <MenuList
+            items={(items[openSub] as { submenu: MenuItem[] }).submenu}
+            onClose={onClose}
+            x={subPos.x}
+            y={subPos.y}
+            className={className}
+          />,
+          document.body,
+        )}
     </div>
   )
 }

@@ -4,6 +4,9 @@ import type { MenuBarMenu } from './ui/Menu'
 
 export type AppCategory = 'system' | 'kherve' | 'internet' | 'games'
 
+/** The submenu of the Applications menu (bottom-left of the Dock) an app sits in. */
+export type AppGroup = 'Office' | 'Science' | 'Development' | 'Internet' | 'Tools' | 'Games'
+
 /** What an app is opened with. Apps read the fields they understand. */
 export interface AppArgs {
   /** A file or folder in the virtual file system. */
@@ -69,6 +72,8 @@ export interface AppManifest {
   /** An official icon picture (Ktools apps that have one), instead of the drawn tile. */
   image?: string
   category: AppCategory
+  /** Its submenu in the Applications menu. */
+  group: AppGroup
   description: string
   load: () => Promise<{ default: ComponentType<AppProps> }>
   defaultSize?: { w: number; h: number }

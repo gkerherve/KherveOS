@@ -11,13 +11,35 @@ import { FileDialog, type FileDialogOptions } from './ui/FileDialog'
 
 // ------------------------------------------------------------ context menu
 
+interface CtxMenu {
+  x: number
+  y: number
+  items: MenuItem[]
+  above?: boolean
+  className?: string
+  /** Who opened it (lets a button toggle its menu). */
+  owner?: string
+}
 interface CtxState {
-  menu: { x: number; y: number; items: MenuItem[] } | null
+  menu: CtxMenu | null
 }
 const useCtx = create<CtxState>(() => ({ menu: null }))
 
-export function showContextMenu(at: { clientX: number; clientY: number }, items: MenuItem[]) {
-  useCtx.setState({ menu: { x: at.clientX, y: at.clientY, items } })
+export function showContextMenu(
+  at: { clientX: number; clientY: number },
+  items: MenuItem[],
+  opts: { above?: boolean; className?: string; owner?: string } = {},
+) {
+  useCtx.setState({ menu: { x: at.clientX, y: at.clientY, items, ...opts } })
+}
+
+export function closeContextMenu() {
+  useCtx.setState({ menu: null })
+}
+
+/** The owner of the open menu, if any. */
+export function openMenuOwner(): string | null {
+  return useCtx.getState().menu?.owner ?? null
 }
 
 function ContextMenuHost() {
@@ -25,7 +47,13 @@ function ContextMenuHost() {
   useEffect(() => {
     if (!menu) return
     const close = () => useCtx.setState({ menu: null })
-    const onDown = (e: PointerEvent) => !(e.target as HTMLElement).closest('.k-menu') && close()
+    // A click on the button that opened the menu is left to that button (it toggles).
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement
+      if (t.closest('.k-menu')) return
+      if (menu.owner && t.closest(`[data-menu-owner="${menu.owner}"]`)) return
+      close()
+    }
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
     window.addEventListener('pointerdown', onDown, true)
     window.addEventListener('keydown', onKey)
@@ -39,7 +67,17 @@ function ContextMenuHost() {
     }
   }, [menu])
   if (!menu) return null
-  return <MenuList items={menu.items} x={menu.x} y={menu.y} onClose={() => useCtx.setState({ menu: null })} />
+  return (
+    <MenuList
+      items={menu.items}
+      x={menu.x}
+      y={menu.y}
+      above={menu.above}
+      className={menu.className}
+      minWidth={menu.above ? 220 : 180}
+      onClose={() => useCtx.setState({ menu: null })}
+    />
+  )
 }
 
 // ----------------------------------------------------------- notifications

@@ -373,6 +373,10 @@ select.k-input {
 .k-menu-item.danger {
   color: var(--k-danger);
 }
+.k-menu-icon.image {
+  width: 20px;
+  height: 20px;
+}
 .k-menu-icon {
   width: 18px;
   display: grid;
@@ -760,4 +764,10 @@ select.k-input {
   flex: none;
   object-fit: contain;
   filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.32));
+}
+
+/* the Applications menu (Dock): roomier rows */
+.k-apps-menu .k-menu-item {
+  height: 30px;
+  font-size: 13.5px;
 }
