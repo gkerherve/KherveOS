@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Curve Fitting with lmfit\nFit a Gaussian to noisy data and report the parameters."
+  },
+  {
+   "type": "code",
+   "source": "from lmfit.models import GaussianModel\nrng = np.random.default_rng(1)\nx = np.linspace(-5, 5, 120)\ny = 4.2 * np.exp(-(x - 0.8)**2 / 1.8) + rng.normal(0, 0.2, x.size)\nmodel = GaussianModel()\nfit = model.fit(y, model.guess(y, x=x), x=x)\nprint(fit.fit_report(show_correl=False))\nfig, ax = plt.subplots()\nax.plot(x, y, 'o', ms=4, label='data')\nax.plot(x, fit.best_fit, 'r-', label='fit')\nax.legend()\nfig"
+  }
+ ]
+}

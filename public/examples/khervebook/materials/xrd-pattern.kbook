@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# XRD Pattern\nSynthetic powder diffraction pattern: Gaussian peaks at Bragg angles on a noisy background."
+  },
+  {
+   "type": "code",
+   "source": "rng = np.random.default_rng(5)\ntwo_theta = np.linspace(10, 90, 2000)\npeaks = [(28.4, 100), (47.3, 55), (56.1, 30), (69.1, 8),\n         (76.4, 12), (88.0, 9)]\ny = 20 + 200 / two_theta + rng.normal(0, 1.5, 2000)\nfor pos, height in peaks:\n    y += height * np.exp(-(two_theta - pos)**2 / 0.06)\nfig, ax = plt.subplots(figsize=(7, 3.6))\nax.plot(two_theta, y, lw=0.8)\nfor pos, _h in peaks:\n    ax.annotate(f'{pos}°', (pos, y.max() * 0.05 + 4\n                + dict(peaks)[pos]), fontsize=7,\n                ha='center')\nax.set_xlabel('2θ (deg)'); ax.set_ylabel('counts')\nfig"
+  }
+ ]
+}

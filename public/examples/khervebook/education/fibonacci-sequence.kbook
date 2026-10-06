@@ -1,0 +1,26 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Fibonacci Sequence\nThe first 30 Fibonacci numbers and their converging ratio."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Fibonacci\", \"rows\": 32, \"cols\": 4, \"data\": {\"A1\": \"n\", \"B1\": \"F(n)\", \"C1\": \"Ratio F(n)/F(n-1)\", \"A2\": \"0\", \"B2\": \"0\", \"A3\": \"1\", \"B3\": \"1\", \"A4\": \"2\", \"B4\": \"1\", \"C4\": \"1.0000\", \"A5\": \"3\", \"B5\": \"2\", \"C5\": \"2.0000\", \"A6\": \"4\", \"B6\": \"3\", \"C6\": \"1.5000\", \"A7\": \"5\", \"B7\": \"5\", \"C7\": \"1.6667\", \"A8\": \"6\", \"B8\": \"8\", \"C8\": \"1.6000\", \"A9\": \"7\", \"B9\": \"13\", \"C9\": \"1.6250\", \"A10\": \"8\", \"B10\": \"21\", \"C10\": \"1.6154\", \"A11\": \"9\", \"B11\": \"34\", \"C11\": \"1.6190\", \"A12\": \"10\", \"B12\": \"55\", \"C12\": \"1.6176\", \"A13\": \"11\", \"B13\": \"89\", \"C13\": \"1.6182\", \"A14\": \"12\", \"B14\": \"144\", \"C14\": \"1.6180\", \"A15\": \"13\", \"B15\": \"233\", \"C15\": \"1.6181\", \"A16\": \"14\", \"B16\": \"377\", \"C16\": \"1.6180\", \"A17\": \"15\", \"B17\": \"610\", \"C17\": \"1.6180\", \"A18\": \"16\", \"B18\": \"987\", \"C18\": \"1.6180\", \"A19\": \"17\", \"B19\": \"1597\", \"C19\": \"1.6180\", \"A20\": \"18\", \"B20\": \"2584\", \"C20\": \"1.6180\", \"A21\": \"19\", \"B21\": \"4181\", \"C21\": \"1.6180\", \"A22\": \"20\", \"B22\": \"6765\", \"C22\": \"1.6180\", \"A23\": \"21\", \"B23\": \"10946\", \"C23\": \"1.6180\", \"A24\": \"22\", \"B24\": \"17711\", \"C24\": \"1.6180\", \"A25\": \"23\", \"B25\": \"28657\", \"C25\": \"1.6180\", \"A26\": \"24\", \"B26\": \"46368\", \"C26\": \"1.6180\", \"A27\": \"25\", \"B27\": \"75025\", \"C27\": \"1.6180\", \"A28\": \"26\", \"B28\": \"121393\", \"C28\": \"1.6180\", \"A29\": \"27\", \"B29\": \"196418\", \"C29\": \"1.6180\", \"A30\": \"28\", \"B30\": \"317811\", \"C30\": \"1.6180\", \"A31\": \"29\", \"B31\": \"514229\", \"C31\": \"1.6180\", \"A32\": \"30\", \"B32\": \"832040\", \"C32\": \"1.6180\"}}], \"active\": \"Fibonacci\"}"
+  },
+  {
+   "type": "latex",
+   "source": "F_n = F_{n-1} + F_{n-2}, \\quad \\frac{F_n}{F_{n-1}} \\to \\varphi"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Fibonacci Sequence\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><polygon points=\"120,42 202,74 120,106 38,74\" fill=\"#3776ab\"/><path d=\"M72 90 V120 Q120 142 168 120 V90\" fill=\"none\" stroke=\"#3776ab\" stroke-width=\"7\"/><line x1=\"202\" y1=\"74\" x2=\"202\" y2=\"116\" stroke=\"#e07b39\" stroke-width=\"3\"/><circle cx=\"202\" cy=\"120\" r=\"7\" fill=\"#e07b39\"/></svg>"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Double Pendulum\nChaotic motion integrated with RK4, a few substeps per frame. Stop with the red button."
+  },
+  {
+   "type": "code",
+   "source": "# Double pendulum — runs continuously\nif 'dp_state' not in globals():\n    dp_state = np.array([2.4, 0.0, -1.0, 0.0])\n    dp_trace = []\ndef _dp_rhs(s):\n    t1, w1, t2, w2 = s\n    d = t1 - t2\n    den = 2 - np.cos(d)**2\n    a1 = (-3*np.sin(t1) - np.sin(t1 - 2*t2)\n          - 2*np.sin(d)*(w2**2 + w1**2*np.cos(d))) / (2*den)\n    a2 = (2*np.sin(d)*(2*w1**2 + 2*np.cos(t1)\n          + w2**2*np.cos(d))) / (2*den)\n    return np.array([w1, a1, w2, a2])\nfor _ in range(4):                  # RK4 substeps\n    h = 0.02\n    k1 = _dp_rhs(dp_state)\n    k2 = _dp_rhs(dp_state + h/2*k1)\n    k3 = _dp_rhs(dp_state + h/2*k2)\n    k4 = _dp_rhs(dp_state + h*k3)\n    dp_state = dp_state + h/6*(k1 + 2*k2 + 2*k3 + k4)\nt1, _w1, t2, _w2 = dp_state\nx1, y1 = np.sin(t1), -np.cos(t1)\nx2, y2 = x1 + np.sin(t2), y1 - np.cos(t2)\ndp_trace = (dp_trace + [(x2, y2)])[-400:]\nfig, ax = plt.subplots(figsize=(4.4, 4.4))\ntr = np.array(dp_trace)\nax.plot(tr[:, 0], tr[:, 1], lw=0.6, color='#2176c7',\n        alpha=0.7)\nax.plot([0, x1, x2], [0, y1, y2], 'o-', color='#c0392b',\n        ms=8, lw=2)\nax.set_xlim(-2.2, 2.2); ax.set_ylim(-2.2, 2.2)\nax.set_aspect('equal'); ax.set_xticks([]); ax.set_yticks([])\nfig"
+  }
+ ]
+}

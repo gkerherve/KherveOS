@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Projectile Motion\nRange depends on launch angle:"
+  },
+  {
+   "type": "latex",
+   "source": "x(t) = v_0\\cos\\theta\\, t \\quad\\quad y(t) = v_0\\sin\\theta\\, t - \\frac{1}{2} g t^2"
+  },
+  {
+   "type": "code",
+   "source": "v0, g = 20.0, 9.81\nfig, ax = plt.subplots()\nfor deg in (15, 30, 45, 60, 75):\n    th = np.radians(deg)\n    tf = 2 * v0 * np.sin(th) / g\n    t = np.linspace(0, tf, 100)\n    ax.plot(v0 * np.cos(th) * t,\n            v0 * np.sin(th) * t - g * t**2 / 2,\n            label=f'{deg}°')\nax.set_xlabel('x (m)'); ax.set_ylabel('y (m)')\nax.legend(); ax.set_ylim(bottom=0)\nfig"
+  }
+ ]
+}

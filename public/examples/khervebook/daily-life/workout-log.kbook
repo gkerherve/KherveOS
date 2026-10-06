@@ -1,0 +1,22 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Workout Log\nSets x reps x weight giving training volume."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Workout\", \"rows\": 10, \"cols\": 6, \"data\": {\"A1\": \"Date\", \"B1\": \"Exercise\", \"C1\": \"Sets\", \"D1\": \"Reps\", \"E1\": \"Weight (kg)\", \"F1\": \"Volume\", \"A2\": \"2026-05-19\", \"B2\": \"Squat\", \"C2\": \"4\", \"D2\": \"8\", \"E2\": \"100\", \"F2\": \"=C2*D2*E2\", \"A3\": \"2026-05-19\", \"B3\": \"Bench Press\", \"C3\": \"4\", \"D3\": \"10\", \"E3\": \"80\", \"F3\": \"=C3*D3*E3\", \"A4\": \"2026-05-19\", \"B4\": \"Deadlift\", \"C4\": \"3\", \"D4\": \"5\", \"E4\": \"140\", \"F4\": \"=C4*D4*E4\", \"A5\": \"2026-05-21\", \"B5\": \"OHP\", \"C5\": \"4\", \"D5\": \"8\", \"E5\": \"50\", \"F5\": \"=C5*D5*E5\", \"A6\": \"2026-05-21\", \"B6\": \"Barbell Row\", \"C6\": \"4\", \"D6\": \"8\", \"E6\": \"70\", \"F6\": \"=C6*D6*E6\", \"A7\": \"2026-05-21\", \"B7\": \"Pull-ups\", \"C7\": \"3\", \"D7\": \"10\", \"E7\": \"0\", \"F7\": \"=C7*D7*E7\", \"A8\": \"2026-05-23\", \"B8\": \"Squat\", \"C8\": \"5\", \"D8\": \"5\", \"E8\": \"110\", \"F8\": \"=C8*D8*E8\", \"A9\": \"2026-05-23\", \"B9\": \"Bench Press\", \"C9\": \"5\", \"D9\": \"5\", \"E9\": \"90\", \"F9\": \"=C9*D9*E9\", \"A10\": \"2026-05-23\", \"B10\": \"RDL\", \"C10\": \"3\", \"D10\": \"10\", \"E10\": \"80\", \"F10\": \"=C10*D10*E10\"}}], \"active\": \"Workout\"}"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Workout Log\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><path d=\"M120 132 L72 86 Q50 64 72 50 Q94 38 120 66 Q146 38 168 50 Q190 64 168 86 Z\" fill=\"#e07b39\"/><polyline points=\"58,100 94,100 110,74 126,122 142,100 182,100\" fill=\"none\" stroke=\"#3776ab\" stroke-width=\"4\" stroke-linejoin=\"round\"/></svg>"
+  }
+ ]
+}

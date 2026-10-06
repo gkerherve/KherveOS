@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# ARPES constant-energy map stack\n\nA full ARPES measurement is a **3-D dataset** *I*(*k<sub>x</sub>*,\n*k<sub>y</sub>*, *E*). Slicing it at a fixed binding energy gives a\n**constant-energy (CE) map**; stacking several such maps shows how the\ncontours **evolve with energy**. For a parabolic band\n*E*(*k*) = −0.5 + α·|*k*|² a CE cut at binding energy *E*<sub>b</sub> is\na **ring** of radius\n\n> *r*(*E*<sub>b</sub>) = √((*E*<sub>b</sub> + 0.5) / α)\n\nthat shrinks toward the band bottom.\n\n[`peaks`](https://github.com/phrgab/peaks) makes these stacks directly —\ne.g. `peaks.plot_grid([...])` lays out CE maps at several binding\nenergies in a grid. The cell below builds a synthetic\n*I*(*k<sub>x</sub>*, *k<sub>y</sub>*, *E*) and plots a 2×3 grid of CE\nmaps so the example always runs.\n"
+  },
+  {
+   "type": "code",
+   "source": "\n# Constant-energy (CE) map stack from a 3-D ARPES dataset I(kx, ky, E).\n# A parabolic band E(k) = -0.5 + alpha*|k|^2 gives a CE ring of radius\n# r(Eb) = sqrt((Eb + 0.5)/alpha). peaks lays out such stacks with\n# plot_grid([...]); here we build the cube and plot a 2x3 grid of CE maps\n# so the example always runs.\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nrng = np.random.default_rng(0)\nkx = np.linspace(-1.0, 1.0, 160)                # 1/Angstrom\nky = np.linspace(-1.0, 1.0, 160)\nKX, KY = np.meshgrid(kx, ky)\nkmag = np.hypot(KX, KY)\n\nalpha = 1.0                                      # band curvature\nband = -0.5 + alpha * kmag ** 2                 # E(k) parabolic band\ngamma = 0.04                                     # energy broadening\n\n# Six binding energies from the band bottom up to E_F.\nenergies = np.linspace(-0.5, 0.0, 6)\n\nfig, axes = plt.subplots(2, 3, figsize=(8.6, 5.8))\nfor ax, Eb in zip(axes.ravel(), energies):\n    # CE slice: Lorentzian of (Eb - E(k)) -> a ring where the band crosses Eb.\n    ce = (gamma / np.pi) / ((Eb - band) ** 2 + gamma ** 2)\n    ce = ce / ce.max() + 0.02 * rng.random(ce.shape)\n    ax.pcolormesh(kx, ky, ce, cmap=\"inferno\", shading=\"auto\")\n    ax.set_aspect(\"equal\")\n    ax.set_title(r\"$E - E_F = %.2f$ eV\" % Eb, fontsize=9)\n    ax.set_xlabel(r\"$k_x$ (1/$\\AA$)\", fontsize=8)\n    ax.set_ylabel(r\"$k_y$ (1/$\\AA$)\", fontsize=8)\n    ax.tick_params(labelsize=7)\n\nfig.suptitle(\"Constant-energy map stack\")\nfig.tight_layout()\nfig\n"
+  }
+ ]
+}

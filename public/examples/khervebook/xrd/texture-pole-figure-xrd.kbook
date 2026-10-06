@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Texture pole figure\n\nIn a textured polycrystal the grains are **not** randomly oriented — some\ncrystal directions line up preferentially (think rolled metal sheet). A\n**pole figure** maps this: for a chosen reflection it plots the diffracted\nintensity as a function of sample orientation, projected\n**stereographically** onto a disc. The radial coordinate is the tilt χ\n(centre = surface normal, rim = in-plane) and the angle is the azimuth φ.\n\nA **random** powder gives a flat, featureless disc. **Preferred\norientation** shows up as bright **maxima** — poles — whose positions tell\nyou which crystallographic directions cluster along which sample\ndirections.\n\nThe cell below builds a pole figure with two intensity maxima (a typical\nfibre-plus-rolling texture) and draws it as a polar contour map.\n"
+  },
+  {
+   "type": "code",
+   "source": "\n# Texture pole figure: diffracted intensity vs sample orientation drawn as\n# a stereographic (polar) contour map.  Two intensity maxima stand for\n# preferred orientation against a weak random background.\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nrng = np.random.default_rng(0)\n\n# Polar sampling grid: phi = azimuth, chi = tilt from the surface normal.\nphi = np.radians(np.linspace(0, 360, 180))\nchi = np.radians(np.linspace(0, 90, 90))\nPHI, CHI = np.meshgrid(phi, chi)\n\n# Stereographic radius for the projection (centre = normal, rim = in-plane)\nr_proj = np.tan(CHI / 2.0)\n\n\ndef pole(phi0, chi0, width, height):\n    \"\"\"A Gaussian texture pole at azimuth phi0, tilt chi0 (degrees).\"\"\"\n    p0, c0 = np.radians(phi0), np.radians(chi0)\n    dphi = np.angle(np.exp(1j * (PHI - p0)))      # wrapped azimuth diff\n    return height * np.exp(-(dphi ** 2 + (CHI - c0) ** 2) / (2.0 * width ** 2))\n\n\n# Two preferred-orientation maxima + a faint random background.\nintensity = (1.0\n             + pole(40, 30, 0.28, 6.0)\n             + pole(220, 55, 0.32, 4.0)\n             + 0.05 * rng.random(PHI.shape))\n\nfig = plt.figure(figsize=(5.4, 4.6))\nax = fig.add_subplot(111, projection=\"polar\")\npm = ax.contourf(PHI, r_proj, intensity, levels=24, cmap=\"inferno\")\nax.set_yticklabels([])                             # radius = stereographic\nax.set_title(r\"(111) pole figure - preferred orientation\", pad=16)\nfig.colorbar(pm, ax=ax, label=\"intensity (arb.)\", pad=0.10, shrink=0.8)\nfig.tight_layout()\nfig\n"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Galton Board\n2000 balls, 12 rows of pegs — the binomial settles into a bell curve."
+  },
+  {
+   "type": "code",
+   "source": "rng = np.random.default_rng(1)\nrows, balls = 12, 2000\nbins = rng.integers(0, 2, (balls, rows)).sum(axis=1)\nfrom scipy.stats import binom\nk = np.arange(rows + 1)\nfig, ax = plt.subplots()\nax.hist(bins, bins=np.arange(rows + 2) - 0.5,\n        rwidth=0.85, label='balls')\nax.plot(k, balls * binom.pmf(k, rows, 0.5), 'ro-',\n        label='binomial')\nax.set_xlabel('bin'); ax.legend()\nfig"
+  }
+ ]
+}

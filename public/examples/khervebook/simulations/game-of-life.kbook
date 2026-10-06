@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Game of Life\nConway's automaton on a 60×60 torus, one generation per frame. Stop with the red button."
+  },
+  {
+   "type": "code",
+   "source": "# Game of Life — runs continuously\nif 'life' not in globals():\n    life = (np.random.default_rng(7)\n            .random((60, 60)) < 0.25).astype(int)\n_n = sum(np.roll(np.roll(life, dr, 0), dc, 1)\n         for dr in (-1, 0, 1) for dc in (-1, 0, 1)\n         if (dr, dc) != (0, 0))\nlife = ((_n == 3) | ((life == 1) & (_n == 2))).astype(int)\nfig, ax = plt.subplots(figsize=(4.5, 4.5))\nax.imshow(life, cmap='Greens', interpolation='nearest')\nax.set_xticks([]); ax.set_yticks([])\nfig"
+  }
+ ]
+}

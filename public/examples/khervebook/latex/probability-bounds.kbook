@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Probability & Inequalities\nBayes' theorem updates a belief in light of evidence; the Cauchy-Schwarz inequality bounds an inner product by the product of norms."
+  },
+  {
+   "type": "latex",
+   "source": "P(A \\mid B) = \\frac{P(B \\mid A)\\, P(A)}{P(B)}"
+  },
+  {
+   "type": "latex",
+   "source": "\\left| \\langle x, y \\rangle \\right| \\leq \\|x\\|\\, \\|y\\|"
+  }
+ ]
+}

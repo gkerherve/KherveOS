@@ -1,0 +1,22 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Grade Book\nStudent scores with an `=AVERAGE(...)` per row."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Grades\", \"rows\": 11, \"cols\": 8, \"data\": {\"A1\": \"Student\", \"B1\": \"HW1\", \"C1\": \"HW2\", \"D1\": \"HW3\", \"E1\": \"Midterm\", \"F1\": \"Final\", \"G1\": \"Average\", \"H1\": \"Grade\", \"A2\": \"Alice\", \"B2\": \"86\", \"C2\": \"86\", \"D2\": \"84\", \"E2\": \"68\", \"F2\": \"92\", \"G2\": \"=np.mean(B2:F2)\", \"A3\": \"Bob\", \"B3\": \"93\", \"C3\": \"86\", \"D3\": \"75\", \"E3\": \"78\", \"F3\": \"45\", \"G3\": \"=np.mean(B3:F3)\", \"A4\": \"Charlie\", \"B4\": \"85\", \"C4\": \"71\", \"D4\": \"62\", \"E4\": \"83\", \"F4\": \"85\", \"G4\": \"=np.mean(B4:F4)\", \"A5\": \"Diana\", \"B5\": \"75\", \"C5\": \"54\", \"D5\": \"83\", \"E5\": \"41\", \"F5\": \"51\", \"G5\": \"=np.mean(B5:F5)\", \"A6\": \"Eve\", \"B6\": \"71\", \"C6\": \"58\", \"D6\": \"93\", \"E6\": \"67\", \"F6\": \"83\", \"G6\": \"=np.mean(B6:F6)\", \"A7\": \"Frank\", \"B7\": \"100\", \"C7\": \"41\", \"D7\": \"40\", \"E7\": \"92\", \"F7\": \"94\", \"G7\": \"=np.mean(B7:F7)\", \"A8\": \"Grace\", \"B8\": \"55\", \"C8\": \"100\", \"D8\": \"89\", \"E8\": \"58\", \"F8\": \"54\", \"G8\": \"=np.mean(B8:F8)\", \"A9\": \"Hank\", \"B9\": \"79\", \"C9\": \"86\", \"D9\": \"65\", \"E9\": \"58\", \"F9\": \"45\", \"G9\": \"=np.mean(B9:F9)\", \"A10\": \"Ivy\", \"B10\": \"98\", \"C10\": \"82\", \"D10\": \"100\", \"E10\": \"65\", \"F10\": \"48\", \"G10\": \"=np.mean(B10:F10)\", \"A11\": \"Jack\", \"B11\": \"89\", \"C11\": \"87\", \"D11\": \"75\", \"E11\": \"42\", \"F11\": \"41\", \"G11\": \"=np.mean(B11:F11)\"}}], \"active\": \"Grades\"}"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Grade Book\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><polygon points=\"120,42 202,74 120,106 38,74\" fill=\"#3776ab\"/><path d=\"M72 90 V120 Q120 142 168 120 V90\" fill=\"none\" stroke=\"#3776ab\" stroke-width=\"7\"/><line x1=\"202\" y1=\"74\" x2=\"202\" y2=\"116\" stroke=\"#e07b39\" stroke-width=\"3\"/><circle cx=\"202\" cy=\"120\" r=\"7\" fill=\"#e07b39\"/></svg>"
+  }
+ ]
+}

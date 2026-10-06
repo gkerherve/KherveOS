@@ -1,0 +1,22 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Three Famous Results\nEuler's identity ties together five fundamental constants; Einstein's mass-energy relation; and the Gaussian integral, a cornerstone of probability and statistical mechanics."
+  },
+  {
+   "type": "latex",
+   "source": "e^{i\\pi} + 1 = 0"
+  },
+  {
+   "type": "latex",
+   "source": "E^2 = (pc)^2 + (m c^2)^2"
+  },
+  {
+   "type": "latex",
+   "source": "\\int_{-\\infty}^{\\infty} e^{-x^2}\\, dx = \\sqrt{\\pi}"
+  }
+ ]
+}

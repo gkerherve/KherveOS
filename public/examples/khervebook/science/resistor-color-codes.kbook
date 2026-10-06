@@ -1,0 +1,22 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Resistor Color Codes\nFour-band resistor colours decoded to resistance."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Resistors\", \"rows\": 11, \"cols\": 5, \"data\": {\"A1\": \"Band 1\", \"B1\": \"Band 2\", \"C1\": \"Multiplier\", \"D1\": \"Value (Ohm)\", \"E1\": \"Tolerance\", \"A2\": \"Red\", \"B2\": \"Red\", \"C2\": \"Orange\", \"D2\": \"22.0k\", \"E2\": \"+/-5%\", \"A3\": \"Brown\", \"B3\": \"Black\", \"C3\": \"Red\", \"D3\": \"1.0k\", \"E3\": \"+/-5%\", \"A4\": \"Yellow\", \"B4\": \"Violet\", \"C4\": \"Brown\", \"D4\": \"470\", \"E4\": \"+/-5%\", \"A5\": \"Green\", \"B5\": \"Blue\", \"C5\": \"Black\", \"D5\": \"56\", \"E5\": \"+/-5%\", \"A6\": \"Brown\", \"B6\": \"Black\", \"C6\": \"Yellow\", \"D6\": \"100.0k\", \"E6\": \"+/-5%\", \"A7\": \"Orange\", \"B7\": \"Orange\", \"C7\": \"Red\", \"D7\": \"3.3k\", \"E7\": \"+/-5%\", \"A8\": \"Blue\", \"B8\": \"Grey\", \"C8\": \"Brown\", \"D8\": \"680\", \"E8\": \"+/-5%\", \"A9\": \"Red\", \"B9\": \"Violet\", \"C9\": \"Orange\", \"D9\": \"27.0k\", \"E9\": \"+/-5%\", \"A10\": \"Brown\", \"B10\": \"Green\", \"C10\": \"Orange\", \"D10\": \"15.0k\", \"E10\": \"+/-5%\", \"A11\": \"Yellow\", \"B11\": \"Violet\", \"C11\": \"Red\", \"D11\": \"4.7k\", \"E11\": \"+/-5%\"}}], \"active\": \"Resistors\"}"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Resistor Color Codes\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><g fill=\"none\" stroke=\"#3776ab\" stroke-width=\"3\"><ellipse cx=\"120\" cy=\"75\" rx=\"72\" ry=\"28\"/><ellipse cx=\"120\" cy=\"75\" rx=\"72\" ry=\"28\" transform=\"rotate(60 120 75)\"/><ellipse cx=\"120\" cy=\"75\" rx=\"72\" ry=\"28\" transform=\"rotate(120 120 75)\"/></g><circle cx=\"120\" cy=\"75\" r=\"11\" fill=\"#e07b39\"/><circle cx=\"192\" cy=\"75\" r=\"5\" fill=\"#3776ab\"/></svg>"
+  }
+ ]
+}

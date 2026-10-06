@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Damped Oscillator\nIntegrating the equation of motion with `scipy.integrate.solve_ivp`:"
+  },
+  {
+   "type": "latex",
+   "source": "\\ddot{x} + 2\\zeta\\omega_0\\,\\dot{x} + \\omega_0^2\\,x = 0"
+  },
+  {
+   "type": "code",
+   "source": "from scipy.integrate import solve_ivp\nw0, zeta = 2 * np.pi, 0.1\ndef rhs(t, s):\n    x, v = s\n    return [v, -2 * zeta * w0 * v - w0**2 * x]\nsol = solve_ivp(rhs, [0, 5], [1, 0], dense_output=True)\nt = np.linspace(0, 5, 400)\nfig, ax = plt.subplots()\nax.plot(t, sol.sol(t)[0])\nax.set_xlabel('t (s)'); ax.set_ylabel('x')\nax.grid(True)\nfig"
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Logistic Population Growth\nGrowth limited by carrying capacity K, for several starting points."
+  },
+  {
+   "type": "latex",
+   "source": "\\frac{dN}{dt} = r N \\left(1 - \\frac{N}{K}\\right)"
+  },
+  {
+   "type": "code",
+   "source": "r, K = 0.6, 1000\nt = np.linspace(0, 15, 300)\nfig, ax = plt.subplots()\nfor N0 in (10, 100, 600, 1500):\n    N = K / (1 + (K - N0) / N0 * np.exp(-r * t))\n    ax.plot(t, N, label=f'N0 = {N0}')\nax.axhline(K, ls=':', color='gray')\nax.set_xlabel('t'); ax.set_ylabel('N')\nax.legend(); ax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

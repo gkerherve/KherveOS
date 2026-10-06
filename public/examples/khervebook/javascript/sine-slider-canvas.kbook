@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Interactive Sine Slider\nA `<input type=range>` slider wired to a `<canvas>`: drag it to change the frequency of the sine wave, redrawn live. Self-contained — no network needed."
+  },
+  {
+   "type": "js",
+   "source": "<div style=\"font-family:system-ui,Arial,sans-serif\">\n  <label>Frequency:\n    <input id=\"freq\" type=\"range\" min=\"1\" max=\"20\" value=\"5\" step=\"1\">\n  </label>\n  <span id=\"val\">5</span> Hz\n</div>\n<canvas id=\"wave\" width=\"440\" height=\"220\"\n        style=\"border:1px solid #ccc;border-radius:6px;margin-top:6px\"></canvas>\n<script>\nconst cv = document.getElementById(\"wave\");\nconst ctx = cv.getContext(\"2d\");\nconst W = cv.width, H = cv.height;\nconst slider = document.getElementById(\"freq\");\nconst label = document.getElementById(\"val\");\nfunction draw() {\n    const f = +slider.value;\n    label.textContent = f;\n    ctx.clearRect(0, 0, W, H);\n    ctx.strokeStyle = \"#eee\";\n    ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();\n    ctx.strokeStyle = \"#3776ab\";\n    ctx.lineWidth = 2;\n    ctx.beginPath();\n    for (let x = 0; x <= W; x++) {\n        const y = H / 2 - (H / 2 - 12) * Math.sin(2 * Math.PI * f * x / W);\n        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);\n    }\n    ctx.stroke();\n}\nslider.addEventListener(\"input\", draw);\ndraw();\n</script>"
+  }
+ ]
+}

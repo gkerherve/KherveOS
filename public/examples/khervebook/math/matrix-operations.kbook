@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Matrix Operations\nEigenvalues, inverse and a linear solve with `np.linalg`."
+  },
+  {
+   "type": "code",
+   "source": "A = np.array([[4., 2., 0.], [2., 5., 1.], [0., 1., 3.]])\nb = np.array([2., 1., 4.])\nprint('det  =', np.linalg.det(A).round(3))\nprint('eig  =', np.linalg.eigvalsh(A).round(3))\nprint('x    =', np.linalg.solve(A, b).round(3))\nnp.linalg.inv(A).round(3)"
+  }
+ ]
+}

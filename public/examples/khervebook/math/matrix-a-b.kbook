@@ -1,0 +1,26 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Matrix A + B\nTwo 3x3 matrices and their element-wise sum."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Matrix\", \"rows\": 15, \"cols\": 4, \"data\": {\"B1\": \"C1\", \"C1\": \"C2\", \"D1\": \"C3\", \"A2\": \"Matrix A\", \"B3\": \"1\", \"C3\": \"2\", \"D3\": \"3\", \"B4\": \"4\", \"C4\": \"5\", \"D4\": \"6\", \"B5\": \"7\", \"C5\": \"8\", \"D5\": \"9\", \"A7\": \"Matrix B\", \"B8\": \"9\", \"C8\": \"8\", \"D8\": \"7\", \"B9\": \"6\", \"C9\": \"5\", \"D9\": \"4\", \"B10\": \"3\", \"C10\": \"2\", \"D10\": \"1\", \"A12\": \"A + B\", \"B13\": \"10\", \"C13\": \"10\", \"D13\": \"10\", \"B14\": \"10\", \"C14\": \"10\", \"D14\": \"10\", \"B15\": \"10\", \"C15\": \"10\", \"D15\": \"10\"}}], \"active\": \"Matrix\"}"
+  },
+  {
+   "type": "latex",
+   "source": "(A + B)_{ij} = A_{ij} + B_{ij}"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Matrix A + B\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><polyline points=\"156,42 64,42 110,90 64,138 156,138\" fill=\"none\" stroke=\"#3776ab\" stroke-width=\"10\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"120,124 150,78 178,104 208,58\" fill=\"none\" stroke=\"#e07b39\" stroke-width=\"4\" stroke-linecap=\"round\"/></svg>"
+  }
+ ]
+}

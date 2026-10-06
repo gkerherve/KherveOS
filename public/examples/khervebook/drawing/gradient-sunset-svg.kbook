@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Gradient Sunset\nLayered linear and radial gradients make an abstract sunset — soft sky, a glowing sun and translucent hills."
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 480 320\" width=\"480\" height=\"320\">\n  <defs>\n    <linearGradient id=\"sky\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0\"   stop-color=\"#1b2a4a\"/>\n      <stop offset=\"0.55\" stop-color=\"#3776ab\"/>\n      <stop offset=\"0.78\" stop-color=\"#e07b39\"/>\n      <stop offset=\"1\"   stop-color=\"#ffd9a8\"/>\n    </linearGradient>\n    <radialGradient id=\"sun\" cx=\"50%\" cy=\"50%\" r=\"50%\">\n      <stop offset=\"0\"   stop-color=\"#fff6e0\"/>\n      <stop offset=\"0.5\" stop-color=\"#ffd27f\"/>\n      <stop offset=\"1\"   stop-color=\"#e07b39\" stop-opacity=\"0\"/>\n    </radialGradient>\n    <linearGradient id=\"sea\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n      <stop offset=\"0\" stop-color=\"#0d3b66\"/>\n      <stop offset=\"1\" stop-color=\"#04111f\"/>\n    </linearGradient>\n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"480\" height=\"200\" fill=\"url(#sky)\"/>\n  <circle cx=\"240\" cy=\"170\" r=\"120\" fill=\"url(#sun)\"/>\n  <circle cx=\"240\" cy=\"148\" r=\"46\" fill=\"#fff1d0\"/>\n  <rect x=\"0\" y=\"200\" width=\"480\" height=\"120\" fill=\"url(#sea)\"/>\n  <!-- rolling hills as translucent layers -->\n  <path d=\"M0 210 Q120 178 240 206 T480 200 V320 H0 Z\"\n        fill=\"#3776ab\" opacity=\"0.55\"/>\n  <path d=\"M0 232 Q140 204 280 230 T480 224 V320 H0 Z\"\n        fill=\"#27506f\" opacity=\"0.7\"/>\n  <path d=\"M0 258 Q160 236 320 258 T480 250 V320 H0 Z\"\n        fill=\"#16344a\"/>\n  <!-- sun reflection on the water -->\n  <g fill=\"#ffe0a3\" opacity=\"0.5\">\n    <rect x=\"225\" y=\"212\" width=\"30\" height=\"5\" rx=\"2\"/>\n    <rect x=\"220\" y=\"226\" width=\"40\" height=\"5\" rx=\"2\"/>\n    <rect x=\"214\" y=\"242\" width=\"52\" height=\"5\" rx=\"2\"/>\n  </g>\n</svg>"
+  }
+ ]
+}

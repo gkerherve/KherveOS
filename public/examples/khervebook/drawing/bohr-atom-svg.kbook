@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Bohr Atom\nA labelled scientific diagram drawn entirely in static SVG — nested orbital shells, a gradient nucleus and electrons."
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 460 360\" width=\"460\" height=\"360\">\n  <defs>\n    <radialGradient id=\"bohrBg\" cx=\"50%\" cy=\"42%\" r=\"75%\">\n      <stop offset=\"0\" stop-color=\"#10243a\"/>\n      <stop offset=\"1\" stop-color=\"#04101d\"/>\n    </radialGradient>\n    <radialGradient id=\"nucleus\" cx=\"38%\" cy=\"34%\" r=\"70%\">\n      <stop offset=\"0\" stop-color=\"#ffd9a8\"/>\n      <stop offset=\"0.45\" stop-color=\"#e07b39\"/>\n      <stop offset=\"1\" stop-color=\"#9c4a16\"/>\n    </radialGradient>\n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"460\" height=\"360\" fill=\"url(#bohrBg)\"/>\n  <g fill=\"none\" stroke=\"#5b8fc0\" stroke-width=\"1.5\">\n    <ellipse cx=\"230\" cy=\"170\" rx=\"70\"  ry=\"70\"  opacity=\"0.85\"/>\n    <ellipse cx=\"230\" cy=\"170\" rx=\"120\" ry=\"120\" opacity=\"0.6\"/>\n    <ellipse cx=\"230\" cy=\"170\" rx=\"170\" ry=\"120\" opacity=\"0.45\"\n             transform=\"rotate(35 230 170)\"/>\n  </g>\n  <!-- nucleus -->\n  <circle cx=\"230\" cy=\"170\" r=\"26\" fill=\"url(#nucleus)\"/>\n  <text x=\"230\" y=\"176\" font-family=\"sans-serif\" font-size=\"16\"\n        font-weight=\"bold\" fill=\"#3a1a06\" text-anchor=\"middle\">+</text>\n  <!-- electrons on the shells -->\n  <g fill=\"#9fd0ff\" stroke=\"#3776ab\" stroke-width=\"1.5\">\n    <circle cx=\"300\" cy=\"170\" r=\"8\"/>\n    <circle cx=\"143\" cy=\"252\" r=\"8\"/>\n    <circle cx=\"148\" cy=\"105\" r=\"8\"/>\n    <circle cx=\"372\" cy=\"116\" r=\"8\"/>\n  </g>\n  <!-- labels -->\n  <g font-family=\"sans-serif\" fill=\"#dce8f5\">\n    <text x=\"230\" y=\"330\" font-size=\"20\" font-weight=\"bold\"\n          text-anchor=\"middle\">Bohr model of the atom</text>\n    <text x=\"306\" y=\"160\" font-size=\"12\" fill=\"#9fd0ff\">e&#8315;</text>\n    <text x=\"252\" y=\"172\" font-size=\"12\" fill=\"#ffd9a8\">nucleus</text>\n  </g>\n  <!-- leader line + shell labels -->\n  <line x1=\"300\" y1=\"240\" x2=\"356\" y2=\"282\" stroke=\"#5b8fc0\"\n        stroke-width=\"1\" stroke-dasharray=\"3 3\"/>\n  <text x=\"360\" y=\"286\" font-family=\"sans-serif\" font-size=\"12\"\n        fill=\"#dce8f5\">n = 1, 2, 3 shells</text>\n</svg>"
+  }
+ ]
+}

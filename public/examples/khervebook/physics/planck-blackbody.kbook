@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Planck Blackbody\nSpectral radiance at several temperatures, with Wien's-law peaks marked."
+  },
+  {
+   "type": "code",
+   "source": "from scipy import constants as C\nlam = np.linspace(0.05e-6, 4e-6, 600)\nfig, ax = plt.subplots()\nfor T in (3000, 4500, 6000):\n    B = (2 * C.h * C.c**2 / lam**5\n         / (np.exp(C.h * C.c / (lam * C.k * T)) - 1))\n    ax.plot(lam * 1e6, B, label=f'{T} K')\n    lp = 2.897771955e-3 / T\n    ax.axvline(lp * 1e6, ls=':', color='gray', alpha=0.6)\nax.set_xlabel('wavelength (µm)')\nax.set_ylabel('spectral radiance')\nax.legend(); ax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

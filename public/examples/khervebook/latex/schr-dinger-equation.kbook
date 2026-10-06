@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# The Schrödinger Equation\nThe time-dependent Schrödinger equation governs how a quantum state evolves, alongside its time-independent eigenvalue form."
+  },
+  {
+   "type": "latex",
+   "source": "i\\hbar\\frac{\\partial}{\\partial t}\\Psi = -\\frac{\\hbar^2}{2m}\\nabla^2\\Psi + V\\Psi"
+  },
+  {
+   "type": "latex",
+   "source": "\\hat{H}\\psi = E\\psi"
+  }
+ ]
+}

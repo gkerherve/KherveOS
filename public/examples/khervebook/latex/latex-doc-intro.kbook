@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# LaTeX Document — Intro\nA **latex cell** can hold a whole LaTeX document, not just one equation. With the `tectonic` engine it typesets real pages; otherwise it falls back to a formatted text view. Double-click the rendered page to edit the source."
+  },
+  {
+   "type": "latex",
+   "source": "\\documentclass[12pt]{article}\n\\usepackage{amsmath, amssymb}\n\\title{\\textbf{Writing with LaTeX cells}}\n\\author{KherveBook}\n\\date{}\n\\begin{document}\n\\maketitle\n\n\\section*{What a document cell does}\nA \\textbf{latex cell} that holds a full document --- one that begins\nwith \\texttt{documentclass} and \\texttt{begin document} --- is typeset\nby the LaTeX engine and shown as finished pages. Without the engine\ninstalled, KherveBook falls back to a lightweight reader that still\nformats the prose. Double-click the rendered view to edit the source,\nthen run with Shift+Enter to refresh.\n\n\\section*{Formatting prose}\nText can be \\textbf{bold}, \\textit{italic}, \\underline{underlined} or\n\\texttt{monospaced}. Use \\texttt{section*} for unnumbered headings like\nthese, or \\texttt{section} when you want them numbered. Inline\nmathematics sits between dollar signs: the area of a circle is\n$A = \\pi r^2$, energy and mass relate through $E = mc^2$, and a wave\nhas frequency $f = 1 / T$.\n\n\\section*{When to reach for it}\nUse document cells for explanatory write-ups, derivations and notes\nthat mix headings, paragraphs and a little inline math --- the prose\ncompanions to your code and equation cells.\n\\end{document}"
+  }
+ ]
+}

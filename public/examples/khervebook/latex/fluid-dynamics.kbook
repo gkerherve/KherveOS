@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Fluid Dynamics\nThe Navier-Stokes momentum equation for an incompressible viscous fluid, with the continuity equation expressing conservation of mass."
+  },
+  {
+   "type": "latex",
+   "source": "\\rho\\left(\\frac{\\partial \\vec{u}}{\\partial t} + \\vec{u}\\cdot\\nabla\\vec{u}\\right) = -\\nabla p + \\mu \\nabla^2 \\vec{u} + \\vec{f}"
+  },
+  {
+   "type": "latex",
+   "source": "\\frac{\\partial \\rho}{\\partial t} + \\nabla \\cdot (\\rho \\vec{u}) = 0"
+  }
+ ]
+}

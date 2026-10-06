@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Value at Risk\nHistorical-simulation VaR of a synthetic returns series."
+  },
+  {
+   "type": "code",
+   "source": "rng = np.random.default_rng(11)\nreturns = rng.standard_t(4, 2500) * 0.01\nvar95 = -np.percentile(returns, 5)\nvar99 = -np.percentile(returns, 1)\nprint(f'1-day VaR 95%: {var95:.2%}')\nprint(f'1-day VaR 99%: {var99:.2%}')\nfig, ax = plt.subplots()\nax.hist(returns, bins=80, density=True)\nax.axvline(-var95, color='orange', label='VaR 95%')\nax.axvline(-var99, color='red', label='VaR 99%')\nax.legend(); ax.set_xlabel('daily return')\nfig"
+  }
+ ]
+}

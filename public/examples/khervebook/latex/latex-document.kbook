@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# LaTeX document\nA **latex cell** compiles a whole LaTeX document with the tectonic engine and shows the typeset result. Double-click the rendered page to edit the source; the LaTeX toolbar (Section / Format / List·Env) inserts the building blocks. Run (Shift+Enter) to re-compile."
+  },
+  {
+   "type": "latex",
+   "source": "\\documentclass[12pt]{article}\n\\usepackage{amsmath, amssymb}\n\\usepackage[normalem]{ulem}\n\\title{\\textbf{A LaTeX document in KherveBook}}\n\\author{Compiled with the real LaTeX engine}\n\\date{}\n\\begin{document}\n\\maketitle\n\n\\section*{Unnumbered sections}\nA latex cell compiles a full LaTeX document and shows the typeset\npages. Use \\texttt{\\textbackslash section*} for sections with no\nnumber, like this one, or \\texttt{\\textbackslash section} when you\nwant them numbered. Text can be \\textbf{bold}, \\textit{italic},\n\\underline{underlined}, \\sout{struck through} or \\texttt{monospaced},\nwith H\\textsubscript{2}O subscripts and E = mc\\textsuperscript{2}.\n\n\\section*{Equations}\nInline math such as $E = mc^2$, and displayed equations, numbered:\n\\begin{equation}\n\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}\n\\end{equation}\nor aligned over several lines:\n\\begin{align*}\n(a+b)^2 &= a^2 + 2ab + b^2 \\\\\n\\nabla \\cdot \\mathbf{E} &= \\frac{\\rho}{\\varepsilon_0}\n\\end{align*}\n\n\\section*{Numbered items}\n\\begin{enumerate}\n  \\item Sections, numbered or not.\n  \\item Itemised and enumerated lists.\n  \\item Tables, figures, theorems --- anything LaTeX can typeset.\n\\end{enumerate}\n\\end{document}"
+  }
+ ]
+}

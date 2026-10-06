@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Tiling Pattern\nTwo `<pattern>` definitions — a hexagon lattice and a polka-dot fill — repeated across shapes via `fill=\"url(#id)\"`."
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 420 360\" width=\"420\" height=\"360\">\n  <defs>\n    <pattern id=\"trihex\" width=\"60\" height=\"52\" patternUnits=\"userSpaceOnUse\">\n      <rect width=\"60\" height=\"52\" fill=\"#f4f7fb\"/>\n      <polygon points=\"30,2 58,18 58,50 30,52 2,50 2,18\"\n               fill=\"none\" stroke=\"#3776ab\" stroke-width=\"1.4\"/>\n      <line x1=\"30\" y1=\"2\"  x2=\"30\" y2=\"26\" stroke=\"#e07b39\" stroke-width=\"1\"/>\n      <line x1=\"58\" y1=\"18\" x2=\"30\" y2=\"26\" stroke=\"#e07b39\" stroke-width=\"1\"/>\n      <line x1=\"2\"  y1=\"18\" x2=\"30\" y2=\"26\" stroke=\"#e07b39\" stroke-width=\"1\"/>\n      <circle cx=\"30\" cy=\"26\" r=\"3\" fill=\"#e07b39\"/>\n    </pattern>\n    <pattern id=\"dots\" width=\"26\" height=\"26\" patternUnits=\"userSpaceOnUse\">\n      <rect width=\"26\" height=\"26\" fill=\"#ffffff\"/>\n      <circle cx=\"6\"  cy=\"6\"  r=\"3\" fill=\"#3776ab\"/>\n      <circle cx=\"19\" cy=\"19\" r=\"3\" fill=\"#e07b39\"/>\n    </pattern>\n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"420\" height=\"360\" fill=\"url(#dots)\"/>\n  <rect x=\"30\" y=\"30\" width=\"360\" height=\"220\" rx=\"10\"\n        fill=\"url(#trihex)\" stroke=\"#2e3440\" stroke-width=\"2\"/>\n  <text x=\"210\" y=\"300\" font-family=\"sans-serif\" font-size=\"20\"\n        font-weight=\"bold\" fill=\"#2e3440\" text-anchor=\"middle\">Tiling with &lt;pattern&gt;</text>\n  <text x=\"210\" y=\"326\" font-family=\"sans-serif\" font-size=\"13\"\n        fill=\"#52606d\" text-anchor=\"middle\">a repeating tile fills the panel; dots fill the page</text>\n</svg>"
+  }
+ ]
+}

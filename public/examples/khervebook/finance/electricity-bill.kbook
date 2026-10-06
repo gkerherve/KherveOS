@@ -1,0 +1,22 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Electricity Bill\nMonthly usage x rate + base charge, summed for the year."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Electric\", \"rows\": 14, \"cols\": 5, \"data\": {\"A1\": \"Month\", \"B1\": \"kWh Used\", \"C1\": \"Rate ($/kWh)\", \"D1\": \"Base Charge\", \"E1\": \"Total Bill\", \"A2\": \"Jan\", \"B2\": \"677\", \"C2\": \"0.12\", \"D2\": \"15.00\", \"E2\": \"=B2*C2+D2\", \"A3\": \"Feb\", \"B3\": \"575\", \"C3\": \"0.12\", \"D3\": \"15.00\", \"E3\": \"=B3*C3+D3\", \"A4\": \"Mar\", \"B4\": \"365\", \"C4\": \"0.12\", \"D4\": \"15.00\", \"E4\": \"=B4*C4+D4\", \"A5\": \"Apr\", \"B5\": \"340\", \"C5\": \"0.12\", \"D5\": \"15.00\", \"E5\": \"=B5*C5+D5\", \"A6\": \"May\", \"B6\": \"377\", \"C6\": \"0.12\", \"D6\": \"15.00\", \"E6\": \"=B6*C6+D6\", \"A7\": \"Jun\", \"B7\": \"840\", \"C7\": \"0.12\", \"D7\": \"15.00\", \"E7\": \"=B7*C7+D7\", \"A8\": \"Jul\", \"B8\": \"344\", \"C8\": \"0.12\", \"D8\": \"15.00\", \"E8\": \"=B8*C8+D8\", \"A9\": \"Aug\", \"B9\": \"867\", \"C9\": \"0.12\", \"D9\": \"15.00\", \"E9\": \"=B9*C9+D9\", \"A10\": \"Sep\", \"B10\": \"622\", \"C10\": \"0.12\", \"D10\": \"15.00\", \"E10\": \"=B10*C10+D10\", \"A11\": \"Oct\", \"B11\": \"675\", \"C11\": \"0.12\", \"D11\": \"15.00\", \"E11\": \"=B11*C11+D11\", \"A12\": \"Nov\", \"B12\": \"615\", \"C12\": \"0.12\", \"D12\": \"15.00\", \"E12\": \"=B12*C12+D12\", \"A13\": \"Dec\", \"B13\": \"714\", \"C13\": \"0.12\", \"D13\": \"15.00\", \"E13\": \"=B13*C13+D13\", \"A14\": \"Total\", \"B14\": \"=sum(B2:B13)\", \"E14\": \"=sum(E2:E13)\"}}], \"active\": \"Electric\"}"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Electricity Bill\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><g stroke=\"#2b6cb0\" stroke-width=\"2\"><ellipse cx=\"80\" cy=\"112\" rx=\"46\" ry=\"15\" fill=\"#3776ab\"/><ellipse cx=\"80\" cy=\"92\" rx=\"46\" ry=\"15\" fill=\"#4a8fd0\"/><ellipse cx=\"80\" cy=\"72\" rx=\"46\" ry=\"15\" fill=\"#5fa0dd\"/></g><g fill=\"none\" stroke=\"#e07b39\" stroke-width=\"7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M158 118 V52\"/><path d=\"M136 74 L158 50 L180 74\"/></g></svg>"
+  }
+ ]
+}

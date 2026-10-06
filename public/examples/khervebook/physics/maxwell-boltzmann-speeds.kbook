@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Maxwell–Boltzmann Speeds\nSpeed distribution of a gas at three temperatures:"
+  },
+  {
+   "type": "latex",
+   "source": "f(v) = 4\\pi \\left(\\frac{m}{2\\pi k T}\\right)^{3/2} v^2 e^{-m v^2 / 2 k T}"
+  },
+  {
+   "type": "code",
+   "source": "from scipy import constants as C\nm = 28 * C.atomic_mass            # N2\nv = np.linspace(0, 1500, 400)\nfig, ax = plt.subplots()\nfor T in (100, 300, 700):\n    f = (4 * np.pi * (m / (2 * np.pi * C.k * T))**1.5\n         * v**2 * np.exp(-m * v**2 / (2 * C.k * T)))\n    ax.plot(v, f, label=f'{T} K')\nax.set_xlabel('speed (m/s)'); ax.set_ylabel('f(v)')\nax.legend(); ax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

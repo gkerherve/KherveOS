@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Predator–Prey (Lotka–Volterra)\nCoupled oscillations of rabbits and foxes."
+  },
+  {
+   "type": "latex",
+   "source": "\\dot{x} = \\alpha x - \\beta x y \\qquad \\dot{y} = \\delta x y - \\gamma y"
+  },
+  {
+   "type": "code",
+   "source": "from scipy.integrate import solve_ivp\na, b, d, g = 1.1, 0.4, 0.1, 0.4\nsol = solve_ivp(lambda t, s: [a*s[0] - b*s[0]*s[1],\n                              d*s[0]*s[1] - g*s[1]],\n                [0, 50], [10, 5], dense_output=True)\nt = np.linspace(0, 50, 600)\nx, y = sol.sol(t)\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(8, 3.4))\na1.plot(t, x, label='prey'); a1.plot(t, y, label='predator')\na1.set_xlabel('t'); a1.legend(); a1.grid(alpha=0.3)\na2.plot(x, y, lw=0.8); a2.set_xlabel('prey')\na2.set_ylabel('predator'); a2.grid(alpha=0.3)\nfig.tight_layout()\nfig"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# three.js Spinning Cube\nA lit, rotating 3D cube rendered with **three.js** and WebGL. *Needs internet*: three.js is loaded from `cdn.jsdelivr.net`."
+  },
+  {
+   "type": "js",
+   "source": "<div id=\"box\" style=\"width:440px;height:320px\"></div>\n<script src=\"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js\"></script>\n<script>\nwindow.addEventListener(\"load\", function () {\n    const mount = document.getElementById(\"box\");\n    const W = 440, H = 320;\n    const scene = new THREE.Scene();\n    scene.background = new THREE.Color(0xf4f7fb);\n    const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 100);\n    camera.position.z = 4;\n    const renderer = new THREE.WebGLRenderer({ antialias: true });\n    renderer.setSize(W, H);\n    mount.appendChild(renderer.domElement);\n    const cube = new THREE.Mesh(\n        new THREE.BoxGeometry(1.6, 1.6, 1.6),\n        new THREE.MeshStandardMaterial({ color: 0x3776ab })\n    );\n    scene.add(cube);\n    const light = new THREE.DirectionalLight(0xffffff, 1.4);\n    light.position.set(3, 4, 5);\n    scene.add(light, new THREE.AmbientLight(0xe07b39, 0.5));\n    function animate() {\n        requestAnimationFrame(animate);\n        cube.rotation.x += 0.012;\n        cube.rotation.y += 0.016;\n        renderer.render(scene, camera);\n    }\n    animate();\n});\n</script>"
+  }
+ ]
+}

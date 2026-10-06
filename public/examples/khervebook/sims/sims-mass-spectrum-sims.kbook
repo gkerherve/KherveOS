@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# SIMS mass spectrum\n\nA **SIMS mass spectrum** plots secondary-ion intensity versus\n**mass-to-charge ratio** *m/z*. Each element appears as a cluster of peaks\nwhose pattern is fixed by the **natural isotope abundances**, so the\nfingerprint identifies the species. Boron is the textbook case: it has two\nstable isotopes, **10B (~19.9%)** and **11B (~80.1%)**, so its doublet\nshows a ~4:1 height ratio. Heavier matrix and cluster ions (here Si and\nSi2) sit at higher *m/z*.\n\nWith [`pySPM`](https://github.com/scholi/pySPM) the calibrated spectrum\nand its peaks come straight from the file:\n\n```python\nimport pySPM\nita = pySPM.ITA(\"sample.ita\")\nmasses, spectrum = ita.get_spectrum()      # calibrated m/z axis\nita.show_masses()                          # list assigned peaks\n```\n\nInstall it with `pip install pySPM`. The cell below builds a synthetic\nspectrum with correct B isotope ratios and labels the key peaks.\n"
+  },
+  {
+   "type": "code",
+   "source": "\n# Synthetic SIMS mass spectrum with correct isotope patterns.\n# Boron doublet (10B ~19.9%, 11B ~80.1%) plus Si and Si2 cluster peaks.\n# With pySPM this is ITA.get_spectrum(); here it is synthesised so the\n# example always runs. Drawn as a stem plot of intensity vs m/z.\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nrng = np.random.default_rng(0)\n\n# (m/z, relative intensity, label) for each secondary-ion peak.\npeaks = [\n    (10.0, 0.199, r\"$^{10}$B\"),     # boron-10\n    (11.0, 0.801, r\"$^{11}$B\"),     # boron-11\n    (28.0, 1.000, r\"$^{28}$Si\"),    # silicon-28 (matrix)\n    (29.0, 0.051, r\"$^{29}$Si\"),    # silicon-29\n    (56.0, 0.300, r\"Si$_2$\"),       # silicon dimer cluster\n]\nmz = np.array([p[0] for p in peaks])\ninten = np.array([p[1] for p in peaks])\ninten = inten * rng.lognormal(mean=0.0, sigma=0.02, size=inten.size)\n\nfig, ax = plt.subplots(figsize=(6.2, 4.2))\nmarkerline, stemlines, baseline = ax.stem(mz, inten, basefmt=\" \")\nplt.setp(stemlines, color=\"#3776ab\", linewidth=1.8)\nplt.setp(markerline, color=\"#3776ab\", markersize=5)\nfor (m, _, lab), y in zip(peaks, inten):\n    ax.annotate(lab, xy=(m, y), xytext=(0, 4),\n                textcoords=\"offset points\", ha=\"center\",\n                fontsize=9, color=\"#e07b39\")\nax.set_xlabel(r\"$m/z$\")\nax.set_ylabel(r\"intensity (arb.)\")\nax.set_title(\"SIMS mass spectrum (B-doped Si)\")\nax.set_xlim(5.0, 62.0)\nax.set_ylim(0.0, inten.max() * 1.18)\nfig.text(0.01, 0.005, \"synthetic spectrum (pip install pySPM)\",\n         fontsize=7, color=\"0.45\")\nfig.tight_layout()\nfig\n"
+  }
+ ]
+}

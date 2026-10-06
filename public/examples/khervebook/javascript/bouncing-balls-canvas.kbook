@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Bouncing Balls (canvas)\nA self-contained HTML5 `<canvas>` animation driven by `requestAnimationFrame` — 18 coloured balls bounce off the walls with a fading trail. No network needed; everything runs in the cell's web view."
+  },
+  {
+   "type": "js",
+   "source": "<canvas id=\"c\" width=\"440\" height=\"320\"\n        style=\"border:1px solid #ccc;border-radius:6px\"></canvas>\n<script>\nconst cv = document.getElementById(\"c\");\nconst ctx = cv.getContext(\"2d\");\nconst W = cv.width, H = cv.height;\nconst COLORS = [\"#3776ab\", \"#e07b39\", \"#2e7d4f\", \"#c0392b\", \"#8e44ad\"];\nconst balls = [];\nfor (let i = 0; i < 18; i++) {\n    balls.push({\n        x: Math.random() * W, y: Math.random() * H,\n        vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4,\n        r: 8 + Math.random() * 14,\n        c: COLORS[i % COLORS.length]\n    });\n}\nfunction frame() {\n    ctx.fillStyle = \"rgba(255,255,255,0.35)\";\n    ctx.fillRect(0, 0, W, H);\n    for (const b of balls) {\n        b.x += b.vx; b.y += b.vy;\n        if (b.x < b.r || b.x > W - b.r) b.vx *= -1;\n        if (b.y < b.r || b.y > H - b.r) b.vy *= -1;\n        ctx.beginPath();\n        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);\n        ctx.fillStyle = b.c;\n        ctx.fill();\n    }\n    requestAnimationFrame(frame);\n}\nframe();\n</script>"
+  }
+ ]
+}

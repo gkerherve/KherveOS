@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Stock Price Paths\nGeometric Brownian motion: 50 simulated years of daily prices."
+  },
+  {
+   "type": "latex",
+   "source": "S_{t+\\Delta t} = S_t \\exp\\left[(\\mu - \\frac{1}{2}\\sigma^2)\\Delta t + \\sigma\\sqrt{\\Delta t}\\,Z\\right]"
+  },
+  {
+   "type": "code",
+   "source": "rng = np.random.default_rng(7)\nmu, sigma, dt = 0.07, 0.2, 1 / 252\nsteps, n = 252, 50\nZ = rng.normal(size=(steps, n))\nS = 100 * np.exp(np.cumsum(\n    (mu - sigma**2 / 2) * dt + sigma * np.sqrt(dt) * Z,\n    axis=0))\nfig, ax = plt.subplots()\nax.plot(S, lw=0.7, alpha=0.6)\nax.axhline(100, color='k', ls=':')\nax.set_xlabel('trading day'); ax.set_ylabel('price')\nax.set_title(f'mean final: {S[-1].mean():.1f}')\nfig"
+  }
+ ]
+}

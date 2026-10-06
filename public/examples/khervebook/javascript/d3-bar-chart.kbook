@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# D3 Bar Chart\nA bar chart built with **D3 v7** — scales, axes and SVG rectangles, with an orange hover. *Needs internet*: D3 is loaded from `d3js.org`."
+  },
+  {
+   "type": "js",
+   "source": "<div id=\"chart\"></div>\n<script src=\"https://d3js.org/d3.v7.min.js\"></script>\n<script>\nwindow.addEventListener(\"load\", function () {\n    const data = [\n        { name: \"A\", value: 30 }, { name: \"B\", value: 80 },\n        { name: \"C\", value: 45 }, { name: \"D\", value: 60 },\n        { name: \"E\", value: 20 }, { name: \"F\", value: 90 },\n        { name: \"G\", value: 55 }\n    ];\n    const W = 480, H = 300, m = { top: 20, right: 20, bottom: 30, left: 40 };\n    const svg = d3.select(\"#chart\").append(\"svg\")\n        .attr(\"width\", W).attr(\"height\", H);\n    const x = d3.scaleBand()\n        .domain(data.map(d => d.name))\n        .range([m.left, W - m.right]).padding(0.2);\n    const y = d3.scaleLinear()\n        .domain([0, d3.max(data, d => d.value)]).nice()\n        .range([H - m.bottom, m.top]);\n    svg.append(\"g\").attr(\"transform\", `translate(0,${H - m.bottom})`)\n        .call(d3.axisBottom(x));\n    svg.append(\"g\").attr(\"transform\", `translate(${m.left},0)`)\n        .call(d3.axisLeft(y));\n    svg.selectAll(\"rect\").data(data).join(\"rect\")\n        .attr(\"x\", d => x(d.name)).attr(\"y\", d => y(d.value))\n        .attr(\"width\", x.bandwidth())\n        .attr(\"height\", d => H - m.bottom - y(d.value))\n        .attr(\"fill\", \"#3776ab\")\n        .on(\"mouseover\", function () { d3.select(this).attr(\"fill\", \"#e07b39\"); })\n        .on(\"mouseout\", function () { d3.select(this).attr(\"fill\", \"#3776ab\"); });\n});\n</script>"
+  }
+ ]
+}

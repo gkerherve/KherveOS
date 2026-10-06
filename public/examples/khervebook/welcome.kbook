@@ -1,0 +1,84 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Welcome to <span style=\"font-size:28px;color:#3776ab\">Kherve</span><span style=\"font-size:28px;color:#e07b39\">Book</span>\n\nA computational notebook: one document mixing **runnable Python**, *formatted text* and LaTeX equations — <span style=\"background-color:#fff3a0\">not just like Jupyter, but more</span>: it also embeds live spreadsheets, full typeset LaTeX documents, drawings, and imported images and PDFs in the same scrolling page.\n\n- **Code cells** run Python with `numpy`, `matplotlib`, `pandas` and `scipy` preloaded (`np`, `plt`, `pd`)\n- **Markdown cells** hold formatted notes like this one\n- **LaTeX cells** render equations\n- **Sheet cells** embed a spreadsheet, two-way linked to Python\n\nPress **Shift+Enter** to run a cell and move to the next. Double-click a rendered text cell to edit it again."
+  },
+  {
+   "type": "code",
+   "source": "# A richer matplotlib figure: four panels, one in 3D\nrng = np.random.default_rng(1)\nfig = plt.figure(figsize=(9, 6.5))\nfig.suptitle(\"One figure, four kinds of plot\", fontsize=14, weight=\"bold\")\n\n# A damped oscillation with its decay envelope\nt = np.linspace(0, 12, 500)\nenv = np.exp(-0.25 * t)\nax1 = fig.add_subplot(2, 2, 1)\nax1.plot(t, env * np.cos(2 * np.pi * 0.7 * t), color=\"#3776ab\")\nax1.fill_between(t, env, -env, color=\"#3776ab\", alpha=0.15)\nax1.set_title(\"Damped oscillation\")\nax1.set_xlabel(\"t\")\n\n# A scatter coloured by distance from the origin, with a colour bar\nx, y = rng.normal(size=(2, 400))\nax2 = fig.add_subplot(2, 2, 2)\nsc = ax2.scatter(x, y, c=np.hypot(x, y), cmap=\"plasma\", s=20, alpha=0.8)\nfig.colorbar(sc, ax=ax2, label=\"radius\")\nax2.set_title(\"Coloured scatter\")\n\n# A filled contour of a 2D field\ng = np.linspace(-3, 3, 200)\nX, Y = np.meshgrid(g, g)\nZ = np.cos(X) * np.sin(Y) * np.exp(-(X**2 + Y**2) / 9)\nax3 = fig.add_subplot(2, 2, 3)\ncf = ax3.contourf(X, Y, Z, levels=20, cmap=\"RdBu_r\")\nfig.colorbar(cf, ax=ax3)\nax3.set_title(\"2D field\")\n\n# The same field as a 3D surface (coarser grid)\ngc = np.linspace(-3, 3, 60)\nXc, Yc = np.meshgrid(gc, gc)\nZc = np.cos(Xc) * np.sin(Yc) * np.exp(-(Xc**2 + Yc**2) / 9)\nax4 = fig.add_subplot(2, 2, 4, projection=\"3d\")\nax4.plot_surface(Xc, Yc, Zc, cmap=\"viridis\", linewidth=0, antialiased=True)\nax4.set_title(\"Same field in 3D\")\n\nfig.tight_layout()\nfig"
+  },
+  {
+   "type": "markdown",
+   "source": "## LaTeX, typeset properly\n\n**LaTeX cells** render equations instantly with matplotlib mathtext — type the maths and run. A few classics (these three rows are LaTeX cells, two of them sitting side by side):"
+  },
+  {
+   "type": "latex",
+   "source": "\\int_0^\\infty e^{-x^2}\\,dx = \\frac{\\sqrt{\\pi}}{2}"
+  },
+  {
+   "type": "latex",
+   "source": "e^{i\\pi} + 1 = 0"
+  },
+  {
+   "type": "latex",
+   "source": "\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}",
+   "column": true
+  },
+  {
+   "type": "latex",
+   "source": "i\\hbar\\frac{\\partial \\Psi}{\\partial t} = \\hat{H}\\Psi"
+  },
+  {
+   "type": "latex",
+   "source": "\\nabla \\times \\vec{E} = -\\frac{\\partial \\vec{B}}{\\partial t}",
+   "column": true
+  },
+  {
+   "type": "markdown",
+   "source": "And a latex cell isn't limited to one equation — it can typeset a **whole document**. Here is one with an unnumbered section and two paragraphs; it compiles with the real `tectonic` engine, or falls back to a lightweight text renderer when tectonic isn't installed:"
+  },
+  {
+   "type": "latex",
+   "source": "\\documentclass[12pt]{article}\n\\usepackage{amsmath}\n\\begin{document}\n\\section*{Prose, not only equations}\nA \\textbf{latex cell} is not limited to a single equation: it can hold a\nwhole document with headings and paragraphs, typeset by the real\n\\texttt{tectonic} engine, or shown with a lightweight text renderer when\ntectonic is not installed. This heading and the two paragraphs below are\none LaTeX cell; \\textit{double-click} the rendered page to edit the source.\n\nUnnumbered headings use \\texttt{\\textbackslash section*}, while plain\n\\texttt{\\textbackslash section} numbers them. Prose wraps automatically and\nmixes \\textbf{bold}, \\textit{italic} and inline mathematics such as\n$E = mc^2$ in the line. Press \\textbf{Shift+Enter} to re-compile, and open\nthe \\textbf{Examples} menu under \\textbf{LaTeX} for numbered equations,\nlists and tables.\n\\end{document}"
+  },
+  {
+   "type": "markdown",
+   "source": "For a fuller example — numbered equations, lists and tables — see **Examples → LaTeX → LaTeX Document**. You can also drop a `.tex` or KherveTeX `.ktex` file straight onto the notebook."
+  },
+  {
+   "type": "markdown",
+   "source": "**Sheet cells** embed a KherveSheet-style spreadsheet with a formula bar. `=` formulas are Python with A1 refs and `A1:B5` ranges, and see everything the kernel knows — like `=np.pi * A2**2` or `=sum(B2:B4)`. After a run the grid is available to code cells as `sheet1`:"
+  },
+  {
+   "type": "sheet",
+   "source": "{\"rows\": 5, \"cols\": 3, \"data\": {\"A1\": \"radius\", \"B1\": \"area\", \"A2\": \"1\", \"B2\": \"=np.pi * A2**2\", \"A3\": \"2\", \"B3\": \"=np.pi * A3**2\", \"A4\": \"3\", \"B4\": \"=np.pi * A4**2\", \"A5\": \"total\", \"B5\": \"=sum(B2:B4)\"}}"
+  },
+  {
+   "type": "markdown",
+   "source": "…and the other way round: a **code cell reads that same grid** as `sheet1`, a list of rows with the header first. Here we pull columns A (radius) and B (area) straight out of the sheet above and plot them — edit a number in the grid, re-run, and the plot follows:"
+  },
+  {
+   "type": "code",
+   "source": "# sheet1 is the grid above: row 0 is the header, then the data\nradius, area = [], []\nfor row in sheet1[1:]:\n    try:                       # skip the 'total' row\n        radius.append(float(row[0]))\n        area.append(float(row[1]))\n    except ValueError:\n        continue\nfig, ax = plt.subplots(figsize=(5, 3.2))\nax.bar(radius, area, width=0.5, color='#3776ab', alpha=0.35)\nax.plot(radius, area, 'o-', color='#e07b39', lw=2)\nax.set_xlabel('radius  (column A)')\nax.set_ylabel('area  (column B)')\nax.set_title('Sheet columns A and B, plotted in Python')\nfig"
+  },
+  {
+   "type": "markdown",
+   "source": "**Live simulations** — a cell can re-run continuously (the ⟳ toolbar button, or right-click → *Run Continuously*). State lives in the kernel between frames. Press the red stop button next to the play button to pause this flock of birds:"
+  },
+  {
+   "type": "code",
+   "source": "# Flocking birds (boids) — runs continuously; stop with the red button\nif 'birds_pos' not in globals():\n    _rng = np.random.default_rng(4)\n    birds_pos = _rng.uniform(0.05, 0.95, (120, 2))\n    _a = _rng.uniform(0, 2 * np.pi, 120)\n    birds_vel = 0.013 * np.c_[np.cos(_a), np.sin(_a)]\n    birds_goal = np.array([0.5, 0.5])   # a target the flock roams to\n    birds_gvel = np.array([0.006, 0.004])\n_N = len(birds_pos)\nbirds_goal = birds_goal + birds_gvel               # drift the goal…\nbirds_gvel = np.where((birds_goal < 0.12) | (birds_goal > 0.88),\n                      -birds_gvel, birds_gvel)      # …bounce off walls\nbirds_goal = np.clip(birds_goal, 0.12, 0.88)\n_off = birds_pos[:, None] - birds_pos[None, :]   # pairwise offsets\n_d2 = (_off ** 2).sum(-1)\nnp.fill_diagonal(_d2, np.inf)\n_nb = (_d2 < 0.15 ** 2)[..., None]               # neighbours\n_n = np.maximum(_nb.sum(1), 1)\n_sep = (_off / _d2[..., None] * (_d2 < 0.05 ** 2)[..., None]).sum(1)\n_ali = (birds_vel[None] * _nb).sum(1) / _n - birds_vel\n_coh = (birds_pos[None] * _nb).sum(1) / _n - birds_pos\nbirds_vel += 1e-4 * _sep + 0.05 * _ali + 0.006 * _coh\nbirds_vel += 0.006 * (birds_goal - birds_pos)   # chase the roaming goal\nbirds_vel += 0.003 * (birds_pos < 0.08)         # veer off the walls…\nbirds_vel -= 0.003 * (birds_pos > 0.92)         # …before they hit them\nbirds_vel += 0.0011 * _rng.standard_normal((_N, 2))   # a little wander\n_sp = np.hypot(*birds_vel.T)[:, None]\nbirds_vel *= np.clip(_sp, 0.010, 0.017) / _sp   # keep them flying\nbirds_pos = np.clip(birds_pos + birds_vel, 0.02, 0.98)\n_u = birds_vel / np.hypot(*birds_vel.T)[:, None]   # unit headings\n_w = np.c_[-_u[:, 1], _u[:, 0]]                    # wing direction\n_tri = np.stack([birds_pos + 0.026 * _u,           # beak\n                 birds_pos - 0.016 * _u + 0.011 * _w,\n                 birds_pos - 0.016 * _u - 0.011 * _w], axis=1)\nfrom matplotlib.collections import PolyCollection\nfig, ax = plt.subplots(figsize=(4.2, 4.2))\nax.add_collection(PolyCollection(_tri, facecolors='#3776ab',\n                                 edgecolors='none'))\nax.set_xlim(0, 1); ax.set_ylim(0, 1)\nax.set_xticks([]); ax.set_yticks([])\nax.set_aspect('equal')\nfig"
+  },
+  {
+   "type": "markdown",
+   "source": "## Try it\n\nClick into any cell and edit it, or add a new one with the **+** button. The toolbar's second row changes with the cell type: text formatting for Markdown, run/comment/snippets for Python, and equation building blocks for LaTeX.\n\n> **Kernel → Restart** clears all variables and the `In [n]` counters. **File → Save** stores the notebook as a `.kbook` file."
+  },
+  {
+   "type": "code",
+   "source": ""
+  }
+ ]
+}

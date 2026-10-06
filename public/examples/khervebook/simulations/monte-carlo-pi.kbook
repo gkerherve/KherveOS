@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Monte Carlo π\nDarts accumulate across frames; the estimate sharpens live. Stop with the red button."
+  },
+  {
+   "type": "code",
+   "source": "# Monte Carlo pi — runs continuously\nif 'pi_in' not in globals():\n    pi_in = np.empty((0, 2)); pi_out = np.empty((0, 2))\npts = np.random.default_rng(len(pi_in)\n                            + len(pi_out)).random((300, 2))\nhit = (pts**2).sum(axis=1) <= 1\npi_in = np.vstack([pi_in, pts[hit]])\npi_out = np.vstack([pi_out, pts[~hit]])\nn = len(pi_in) + len(pi_out)\nest = 4 * len(pi_in) / n\nfig, ax = plt.subplots(figsize=(4.4, 4.4))\nax.scatter(pi_in[:, 0], pi_in[:, 1], s=2, c='#2e7d4f')\nax.scatter(pi_out[:, 0], pi_out[:, 1], s=2, c='#c0392b')\nth = np.linspace(0, np.pi / 2, 100)\nax.plot(np.cos(th), np.sin(th), 'k', lw=1)\nax.set_title(f'π ≈ {est:.5f}   (n = {n})')\nax.set_aspect('equal'); ax.set_xticks([]); ax.set_yticks([])\nfig"
+  }
+ ]
+}

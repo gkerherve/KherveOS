@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Flocking Birds\nA boids flock — separation, alignment and cohesion, plus a roaming goal and a touch of wander, send the triangles wheeling across the canvas as one. Stop with the red button."
+  },
+  {
+   "type": "code",
+   "source": "# Flocking birds (boids) — runs continuously; stop with the red button\nif 'birds_pos' not in globals():\n    _rng = np.random.default_rng(4)\n    birds_pos = _rng.uniform(0.05, 0.95, (120, 2))\n    _a = _rng.uniform(0, 2 * np.pi, 120)\n    birds_vel = 0.013 * np.c_[np.cos(_a), np.sin(_a)]\n    birds_goal = np.array([0.5, 0.5])   # a target the flock roams to\n    birds_gvel = np.array([0.006, 0.004])\n_N = len(birds_pos)\nbirds_goal = birds_goal + birds_gvel               # drift the goal…\nbirds_gvel = np.where((birds_goal < 0.12) | (birds_goal > 0.88),\n                      -birds_gvel, birds_gvel)      # …bounce off walls\nbirds_goal = np.clip(birds_goal, 0.12, 0.88)\n_off = birds_pos[:, None] - birds_pos[None, :]   # pairwise offsets\n_d2 = (_off ** 2).sum(-1)\nnp.fill_diagonal(_d2, np.inf)\n_nb = (_d2 < 0.15 ** 2)[..., None]               # neighbours\n_n = np.maximum(_nb.sum(1), 1)\n_sep = (_off / _d2[..., None] * (_d2 < 0.05 ** 2)[..., None]).sum(1)\n_ali = (birds_vel[None] * _nb).sum(1) / _n - birds_vel\n_coh = (birds_pos[None] * _nb).sum(1) / _n - birds_pos\nbirds_vel += 1e-4 * _sep + 0.05 * _ali + 0.006 * _coh\nbirds_vel += 0.006 * (birds_goal - birds_pos)   # chase the roaming goal\nbirds_vel += 0.003 * (birds_pos < 0.08)         # veer off the walls…\nbirds_vel -= 0.003 * (birds_pos > 0.92)         # …before they hit them\nbirds_vel += 0.0011 * _rng.standard_normal((_N, 2))   # a little wander\n_sp = np.hypot(*birds_vel.T)[:, None]\nbirds_vel *= np.clip(_sp, 0.010, 0.017) / _sp   # keep them flying\nbirds_pos = np.clip(birds_pos + birds_vel, 0.02, 0.98)\n_u = birds_vel / np.hypot(*birds_vel.T)[:, None]   # unit headings\n_w = np.c_[-_u[:, 1], _u[:, 0]]                    # wing direction\n_tri = np.stack([birds_pos + 0.026 * _u,           # beak\n                 birds_pos - 0.016 * _u + 0.011 * _w,\n                 birds_pos - 0.016 * _u - 0.011 * _w], axis=1)\nfrom matplotlib.collections import PolyCollection\nfig, ax = plt.subplots(figsize=(4.2, 4.2))\nax.add_collection(PolyCollection(_tri, facecolors='#3776ab',\n                                 edgecolors='none'))\nax.set_xlim(0, 1); ax.set_ylim(0, 1)\nax.set_xticks([]); ax.set_yticks([])\nax.set_aspect('equal')\nfig"
+  }
+ ]
+}

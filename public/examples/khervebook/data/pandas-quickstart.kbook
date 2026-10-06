@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Pandas Quickstart\n`pd` is preloaded; the trailing DataFrame echoes like in Jupyter."
+  },
+  {
+   "type": "code",
+   "source": "df = pd.DataFrame({\n    'element': ['C', 'N', 'O', 'Si', 'Fe'],\n    'Z': [6, 7, 8, 14, 26],\n    'mass': [12.011, 14.007, 15.999, 28.085, 55.845],\n})\ndf['mass/Z'] = (df['mass'] / df['Z']).round(3)\nprint(df.describe().round(2))\ndf"
+  },
+  {
+   "type": "code",
+   "source": "fig, ax = plt.subplots()\nax.bar(df['element'], df['mass'])\nax.set_ylabel('atomic mass')\nfig"
+  }
+ ]
+}

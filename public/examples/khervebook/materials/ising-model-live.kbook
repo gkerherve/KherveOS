@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Ising Model\nMetropolis spin flips at T just below critical — watch domains coarsen. Stop with the red button."
+  },
+  {
+   "type": "code",
+   "source": "# Ising model — runs continuously (200 ms)\nif 'spins' not in globals():\n    _irng = np.random.default_rng(0)\n    spins = _irng.choice([-1, 1], (64, 64))\n    ISING_T = 2.2\nfor _ in range(3000):    # Metropolis sweeps per frame\n    i, j = _irng.integers(0, 64, 2)\n    nb = (spins[(i+1) % 64, j] + spins[i-1, j]\n          + spins[i, (j+1) % 64] + spins[i, j-1])\n    dE = 2 * spins[i, j] * nb\n    if dE <= 0 or _irng.random() < np.exp(-dE / ISING_T):\n        spins[i, j] *= -1\nfig, ax = plt.subplots(figsize=(4.4, 4.4))\nax.imshow(spins, cmap='coolwarm', interpolation='nearest')\nax.set_xticks([]); ax.set_yticks([])\nax.set_title(f'T = {ISING_T}   M = {spins.mean():+.2f}')\nfig"
+  }
+ ]
+}

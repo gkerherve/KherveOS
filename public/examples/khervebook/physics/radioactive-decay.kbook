@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Radioactive Decay\nDeterministic curve vs a stochastic simulation of 500 nuclei."
+  },
+  {
+   "type": "latex",
+   "source": "N(t) = N_0\\, e^{-\\lambda t}"
+  },
+  {
+   "type": "code",
+   "source": "rng = np.random.default_rng(3)\nN0, lam = 500, 0.3\nt = np.linspace(0, 15, 200)\nlifetimes = rng.exponential(1 / lam, N0)\nalive = (lifetimes[None, :] > t[:, None]).sum(axis=1)\nfig, ax = plt.subplots()\nax.plot(t, N0 * np.exp(-lam * t), 'r-', label='N0·e^{-λt}')\nax.step(t, alive, where='post', alpha=0.7,\n        label='stochastic (500 nuclei)')\nax.set_xlabel('t'); ax.set_ylabel('N')\nax.legend(); ax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

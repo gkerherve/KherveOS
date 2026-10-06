@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Todo List\nTasks with priority, status and due dates."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Todo\", \"rows\": 9, \"cols\": 5, \"data\": {\"A1\": \"Task\", \"B1\": \"Priority\", \"C1\": \"Status\", \"D1\": \"Due Date\", \"E1\": \"Notes\", \"A2\": \"Review PR #42\", \"B2\": \"High\", \"C2\": \"In Progress\", \"D2\": \"2026-05-25\", \"A3\": \"Update docs\", \"B3\": \"Medium\", \"C3\": \"Todo\", \"D3\": \"2026-05-28\", \"A4\": \"Fix login bug\", \"B4\": \"High\", \"C4\": \"Done\", \"D4\": \"2026-05-20\", \"E4\": \"v2.1\", \"A5\": \"Deploy staging\", \"B5\": \"Medium\", \"C5\": \"Todo\", \"D5\": \"2026-05-30\", \"A6\": \"Team meeting\", \"B6\": \"Low\", \"C6\": \"Done\", \"D6\": \"2026-05-24\", \"E6\": \"weekly\", \"A7\": \"Write tests\", \"B7\": \"High\", \"C7\": \"In Progress\", \"D7\": \"2026-05-27\", \"E7\": \"unit\", \"A8\": \"Backup database\", \"B8\": \"High\", \"C8\": \"Todo\", \"D8\": \"2026-05-26\", \"A9\": \"Code review\", \"B9\": \"Medium\", \"C9\": \"Todo\", \"D9\": \"2026-05-29\"}}], \"active\": \"Todo\"}"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><polygon points=\"120,38 46,96 194,96\" fill=\"#e07b39\"/><rect x=\"66\" y=\"96\" width=\"108\" height=\"54\" fill=\"#3776ab\"/><rect x=\"104\" y=\"116\" width=\"32\" height=\"34\" fill=\"#f4f7fb\"/></svg>"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Temperature Conversion\nCelsius to Fahrenheit and Kelvin by formula."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Temperature\", \"rows\": 30, \"cols\": 4, \"data\": {\"A1\": \"Celsius\", \"B1\": \"Fahrenheit\", \"C1\": \"Kelvin\", \"A2\": \"-40\", \"B2\": \"=A2*9/5+32\", \"C2\": \"=A2+273.15\", \"A3\": \"-35\", \"B3\": \"=A3*9/5+32\", \"C3\": \"=A3+273.15\", \"A4\": \"-30\", \"B4\": \"=A4*9/5+32\", \"C4\": \"=A4+273.15\", \"A5\": \"-25\", \"B5\": \"=A5*9/5+32\", \"C5\": \"=A5+273.15\", \"A6\": \"-20\", \"B6\": \"=A6*9/5+32\", \"C6\": \"=A6+273.15\", \"A7\": \"-15\", \"B7\": \"=A7*9/5+32\", \"C7\": \"=A7+273.15\", \"A8\": \"-10\", \"B8\": \"=A8*9/5+32\", \"C8\": \"=A8+273.15\", \"A9\": \"-5\", \"B9\": \"=A9*9/5+32\", \"C9\": \"=A9+273.15\", \"A10\": \"0\", \"B10\": \"=A10*9/5+32\", \"C10\": \"=A10+273.15\", \"A11\": \"5\", \"B11\": \"=A11*9/5+32\", \"C11\": \"=A11+273.15\", \"A12\": \"10\", \"B12\": \"=A12*9/5+32\", \"C12\": \"=A12+273.15\", \"A13\": \"15\", \"B13\": \"=A13*9/5+32\", \"C13\": \"=A13+273.15\", \"A14\": \"20\", \"B14\": \"=A14*9/5+32\", \"C14\": \"=A14+273.15\", \"A15\": \"25\", \"B15\": \"=A15*9/5+32\", \"C15\": \"=A15+273.15\", \"A16\": \"30\", \"B16\": \"=A16*9/5+32\", \"C16\": \"=A16+273.15\", \"A17\": \"35\", \"B17\": \"=A17*9/5+32\", \"C17\": \"=A17+273.15\", \"A18\": \"40\", \"B18\": \"=A18*9/5+32\", \"C18\": \"=A18+273.15\", \"A19\": \"45\", \"B19\": \"=A19*9/5+32\", \"C19\": \"=A19+273.15\", \"A20\": \"50\", \"B20\": \"=A20*9/5+32\", \"C20\": \"=A20+273.15\", \"A21\": \"55\", \"B21\": \"=A21*9/5+32\", \"C21\": \"=A21+273.15\", \"A22\": \"60\", \"B22\": \"=A22*9/5+32\", \"C22\": \"=A22+273.15\", \"A23\": \"65\", \"B23\": \"=A23*9/5+32\", \"C23\": \"=A23+273.15\", \"A24\": \"70\", \"B24\": \"=A24*9/5+32\", \"C24\": \"=A24+273.15\", \"A25\": \"75\", \"B25\": \"=A25*9/5+32\", \"C25\": \"=A25+273.15\", \"A26\": \"80\", \"B26\": \"=A26*9/5+32\", \"C26\": \"=A26+273.15\", \"A27\": \"85\", \"B27\": \"=A27*9/5+32\", \"C27\": \"=A27+273.15\", \"A28\": \"90\", \"B28\": \"=A28*9/5+32\", \"C28\": \"=A28+273.15\", \"A29\": \"95\", \"B29\": \"=A29*9/5+32\", \"C29\": \"=A29+273.15\", \"A30\": \"100\", \"B30\": \"=A30*9/5+32\", \"C30\": \"=A30+273.15\"}}], \"active\": \"Temperature\"}"
+  },
+  {
+   "type": "latex",
+   "source": "F = \\frac{9}{5}\\,C + 32, \\quad K = C + 273.15"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Temperature Conversion\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><g fill=\"none\" stroke=\"#3776ab\" stroke-width=\"3\"><ellipse cx=\"120\" cy=\"75\" rx=\"72\" ry=\"28\"/><ellipse cx=\"120\" cy=\"75\" rx=\"72\" ry=\"28\" transform=\"rotate(60 120 75)\"/><ellipse cx=\"120\" cy=\"75\" rx=\"72\" ry=\"28\" transform=\"rotate(120 120 75)\"/></g><circle cx=\"120\" cy=\"75\" r=\"11\" fill=\"#e07b39\"/><circle cx=\"192\" cy=\"75\" r=\"5\" fill=\"#3776ab\"/></svg>"
+  }
+ ]
+}

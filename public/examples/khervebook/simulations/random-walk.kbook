@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Random Walk\nOne step per frame — watch it wander. Stop with the red button."
+  },
+  {
+   "type": "code",
+   "source": "# Random walk — runs continuously\nif 'walk' not in globals():\n    walk = [np.zeros(2)]\nwalk.append(walk[-1]\n            + np.random.default_rng(len(walk)).normal(0, 1, 2))\npath = np.array(walk[-600:])\nfig, ax = plt.subplots(figsize=(4.5, 4.5))\nax.plot(path[:, 0], path[:, 1], lw=0.8)\nax.plot(*path[-1], 'ro')\nax.set_title(f'{len(walk)} steps')\nfig"
+  }
+ ]
+}

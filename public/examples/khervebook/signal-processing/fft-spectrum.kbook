@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# FFT Spectrum\nA 50 Hz + 120 Hz signal buried in noise, recovered with `np.fft.rfft`."
+  },
+  {
+   "type": "code",
+   "source": "fs = 1000                      # sampling rate (Hz)\nt = np.arange(0, 1, 1 / fs)\nsig = (np.sin(2 * np.pi * 50 * t)\n       + 0.5 * np.sin(2 * np.pi * 120 * t)\n       + 0.8 * np.random.default_rng(0).normal(size=t.size))\nfreq = np.fft.rfftfreq(t.size, 1 / fs)\nmag = np.abs(np.fft.rfft(sig)) / t.size\nfig, (a1, a2) = plt.subplots(2, 1, figsize=(6, 4.5))\na1.plot(t[:200], sig[:200]); a1.set_title('signal')\na2.plot(freq, mag); a2.set_title('spectrum')\na2.set_xlabel('Hz'); fig.tight_layout()\nfig"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# SIR Epidemic\nSusceptible–Infected–Recovered dynamics for a few R₀ values."
+  },
+  {
+   "type": "code",
+   "source": "from scipy.integrate import solve_ivp\nfig, ax = plt.subplots()\nfor R0, ls in ((1.5, ':'), (2.5, '--'), (4, '-')):\n    g = 0.2; b = R0 * g\n    sol = solve_ivp(\n        lambda t, s: [-b*s[0]*s[1], b*s[0]*s[1] - g*s[1],\n                      g*s[1]],\n        [0, 80], [0.999, 0.001, 0], dense_output=True)\n    t = np.linspace(0, 80, 400)\n    ax.plot(t, sol.sol(t)[1], ls=ls, color='#c0392b',\n            label=f'I, R0={R0}')\nax.set_xlabel('days'); ax.set_ylabel('infected fraction')\nax.legend(); ax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

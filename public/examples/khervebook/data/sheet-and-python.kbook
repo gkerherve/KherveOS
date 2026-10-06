@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Sheet ↔ Python\nThe grid computes `=` formulas, then publishes itself to code cells as `sheet1`."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"rows\": 5, \"cols\": 2, \"data\": {\"A1\": \"1\", \"B1\": \"=A1**2\", \"A2\": \"2\", \"B2\": \"=A2**2\", \"A3\": \"3\", \"B3\": \"=A3**2\", \"A4\": \"4\", \"B4\": \"=A4**2\", \"A5\": \"5\", \"B5\": \"=A5**2\"}}"
+  },
+  {
+   "type": "code",
+   "source": "data = np.array(sheet1, dtype=float)\nfig, ax = plt.subplots()\nax.plot(data[:, 0], data[:, 1], 'o-')\nax.set_xlabel('A'); ax.set_ylabel('B = A²')\nfig"
+  }
+ ]
+}

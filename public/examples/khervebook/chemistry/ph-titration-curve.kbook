@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# pH Titration Curve\nStrong acid titrated with strong base; the equivalence point sits at the inflection."
+  },
+  {
+   "type": "code",
+   "source": "Ca, Va = 0.1, 50.0          # acid: 0.1 M, 50 mL\nCb = 0.1                     # base molarity\nVb = np.linspace(0.01, 100, 500)\nmol_h = Ca * Va - Cb * Vb\nV = Va + Vb\npH = np.where(mol_h > 0,\n              -np.log10(np.maximum(mol_h, 1e-12) / V),\n              14 + np.log10(np.maximum(-mol_h, 1e-12) / V))\nfig, ax = plt.subplots()\nax.plot(Vb, pH)\nax.axvline(50, ls=':', color='gray')\nax.annotate('equivalence', (50, 7), xytext=(60, 7),\n            arrowprops=dict(arrowstyle='->'))\nax.set_xlabel('base added (mL)'); ax.set_ylabel('pH')\nax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

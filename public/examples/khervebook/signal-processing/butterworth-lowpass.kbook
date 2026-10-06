@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Butterworth Lowpass\nDesign a 4th-order filter and clean a noisy signal with `scipy.signal`."
+  },
+  {
+   "type": "code",
+   "source": "from scipy import signal\nfs = 500\nt = np.arange(0, 2, 1 / fs)\nx = (np.sin(2 * np.pi * 5 * t)\n     + 0.6 * np.sin(2 * np.pi * 90 * t))\nb, a = signal.butter(4, 20, fs=fs)\ny = signal.filtfilt(b, a, x)\nfig, ax = plt.subplots()\nax.plot(t, x, alpha=0.4, label='noisy')\nax.plot(t, y, 'r', label='filtered (20 Hz)')\nax.set_xlim(0, 1); ax.legend(); ax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Wave Interference\nTwo point sources — classic two-slit-style fringes."
+  },
+  {
+   "type": "code",
+   "source": "x, y = np.meshgrid(np.linspace(-10, 10, 400),\n                   np.linspace(0, 14, 280))\nk = 2 * np.pi / 1.2\nr1 = np.hypot(x + 2, y); r2 = np.hypot(x - 2, y)\nz = np.cos(k * r1) + np.cos(k * r2)\nfig, ax = plt.subplots(figsize=(6, 4.2))\nim = ax.imshow(z, extent=[-10, 10, 0, 14], origin='lower',\n               cmap='RdBu', aspect='auto')\nfig.colorbar(im, ax=ax, label='amplitude')\nax.plot([-2, 2], [0, 0], 'k^', ms=10)\nfig"
+  }
+ ]
+}

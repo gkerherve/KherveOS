@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Plotly 3D Surface\nAn interactive **Plotly** surface of a radial sine — drag to rotate, scroll to zoom, hover to read values. *Needs internet*: Plotly is loaded from `cdn.plot.ly`."
+  },
+  {
+   "type": "js",
+   "source": "<div id=\"surf\" style=\"width:520px;height:380px\"></div>\n<script src=\"https://cdn.plot.ly/plotly-2.35.2.min.js\"></script>\n<script>\nwindow.addEventListener(\"load\", function () {\n    const n = 40, z = [];\n    for (let i = 0; i < n; i++) {\n        const row = [];\n        for (let j = 0; j < n; j++) {\n            const x = (i - n / 2) / 5, y = (j - n / 2) / 5;\n            row.push(Math.sin(Math.sqrt(x * x + y * y)));\n        }\n        z.push(row);\n    }\n    Plotly.newPlot(\"surf\", [{\n        z: z, type: \"surface\", colorscale: \"Viridis\", showscale: true\n    }], {\n        title: \"z = sin(√(x² + y²))\",\n        margin: { l: 0, r: 0, t: 40, b: 0 },\n        scene: { aspectratio: { x: 1, y: 1, z: 0.6 } }\n    }, { responsive: false });\n});\n</script>"
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Taylor Series\nsin(x) approximated by partial sums of increasing order."
+  },
+  {
+   "type": "latex",
+   "source": "\\sin x = x - \\frac{x^3}{3!} + \\frac{x^5}{5!} - \\cdots"
+  },
+  {
+   "type": "code",
+   "source": "import math as m\nx = np.linspace(-2 * np.pi, 2 * np.pi, 400)\nfig, ax = plt.subplots()\nax.plot(x, np.sin(x), 'k', lw=2, label='sin')\ns = np.zeros_like(x)\nfor n in range(5):\n    s += (-1)**n * x**(2*n+1) / m.factorial(2*n+1)\n    ax.plot(x, s, alpha=0.7, label=f'order {2*n+1}')\nax.set_ylim(-2.5, 2.5); ax.legend(fontsize=8)\nax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

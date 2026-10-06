@@ -1,0 +1,22 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Distance Matrix\nRoad distances between European cities."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Distances\", \"rows\": 9, \"cols\": 9, \"data\": {\"A1\": \"City\", \"B1\": \"London\", \"C1\": \"Paris\", \"D1\": \"Berlin\", \"E1\": \"Madrid\", \"F1\": \"Rome\", \"G1\": \"Amsterdam\", \"H1\": \"Vienna\", \"I1\": \"Brussels\", \"A2\": \"London\", \"B2\": \"0\", \"C2\": \"341\", \"D2\": \"930\", \"E2\": \"1264\", \"F2\": \"1435\", \"G2\": \"358\", \"H2\": \"1237\", \"I2\": \"322\", \"A3\": \"Paris\", \"B3\": \"341\", \"C3\": \"0\", \"D3\": \"878\", \"E3\": \"1054\", \"F3\": \"1106\", \"G3\": \"430\", \"H3\": \"1034\", \"I3\": \"264\", \"A4\": \"Berlin\", \"B4\": \"930\", \"C4\": \"878\", \"D4\": \"0\", \"E4\": \"1870\", \"F4\": \"1181\", \"G4\": \"577\", \"H4\": \"524\", \"I4\": \"651\", \"A5\": \"Madrid\", \"B5\": \"1264\", \"C5\": \"1054\", \"D5\": \"1870\", \"E5\": \"0\", \"F5\": \"1363\", \"G5\": \"1480\", \"H5\": \"1809\", \"I5\": \"1316\", \"A6\": \"Rome\", \"B6\": \"1435\", \"C6\": \"1106\", \"D6\": \"1181\", \"E6\": \"1363\", \"F6\": \"0\", \"G6\": \"1293\", \"H6\": \"765\", \"I6\": \"1174\", \"A7\": \"Amsterdam\", \"B7\": \"358\", \"C7\": \"430\", \"D7\": \"577\", \"E7\": \"1480\", \"F7\": \"1293\", \"G7\": \"0\", \"H7\": \"938\", \"I7\": \"171\", \"A8\": \"Vienna\", \"B8\": \"1237\", \"C8\": \"1034\", \"D8\": \"524\", \"E8\": \"1809\", \"F8\": \"765\", \"G8\": \"938\", \"H8\": \"0\", \"I8\": \"915\", \"A9\": \"Brussels\", \"B9\": \"322\", \"C9\": \"264\", \"D9\": \"651\", \"E9\": \"1316\", \"F9\": \"1174\", \"G9\": \"171\", \"H9\": \"915\", \"I9\": \"0\"}}], \"active\": \"Distances\"}"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Distance Matrix\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><circle cx=\"120\" cy=\"75\" r=\"56\" fill=\"#3776ab\"/><g fill=\"none\" stroke=\"#cfe3f6\" stroke-width=\"2\"><ellipse cx=\"120\" cy=\"75\" rx=\"23\" ry=\"56\"/><ellipse cx=\"120\" cy=\"75\" rx=\"46\" ry=\"56\"/><line x1=\"64\" y1=\"75\" x2=\"176\" y2=\"75\"/><path d=\"M74 44 H166 M74 106 H166\"/></g></svg>"
+  }
+ ]
+}

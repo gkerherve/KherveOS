@@ -1,0 +1,78 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# ARPES analysis walkthrough\n\nA guided tour through a full angle-resolved photoemission (ARPES) analysis\nwith the [`peaks`](https://github.com/phrgab/peaks) toolkit, in one runnable\nnotebook. Run the cells top to bottom (Shift+Enter): the first builds the\ndata set and every later step reuses it.\n\nThe eight steps mirror the standalone Spectroscopy examples:\n\n1. band dispersion  2. EDC & MDC cuts  3. angle to momentum\n4. Fermi surface  5. curvature  6. energy resolution (gold edge)\n7. self-energy & kink  8. superconducting gap\n\nIt uses the real `peaks` sample dispersion when installed\n(`pip install peaks-arpes`) and otherwise synthesises a faithful metallic\nband, so it runs anywhere.\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## 1. Band dispersion\nThe raw ARPES map: intensity vs binding energy and emission angle."
+  },
+  {
+   "type": "code",
+   "source": "\n# Step 1 -- the band dispersion (real peaks data if installed, else synthetic)\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nrng = np.random.default_rng(0)\n\n\ndef build_dispersion():\n    try:\n        import peaks as pks                                  # noqa: F401\n        from peaks.core.utils.sample_data import ExampleData\n        d = ExampleData.dispersion()           # downloads i05-59819.nxs\n        try:\n            inten = np.asarray(d.pint.magnitude, dtype=float)\n        except Exception:\n            inten = np.asarray(d.values, dtype=float)\n        e_ax = np.asarray(d[\"eV\"].values, dtype=float)\n        a_ax = np.asarray(d[\"theta_par\"].values, dtype=float)\n        if inten.shape != (e_ax.size, a_ax.size):\n            inten = inten.T\n        return a_ax, e_ax, inten, \"peaks data (Diamond I05)\"\n    except Exception:\n        theta = np.linspace(-16, 16, 200)        # emission angle (deg)\n        E = np.linspace(-0.70, 0.10, 260)        # E - E_F (eV)\n        TH, EE = np.meshgrid(theta, E)\n        band = -0.45 + 0.0045 * TH ** 2          # parabolic band\n        gamma = 0.02 + 0.05 * band ** 2\n        A = (gamma / np.pi) / ((EE - band) ** 2 + gamma ** 2)\n        inten = A / (np.exp(EE / 0.012) + 1.0)   # x Fermi-Dirac\n        inten = inten / inten.max() + 0.02 * rng.random(inten.shape)\n        return theta, E, inten, \"synthetic dispersion\"\n\n\ntheta, E, disp, SRC = build_dispersion()\n\nfig, ax = plt.subplots(figsize=(5.4, 4.2))\nax.pcolormesh(theta, E, disp, cmap=\"inferno\", shading=\"auto\")\nax.axhline(0, color=\"w\", ls=\"--\", lw=0.8, alpha=0.7)\nax.set_xlabel(r\"emission angle  $\\theta_\\parallel$  (deg)\")\nax.set_ylabel(r\"$E - E_F$  (eV)\")\nax.set_title(\"1. band dispersion -- \" + SRC)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## 2. EDC & MDC\nEnergy- and momentum-distribution curves are the fundamental 1-D cuts."
+  },
+  {
+   "type": "code",
+   "source": "\n# Step 2 -- EDC at normal emission and MDC just below E_F (reuses disp)\ni0 = int(np.argmin(np.abs(theta)))             # column nearest theta = 0\nedc = disp[:, i0]\niE = int(np.argmin(np.abs(E - (-0.05))))       # row 50 meV below E_F\nmdc = disp[iE]\n\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(7.4, 3.4))\na1.plot(edc, E, color=\"#3776ab\")\na1.set_xlabel(\"intensity\"); a1.set_ylabel(r\"$E - E_F$ (eV)\")\na1.set_title(r\"EDC at $\\theta \\approx 0$\")\na2.plot(theta, mdc, color=\"#3776ab\")\na2.set_xlabel(r\"$\\theta_\\parallel$ (deg)\"); a2.set_ylabel(\"intensity\")\na2.set_title(r\"MDC 50 meV below $E_F$\")\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## 3. Angle to momentum\nConvert the angle axis to parallel crystal momentum $k_\\parallel$."
+  },
+  {
+   "type": "code",
+   "source": "\n# Step 3 -- convert emission angle to parallel momentum k (reuses disp)\nE_kin = 16.0                                    # photoelectron KE (eV)\nk_par = 0.5123 * np.sqrt(E_kin) * np.sin(np.radians(theta))\n\nfig, ax = plt.subplots(figsize=(5.4, 4.2))\nax.pcolormesh(k_par, E, disp, cmap=\"inferno\", shading=\"auto\")\nax.axhline(0, color=\"w\", ls=\"--\", lw=0.8, alpha=0.7)\nax.set_xlabel(r\"$k_\\parallel$  (1/$\\AA$)\")\nax.set_ylabel(r\"$E - E_F$ (eV)\")\nax.set_title(r\"3. dispersion vs momentum  ($k = 0.512\\sqrt{E_k}\\,\\sin\\theta$)\")\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## 4. Fermi surface\nA constant-energy slice at $E_F$ maps the Fermi surface."
+  },
+  {
+   "type": "code",
+   "source": "\n# Step 4 -- a constant-energy Fermi-surface map\nkx = np.linspace(-1.0, 1.0, 200)\nky = np.linspace(-1.0, 1.0, 200)\nKX, KY = np.meshgrid(kx, ky)\nKR = np.hypot(KX, KY)\nkF, g = 0.6, 0.05\nFS = (g / np.pi) / ((KR - kF) ** 2 + g ** 2)\nFS = FS / FS.max() + 0.02 * rng.random(FS.shape)\n\nfig, ax = plt.subplots(figsize=(4.6, 4.3))\npm = ax.pcolormesh(kx, ky, FS, cmap=\"inferno\", shading=\"auto\")\nax.set_aspect(\"equal\")\nax.set_xlabel(r\"$k_x$ (1/$\\AA$)\"); ax.set_ylabel(r\"$k_y$ (1/$\\AA$)\")\nax.set_title(\"4. Fermi surface\")\nfig.colorbar(pm, ax=ax, label=\"intensity\")\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## 5. Curvature\nThe 2-D curvature method sharpens faint bands for the eye."
+  },
+  {
+   "type": "code",
+   "source": "\n# Step 5 -- the curvature method sharpens the band (2nd derivative in E)\nd2 = np.gradient(np.gradient(disp, E, axis=0), E, axis=0)\ncurv = np.clip(-d2, 0, None)\n\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(7.6, 3.6), sharey=True)\na1.pcolormesh(theta, E, disp, cmap=\"inferno\", shading=\"auto\")\na1.set_title(\"raw\"); a1.set_ylabel(r\"$E - E_F$ (eV)\")\na2.pcolormesh(theta, E, curv, cmap=\"inferno\", shading=\"auto\")\na2.set_title(\"curvature\")\nfor a in (a1, a2):\n    a.set_xlabel(r\"$\\theta_\\parallel$ (deg)\")\nfig.suptitle(\"5. curvature method\")\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## 6. Energy resolution\nA gold Fermi edge calibrates the combined thermal + instrument resolution."
+  },
+  {
+   "type": "code",
+   "source": "\n# Step 6 -- a gold Fermi edge gives the energy resolution\nfrom scipy.optimize import curve_fit\n\nEg = np.linspace(-0.30, 0.15, 400)\n\n\ndef edge(e, ef, w, amp, c):                     # resolution-broadened edge\n    return amp / (np.exp((e - ef) / w) + 1.0) + c\n\n\ngold = edge(Eg, 0.0, 0.022, 1.0, 0.04) + rng.normal(0, 0.012, Eg.size)\ntry:\n    popt, _ = curve_fit(edge, Eg, gold, p0=[0.0, 0.03, 1.0, 0.04])\nexcept Exception:\n    popt = [0.0, 0.022, 1.0, 0.04]\ndE = 3.53 * abs(popt[1]) * 1000.0               # edge width -> FWHM (meV)\n\nfig, ax = plt.subplots(figsize=(5.4, 3.8))\nax.plot(Eg, gold, \".\", ms=3, color=\"#3776ab\", alpha=0.5, label=\"gold\")\nax.plot(Eg, edge(Eg, *popt), color=\"#e07b39\", lw=2, label=\"fit\")\nax.axvline(popt[0], color=\"0.5\", ls=\":\")\nax.set_xlabel(r\"$E - E_F$ (eV)\"); ax.set_ylabel(\"intensity\")\nax.set_title(\"6. Fermi edge -- resolution $\\\\Delta E \\\\approx %.0f$ meV\" % dE)\nax.legend(frameon=False)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## 7. Self-energy & kink\nFitting MDCs across energy reveals a dispersion kink -- the electron self-energy."
+  },
+  {
+   "type": "code",
+   "source": "\n# Step 7 -- MDC peak positions vs energy reveal a kink (self-energy)\nkgrid = np.linspace(-0.30, 0.30, 400)\nEs = np.linspace(-0.30, -0.003, 200)\nvF, E_ph = 2.5, 0.07                            # bare velocity, mode energy\nk_bare = Es / vF\nReS = 0.020 * np.exp(-((np.abs(Es) - E_ph) / 0.030) ** 2)   # Re self-energy\nk_meas = (Es - ReS) / vF\n# lifetime (Im) rises smoothly below the mode energy -- no brightness seam\nGam = 0.012 + 0.012 / (1.0 + np.exp(-(np.abs(Es) - E_ph) / 0.010))\nimg = np.exp(-((kgrid[None, :] - k_meas[:, None]) ** 2)\n             / (2 * Gam[:, None] ** 2))\nimg = img / img.max(axis=1, keepdims=True)      # each MDC peaks at 1\nimg = img + 0.005 * rng.random(img.shape)\n# extract k(E) by intensity-weighted centroid around each MDC peak\njmax = np.argmax(img, axis=1)\nk_ext = np.empty(Es.size)\nfor i, j in enumerate(jmax):\n    lo, hi = max(0, j - 25), min(kgrid.size, j + 26)\n    w = img[i, lo:hi]\n    k_ext[i] = np.sum(kgrid[lo:hi] * w) / np.sum(w)\nReS_ext = vF * (k_ext - k_bare)\n\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(7.6, 3.6))\na1.pcolormesh(kgrid, Es, img, cmap=\"inferno\", shading=\"auto\")\na1.plot(k_ext, Es, \"-\", lw=1.6, color=\"#34e1eb\", label=\"MDC peaks\")\na1.plot(k_bare, Es, \"--\", color=\"w\", lw=1.1, label=\"bare band\")\na1.set_xlabel(r\"$k$ (1/$\\AA$)\"); a1.set_ylabel(r\"$E - E_F$ (eV)\")\na1.set_xlim(-0.3, 0.3); a1.set_title(\"dispersion + kink\")\na1.legend(fontsize=8, frameon=False, loc=\"lower left\")\na2.plot(ReS_ext * 1000, Es, color=\"#e07b39\")\na2.axhline(-E_ph, color=\"0.6\", ls=\":\", lw=0.9)\na2.set_xlabel(r\"$\\mathrm{Re}\\,\\Sigma$ (meV)\"); a2.set_ylabel(r\"$E - E_F$ (eV)\")\na2.set_title(\"self-energy (kink near %d meV)\" % int(E_ph * 1000))\nfig.suptitle(\"7. self-energy from the kink\")\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## 8. Superconducting gap\nSymmetrising an EDC at $k_F$ removes the Fermi cut-off and exposes the gap."
+  },
+  {
+   "type": "code",
+   "source": "\n# Step 8 -- symmetrising an EDC at k_F exposes a superconducting gap\nfrom scipy.ndimage import gaussian_filter1d\n\nEg = np.linspace(-0.08, 0.08, 400)\nD = 0.015                                        # gap (eV)\ndos = np.abs(Eg) / np.sqrt(np.clip(Eg ** 2 - D ** 2, 1e-6, None))\ndos[np.abs(Eg) < D] = 0.0\ndx = Eg[1] - Eg[0]\nA = gaussian_filter1d(dos, 0.004 / dx)\nedc = A / (np.exp(Eg / 0.004) + 1.0) + 0.05 + rng.normal(0, 0.01, Eg.size)\nsym = edc + edc[::-1]                            # symmetrise about E_F\n\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(7.4, 3.4))\na1.plot(Eg * 1000, edc, color=\"#3776ab\")\na1.set_xlabel(r\"$E - E_F$ (meV)\"); a1.set_ylabel(\"intensity\")\na1.set_title(r\"EDC at $k_F$\")\na2.plot(Eg * 1000, sym, color=\"#3776ab\")\nfor s in (-D, D):\n    a2.axvline(s * 1000, color=\"#e07b39\", ls=\"--\", lw=1)\na2.set_xlabel(r\"$E - E_F$ (meV)\"); a2.set_ylabel(\"intensity\")\na2.set_title(r\"symmetrised: $2\\Delta = %d$ meV\" % int(round(2000 * D)))\nfig.suptitle(\"8. superconducting gap\")\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "markdown",
+   "source": "## That's the tour\n\nYou have gone from a raw dispersion to band structure, momentum, a Fermi\nsurface, the energy resolution, the electron self-energy and a\nsuperconducting gap. Each step has its own standalone example in the\n**Spectroscopy** category with more detail (Fermi surfaces, k-conversion,\ncurvature, gold fitting, MDC self-energy, the gap, plus photon-energy/kz,\nnanoARPES, TR-ARPES and Brillouin zones). With `peaks` installed\n(`pip install peaks-arpes`) the same chain runs on real beamline data.\n"
+  }
+ ]
+}

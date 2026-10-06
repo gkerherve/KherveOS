@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# ARPES band curvature (second-derivative) enhancement\n\nFaint bands in an ARPES dispersion are often sharpened by taking a\n**curvature** or **second-derivative** of the intensity — a standard\nanalysis trick that suppresses the smooth background and highlights peak\npositions. A simple energy curvature is\n\n> *C* = −∂²*I* / ∂*E*²&nbsp;&nbsp; (negative values clipped to zero)\n\nso that intensity maxima (band positions) become bright ridges.\n\n[`peaks`](https://github.com/phrgab/peaks) provides processing tools for\nexactly this — **gradient** and **curvature** operators that run over the\nenergy or momentum axis of a dispersion. The cell below applies the\nenergy second-derivative by hand (`np.gradient` twice) to a synthetic\nparabolic band, showing the raw dispersion next to its curvature.\n"
+  },
+  {
+   "type": "code",
+   "source": "\n# Band-curvature enhancement of an ARPES dispersion.\n# C = -d2I/dE2 (np.gradient twice along the energy axis), negatives clipped.\n# This standard ARPES trick sharpens faint bands; peaks ships gradient and\n# curvature processing tools that do the same over a real dispersion. Here\n# we build a synthetic parabolic band so the example always runs.\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nrng = np.random.default_rng(0)\ntheta = np.linspace(-16, 16, 220)               # emission angle (deg)\nE = np.linspace(-0.70, 0.10, 300)               # E - E_F (eV)\nTH, EE = np.meshgrid(theta, E)\nband = -0.45 + 0.0045 * TH ** 2                 # parabolic band minimum\ngamma = 0.02 + 0.05 * band ** 2                 # lifetime broadening\nspectral = (gamma / np.pi) / ((EE - band) ** 2 + gamma ** 2)\nfermi = 1.0 / (np.exp(EE / 0.012) + 1.0)        # Fermi-Dirac cut-off\nI = spectral * fermi\nI = I / I.max() + 0.02 * rng.random(I.shape)\n\n# Second derivative along the energy axis (axis 0), then clip negatives.\ndIdE = np.gradient(I, E, axis=0)\nd2IdE2 = np.gradient(dIdE, E, axis=0)\ncurv = np.clip(-d2IdE2, 0, None)                # curvature enhancement\n\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(8.0, 3.8))\n\npm1 = a1.pcolormesh(theta, E, I, cmap=\"inferno\", shading=\"auto\")\na1.axhline(0, color=\"w\", ls=\"--\", lw=0.8, alpha=0.7)\na1.set_xlabel(r\"emission angle  $\\theta_\\parallel$  (deg)\")\na1.set_ylabel(r\"$E - E_F$  (eV)\")\na1.set_title(\"raw dispersion\")\nfig.colorbar(pm1, ax=a1, label=\"intensity (arb.)\")\n\npm2 = a2.pcolormesh(theta, E, curv, cmap=\"viridis\", shading=\"auto\")\na2.axhline(0, color=\"w\", ls=\"--\", lw=0.8, alpha=0.7)\na2.set_xlabel(r\"emission angle  $\\theta_\\parallel$  (deg)\")\na2.set_ylabel(r\"$E - E_F$  (eV)\")\na2.set_title(r\"curvature  $-\\partial^2 I / \\partial E^2$\")\nfig.colorbar(pm2, ax=a2, label=\"curvature (arb.)\")\n\nfig.tight_layout()\nfig\n"
+  }
+ ]
+}

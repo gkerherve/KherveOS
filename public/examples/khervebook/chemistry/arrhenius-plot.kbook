@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Arrhenius Plot\nRate constants vs temperature: ln k against 1/T gives −Ea/R as the slope."
+  },
+  {
+   "type": "latex",
+   "source": "k = A\\, e^{-E_a / RT}"
+  },
+  {
+   "type": "code",
+   "source": "T = np.array([300, 320, 340, 360, 380, 400.])\nk = np.array([0.012, 0.048, 0.16, 0.47, 1.22, 2.9])\nslope, icept = np.polyfit(1 / T, np.log(k), 1)\nEa = -slope * 8.314\nprint(f'Ea = {Ea / 1000:.1f} kJ/mol')\nfig, ax = plt.subplots()\nax.plot(1 / T, np.log(k), 'o', label='data')\nax.plot(1 / T, slope / T + icept, 'r-', label='fit')\nax.set_xlabel('1/T (1/K)'); ax.set_ylabel('ln k')\nax.legend(); ax.grid(alpha=0.3)\nfig"
+  }
+ ]
+}

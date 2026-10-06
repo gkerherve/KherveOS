@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Symbolic Calculus\n`sympy` is preloaded — differentiate and integrate symbolically."
+  },
+  {
+   "type": "code",
+   "source": "x = sympy.symbols('x')\nexpr = sympy.sin(x) * sympy.exp(-x)\nprint('d/dx :', sympy.diff(expr, x))\nprint('∫dx  :', sympy.integrate(expr, x))\nsympy.integrate(expr, (x, 0, sympy.oo))"
+  },
+  {
+   "type": "latex",
+   "source": "\\int_0^\\infty \\sin(x)\\,e^{-x}\\,dx = \\frac{1}{2}"
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Fourier & Taylor\nThe continuous Fourier transform decomposes a signal into frequencies, and the Taylor series expands a smooth function as a power series about a point."
+  },
+  {
+   "type": "latex",
+   "source": "\\hat{f}(\\xi) = \\int_{-\\infty}^{\\infty} f(x)\\, e^{-2\\pi i x \\xi}\\, dx"
+  },
+  {
+   "type": "latex",
+   "source": "f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!}(x-a)^n"
+  }
+ ]
+}

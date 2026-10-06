@@ -1,0 +1,22 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# World Population\nThe 15 most populous countries, with density and a bar chart."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Population\", \"rows\": 16, \"cols\": 4, \"data\": {\"A1\": \"Country\", \"B1\": \"Population (M)\", \"C1\": \"Area (km2)\", \"D1\": \"Density (per km2)\", \"A2\": \"China\", \"B2\": \"1412\", \"C2\": \"9597000\", \"D2\": \"=B2*1000000/C2\", \"A3\": \"India\", \"B3\": \"1408\", \"C3\": \"3287000\", \"D3\": \"=B3*1000000/C3\", \"A4\": \"USA\", \"B4\": \"331\", \"C4\": \"9834000\", \"D4\": \"=B4*1000000/C4\", \"A5\": \"Indonesia\", \"B5\": \"274\", \"C5\": \"1905000\", \"D5\": \"=B5*1000000/C5\", \"A6\": \"Pakistan\", \"B6\": \"221\", \"C6\": \"881000\", \"D6\": \"=B6*1000000/C6\", \"A7\": \"Brazil\", \"B7\": \"214\", \"C7\": \"8516000\", \"D7\": \"=B7*1000000/C7\", \"A8\": \"Nigeria\", \"B8\": \"211\", \"C8\": \"924000\", \"D8\": \"=B8*1000000/C8\", \"A9\": \"Bangladesh\", \"B9\": \"166\", \"C9\": \"148000\", \"D9\": \"=B9*1000000/C9\", \"A10\": \"Russia\", \"B10\": \"146\", \"C10\": \"17098000\", \"D10\": \"=B10*1000000/C10\", \"A11\": \"Mexico\", \"B11\": \"130\", \"C11\": \"1964000\", \"D11\": \"=B11*1000000/C11\", \"A12\": \"Japan\", \"B12\": \"126\", \"C12\": \"378000\", \"D12\": \"=B12*1000000/C12\", \"A13\": \"Ethiopia\", \"B13\": \"118\", \"C13\": \"1104000\", \"D13\": \"=B13*1000000/C13\", \"A14\": \"Philippines\", \"B14\": \"111\", \"C14\": \"300000\", \"D14\": \"=B14*1000000/C14\", \"A15\": \"Egypt\", \"B15\": \"102\", \"C15\": \"1002000\", \"D15\": \"=B15*1000000/C15\", \"A16\": \"Germany\", \"B16\": \"84\", \"C16\": \"357000\", \"D16\": \"=B16*1000000/C16\"}}], \"active\": \"Population\"}"
+  },
+  {
+   "type": "code",
+   "source": "rows = sheet1[1:]\nnames = [r[0] for r in rows]\npop = [float(r[1]) for r in rows]\nfig, ax = plt.subplots(figsize=(6, 5))\nax.barh(names[::-1], pop[::-1], color='#3776ab')\nax.set_xlabel('Population (millions)')\nax.set_title('Most populous countries')\nfig.tight_layout()\nfig"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><circle cx=\"120\" cy=\"75\" r=\"56\" fill=\"#3776ab\"/><g fill=\"none\" stroke=\"#cfe3f6\" stroke-width=\"2\"><ellipse cx=\"120\" cy=\"75\" rx=\"23\" ry=\"56\"/><ellipse cx=\"120\" cy=\"75\" rx=\"46\" ry=\"56\"/><line x1=\"64\" y1=\"75\" x2=\"176\" y2=\"75\"/><path d=\"M74 44 H166 M74 106 H166\"/></g></svg>"
+  }
+ ]
+}

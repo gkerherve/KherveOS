@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# LaTeX Document — Physics Notes\nA longer **latex document** mixing prose and inline `$...$` math across several sections. It typesets with `tectonic` when available, and reads cleanly through the offline fallback otherwise."
+  },
+  {
+   "type": "latex",
+   "source": "\\documentclass[12pt]{article}\n\\usepackage{amsmath, amssymb}\n\\title{\\textbf{A page of physics}}\n\\author{KherveBook}\n\\date{}\n\\begin{document}\n\\maketitle\n\n\\section*{Mechanics}\nNewton's second law states that force equals the rate of change of\nmomentum, $F = m a$ for constant mass. The kinetic energy of a body is\n$E_k = \\frac{1}{2} m v^2$, and the period of a simple pendulum grows\nwith its length $L$ as $T = 2\\pi \\sqrt{L / g}$.\n\n\\section*{Thermodynamics}\nFor an ideal gas the state variables obey $p V = n R T$. Entropy and\nthe number of microstates are linked by Boltzmann's relation\n$S = k_B \\ln \\Omega$, one of the deepest results in physics.\n\n\\section*{Relativity}\nA moving clock runs slow by the Lorentz factor $\\gamma$, and the total\nenergy of a particle is $E = \\gamma m c^2$. In the rest frame this\nreduces to the famous $E = mc^2$.\n\n\\section*{Closing note}\nEach paragraph above mixes \\textbf{prose} with inline math such as\n$\\hbar$, $\\nabla$ and $\\int$ --- exactly what a document-style latex\ncell is for.\n\\end{document}"
+  }
+ ]
+}

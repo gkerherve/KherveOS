@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Chart.js Bar Chart\nA bar chart drawn with **Chart.js** loaded from a CDN. Hover a bar to highlight it in orange. *Needs internet* — the library is fetched from `cdn.jsdelivr.net` at run time."
+  },
+  {
+   "type": "js",
+   "source": "<canvas id=\"bar\" width=\"480\" height=\"300\"></canvas>\n<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>\n<script>\nwindow.addEventListener(\"load\", function () {\n    const ctx = document.getElementById(\"bar\").getContext(\"2d\");\n    new Chart(ctx, {\n        type: \"bar\",\n        data: {\n            labels: [\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\", \"Sun\"],\n            datasets: [{\n                label: \"Visitors\",\n                data: [120, 190, 170, 220, 260, 90, 60],\n                backgroundColor: \"#3776ab\",\n                hoverBackgroundColor: \"#e07b39\",\n                borderRadius: 4\n            }]\n        },\n        options: {\n            responsive: false,\n            plugins: { legend: { display: true } },\n            scales: { y: { beginAtZero: true } }\n        }\n    });\n});\n</script>"
+  }
+ ]
+}

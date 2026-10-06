@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Pair distribution function (PDF)\n\nBeyond the Bragg peaks, **total scattering** captures the diffuse signal\ntoo, and its Fourier transform reveals the **local** structure directly in\nreal space. The reduced total-scattering structure function *S*(*Q*) − 1\n(with *Q* = 4π sinθ/λ) transforms to the **pair distribution function**\n*G*(*r*) by a sine transform:\n\n$$G(r) = \\frac{2}{\\pi}\\int_0^{Q_{\\max}} Q\\,[S(Q) - 1]\\,\\sin(Qr)\\,dQ$$\n\n*G*(*r*) is a histogram of **interatomic distances**: each peak sits at a\nnearest-neighbour, next-nearest-neighbour, … separation, and its area\ncounts the neighbours in that shell. PDF analysis (e.g. **PDFgui** /\n**diffpy**) works for crystalline *and* amorphous or nanostructured\nmaterials, where Bragg analysis alone falls short.\n\nThe cell below builds an oscillatory *S*(*Q*) and sine-transforms it to a\n*G*(*r*) with peaks at a few coordination-shell distances.\n"
+  },
+  {
+   "type": "code",
+   "source": "\n# Pair distribution function: build a total-scattering S(Q) whose\n# oscillations encode a set of interatomic distances, then sine-Fourier-\n# transform to the PDF G(r). Peaks in G(r) sit at the coordination shells.\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nrng = np.random.default_rng(0)\n\n# Coordination shells (Angstrom) and their relative weights.\nshells = np.array([2.50, 3.55, 4.35, 5.00])       # nearest-neighbour radii\nweights = np.array([1.00, 0.60, 0.45, 0.30])\n\nQ = np.linspace(0.5, 20.0, 1600)                  # momentum transfer (1/Ang)\n\n# F(Q) = Q[S(Q)-1] is a damped sum of sine waves, one per shell distance.\nFQ = np.zeros_like(Q)\nfor r0, w in zip(shells, weights):\n    FQ += w * np.sin(Q * r0) * np.exp(-(Q * 0.045) ** 2)\nSQ = 1.0 + FQ / Q                                  # the structure function\nSQ += rng.normal(0.0, 0.01, Q.size)               # counting noise\n\n# Sine Fourier transform F(Q) -> G(r) = (2/pi) integral Q[S-1] sin(Qr) dQ.\nr = np.linspace(0.5, 8.0, 800)\ndQ = Q[1] - Q[0]\nGr = (2.0 / np.pi) * (np.sin(np.outer(r, Q)) * FQ).sum(axis=1) * dQ\n\nfig, (a1, a2) = plt.subplots(1, 2, figsize=(8.4, 3.8))\na1.plot(Q, SQ, color=\"#3776ab\", lw=0.9)\na1.axhline(1.0, color=\"0.6\", ls=\":\", lw=0.8)\na1.set_xlabel(r\"$Q$ (1/$\\mathrm{\\AA}$)\")\na1.set_ylabel(r\"$S(Q)$\")\na1.set_title(\"total-scattering structure function\")\n\na2.plot(r, Gr, color=\"#50bea0\", lw=1.6)\nfor r0 in shells:\n    a2.axvline(r0, color=\"#e07b39\", ls=\"--\", lw=0.8, alpha=0.7)\na2.set_xlabel(r\"$r$ ($\\mathrm{\\AA}$)\")\na2.set_ylabel(r\"$G(r)$\")\na2.set_title(\"pair distribution function\")\nfig.tight_layout()\nfig\n"
+  }
+ ]
+}

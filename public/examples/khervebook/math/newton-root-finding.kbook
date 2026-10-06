@@ -1,0 +1,18 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Newton Root Finding\nQuadratic convergence to √2 — each step doubles the correct digits."
+  },
+  {
+   "type": "latex",
+   "source": "x_{n+1} = x_n - \\frac{f(x_n)}{f'(x_n)}"
+  },
+  {
+   "type": "code",
+   "source": "f = lambda x: x**2 - 2\ndf = lambda x: 2 * x\nx, steps = 3.0, [3.0]\nfor _ in range(6):\n    x = x - f(x) / df(x)\n    steps.append(x)\nfor i, s in enumerate(steps):\n    print(f'x{i} = {s:.15f}   err = {abs(s-2**0.5):.2e}')\nxs = np.linspace(0.5, 3.2, 200)\nfig, ax = plt.subplots()\nax.plot(xs, f(xs)); ax.axhline(0, color='k', lw=0.6)\nax.plot(steps, [f(s) for s in steps], 'ro-', alpha=0.6)\nfig"
+  }
+ ]
+}

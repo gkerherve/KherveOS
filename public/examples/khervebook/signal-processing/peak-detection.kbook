@@ -1,0 +1,14 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Peak Detection\n`scipy.signal.find_peaks` with prominence filtering."
+  },
+  {
+   "type": "code",
+   "source": "from scipy.signal import find_peaks\nrng = np.random.default_rng(4)\nx = np.linspace(0, 10, 1500)\ny = rng.normal(0, 0.08, 1500)\nfor c, h, w in [(1.5, 1, .1), (3.2, 2.4, .15), (5, 1.4, .1),\n                (6.8, .8, .12), (8.6, 1.9, .2)]:\n    y += h * np.exp(-(x - c)**2 / (2 * w**2))\nidx, props = find_peaks(y, prominence=0.5)\nprint('peaks at x =', x[idx].round(2))\nfig, ax = plt.subplots()\nax.plot(x, y, lw=0.8)\nax.plot(x[idx], y[idx], 'rv', ms=8)\nfig"
+  }
+ ]
+}

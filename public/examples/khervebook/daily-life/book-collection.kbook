@@ -1,0 +1,22 @@
+{
+ "format": "kbook",
+ "version": 1,
+ "cells": [
+  {
+   "type": "markdown",
+   "source": "# Book Collection\nA small library catalogue with ratings."
+  },
+  {
+   "type": "sheet",
+   "source": "{\"sheets\": [{\"name\": \"Books\", \"rows\": 11, \"cols\": 6, \"data\": {\"A1\": \"Title\", \"B1\": \"Author\", \"C1\": \"Year\", \"D1\": \"Pages\", \"E1\": \"Genre\", \"F1\": \"Rating\", \"A2\": \"1984\", \"B2\": \"George Orwell\", \"C2\": \"1949\", \"D2\": \"328\", \"E2\": \"Dystopian\", \"F2\": \"4.7\", \"A3\": \"Dune\", \"B3\": \"Frank Herbert\", \"C3\": \"1965\", \"D3\": \"412\", \"E3\": \"Sci-Fi\", \"F3\": \"4.6\", \"A4\": \"Pride and Prejudice\", \"B4\": \"Jane Austen\", \"C4\": \"1813\", \"D4\": \"279\", \"E4\": \"Romance\", \"F4\": \"4.5\", \"A5\": \"The Hobbit\", \"B5\": \"J.R.R. Tolkien\", \"C5\": \"1937\", \"D5\": \"310\", \"E5\": \"Fantasy\", \"F5\": \"4.7\", \"A6\": \"Brave New World\", \"B6\": \"Aldous Huxley\", \"C6\": \"1932\", \"D6\": \"311\", \"E6\": \"Dystopian\", \"F6\": \"4.3\", \"A7\": \"Crime and Punishment\", \"B7\": \"Dostoevsky\", \"C7\": \"1866\", \"D7\": \"671\", \"E7\": \"Fiction\", \"F7\": \"4.4\", \"A8\": \"The Great Gatsby\", \"B8\": \"F. Scott Fitzgerald\", \"C8\": \"1925\", \"D8\": \"180\", \"E8\": \"Fiction\", \"F8\": \"4.2\", \"A9\": \"Sapiens\", \"B9\": \"Yuval N. Harari\", \"C9\": \"2011\", \"D9\": \"443\", \"E9\": \"Non-Fiction\", \"F9\": \"4.4\", \"A10\": \"To Kill a Mockingbird\", \"B10\": \"Harper Lee\", \"C10\": \"1960\", \"D10\": \"281\", \"E10\": \"Fiction\", \"F10\": \"4.6\", \"A11\": \"The Alchemist\", \"B11\": \"Paulo Coelho\", \"C11\": \"1988\", \"D11\": \"197\", \"E11\": \"Fiction\", \"F11\": \"4.2\"}}], \"active\": \"Books\"}"
+  },
+  {
+   "type": "code",
+   "source": "\n# Auto-chart of the sheet's numeric columns (reads the live sheet1 grid).\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ngrid = [list(r) for r in sheet1]\nhdr = grid[0] if grid else []\nrows = grid[1:] if len(grid) > 1 else []\nwhile rows and all(c in (None, \"\") for c in rows[-1]):   # drop blank padding\n    rows.pop()\nncol = max((len(r) for r in grid), default=0)\n\n\ndef _col(j):\n    out = []\n    for r in rows:\n        try:\n            out.append(float(str(r[j]).replace(\",\", \"\")))\n        except Exception:\n            out.append(np.nan)\n    return np.array(out, dtype=float)\n\n\nnum = [j for j in range(ncol)\n       if np.isfinite(_col(j)).sum() >= max(2, 0.4 * len(rows))]\nlabel_j = next((j for j in range(ncol) if j not in num), None)\nseries = [j for j in num if j != label_j][:3] or num[:3]\n\nfig, ax = plt.subplots(figsize=(6, 4))\nif not series:\n    ax.text(0.5, 0.5, \"no numeric columns to chart\",\n            ha=\"center\", va=\"center\", color=\"0.5\")\n    ax.axis(\"off\")\nelif label_j is not None and len(rows) <= 16:\n    labels = [str(r[label_j]) for r in rows]\n    x = np.arange(len(rows))\n    w = 0.8 / len(series)\n    for k, j in enumerate(series):\n        ax.bar(x + k * w, np.nan_to_num(_col(j)), w,\n               label=str(hdr[j]) if j < len(hdr) else \"\")\n    ax.set_xticks(x + 0.4 - w / 2)\n    ax.set_xticklabels(labels, rotation=45, ha=\"right\", fontsize=8)\n    if len(series) > 1:\n        ax.legend(fontsize=8)\nelif label_j is None and len(series) == 1:\n    ax.plot(np.arange(len(rows)), _col(series[0]), color=\"#3776ab\")\nelse:\n    xj = None if label_j is not None else series[0]\n    ys = [j for j in series if j != xj]\n    xv = np.arange(len(rows)) if xj is None else _col(xj)\n    for j in ys:\n        ax.plot(xv, _col(j), label=str(hdr[j]) if j < len(hdr) else \"\")\n    if xj is not None and xj < len(hdr):\n        ax.set_xlabel(str(hdr[xj]))\n    ax.legend(fontsize=8)\nif series:\n    ax.set_title(\"Book Collection\")\n    ax.grid(True, alpha=0.3)\nfig.tight_layout()\nfig\n"
+  },
+  {
+   "type": "svg",
+   "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\" width=\"240\" height=\"150\"><rect width=\"240\" height=\"150\" rx=\"12\" fill=\"#f4f7fb\"/><polygon points=\"120,38 46,96 194,96\" fill=\"#e07b39\"/><rect x=\"66\" y=\"96\" width=\"108\" height=\"54\" fill=\"#3776ab\"/><rect x=\"104\" y=\"116\" width=\"32\" height=\"34\" fill=\"#f4f7fb\"/></svg>"
+  }
+ ]
+}
