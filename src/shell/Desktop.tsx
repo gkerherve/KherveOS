@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ImageIcon, Settings as SettingsIcon } from 'lucide-react'
+import { AppWindow, ImageIcon, LayoutGrid, Maximize2, Minimize2, Settings as SettingsIcon } from 'lucide-react'
 import { fs, useDir } from '@/os/vfs'
 import { HOME } from '@/os/path'
 import { APPS } from '@/os/registry'
@@ -12,6 +12,9 @@ import { os } from '@/os'
 import { AppIcon } from '@/os/ui/AppIcon'
 import type { AppManifest } from '@/os/types'
 import { wallpaperCss } from './wallpapers'
+import { appGroups } from './appsMenu'
+import { openLaunchpad } from './ui'
+import { isFullscreen, toggleFullscreen } from '@/os/fullscreen'
 
 const DESKTOP = `${HOME}/Desktop`
 
@@ -91,12 +94,23 @@ export function Desktop() {
       onPointerDown={(e) => e.target === e.currentTarget && setSelected(null)}
       onContextMenu={(e) => {
         e.preventDefault()
-        if (e.target !== e.currentTarget) return
+        // Icons have their own menu; anywhere else on the desktop gets this one.
+        if ((e.target as HTMLElement).closest('.k-desktop-icon')) return
+        const full = isFullscreen()
         showContextMenu(
           e,
           folderMenu(DESKTOP, [
-            { label: 'Wallpaper…', icon: ImageIcon, onClick: () => open('settings', { section: 'appearance' }) },
-            { label: 'Settings', icon: SettingsIcon, onClick: () => open('settings') },
+            { label: 'Open App', icon: AppWindow, submenu: appGroups((id) => open(id)) },
+            { label: 'All Apps…', icon: LayoutGrid, onClick: openLaunchpad },
+            '-',
+            { label: 'Change Wallpaper…', icon: ImageIcon, onClick: () => open('settings', { section: 'appearance' }) },
+            {
+              label: showApps ? 'Hide App Shortcuts' : 'Show App Shortcuts',
+              onClick: () => useSettings.getState().set({ desktopIcons: !showApps }),
+            },
+            { label: full ? 'Exit Full Screen' : 'Enter Full Screen', icon: full ? Minimize2 : Maximize2, onClick: () => void toggleFullscreen() },
+            '-',
+            { label: 'Settings…', icon: SettingsIcon, onClick: () => open('settings') },
           ]),
         )
       }}

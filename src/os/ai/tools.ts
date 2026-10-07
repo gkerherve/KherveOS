@@ -377,13 +377,15 @@ export const KTOOLS: KTool[] = [
     name: 'open_app',
     description:
       'Open a KherveOS app in a window on the user\'s screen, optionally with a file or folder ("path") or, for the Browser, ' +
-      'a web address ("url"). Apps: files, notepad, terminal, khervebook, browser, viewer, settings… (list_apps has them all). ' +
+      'a web address ("url"), or, for KherveDB (the XPS binding-energy database), the element to show ("element", e.g. "O" ' +
+      'for oxygen). Apps: files, notepad, terminal, khervebook, khervedb, browser, viewer, settings… (list_apps has them all). ' +
       'Returns the window id.',
     inputSchema: object(
       {
         app: str('The app id or name, e.g. "notepad" or "KherveBook".'),
         path: str(`A file or folder for the app to open. ${PATH_HELP}`),
         url: str('For the Browser: the web address to open.'),
+        element: str('For KherveDB: the chemical symbol of the element to show, e.g. "O", "Fe".'),
       },
       ['app'],
     ),
@@ -403,6 +405,8 @@ export const KTOOLS: KTool[] = [
         if (/^[a-z][a-z0-9+.-]*:/i.test(url) && !/^https?:\/\//i.test(url)) throw new Error('Only http:// and https:// addresses can be opened.')
         args.url = /^https?:\/\//i.test(url) ? url : `https://${url}`
       }
+      const element = optText(a, 'element')?.trim()
+      if (element) args.element = element
       const id = os.open(app.id, args)
       if (!id) throw new Error(`${app.name} could not be opened.`)
       return { window: id, app: app.id, ...(args.path && { path: pretty(args.path) }) }
