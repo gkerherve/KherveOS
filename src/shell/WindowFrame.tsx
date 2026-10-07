@@ -3,13 +3,14 @@
 // order and stacked with z-index — never re-ordered in the DOM, because moving
 // an <iframe> in the DOM reloads it (Browser tabs and games would restart).
 
-import { Component, Suspense, lazy, memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { Component, Suspense, lazy, memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type ErrorInfo, type ReactNode } from 'react'
 import { useWindows, setCloseGuard, isSmallScreen, desktopSize, type WinState } from '@/os/windows'
 import { getApp } from '@/os/registry'
 import { setWindowMenus } from '@/os/menus'
 import { useWindowTheme } from '@/os/themes'
 import { Spinner } from '@/os/ui/ServerGate'
 import { os } from '@/os'
+import { reportCrash } from '@/os/crash'
 import { HOME, extname } from '@/os/path'
 import type { AppArgs, AppManifest, AppProps, WindowApi } from '@/os/types'
 import { animateMinimize, animateRestore, captureWindow, forgetWindow, tileFor, tileRects } from './minimize'
@@ -26,8 +27,9 @@ class AppErrorBoundary extends Component<{ name: string; onClose: () => void; ch
   static getDerivedStateFromError(error: Error) {
     return { error }
   }
-  componentDidCatch(error: Error) {
+  componentDidCatch(error: Error, info: ErrorInfo) {
     console.error(`[${this.props.name}] crashed`, error)
+    reportCrash(this.props.name, error, info.componentStack ?? '')
   }
   render() {
     if (!this.state.error) return this.props.children

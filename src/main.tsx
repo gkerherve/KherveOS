@@ -3,6 +3,9 @@ import './styles/global.css'
 import './shell/shell.css'
 import { Shell } from './shell/Shell'
 import { fs } from './os/vfs'
+import { installCrashReporter } from './os/crash'
+
+installCrashReporter()
 
 const root = createRoot(document.getElementById('root')!)
 
