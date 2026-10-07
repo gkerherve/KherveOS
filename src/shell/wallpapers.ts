@@ -6,7 +6,8 @@ export interface Wallpaper {
   css: string
 }
 
-// The picture is the user's artwork at twice its size (tools/make_wallpaper.py), with floor added below it
+// The picture is the user's artwork upscaled 3× by Real-ESRGAN (tools/upscale_wallpaper.py, then
+// tools/make_wallpaper.py), with floor added below it
 // (a fading reflection), so its caption sits above the Dock. Anchored at the
 // bottom: on wide screens the top is what gets cropped, never the caption.
 export const WALLPAPER: Wallpaper = {

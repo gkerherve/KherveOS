@@ -2,7 +2,10 @@
 
     ../KherveBook/.venv/bin/python tools/make_wallpaper.py tools/wallpaper/ktools-tech-lab.jpg public/wallpapers/ktools-tech-lab.webp 2
 
-(Any Python with Pillow. Pass --upscaled for a picture already enlarged elsewhere.)
+(Any Python with Pillow.) The wallpaper in use is built from the AI-upscaled
+picture (tools/upscale_wallpaper.py, 3×):
+
+    tools/make_wallpaper.py lab3x.png public/wallpapers/ktools-tech-lab.webp --upscaled
 
 The picture is enlarged (Lanczos + a light unsharp mask, unless it is already
 upscaled), then gets a strip of floor below it: the floor's own fading
@@ -11,9 +14,10 @@ reflection, without the caption, so the caption sits above the Dock.
 import sys
 from PIL import Image, ImageFilter
 
-src_path, out_path = sys.argv[1], sys.argv[2]
-scale = float(sys.argv[3]) if len(sys.argv) > 3 else 2.0
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
 pre_upscaled = "--upscaled" in sys.argv
+src_path, out_path = args[0], args[1]
+scale = float(args[2]) if len(args) > 2 else 2.0
 
 src = Image.open(src_path).convert("RGB")
 if pre_upscaled:
