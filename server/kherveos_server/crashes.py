@@ -2,7 +2,8 @@
 
 When an app crashes in someone's browser, the browser sends the error here (only
 when signed in), so it can be read in the server's log instead of being copied
-out of a dialog. POST /api/crash {app, message, stack, component}.
+out of a dialog. Reports are also appended to data/crashes.log, which outlives
+restarts. POST /api/crash {app, message, stack, component}.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ import time
 from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, Field
 
+from . import config
 from .auth import User, current_user
 
 router = APIRouter(prefix="/api/crash", tags=["crash"])
@@ -37,6 +39,13 @@ async def report(crash: Crash, user: User = Depends(current_user)) -> Response:
         times.append(now)
         lines = [f"[crash] {crash.app} ({user.username}): {crash.message}"]
         lines += [f"    {line}" for line in (crash.stack + "\n" + crash.component).strip().splitlines()[:60]]
-        print("\n".join(lines), file=sys.stderr, flush=True)
+        text = "\n".join(lines)
+        print(text, file=sys.stderr, flush=True)
+        try:
+            config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+            with open(config.DATA_DIR / "crashes.log", "a", encoding="utf-8") as f:
+                f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {text}\n")
+        except OSError:
+            pass
     _recent[user.id] = times
     return Response(status_code=204)
