@@ -40,14 +40,17 @@ Shell, Files, Notepad, Terminal, Viewer, Settings, Browser, Messages, Email,
 games launcher (PlanetCraft, SimAI, FaceCraft), Python in the browser, server.
 
 Still open in stage 1:
-- [ ] **KherveBook parity** with the desktop app (`../KherveBook`, dev): layout,
-      toolbars, Files + AI Chat panels, Examples menu (181 notebooks already exported
-      to `public/examples/khervebook/` by `tools/export_khervebook_examples.py`),
-      sheet, SVG and JavaScript cells, live loops ("runs continuously"), np/plt/pd
-      preloaded. A sub-agent was working on it on 2026-10-06 — check
-      `src/apps/khervebook/` and finish/test it.
+- [x] **KherveBook parity** with the desktop app (`../KherveBook`, dev): layout,
+      toolbars, Files + AI Chat panels, Examples menu (181 notebooks exported to
+      `public/examples/khervebook/` by `tools/export_khervebook_examples.py`), sheet,
+      SVG and JavaScript cells, live loops, np/plt/pd preloaded — done 2026-10-07.
 
 ### AI — KherveAI and the MCP server (requested 2026-10-07)
+- [x] Assistant app (from the "AI chatbox and Claude integration" session): Claude
+      through the server's ANTHROPIC_API_KEY (`server/kherveos_server/ai.py`,
+      `/api/ai/status`, `/api/ai/chat`), or Ollama; client `src/os/ai/index.ts`.
+      To do: fold it into KherveAI as its "KherveOS server" provider, so there is
+      one AI app.
 - [ ] KherveOS tool registry (`src/os/ai/tools.ts`): files, apps, windows, Python,
       notebooks — shared by KherveAI and MCP; destructive actions need the user's OK
 - [ ] KherveAI app: chat with Ollama (local; installed here with qwen3.5:4b,
@@ -101,6 +104,10 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
   a server. Messages: unread badge on the Dock icon. Deployment.
 
 ## Log
+- 2026-10-07 05:35 — KherveBook committed and checked in the browser (welcome notebook,
+  plots, Examples menu, an XPS example); fixed its panel layout. Assistant committed.
+  Agents still running: PDF+KhervePDF, Git+KhervePY, LaTeX+KherveTeX, MCP+tool
+  registry, KherveAI.
 - 2026-10-07 00:10 — Usage limit reached. Applications menu (Dock, bottom-left: Office /
   Science / Development / Internet / Tools / Games submenus) committed; its submenu fix
   (portal) is type-checked but not yet seen in the browser — check it first. The four
