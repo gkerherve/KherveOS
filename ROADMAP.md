@@ -107,7 +107,7 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       drawing/flowchart/chemistry/equation-builder editors, Typst, Git history,
       .docx/.pdf/.md import, the KherveRef picker
 - [ ] KherveNote (`../KherveNote`) — transcription later (Whisper on WebGPU)
-- [ ] KherveSlide (`../KherveSlide`)
+- [x] KherveSlide (`../KherveSlide`) — done 2026-10-07 (not ported: PowerPoint, drawing/chemistry editors, video, two screens)
 
 ### 4. KherveSheet, KhervePaint, KherveFitting
 - [x] KherveSheet (`../KherveSheet`, dev) — grid, `=PY` cells in Pyodide, charts — done
