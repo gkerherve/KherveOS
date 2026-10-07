@@ -1,0 +1,920 @@
+/* KherveMol. Every rule is scoped under the app's root (.km-app) or a km-
+   class of its own (menus and the periodic table float above it). Chrome
+   colours come from the theme variables; the drawing surfaces keep the
+   desktop's own (the 3D gradient, the white 2D sheet and previews). */
+
+.km-app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-size: 13px;
+  overflow: hidden;
+  background: var(--k-bg);
+  color: var(--k-text);
+}
+.km-app .km-mdi {
+  display: block;
+  flex: none;
+}
+
+/* ------------------------------------------------------------ toolbars */
+.km-app .km-toolbars {
+  flex: none;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+}
+.km-app .km-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1px;
+  min-height: 34px;
+  padding: 2px 6px;
+}
+.km-app .km-toolbar + .km-toolbar {
+  border-top: 1px solid var(--k-border);
+}
+.km-app .km-tb {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--k-accent);
+  cursor: pointer;
+}
+.km-app .km-tb:hover:not(:disabled) {
+  background: var(--k-button-hover);
+}
+.km-app .km-tb.on {
+  background: var(--k-selection);
+  border-color: color-mix(in srgb, var(--k-accent) 45%, transparent);
+}
+.km-app .km-tb:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.km-app .km-tbsep {
+  width: 1px;
+  height: 22px;
+  margin: 0 5px;
+  background: var(--k-border);
+}
+.km-app .km-tblabel {
+  padding: 0 6px;
+  color: var(--k-text);
+}
+
+/* ---------------------------------------------------------- the layout */
+.km-app .km-main {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.km-app .km-left,
+.km-app .km-right {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.km-app .km-center {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.km-app .km-split {
+  flex: none;
+  width: 5px;
+  cursor: col-resize;
+  background: var(--k-chrome);
+}
+.km-app .km-split.v {
+  width: auto;
+  height: 5px;
+  cursor: row-resize;
+}
+.km-app .km-split:hover {
+  background: var(--k-selection);
+}
+
+.km-app .km-dock {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+}
+.km-app .km-dock.fill {
+  flex: 1;
+}
+.km-app .km-dock-title {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 4px 0 8px;
+  background: var(--k-chrome);
+  color: var(--k-muted);
+  font-size: 12px;
+}
+.km-app .km-dock-title span {
+  flex: 1;
+}
+.km-app .km-dock-close {
+  border: none;
+  background: transparent;
+  color: var(--k-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.km-app .km-dock-close:hover {
+  color: var(--k-text);
+}
+.km-app .km-dock-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.km-app .km-dock-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.km-app .km-dock:not(.fill) .km-dock-fill {
+  flex: none;
+}
+.km-app .km-docktabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 2px 4px 0;
+  border-top: 1px solid var(--k-border);
+  background: var(--k-chrome);
+}
+.km-app .km-docktabs button {
+  border: 1px solid var(--k-border);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background: var(--k-chrome);
+  color: var(--k-text);
+  padding: 4px 14px;
+  cursor: pointer;
+}
+.km-app .km-docktabs button.on {
+  background: var(--k-bg);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- trees */
+.km-app .km-tree {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--k-bg);
+  user-select: none;
+  outline: none;
+}
+.km-app .km-structure {
+  display: flex;
+  flex-direction: column;
+}
+.km-app .km-thead,
+.km-app .km-trow {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 44px 62px 60px;
+  align-items: center;
+  min-height: 22px;
+}
+.km-app .km-thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  color: var(--k-muted);
+  font-size: 12px;
+}
+.km-app .km-tbody {
+  flex: 1;
+}
+.km-app .km-tcell {
+  padding: 0 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.km-app .km-tcell.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.km-app .km-tatom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.km-app .km-ttext {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.km-app .km-trow.alt {
+  background: var(--k-alt);
+}
+.km-app .km-trow.sel {
+  background: var(--k-selection);
+}
+.km-app .km-trow.ring {
+  color: var(--k-muted);
+}
+.km-app .km-trow.drop {
+  outline: 1px dashed var(--k-accent);
+  outline-offset: -1px;
+}
+.km-app .km-twisty {
+  display: inline-block;
+  width: 12px;
+  flex: none;
+  color: var(--k-muted);
+  cursor: pointer;
+  font-size: 10px;
+}
+.km-app .km-twisty.leaf {
+  cursor: default;
+}
+
+.km-app .km-lrow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 21px;
+  padding: 0 6px;
+  white-space: nowrap;
+  cursor: default;
+}
+.km-app .km-lrow.head {
+  font-size: 14px;
+  padding-left: 4px;
+}
+.km-app .km-lrow.group {
+  padding-left: 22px;
+}
+.km-app .km-lrow.leaf {
+  padding-left: 40px;
+}
+.km-app .km-library .km-lrow:hover,
+.km-app .km-extree .km-lrow:hover,
+.km-app .km-list .km-lrow:hover {
+  background: color-mix(in srgb, var(--k-selection) 50%, transparent);
+}
+.km-app .km-lrow.sel {
+  background: var(--k-selection);
+}
+.km-app .km-list .km-lrow.leaf {
+  padding-left: 8px;
+}
+
+/* ----------------------------------------------------------- the shelf */
+.km-app .km-shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  padding: 4px;
+}
+.km-app .km-hint {
+  color: var(--k-muted);
+  font-size: 12px;
+}
+.km-app .km-list {
+  flex: 1;
+  min-height: 60px;
+  overflow: auto;
+  border: 1px solid var(--k-border);
+  border-radius: 4px;
+}
+.km-app .km-shelfbtn {
+  flex: 1;
+  gap: 4px;
+}
+
+/* ------------------------------------------------------------- the tabs */
+.km-app .km-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.km-app .km-tabbar {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 4px 6px 0;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+}
+.km-app .km-tabbar button {
+  padding: 5px 16px;
+  border: 1px solid var(--k-border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: var(--k-chrome);
+  color: var(--k-text);
+  cursor: pointer;
+}
+.km-app .km-tabbar button.on {
+  background: var(--k-bg);
+  font-weight: 600;
+}
+.km-app .km-tabpage {
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* --------------------------------------------------------- the 3D view */
+.km-app .km-viewer,
+.km-app .km-sketch {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 4px;
+  gap: 2px;
+}
+.km-app .km-viewrow,
+.km-app .km-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 28px;
+}
+.km-app .km-cube {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--k-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.km-app .km-cube:hover {
+  background: var(--k-button-hover);
+}
+.km-app .km-stretch {
+  flex: 1;
+}
+.km-app .km-grow {
+  flex: 1;
+  min-width: 60px;
+}
+.km-app .km-gap {
+  width: 8px;
+}
+.km-app .km-label {
+  color: var(--k-text);
+  white-space: nowrap;
+}
+.km-app .km-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.km-app .km-flat {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--k-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.km-app .km-flat:hover:not(:disabled) {
+  background: var(--k-button-hover);
+}
+.km-app .km-flat:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.km-app .km-toggle.on {
+  background: var(--k-selection);
+  border-color: color-mix(in srgb, var(--k-accent) 45%, transparent);
+}
+.km-app .km-view {
+  position: relative;
+  flex: 1;
+  min-height: 200px;
+  overflow: hidden;
+  outline: none;
+  border: 1px solid var(--k-border);
+  touch-action: none;
+}
+.km-app .km-view.picking {
+  cursor: crosshair;
+}
+.km-app .km-view:focus-visible {
+  border-color: var(--k-accent);
+}
+.km-app .km-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+}
+.km-app .km-overlay {
+  pointer-events: none;
+}
+.km-app .km-vstatus {
+  flex: none;
+  padding: 2px 4px;
+  color: var(--k-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.km-app .km-slider {
+  accent-color: var(--k-accent);
+}
+.km-app .km-combo {
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--k-border);
+  border-radius: 4px;
+  background: var(--k-bg);
+  color: var(--k-text);
+}
+.km-app .km-elbtn {
+  min-width: 38px;
+  height: 26px;
+  padding: 3px 6px;
+  border: 1px solid #888;
+  border-radius: 3px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.km-app .km-elbtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.km-app .km-elbtn.km-table {
+  min-width: 78px;
+  padding: 3px 8px;
+  border-color: #666;
+}
+.km-app .km-num {
+  width: 68px;
+  height: 26px;
+  padding: 0 4px;
+}
+.km-app .km-spin {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.km-app .km-suffix {
+  color: var(--k-muted);
+}
+.km-app .km-groupcombo {
+  min-width: 130px;
+}
+.km-app .km-nudge {
+  min-width: 40px;
+}
+.km-app .km-nudge.turn {
+  min-width: 56px;
+}
+.km-app .km-elcombo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* --------------------------------------------------------- the 2D sheet */
+.km-app .km-sheet {
+  position: relative;
+  flex: 1;
+  min-height: 200px;
+  overflow: auto;
+  border: 1px solid var(--k-border);
+  background: #ffffff;
+}
+.km-app .km-sheet-canvas {
+  position: absolute;
+  display: block;
+  touch-action: none;
+}
+
+/* ------------------------------------------------------- start screen */
+.km-app .km-welcome {
+  position: relative;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  background: linear-gradient(135deg, var(--k-bg), var(--k-chrome));
+}
+.km-app .km-wall {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.km-app .km-wall-dot {
+  fill: var(--k-selection);
+  opacity: 0.35;
+}
+.km-app .km-card {
+  position: relative;
+  width: min(560px, calc(100% - 40px));
+  padding: 32px 36px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: var(--k-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.km-app .km-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.km-app .km-card-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+.km-app .km-card-sub,
+.km-app .km-card-empty,
+.km-app .km-recent-sub {
+  color: var(--k-muted);
+}
+.km-app .km-card-recent {
+  font-weight: 600;
+  color: var(--k-muted);
+}
+.km-app .km-card-actions {
+  display: flex;
+  gap: 8px;
+}
+.km-app .km-card-actions .k-btn {
+  flex: 1;
+  min-height: 34px;
+}
+.km-app .km-divider {
+  border: none;
+  border-top: 1px solid var(--k-border);
+  margin: 0;
+}
+.km-app .km-recent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--k-accent);
+}
+.km-app .km-recent:hover {
+  background: var(--k-button-hover);
+}
+.km-app .km-recent-name {
+  font-weight: 600;
+  color: var(--k-text);
+}
+.km-app .km-recent-sub {
+  font-size: 11px;
+}
+
+/* ----------------------------------------------------------- AI dock */
+.km-app .km-ai {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  padding: 6px;
+}
+.km-app .km-ai .k-icon-btn {
+  color: var(--k-accent);
+}
+.km-app .km-ai-provider {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.km-app .km-ai-log {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 6px;
+  border: 1px solid var(--k-border);
+  border-radius: 4px;
+  background: #ffffff;
+  white-space: pre-wrap;
+  user-select: text;
+}
+.km-app .km-ai-line {
+  margin: 5px 0;
+}
+.km-app .km-ai-input textarea {
+  height: 66px;
+  resize: none;
+  padding: 6px;
+}
+
+/* ------------------------------------------------------- status bar */
+.km-app .km-status {
+  flex: none;
+}
+.km-app .km-status-msg {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------------------------------------------------------- dialogs */
+.km-app .km-modal-back {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.32);
+}
+.km-app .km-modal {
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100% - 24px);
+  max-height: calc(100% - 24px);
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  background: var(--k-bg);
+  box-shadow: var(--k-shadow-lg);
+}
+.km-app .km-modal.wide {
+  width: min(880px, calc(100% - 24px));
+}
+.km-app .km-modal-title {
+  padding: 10px 14px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--k-border);
+}
+.km-app .km-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.km-app .km-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--k-border);
+}
+.km-app .km-form {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px 10px;
+}
+.km-app .km-flabel {
+  white-space: nowrap;
+  text-align: right;
+}
+.km-app .km-ffield {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.km-app .km-ffield .k-input {
+  height: 28px;
+}
+.km-app .km-wide {
+  flex: 1;
+  min-width: 200px;
+  max-width: 100%;
+}
+.km-app .km-short {
+  width: 110px;
+}
+.km-app .km-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.km-app .km-summary {
+  color: var(--k-muted);
+  padding: 4px 0;
+  white-space: pre-wrap;
+  user-select: text;
+}
+.km-app .km-report {
+  height: 150px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  white-space: pre;
+}
+.km-app .km-text {
+  margin: 0;
+}
+.km-app .km-error {
+  color: var(--k-danger);
+}
+.km-app .km-explorer {
+  display: flex;
+  gap: 10px;
+  min-height: 460px;
+}
+.km-app .km-exleft {
+  width: 320px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.km-app .km-extree {
+  border: 1px solid var(--k-border);
+  border-radius: 4px;
+}
+.km-app .km-extree .km-lrow.group {
+  font-weight: normal;
+}
+.km-app .km-exright {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.km-app .km-preview {
+  flex: 1;
+  min-height: 260px;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--k-border);
+}
+.km-app .km-info {
+  min-height: 64px;
+  padding: 4px;
+  user-select: text;
+}
+.km-app .km-props-title {
+  font-size: 14px;
+}
+.km-app .km-props {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid var(--k-border);
+}
+.km-app .km-props table {
+  width: 100%;
+  border-collapse: collapse;
+  user-select: text;
+}
+.km-app .km-props th,
+.km-app .km-props td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--k-border);
+  vertical-align: top;
+  word-break: break-word;
+}
+.km-app .km-props th {
+  background: var(--k-chrome);
+  position: sticky;
+  top: 0;
+}
+.km-app .km-props td:first-child {
+  white-space: nowrap;
+}
+.km-app .km-guide {
+  max-height: 60vh;
+  overflow: auto;
+  line-height: 1.45;
+  user-select: text;
+}
+.km-app .km-guide h2 {
+  margin-top: 0;
+}
+.km-app .km-guide code {
+  background: var(--k-alt);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+.km-app .km-about {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.km-app .km-about h2 {
+  margin: 0 0 4px;
+}
+.km-app .km-about p {
+  margin: 4px 0;
+}
+.km-app .km-group {
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.km-app .km-pre {
+  white-space: pre-wrap;
+  color: var(--k-muted);
+}
+
+/* ---------------------------------------------- the periodic table window */
+.km-app .km-tool {
+  position: absolute;
+  z-index: 40;
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  background: var(--k-bg);
+  box-shadow: var(--k-shadow-lg);
+  max-width: calc(100% - 20px);
+  max-height: calc(100% - 20px);
+  overflow: auto;
+}
+.km-app .km-tool-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 26px;
+  padding: 0 4px 0 10px;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  cursor: move;
+  user-select: none;
+  font-size: 12px;
+}
+.km-app .km-tool-close {
+  border: none;
+  background: transparent;
+  color: var(--k-muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+.km-app .km-ptable {
+  padding: 6px 8px;
+}
+.km-app .km-pthead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.km-app .km-ptgrid {
+  display: grid;
+  grid-template-columns: repeat(18, 40px);
+  grid-auto-rows: 34px;
+  gap: 2px;
+}
+.km-app .km-ptcell {
+  width: 40px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #7f8a86;
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: bold;
+  line-height: 1.25;
+  text-align: center;
+  cursor: pointer;
+}
+.km-app .km-ptcell:hover {
+  border: 2px solid #159c74;
+}
+.km-app .km-ptcell.active {
+  border: 2px solid #0c3b2e;
+}
+.km-app .km-ptmark {
+  display: grid;
+  place-items: center;
+  color: #888;
+  font-size: 8px;
+}
+

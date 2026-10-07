@@ -689,3 +689,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
 export function appToolSet(app: string): AppToolSet | undefined {
   return APP_TOOL_SETS.find((s) => s.app === app)
 }
+
+// KherveMol (its tools' code: src/apps/khervemol/aiTools.ts)
+import { KHERVEMOL_TOOL_SET } from './manifests/khervemol.ts'
+APP_TOOL_SETS.push(KHERVEMOL_TOOL_SET)

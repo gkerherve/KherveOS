@@ -1,0 +1,68 @@
+{
+ "examples": [
+  {
+   "title": "Caffeine",
+   "file": "Caffeine.kmol"
+  },
+  {
+   "title": "Aspirin",
+   "file": "Aspirin.kmol"
+  },
+  {
+   "title": "Diamond",
+   "file": "Diamond.kmol"
+  },
+  {
+   "title": "Rock salt NaCl",
+   "file": "Rock salt NaCl.kmol"
+  },
+  {
+   "title": "Perovskite SrTiO3",
+   "file": "Perovskite SrTiO3.kmol"
+  },
+  {
+   "title": "Buckminsterfullerene C60",
+   "file": "Buckminsterfullerene C60.kmol"
+  },
+  {
+   "title": "Graphene",
+   "file": "Graphene.kmol"
+  },
+  {
+   "title": "Twisted bilayer graphene",
+   "file": "Twisted bilayer graphene.kmol"
+  },
+  {
+   "title": "Nanotube (10,0)",
+   "file": "Nanotube (10,0).kmol"
+  },
+  {
+   "title": "MoS2 (0001) surface",
+   "file": "MoS2 (0001) surface.kmol"
+  },
+  {
+   "title": "Methane combustion",
+   "file": "Methane combustion.kmol"
+  },
+  {
+   "title": "Caffeine.xyz",
+   "file": "Caffeine.xyz"
+  },
+  {
+   "title": "Caffeine.mol",
+   "file": "Caffeine.mol"
+  },
+  {
+   "title": "Caffeine.sdf",
+   "file": "Caffeine.sdf"
+  },
+  {
+   "title": "Caffeine.pdb",
+   "file": "Caffeine.pdb"
+  },
+  {
+   "title": "Rutile TiO2.cif",
+   "file": "Rutile TiO2.cif"
+  }
+ ]
+}

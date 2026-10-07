@@ -342,6 +342,9 @@ select.k-input {
 .k-menu {
   position: fixed;
   z-index: 100000;
+  /* long menus (e.g. KherveMol's library groups) scroll instead of leaving the screen */
+  max-height: calc(100vh - 8px);
+  overflow-y: auto;
   background: var(--k-bg);
   color: var(--k-text);
   border: 1px solid var(--k-border);
