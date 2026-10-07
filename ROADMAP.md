@@ -118,7 +118,7 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
 
 ### 5. KherveLAB and the mini-games
 - [ ] KherveLAB (`../KherveLAB`) — instrument booking as a KherveOS server module
-- [ ] **Little games** (requested 2026-10-07): Tetris, Breakout, Pinball — each a
+- [x] **Little games** (requested 2026-10-07; Tetris, Breakout, Pinball done 2026-10-07) — each a
       small window (fixed size, like a classic Mac game), TypeScript + canvas, keyboard
       controls, high scores kept, the Ktools green look; group Games. Also the
       KherveFitting mini-games (`libraries/Games`: TetrisGame, Asteroid, Flappybird,
