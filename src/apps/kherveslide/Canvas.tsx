@@ -33,6 +33,12 @@ export interface CanvasProps {
   onProperties: (i: number) => void
   onContextMenu: (e: React.MouseEvent, index: number | null) => void
   onDropFiles: (paths: string[], at: { x: number; y: number }) => void
+  /** View ▸ Snap to grid (divisions across the slide width; 0 = off) and ▸ Snap to objects. */
+  snapGrid?: number
+  snapObjects?: boolean
+  /** View ▸ Check spelling, and the language of the in-place editor. */
+  spellcheck?: boolean
+  lang?: string
 }
 
 type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'p0' | 'p1'
@@ -144,12 +150,39 @@ export function Canvas(props: CanvasProps) {
     const fx = fracDX(dx)
     const fy = fracDY(dy)
     if (d.kind === 'move') {
+      let sx = fx
+      let sy = fy
+      const first = [...d.orig.entries()][0]
+      if (first && (props.snapGrid || props.snapObjects)) {
+        const [, o] = first
+        if (props.snapGrid) {
+          // Square cells: 1/div of the width across, the same length down.
+          const stepX = 1 / props.snapGrid
+          const stepY = stepX * (g.W / g.H)
+          sx = Math.round((o.x + fx) / stepX) * stepX - o.x
+          sy = Math.round((o.y + fy) / stepY) * stepY - o.y
+        }
+        if (props.snapObjects) {
+          const near = 0.008
+          const others = slide.objects.filter((_, i) => !d.orig.has(i) && slide.objects[i].type !== 'SlideLine')
+          const xs = others.flatMap((t) => [t.x, t.x + t.w / 2, t.x + t.w])
+          const ys = others.flatMap((t) => [t.y, t.y + t.h / 2, t.y + t.h])
+          const best = (edges: number[], targets: number[]) => {
+            let shift = 0
+            let dist = near
+            for (const e of edges) for (const t of targets) if (Math.abs(t - e) < dist) [dist, shift] = [Math.abs(t - e), t - e]
+            return shift
+          }
+          sx += best([o.x + sx, o.x + sx + o.w / 2, o.x + sx + o.w], xs)
+          sy += best([o.y + sy, o.y + sy + o.h / 2, o.y + sy + o.h], ys)
+        }
+      }
       edit((s) => {
         for (const [i, o] of d.orig) {
           const t = s.objects[i]
           if (!t) continue
-          t.x = round(o.x + fx)
-          t.y = round(o.y + fy)
+          t.x = round(o.x + sx)
+          t.y = round(o.y + sy)
         }
       }, false)
       return
@@ -307,6 +340,8 @@ export function Canvas(props: CanvasProps) {
           key={editingText}
           o={slide.objects[editingText] as SlideText}
           g={g}
+          spell={props.spellcheck !== false}
+          lang={props.lang}
           onDone={(text) => {
             const i = editingText
             setEditingText(null)
@@ -367,7 +402,7 @@ export function Canvas(props: CanvasProps) {
 const round = (v: number) => Math.round(v * 1e6) / 1e6
 
 /** The in-place text editor: the box's LaTeX source in the box's own font. Commits on focus-out or Escape, like the desktop. */
-function TextEditor({ o, g, onDone }: { o: SlideText; g: Geometry; onDone: (text: string | null) => void }) {
+function TextEditor({ o, g, spell, lang, onDone }: { o: SlideText; g: Geometry; spell: boolean; lang?: string; onDone: (text: string | null) => void }) {
   const [text, setText] = useState(o.text)
   const ref = useRef<HTMLTextAreaElement>(null)
   const done = useRef(false)
@@ -388,7 +423,8 @@ function TextEditor({ o, g, onDone }: { o: SlideText; g: Geometry; onDone: (text
       ref={ref}
       className="ks2-editor"
       value={text}
-      spellCheck
+      spellCheck={spell}
+      lang={lang}
       onChange={(e) => setText(e.target.value)}
       onBlur={() => finish(text)}
       onPointerDown={(e) => e.stopPropagation()}

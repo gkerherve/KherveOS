@@ -1,48 +1,116 @@
 // KherveSlide: a slide designer that typesets with beamer — the desktop
-// KherveSlide (../KherveSlide, kherveslide/) in KherveOS.
+// KherveSlide (../KherveSlide, branch dev, kherveslide/window.py) in KherveOS,
+// laid out as the desktop lays it out:
+//
+//   main window   top toolbar · vertical "Insert & arrange" toolbar on the left
+//                 Visual | LaTeX | Console tabs (Visual = Slides list + the
+//                 Frame / Header fields, the slide, the Foot fields)
+//                 status bar: message · "Compiled ✓" · Slide n of N · Theme ·
+//                 Normal / Overview / Master · slideshow · zoom
+//   PDF window    PDF | Overview tabs, a second KherveOS window placed to the
+//                 right (View ▸ Visual + PDF in its own window, the default),
+//                 or docked beside the Visual editor (side by side), or hidden
+//                 (Visual only).
 //
 // As on the desktop the presentation model (model.ts) is the single source of
-// truth: the slide sorter and the Visual canvas draw it, serializer.ts turns it
+// truth: the navigator and the Visual canvas draw it, serializer.ts turns it
 // into exactly the beamer LaTeX the desktop writes, and the KherveOS server
-// compiles that with tectonic (os/services/latex.ts) for the PDF, the PDF
-// export and the exact theme under the canvas (backdrop.ts). Files are the
-// desktop's .kslide JSON, written byte for byte as the desktop writes them.
+// compiles that with tectonic (os/services/latex.ts) for the PDF and the exact
+// theme under the canvas (backdrop.ts). Files are the desktop's .kslide JSON.
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { zipSync } from 'fflate'
-import {
-  AlignCenter, AlignLeft, AlignRight, ArrowDownToLine, ArrowUpToLine, Bold, BringToFront, FileDown, FilePlus, FolderOpen, Image as ImageIcon,
-  Italic, List, ListOrdered, Lock, LockOpen, MoveRight, PaintBucket, Play, Redo2, Save, SendToBack, Shapes, Sigma, Slash, Square, Table,
-  Type, Undo2, Unlock, ZoomIn, ZoomOut,
-} from 'lucide-react'
+import type { EditorView } from '@codemirror/view'
 import { os, fs, path as P, HOME, type AppProps, type MenuBarMenu, type MenuItem } from '@/os'
+import { useWindows, desktopSize, isSmallScreen } from '@/os/windows'
 import { useAppTools } from '@/os/ai/appTools'
 import { compileLatex } from '@/os/services/latex'
+import { openPdf } from '@/os/services/pdf'
 import {
-  cloneDeck, fromJson, lowerObject, makeObject, makeSlide, OBJECT_LABEL, raiseObject, slideHeading, toBack, toFront, toJson,
-  type Deck, type Slide, type SlideObject, type SlideText,
+  cloneDeck, fromJson, lowerObject, makeObject, makeSlide, raiseObject, slideHeading, toBack, toFront, toJson,
+  type Deck, type Slide, type SlideObject, type SlidePicture, type SlideTable, type SlideText,
 } from './model'
-import { serializeDeck } from './serializer'
+import { serializeDeck, BEAMER_COLOR_THEMES, BEAMER_THEMES, BLOCK_ENVS, THEOREM_ENVS } from './serializer'
 import { SHAPE_GROUPS } from './shapes'
-import {
-  addSlideFromBullets, applyKit, bulletBox, bulletsOf, itemize, newFromTemplate, SLIDE_LAYOUTS, slideLayout, TEMPLATES, THEME_PRESETS,
-} from './templates'
+import { addSlideFromBullets, applyKit, bulletBox, bulletsOf, itemize, newFromTemplate, SLIDE_LAYOUTS, slideLayout, TEMPLATES, THEME_PRESETS } from './templates'
 import { ASPECTS, deckLook } from './look'
-import { BEAMER_COLOR_THEMES, BEAMER_THEMES } from './serializer'
-import { compileBundle, isPicture, Media, PICTURE_EXTENSIONS, usedPictures } from './media'
+import { compileBundle, isPicture, Media, PICTURE_EXTENSIONS } from './media'
 import { useBackdrop } from './backdrop'
 import { fetchExample, findExample, loadExamples, type ExampleItem } from './examples'
 import { Canvas } from './Canvas'
-import { Sorter } from './Sorter'
-import { ConsolePanel, LatexPanel, PdfPanel } from './Panels'
-import { Present } from './Present'
-import { ColorButton, EquationDialog, FieldsDialog, type Values } from './dialogs'
-import { OBJECT_FIELDS, PAGE_FIELDS, THEME_FIELDS } from './props'
-import { geometry } from './SlideView'
+import { Navigator } from './Navigator'
+import { ConsoleTab, LatexTab } from './Panels'
+import { Overview, PdfWindow, RightTabs } from './PdfPane'
+import { Present, type AutoPlay } from './Present'
+import { ColorButton, EquationDialog, FieldsDialog, type FieldSpec, type Values } from './dialogs'
+import {
+  AboutDialog, applyTableStyle, AutoSlideshowDialog, ChemfigDialog, chemfigDoc, CompilerStatusDialog, ListDialog, SymbolDialog, TableDesignDialog,
+  TableGridDialog, TEXT_MODE_SYMBOLS, ThemeGallery, UserGuideDialog, type ShowMode, type TableStyle,
+} from './desktopDialogs'
+import { FRAME, OBJECT_FIELDS, THEME_FIELDS } from './props'
+import { geometry, SlideView } from './SlideView'
 import { texToPlain } from './texhtml'
+import { Ico, menuIcon } from './icons'
+import { tip, TIPS } from './tooltips'
+import { FontSpin, SideToolbar, TopToolbar, ViewBar, type TBItem, type ViewMode } from './Toolbars'
+import { useLinks, type PdfLink, type PdfLinkActions, type RightTab } from './link'
+import { LAYOUT_TEXT, RecentPanel, StartPage, type Layout } from './Start'
 import './kherveslide.css'
 
-type PanelTab = 'none' | 'latex' | 'console' | 'pdf'
+export default function KherveSlide(props: AppProps) {
+  return typeof props.args.pdfFor === 'string' ? <PdfWindow {...props} /> : <MainWindow {...props} />
+}
+
+// ------------------------------------------------------------------ settings (the desktop's QSettings)
+
+interface Prefs {
+  layout: Layout
+  autoCompile: boolean
+  skipImages: boolean
+  showTheme: boolean
+  gridDivisions: number
+  spellcheck: boolean
+  spellLang: string
+  showWelcome: boolean
+  recent: string[]
+  /** User templates: name → the presentation's JSON (templates.TemplateStore). */
+  templates: Record<string, string>
+  autoShow: AutoPlay & { mode: ShowMode; fromCurrent: boolean }
+}
+
+const PREFS_KEY = 'kherveslide.prefs'
+const DEFAULT_PREFS: Prefs = {
+  // First launch: the PDF in its own window (welcome.LAYOUT_DEFAULT).
+  layout: 'window',
+  autoCompile: true,
+  skipImages: false,
+  showTheme: true,
+  gridDivisions: 40,
+  spellcheck: true,
+  spellLang: 'en',
+  showWelcome: false,
+  recent: [],
+  templates: {},
+  autoShow: { seconds: 10, repeat: 'once', minutes: 30, mode: 'full', fromCurrent: false },
+}
+
+function loadPrefs(): Prefs {
+  try {
+    return { ...DEFAULT_PREFS, ...(JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') as Partial<Prefs>) }
+  } catch {
+    return { ...DEFAULT_PREFS }
+  }
+}
+
+function savePrefs(p: Partial<Prefs>) {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ ...loadPrefs(), ...p }))
+  } catch {
+    /* private mode: the defaults next time */
+  }
+}
+
+// ------------------------------------------------------------------ helpers
 
 interface CompileState {
   busy: boolean
@@ -50,52 +118,198 @@ interface CompileState {
   errors: { line?: number; file?: string; message: string }[]
   missing: string[]
   pdf: Uint8Array | null
-  /** The deck JSON the PDF was made from. */
+  /** What the PDF was made from ("n"/"s" for with / without pictures, then the LaTeX). */
   of: string
 }
 
+type StatusKind = 'idle' | 'busy' | 'ok' | 'err'
+
 const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.m4v', '.webm', '.avi', '.mkv']
-const FONT_SIZES = [8, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 44, 48, 54, 60, 72, 96]
 const HISTORY_MAX = 200
+const GRID_SIZES: [string, number][] = [['Coarse (10)', 10], ['Medium (20)', 20], ['Fine (40)', 40], ['Very fine (60)', 60], ['Ultra fine (80)', 80]]
+const SPELL_LANGUAGES: [string, string][] = [['English', 'en'], ['French', 'fr'], ['German', 'de'], ['Spanish', 'es'], ['Portuguese', 'pt'], ['Russian', 'ru']]
+const DEFAULT_MESSAGE = 'Double-click to edit • while editing, ⌘B / ⌘I bold/italicise the selection'
+
+/** Box ▸ kinds (window._build_toolbar's type combo). */
+const BOX_KINDS: [string, string][] = [
+  ['text', 'Text'], ['block', 'Block'], ['alertblock', 'Alert block'], ['exampleblock', 'Example block'], ['theorem', 'Theorem'],
+  ['definition', 'Definition'], ['corollary', 'Corollary'], ['lemma', 'Lemma'], ['example', 'Example (thm)'], ['proof', 'Proof'], ['fact', 'Fact'],
+  ['equation', 'Equation'], ['image', 'Image'], ['table', 'Table'],
+]
+const COLOURED_BLOCKS = new Set(['block', 'alertblock', 'exampleblock'])
+const ALL_BLOCK_ENVS = new Set([...BLOCK_ENVS, ...THEOREM_ENVS])
+const TEXT_KINDS = new Set(['text', 'equation', ...ALL_BLOCK_ENVS])
+
+/** Dynamic bits for a header / footer / frame-title slot (window._HF_INSERTS). */
+const HF_INSERTS: ([string, string] | null)[] = [
+  ['Slide number', '\\insertframenumber'],
+  ['Slide n / N', '\\insertframenumber\\,/\\,\\inserttotalframenumber'],
+  ['Total slides', '\\inserttotalframenumber'],
+  null,
+  ['Date (today)', '\\today'],
+  ['Date (numbers)', '\\the\\day/\\the\\month/\\the\\year'],
+  ['Year', '\\the\\year'],
+  null,
+  ['Presentation title', '\\inserttitle'],
+  ['Short title', '\\insertshorttitle'],
+  ["This slide's frame title", '\\insertframetitle'],
+  ['Author', '\\insertauthor'],
+  ['Short author', '\\insertshortauthor'],
+  ['Institute', '\\insertinstitute'],
+  null,
+  ['Section', '\\insertsectionhead'],
+  ['Subsection', '\\insertsubsectionhead'],
+]
+
+const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e))
+const stemOf = (p: string) => P.basename(p).replace(/\.kslide(\.json)?$/i, '').replace(/\.json$/i, '')
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+const K = (s: string) => (isMac ? s : s.replace(/⌘/g, 'Ctrl+').replace(/⇧/g, 'Shift+').replace(/⌥/g, 'Alt+'))
 
 /** Objects copied with ⌘C, shared by every KherveSlide window. */
 let objectClipboard: SlideObject[] = []
 
-const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e))
-const stemOf = (p: string) => P.basename(p).replace(/\.kslide(\.json)?$/i, '').replace(/\.json$/i, '')
+const INCLUDE_RE = /\\includegraphics(\*?)(\[[^\]]*\])?\{([^}]+)\}/g
 
-export default function KherveSlide({ win, args }: AppProps) {
+/** compiler._strip_images: every picture becomes an empty framed box of its size. */
+function stripImages(tex: string): string {
+  return tex.replace(INCLUDE_RE, (_m, _star: string, opts: string | undefined) => {
+    const w = /width=([^,\]]+)/.exec(opts ?? '')?.[1].trim() ?? '0.3\\paperwidth'
+    const h = /height=([^,\]]+)/.exec(opts ?? '')?.[1].trim() ?? '0.2\\paperheight'
+    return `{\\setlength{\\fboxsep}{0pt}\\framebox[${w}]{\\rule{0pt}{${h}}}}`
+  })
+}
+
+/** A box holding nothing but maths (canvas._math_only): the inner LaTeX, or null. */
+function mathOnly(text: string): string | null {
+  const t = text.trim()
+  const m = /^\$\$([\s\S]+)\$\$$/.exec(t) ?? /^\\\[([\s\S]+)\\\]$/.exec(t) ?? /^\$([^$]+)\$$/.exec(t)
+  return m ? m[1].trim() : null
+}
+
+/** \ce{…} → its body (chemistry.unwrap_ce), else null. */
+function unwrapCe(inner: string): string | null {
+  const m = /^\\ce\{([\s\S]*)\}$/.exec(inner.trim())
+  return m ? m[1] : null
+}
+
+function objKind(o: SlideObject | undefined): string {
+  if (!o) return 'text'
+  if (o.type === 'SlidePicture') return 'image'
+  if (o.type === 'SlideTable') return 'table'
+  if (o.type === 'SlideText') {
+    if (ALL_BLOCK_ENVS.has(o.block)) return o.block
+    if (o.text.includes('$')) return 'equation'
+  }
+  return 'text'
+}
+
+/** Change a textarea's text as if typed (React sees an input event). */
+function editTextarea(ta: HTMLTextAreaElement, fn: (v: string, a: number, b: number) => { value: string; a: number; b: number }) {
+  const r = fn(ta.value, ta.selectionStart, ta.selectionEnd)
+  Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(ta, r.value)
+  ta.dispatchEvent(new Event('input', { bubbles: true }))
+  ta.setSelectionRange(r.a, r.b)
+}
+
+/** The in-place text editor, when it has the focus. */
+const activeEditor = (): HTMLTextAreaElement | null => {
+  const el = document.activeElement
+  return el instanceof HTMLTextAreaElement && el.classList.contains('ks2-editor') ? el : null
+}
+
+/** The browser's print dialog for a PDF (File ▸ Print… / Print preview…). */
+function printPdf(pdf: Uint8Array) {
+  const url = URL.createObjectURL(new Blob([pdf as BlobPart], { type: 'application/pdf' }))
+  const frame = document.createElement('iframe')
+  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'
+  frame.src = url
+  frame.onload = () => {
+    try {
+      frame.contentWindow?.focus()
+      frame.contentWindow?.print()
+    } catch {
+      os.notify({ title: 'Print', body: 'The browser would not print the PDF; export it and print it from KhervePDF.' })
+    }
+    setTimeout(() => {
+      frame.remove()
+      URL.revokeObjectURL(url)
+    }, 60_000)
+  }
+  document.body.appendChild(frame)
+}
+
+// ------------------------------------------------------------------ the main window
+
+function MainWindow({ win, args }: AppProps) {
   const media = useMemo(() => new Media(), [])
   useEffect(() => () => media.dispose(), [media])
+  const initialPrefs = useMemo(loadPrefs, [])
 
-  const [deck, setDeckState] = useState<Deck>(() => newFromTemplate('Blank'))
+  const [deck, setDeckState] = useState<Deck>(() => newFromTemplate('Title + content'))
   const deckRef = useRef(deck)
   const past = useRef<Deck[]>([])
   const future = useRef<Deck[]>([])
   const [, setHistoryTick] = useState(0)
   const [current, setCurrent] = useState(0)
-  const [masterMode, setMasterMode] = useState(false)
+  const [view, setView] = useState<ViewMode>('normal')
+  const masterMode = view === 'master'
   const [sel, setSel] = useState<number[]>([])
   const [editingText, setEditingText] = useState<number | null>(null)
   const [filePath, setFilePath] = useState<string | null>(null)
   const [savedJson, setSavedJson] = useState(() => toJson(deck))
-  const [panel, setPanel] = useState<PanelTab>('none')
   const [compile, setCompile] = useState<CompileState>({ busy: false, log: '', errors: [], missing: [], pdf: null, of: '' })
-  const [exact, setExact] = useState(true)
+  const [compileStatus, setCompileStatus] = useState<{ text: string; kind: StatusKind }>({ text: 'Ready', kind: 'idle' })
   const [zoom, setZoom] = useState(1)
-  const [present, setPresent] = useState<{ start: number; pdf: Uint8Array | null; presenter: boolean } | null>(null)
+  const [present, setPresent] = useState<{ start: number; pdf: Uint8Array | null; presenter: boolean; windowed: boolean; auto: AutoPlay | null } | null>(null)
   const [modal, setModal] = useState<ReactNode>(null)
   const [examples, setExamples] = useState<ExampleItem[] | null>(null)
   const [loading, setLoading] = useState(!!(args.path || args.example))
   const [untitledName, setUntitledName] = useState('Untitled')
+  const [layout, setLayout] = useState<Layout>(initialPrefs.layout)
+  const [leftTab, setLeftTab] = useState<'visual' | 'latex' | 'console'>('visual')
+  const [rightTab, setRightTab] = useState<RightTab>('pdf')
+  const [navShown, setNavShown] = useState(true)
+  const [showTheme, setShowTheme] = useState(initialPrefs.showTheme)
+  const [autoCompile, setAutoCompile] = useState(initialPrefs.autoCompile)
+  const [skipImages, setSkipImages] = useState(initialPrefs.skipImages)
+  const [showGrid, setShowGrid] = useState(false)
+  const [gridDivisions, setGridDivisions] = useState(initialPrefs.gridDivisions)
+  const [snapGrid, setSnapGrid] = useState(false)
+  const [snapObjects, setSnapObjects] = useState(false)
+  const [spell, setSpell] = useState(initialPrefs.spellcheck)
+  const [spellLang, setSpellLang] = useState(initialPrefs.spellLang)
+  const [find, setFind] = useState<{ open: boolean; text: string; count: string }>({ open: false, text: '', count: '' })
+  const [message, setMessage] = useState(DEFAULT_MESSAGE)
+  const [override, setOverride] = useState<{ text: string; base: string } | null>(null)
+  const [pageTick, setPageTick] = useState(0)
+  const [welcome, setWelcome] = useState(initialPrefs.showWelcome && !args.path && !args.example && !args.template)
+  const [rightWidth, setRightWidth] = useState(0.4)
+  const [prefsTick, setPrefsTick] = useState(0)
 
   const slideIndex = Math.max(0, Math.min(current, deck.slides.length - 1))
   const slide: Slide = masterMode ? deck.master : (deck.slides[slideIndex] ?? makeSlide())
   const look = useMemo(() => deckLook(deck), [deck])
-  const backdrop = useBackdrop(deck, media, exact)
+  const backdrop = useBackdrop(deck, media, showTheme)
   const json = useMemo(() => toJson(deck), [deck])
+  const generated = useMemo(() => serializeDeck(deck), [deck])
+  const latexSource = override?.text ?? generated
   const dirty = json !== savedJson
   const docName = filePath ? P.basename(filePath) : untitledName
+  const title = `${dirty ? '• ' : ''}${docName} — KherveSlide`
+  const pdfPageOf = (row: number) => deck.slides.slice(0, row).filter((s) => !s.hidden).length
+
+  // ------------------------------------------------------------------ status bar
+
+  const msgTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const flash = useCallback((text: string, ms = 4000) => {
+    setMessage(text)
+    if (msgTimer.current) clearTimeout(msgTimer.current)
+    if (ms) msgTimer.current = setTimeout(() => setMessage(''), ms)
+  }, [])
+  useEffect(() => () => {
+    if (msgTimer.current) clearTimeout(msgTimer.current)
+  }, [])
 
   // ------------------------------------------------------------------ the model and its history
 
@@ -145,6 +359,7 @@ export default function KherveSlide({ win, args }: AppProps) {
     deckRef.current = prev
     setDeckState(prev)
     setSel([])
+    setOverride(null)
     setHistoryTick((t) => t + 1)
   }
   const redo = () => {
@@ -154,7 +369,14 @@ export default function KherveSlide({ win, args }: AppProps) {
     deckRef.current = next
     setDeckState(next)
     setSel([])
+    setOverride(null)
     setHistoryTick((t) => t + 1)
+  }
+
+  const addRecent = (p: string) => {
+    const recent = [p, ...loadPrefs().recent.filter((x) => x !== p)].slice(0, 20)
+    savePrefs({ recent })
+    setPrefsTick((t) => t + 1)
   }
 
   /** Start over with this presentation (no undo back to the previous one). */
@@ -169,39 +391,57 @@ export default function KherveSlide({ win, args }: AppProps) {
     setCurrent(0)
     setSel([])
     setEditingText(null)
-    setMasterMode(false)
+    setView('normal')
+    setOverride(null)
+    setWelcome(false)
     setCompile({ busy: false, log: '', errors: [], missing: [], pdf: null, of: '' })
     media.deckDir = path ? P.dirname(path) : null
     win.setDocumentPath(path)
+    if (path) addRecent(path)
   }
 
   useEffect(() => {
-    win.setTitle(`${dirty ? '• ' : ''}${docName} — KherveSlide`)
-  }, [win, docName, dirty])
+    win.setTitle(title)
+  }, [win, title])
 
   useEffect(() => {
     setSel([])
     setEditingText(null)
   }, [slideIndex, masterMode])
 
+  // A real slide edit regenerates hand-edited LaTeX (window._refresh_latex).
+  useEffect(() => {
+    if (override && generated !== override.base) {
+      setOverride(null)
+      flash('Slide edited — LaTeX regenerated from the slides (manual LaTeX edits replaced)', 4000)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generated])
+
   // ------------------------------------------------------------------ files
 
-  const confirmDiscard = async (): Promise<boolean> => {
+  const confirmDiscard = async (doing = 'continuing'): Promise<boolean> => {
     if (toJson(deckRef.current) === savedJson) return true
     const choice = await os.dialog.choose(
-      `Save the changes to "${docName}" first?`,
+      `Save the presentation before ${doing}?`,
       [
         { label: 'Cancel', value: 'cancel' },
-        { label: "Don't save", value: 'discard', danger: true },
+        { label: 'Discard', value: 'discard', danger: true },
         { label: 'Save', value: 'save', primary: true },
       ],
-      { title: 'Unsaved changes' },
+      { title: 'KherveSlide' },
     )
     if (choice === 'save') return save()
     return choice === 'discard'
   }
 
   const openPath = async (p: string) => {
+    if (!fs.exists(p)) {
+      await os.dialog.alert(`File not found:\n${p}`, { title: 'Open' })
+      savePrefs({ recent: loadPrefs().recent.filter((x) => x !== p) })
+      setPrefsTick((t) => t + 1)
+      return
+    }
     setLoading(true)
     try {
       const d = fromJson(await fs.readText(p))
@@ -209,32 +449,33 @@ export default function KherveSlide({ win, args }: AppProps) {
       media.assets.clear()
       replaceDeck(d, p)
     } catch (e) {
-      await os.dialog.alert(`"${P.basename(p)}" could not be opened: ${errorText(e)}`, { title: 'KherveSlide' })
+      await os.dialog.alert(`"${P.basename(p)}" could not be opened: ${errorText(e)}`, { title: 'Open' })
     } finally {
       setLoading(false)
     }
   }
 
-  const openDialog = async () => {
-    if (!(await confirmDiscard())) return
-    const p = await os.dialog.openFile({ title: 'Open a presentation', extensions: ['.kslide', '.json'], startDir: filePath ? P.dirname(filePath) : undefined })
+  const openDialog = async (ask = true) => {
+    if (ask && !(await confirmDiscard('opening another presentation'))) return
+    const p = await os.dialog.openFile({ title: 'Open presentation', extensions: ['.kslide', '.json'], startDir: filePath ? P.dirname(filePath) : undefined })
     if (p) await openPath(p)
   }
 
   const newDeck = async (template = 'Blank') => {
-    if (!(await confirmDiscard())) return
+    if (!(await confirmDiscard('starting a new presentation'))) return
     media.assets.clear()
-    replaceDeck(newFromTemplate(template), null)
+    replaceDeck(instantiateTemplate(template), null)
   }
 
   const openExample = async (item: ExampleItem, ask = true) => {
-    if (ask && !(await confirmDiscard())) return
+    if (ask && !(await confirmDiscard('opening an example'))) return
     setLoading(true)
     try {
       const { deck: d, assets } = await fetchExample(item)
       media.assets.clear()
       for (const [k, v] of assets) media.assets.set(k, v)
       replaceDeck(d, null, item.title)
+      flash(`Example “${item.title}” — edit freely, then Save As to keep it`, 5000)
     } catch (e) {
       await os.dialog.alert(`The example could not be opened: ${errorText(e)}`, { title: 'KherveSlide' })
     } finally {
@@ -257,6 +498,8 @@ export default function KherveSlide({ win, args }: AppProps) {
         setFilePath(p)
         win.setDocumentPath(p)
       }
+      addRecent(p)
+      flash(`✔ Saved ${P.pretty(p)}`, 4000)
       return true
     } catch (e) {
       await os.dialog.alert(`Could not save: ${errorText(e)}`, { title: 'KherveSlide' })
@@ -266,7 +509,7 @@ export default function KherveSlide({ win, args }: AppProps) {
 
   const saveAs = async (): Promise<boolean> => {
     const p = await os.dialog.saveFile({
-      title: 'Save the presentation',
+      title: 'Save presentation as',
       extensions: ['.kslide'],
       defaultName: filePath ? P.basename(filePath) : `${untitledName.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'Presentation'}.kslide`,
       startDir: filePath ? P.dirname(filePath) : P.join(HOME, 'Documents'),
@@ -279,7 +522,7 @@ export default function KherveSlide({ win, args }: AppProps) {
 
   // Ask before closing with unsaved changes.
   useEffect(() => {
-    win.setCloseGuard(async () => confirmDiscard())
+    win.setCloseGuard(async () => confirmDiscard('closing'))
     return () => win.setCloseGuard(null)
   })
 
@@ -306,115 +549,350 @@ export default function KherveSlide({ win, args }: AppProps) {
       .catch(() => setExamples([]))
   }, [])
 
-  // ------------------------------------------------------------------ compile and export
+  // ------------------------------------------------------------------ templates (templates.TemplateStore)
 
-  const lastCompileError = useRef('')
-  const runCompile = async (show = true): Promise<Uint8Array | null> => {
-    setCompile((c) => ({ ...c, busy: true }))
+  const userTemplates = (): Record<string, string> => loadPrefs().templates
+  const templateNames = () => [...Object.keys(TEMPLATES), ...Object.keys(userTemplates()).sort()]
+  function instantiateTemplate(name: string): Deck {
+    const user = userTemplates()[name]
+    if (user) {
+      try {
+        return fromJson(user)
+      } catch {
+        /* a broken entry: fall back to a built-in */
+      }
+    }
+    return newFromTemplate(name)
+  }
+  const saveAsTemplate = async () => {
+    const name = (await os.dialog.prompt('New template name:', { title: 'Save template' }))?.trim()
+    if (!name) return
+    if (name in TEMPLATES) return void os.dialog.alert(`'${name}' is a built-in template name`, { title: 'Template' })
+    savePrefs({ templates: { ...userTemplates(), [name]: toJson(deckRef.current) } })
+    flash(`Saved template '${name}'`)
+  }
+  const renameTemplate = () => {
+    const names = Object.keys(userTemplates()).sort()
+    if (!names.length) return void os.dialog.alert('No user templates yet.', { title: 'Rename' })
+    setModal(
+      <ListDialog
+        title="Rename template"
+        label="Template:"
+        items={names}
+        onDone={async (old) => {
+          setModal(null)
+          if (!old) return
+          const nu = (await os.dialog.prompt('New name:', { title: 'Rename template', defaultValue: old }))?.trim()
+          if (!nu || nu === old) return
+          const all = userTemplates()
+          if (nu in TEMPLATES) return void os.dialog.alert(`'${nu}' is a built-in template name`, { title: 'Rename' })
+          if (nu in all) return void os.dialog.alert(`A template named '${nu}' already exists`, { title: 'Rename' })
+          all[nu] = all[old]
+          delete all[old]
+          savePrefs({ templates: all })
+        }}
+      />,
+    )
+  }
+  const deleteTemplate = () => {
+    const names = Object.keys(userTemplates()).sort()
+    if (!names.length) return void os.dialog.alert('No user templates yet.', { title: 'Delete' })
+    setModal(
+      <ListDialog
+        title="Delete template"
+        label="Template:"
+        items={names}
+        onDone={(name) => {
+          setModal(null)
+          if (!name) return
+          const all = userTemplates()
+          delete all[name]
+          savePrefs({ templates: all })
+        }}
+      />,
+    )
+  }
+  /** The toolbar's Templates button (window._templates_menu). */
+  const templatesChooser = () => {
+    const choices = [...templateNames().map((n) => `New from: ${n}`), '— Save current presentation as template…', '— Rename a template…', '— Delete a template…']
+    setModal(
+      <ListDialog
+        title="Templates"
+        label="Choose an action:"
+        items={choices}
+        onDone={(c) => {
+          setModal(null)
+          if (!c) return
+          if (c.startsWith('New from: ')) void newDeck(c.slice('New from: '.length))
+          else if (c.includes('Save current')) void saveAsTemplate()
+          else if (c.includes('Rename')) renameTemplate()
+          else if (c.includes('Delete')) deleteTemplate()
+        }}
+      />,
+    )
+  }
+
+  // ------------------------------------------------------------------ compile
+
+  const overrideRef = useRef(override)
+  overrideRef.current = override
+  const skipRef = useRef(skipImages)
+  skipRef.current = skipImages
+  const latexDown = useRef(false)
+  const compileRun = useRef({ running: false, pending: false })
+  const compileOf = useRef('')
+
+  /** The LaTeX the PDF is made from — the LaTeX tab's, hand edits included — and every file it needs. */
+  const buildFiles = async (skip: boolean) => {
     const d = deckRef.current
     const b = await compileBundle(d, media)
-    const r = await compileLatex('presentation.tex', b.files)
-    setCompile((c) => ({ busy: false, log: r.log, errors: r.errors, missing: b.missing, pdf: r.pdf ?? c.pdf, of: r.pdf ? toJson(d) : c.of }))
-    if (!r.pdf) {
-      lastCompileError.current = r.errors[0]?.message ?? 'The slides could not be compiled.'
-      if (show) setPanel('console')
-      os.notify({ title: 'KherveSlide', body: lastCompileError.current })
+    let tex = b.tex
+    const ov = overrideRef.current
+    if (ov) {
+      tex = ov.text
+      for (const [stored, name] of b.paths) {
+        tex = tex.split(`{${stored}}`).join(`{${name}}`)
+        tex = tex.split(`{${stored.replace(/\\/g, '/')}}`).join(`{${name}}`)
+      }
+    }
+    const files = { ...b.files }
+    if (skip) {
+      tex = stripImages(tex)
+      for (const k of Object.keys(files)) if (k.startsWith('img/')) delete files[k]
+    }
+    files['presentation.tex'] = tex
+    return { tex, files, missing: b.missing, key: `${skip ? 's' : 'n'}${tex}` }
+  }
+
+  const setStatus = (text: string, kind: StatusKind) => setCompileStatus({ text, kind })
+
+  const runCompile = async (): Promise<Uint8Array | null> => {
+    if (compileRun.current.running) {
+      compileRun.current.pending = true // coalesce: run again when done
       return null
     }
-    lastCompileError.current = ''
-    if (show) setPanel((p) => (p === 'none' || p === 'console' ? (r.errors.length ? 'console' : 'pdf') : p))
-    return r.pdf
+    compileRun.current.running = true
+    setCompile((c) => ({ ...c, busy: true }))
+    setStatus('Compiling…', 'busy')
+    try {
+      const { files, missing, key } = await buildFiles(skipRef.current)
+      const r = await compileLatex('presentation.tex', files)
+      const down = !r.ok && (r.log.includes('not reachable') || r.log.includes('Sign in'))
+      latexDown.current = down
+      if (r.pdf) compileOf.current = key
+      setCompile((c) => ({ busy: false, log: r.log, errors: r.errors, missing, pdf: r.pdf ?? c.pdf, of: r.pdf ? key : c.of }))
+      if (r.pdf) setStatus('Compiled ✓', 'ok')
+      else {
+        setStatus(down ? 'LaTeX unavailable ✗' : 'Compile failed ✗', 'err')
+        flash(down ? r.errors[0]?.message ?? 'LaTeX is not available.' : 'Compile failed — see Console tab', 0)
+      }
+      return r.pdf ?? null
+    } finally {
+      compileRun.current.running = false
+      if (compileRun.current.pending) {
+        compileRun.current.pending = false
+        setTimeout(() => void runCompile(), 0)
+      }
+    }
+  }
+
+  // Auto-compile shortly after each change (not in Visual only, nor while LaTeX is unreachable).
+  useEffect(() => {
+    if (!autoCompile || layout === 'visual' || latexDown.current || loading || present) return
+    const t = setTimeout(() => void runCompile(), 900)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [json, override?.text, autoCompile, layout, skipImages, loading, present])
+
+  /** Compile now and show the PDF (the ▶ button, ⌘R, File ▸ Compile to PDF). */
+  const compileNow = () => {
+    latexDown.current = false
+    if (layout === 'visual') applyLayout('side')
+    setRightTab('pdf')
+    void runCompile()
+  }
+
+  /** For theme / decoration changes: show the PDF and compile straight away. */
+  const recompileNow = () => {
+    if (layout === 'visual') return
+    setRightTab('pdf')
+    setTimeout(() => void runCompile(), 0)
   }
 
   const defaultExportPath = (ext: string) =>
-    filePath ? P.join(P.dirname(filePath), `${stemOf(filePath)}${ext}`) : P.join(HOME, 'Documents', `${(deckRef.current.title || untitledName).replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'Presentation'}${ext}`)
+    filePath ? P.join(P.dirname(filePath), `${stemOf(filePath)}${ext}`) : P.join(HOME, 'Documents', `${(deckRef.current.title || untitledName).replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'presentation'}${ext}`)
+
+  /** The compiled presentation as it is now, with its pictures: the last compile when current, else a compile now. */
+  const slideshowPdf = async (): Promise<{ pdf: Uint8Array | null; down: boolean }> => {
+    const { files, missing, key } = await buildFiles(false)
+    if (compile.pdf && compileOf.current === key) return { pdf: compile.pdf, down: false }
+    flash('Building the slides for the show…', 0)
+    const r = await compileLatex('presentation.tex', files)
+    flash('', 1)
+    if (r.pdf) {
+      compileOf.current = key
+      setCompile((c) => ({ ...c, log: r.log, errors: r.errors, missing, pdf: r.pdf!, of: key }))
+      return { pdf: r.pdf, down: false }
+    }
+    const down = r.log.includes('not reachable') || r.log.includes('Sign in')
+    setCompile((c) => ({ ...c, log: r.log, errors: r.errors, missing }))
+    return { pdf: null, down }
+  }
 
   const exportPdf = async () => {
-    const p = await os.dialog.saveFile({ title: 'Export PDF', extensions: ['.pdf'], defaultName: defaultExportPath('.pdf') })
+    const p = await os.dialog.saveFile({ title: 'Export PDF', extensions: ['.pdf'], defaultName: P.basename(defaultExportPath('.pdf')), startDir: P.dirname(defaultExportPath('.pdf')) })
     if (!p) return
-    const pdf = await runCompile()
-    if (!pdf) return
+    flash('Exporting PDF…', 0)
+    const { pdf, down } = await slideshowPdf()
+    if (!pdf) {
+      setLeftTab('console')
+      flash('PDF export failed — see Console tab', 0)
+      await os.dialog.alert(down ? 'LaTeX is not available: the KherveOS server compiles the slides.' : 'Compilation failed; see the Console tab for the log.', { title: 'Export PDF' })
+      return
+    }
     await fs.writeBytes(p, pdf, { mkdirs: true })
-    os.notify({ title: 'PDF exported', body: P.pretty(p) })
+    flash(`Exported PDF to ${P.pretty(p)}`)
   }
 
   const exportTex = async () => {
-    const p = await os.dialog.saveFile({ title: 'Export LaTeX', extensions: ['.tex'], defaultName: defaultExportPath('.tex') })
+    const p = await os.dialog.saveFile({ title: 'Export LaTeX', extensions: ['.tex'], defaultName: P.basename(defaultExportPath('.tex')), startDir: P.dirname(defaultExportPath('.tex')) })
     if (!p) return
-    await fs.writeText(p, serializeDeck(deckRef.current), { mkdirs: true })
-    os.notify({ title: 'LaTeX exported', body: `${P.pretty(p)} — pictures keep their paths.` })
+    await fs.writeText(p, latexSource, { mkdirs: true })
+    flash(`Exported ${P.pretty(p)}`)
   }
 
   const exportZip = async () => {
-    const p = await os.dialog.saveFile({ title: 'Export the LaTeX project', extensions: ['.zip'], defaultName: defaultExportPath('.zip') })
+    const p = await os.dialog.saveFile({ title: 'Export the LaTeX project', extensions: ['.zip'], defaultName: P.basename(defaultExportPath('.zip')), startDir: P.dirname(defaultExportPath('.zip')) })
     if (!p) return
-    const b = await compileBundle(deckRef.current, media)
+    const { files } = await buildFiles(false)
     const enc = new TextEncoder()
     const entries: Record<string, Uint8Array> = {}
-    for (const [name, data] of Object.entries(b.files)) entries[name] = typeof data === 'string' ? enc.encode(data) : data
+    for (const [name, data] of Object.entries(files)) entries[name] = typeof data === 'string' ? enc.encode(data) : data
     await fs.writeBytes(p, zipSync(entries), { mkdirs: true })
     os.notify({ title: 'LaTeX project exported', body: `${P.pretty(p)}: presentation.tex and its pictures, ready for any LaTeX (XeLaTeX or tectonic).` })
   }
 
-  const startShow = async (fromCurrent: boolean, pdfMode: boolean, presenter = false) => {
+  const print = async () => {
+    setEditingText(null)
+    const { pdf, down } = await slideshowPdf()
+    if (!pdf) return void os.dialog.alert(down ? 'LaTeX is not available, so the slides cannot be built.' : 'The slides could not be compiled — see the Console tab.', { title: 'Print' })
+    printPdf(pdf)
+  }
+
+  // ------------------------------------------------------------------ slideshow (slideshow.py)
+
+  const startSlideshow = async (mode: ShowMode | 'next' = 'full', fromCurrent = false, auto: AutoPlay | null = null) => {
+    setEditingText(null)
+    const { pdf, down } = await slideshowPdf()
+    if (!pdf && !down) {
+      setLeftTab('console')
+      return void os.dialog.alert('The slides could not be compiled — see the Console tab.', { title: 'Slideshow' })
+    }
+    if (!pdf) os.notify({ title: 'Slideshow', body: 'LaTeX is not available: the slides are shown as the Visual editor draws them.' })
     const d = deckRef.current
     const shownBefore = d.slides.slice(0, slideIndex).filter((s) => !s.hidden).length
-    let pdf: Uint8Array | null = null
-    if (pdfMode) {
-      pdf = compile.pdf && compile.of === toJson(d) ? compile.pdf : await runCompile(false)
-      if (!pdf) return
-    }
-    setEditingText(null)
-    setPresent({ start: fromCurrent ? shownBefore : 0, pdf, presenter })
+    setPresent({ start: fromCurrent ? shownBefore : 0, pdf, presenter: mode === 'presenter' || mode === 'next', windowed: mode === 'window', auto })
+  }
+
+  const autoSlideshow = () => {
+    const a = loadPrefs().autoShow
+    setModal(
+      <AutoSlideshowDialog
+        auto={a}
+        mode={a.mode}
+        fromCurrent={a.fromCurrent}
+        onDone={(r) => {
+          setModal(null)
+          if (!r) return
+          savePrefs({ autoShow: { ...r.auto, mode: r.mode, fromCurrent: r.fromCurrent } })
+          void startSlideshow(r.mode, r.fromCurrent, r.auto)
+        }}
+      />,
+    )
   }
 
   // ------------------------------------------------------------------ objects
 
-  const addObject = (o: SlideObject) => {
-    editSlide((s) => s.objects.push(o))
-    setSel([slide.objects.length])
+  /** window._place_stacked: just below the bottom-most object, at its left and width. */
+  const placeStacked = (obj: SlideObject, s: Slide) => {
+    const others = s.objects.filter((o) => o !== obj)
+    if (!others.length) return
+    const last = others.reduce((a, b) => (b.y + b.h > a.y + a.h ? b : a))
+    obj.x = Math.round(last.x * 1e4) / 1e4
+    if (obj.type !== 'SlidePicture') obj.w = last.w
+    let y = last.y + last.h + 0.02
+    if (y + obj.h > 1) y = Math.max(0, 1 - obj.h)
+    obj.y = Math.round(y * 1e4) / 1e4
   }
 
-  const addText = (text = 'Text', fields: Partial<SlideText> = {}) =>
-    addObject(makeObject('SlideText', { x: 0.2, y: 0.3, w: 0.6, h: 0.15, text, font_pt: 20, locked: false, ...fields }))
-
-  const pictureBox = async (p: string, w = 0.5): Promise<{ w: number; h: number }> => {
-    const g = geometry(deckRef.current)
-    try {
-      const url = await media.url(p)
-      if (!url) throw new Error()
-      const img = new Image()
-      img.src = url
-      await img.decode()
-      const h = Math.min(0.8, (w * g.W * img.naturalHeight) / img.naturalWidth / g.H)
-      return { w: (h * g.H * img.naturalWidth) / img.naturalHeight / g.W, h }
-    } catch {
-      return { w, h: 0.5 }
-    }
+  const offset = (o: SlideObject) => {
+    o.x = Math.round(Math.min(0.92, o.x + 0.03) * 1e4) / 1e4
+    o.y = Math.round(Math.min(0.92, o.y + 0.03) * 1e4) / 1e4
   }
+
+  /** Add an object (stacked below the others, or nudged), select it. */
+  const addObject = (o: SlideObject, how: 'stack' | 'offset' | 'none' = 'none', after?: (o: SlideObject) => void) => {
+    const n = slide.objects.length
+    editSlide((s) => {
+      if (how === 'stack') placeStacked(o, s)
+      else if (how === 'offset') offset(o)
+      after?.(o)
+      s.objects.push(o)
+    })
+    setSel([n])
+  }
+
+  const addText = () => addObject(makeObject('SlideText'), 'stack')
 
   const addPicture = async () => {
-    const p = await os.dialog.openFile({ title: 'Insert a picture', extensions: PICTURE_EXTENSIONS })
-    if (!p) return
-    const { w, h } = await pictureBox(p)
-    addObject(makeObject('SlidePicture', { path: p, x: (1 - w) / 2, y: Math.max(0.05, (1 - h) / 2), w, h, locked: false }))
-  }
-
-  const swapPicture = async (i: number) => {
-    const p = await os.dialog.openFile({ title: 'Choose a picture', extensions: PICTURE_EXTENSIONS })
-    if (!p) return
-    editSlide((s) => {
-      const o = s.objects[i]
-      if (o?.type === 'SlidePicture') o.path = p
-    })
+    const p = await os.dialog.openFile({ title: 'Choose image', extensions: PICTURE_EXTENSIONS })
+    // As on the desktop: a cancelled choice still adds an empty picture box to fill later.
+    addObject(makeObject('SlidePicture', { path: p ?? '' }), 'stack')
   }
 
   const addVideo = async () => {
-    const p = await os.dialog.openFile({ title: 'Insert a video', extensions: VIDEO_EXTENSIONS })
+    const p = await os.dialog.openFile({ title: 'Choose video', extensions: VIDEO_EXTENSIONS })
     if (!p) return
-    addObject(makeObject('SlideVideo', { path: p }))
-    os.notify({ title: 'Video', body: 'In the PDF the video is a link that opens the file in the video player; keep the file with the PDF.' })
+    addObject(makeObject('SlideVideo', { path: p }), 'stack')
   }
+
+  const insertTable = (rows: number, cols: number, style?: TableStyle) => {
+    const t = makeObject('SlideTable', { rows: Array.from({ length: rows }, () => Array.from({ length: cols }, () => '')) })
+    if (style) applyTableStyle(t, style)
+    addObject(t, 'stack')
+  }
+  const addTable = () => insertTable(2, 2)
+
+  const tablePicker = () =>
+    setModal(
+      <TableGridDialog
+        onDone={(size) => {
+          setModal(null)
+          if (size) insertTable(size[0], size[1])
+        }}
+        onDesign={() => tableDesign()}
+      />,
+    )
+
+  const tableDesign = () => {
+    const i = sel.length === 1 && slide.objects[sel[0]]?.type === 'SlideTable' ? sel[0] : -1
+    setModal(
+      <TableDesignDialog
+        onDone={(st) => {
+          setModal(null)
+          if (!st) return
+          if (i < 0) insertTable(3, 3, st)
+          else editSlide((s) => applyTableStyle(s.objects[i] as SlideTable, st))
+        }}
+      />,
+    )
+  }
+
+  /** The equation builder: a wide maths box so the PDF keeps it on one line (window._add_equation). */
+  const mathBox = (latex: string) => addObject(makeObject('SlideText', { text: `$${latex}$`, font_pt: 28, align: 'center', x: 0.08, w: 0.84, h: 0.14, locked: false }), 'stack', (o) => {
+    o.x = 0.08
+    o.w = 0.84
+  })
 
   const addEquation = () =>
     setModal(
@@ -422,60 +900,158 @@ export default function KherveSlide({ win, args }: AppProps) {
         initial=""
         onDone={(tex) => {
           setModal(null)
-          if (tex) addText(`\\[${tex}\\]`, { align: 'center', font_pt: 24, x: 0.15, w: 0.7, h: 0.18 })
+          if (tex?.trim()) mathBox(tex.trim())
         }}
       />,
     )
 
-  const editEquation = (i: number) => {
-    const o = slide.objects[i] as SlideText
-    const m = /^\s*\\\[([\s\S]*)\\\]\s*$/.exec(o.text) ?? /^\s*\$([\s\S]*)\$\s*$/.exec(o.text)
+  const addChemistry = () =>
     setModal(
       <EquationDialog
-        initial={m ? m[1].trim() : o.text}
+        initial=""
+        title="Chemical reaction"
+        chemistry
         onDone={(tex) => {
           setModal(null)
-          if (tex !== null) editSlide((s) => ((s.objects[i] as SlideText).text = `\\[${tex}\\]`))
+          if (tex?.trim()) mathBox(`\\ce{${tex.trim()}}`)
+        }}
+      />,
+    )
+
+  /** Double-click on a maths-only box reopens the editor that built it. */
+  const editMathBox = (i: number): boolean => {
+    const o = slide.objects[i]
+    if (o?.type !== 'SlideText') return false
+    const inner = mathOnly(o.text)
+    if (inner === null) return false
+    const ce = unwrapCe(inner)
+    const rewrap = (body: string) => {
+      const t = o.text.trim()
+      return t.startsWith('$$') ? `$$${body}$$` : t.startsWith('\\[') ? `\\[${body}\\]` : `$${body}$`
+    }
+    setModal(
+      <EquationDialog
+        initial={ce ?? inner}
+        title={ce !== null ? 'Chemical reaction' : 'Equation builder'}
+        chemistry={ce !== null}
+        onDone={(tex) => {
+          setModal(null)
+          if (tex?.trim()) editSlide((s) => ((s.objects[i] as SlideText).text = rewrap(ce !== null ? `\\ce{${tex.trim()}}` : tex.trim())))
+        }}
+      />,
+    )
+    return true
+  }
+
+  const figuresDir = () => (filePath ? P.join(P.dirname(filePath), 'figures') : P.join(HOME, 'Documents', 'KherveSlide figures'))
+
+  /** A 2-D molecule drawn by chemfig: compiled once, placed as a picture, its source kept beside it. */
+  const addChemStructure = async (i: number | null = null) => {
+    const existing = i !== null ? (slide.objects[i] as SlidePicture) : null
+    let initial = ''
+    if (existing?.path) {
+      const src = existing.path.replace(/\.[^./]+$/, '.chemfig')
+      const d = media.drivePath(src)
+      if (d) initial = await fs.readText(d).catch(() => '')
+    }
+    setModal(
+      <ChemfigDialog
+        initial={initial}
+        onDone={async (code) => {
+          setModal(null)
+          if (!code) return
+          flash('Compiling the structure…', 0)
+          const r = await compileLatex('figure.tex', { 'figure.tex': chemfigDoc(code) })
+          flash('', 1)
+          if (!r.pdf) return void os.dialog.alert(`The structure could not be compiled:\n\n${r.log.slice(-1200)}`, { title: 'Chemical structure' })
+          const doc = await openPdf(r.pdf)
+          try {
+            const bmp = await doc.renderPage(0, 4)
+            const c = document.createElement('canvas')
+            c.width = bmp.width
+            c.height = bmp.height
+            c.getContext('2d')!.drawImage(bmp, 0, 0)
+            bmp.close()
+            const png = new Uint8Array(await (await new Promise<Blob>((res) => c.toBlob((b) => res(b!), 'image/png'))).arrayBuffer())
+            let target = existing ? media.drivePath(existing.path) : null
+            if (!target) {
+              const dir = figuresDir()
+              let n = 1
+              while (fs.exists(P.join(dir, `structure_${String(n).padStart(3, '0')}.png`))) n++
+              target = P.join(dir, `structure_${String(n).padStart(3, '0')}.png`)
+            }
+            await fs.writeBytes(target, png, { mkdirs: true })
+            await fs.writeText(target.replace(/\.png$/, '.chemfig'), code)
+            if (existing && i !== null) editSlide((s) => ((s.objects[i] as SlidePicture).path = target!))
+            else addObject(makeObject('SlidePicture', { path: target, x: 0.3, y: 0.3, w: 0.35, h: 0.35, keep_aspect: true, locked: false }), 'stack')
+          } finally {
+            doc.close()
+          }
         }}
       />,
     )
   }
 
-  const addTable = () =>
+  const notInKherveOS = (what: string, extra = '') =>
+    void os.dialog.alert(`${what} is not in KherveSlide for KherveOS yet.${extra ? `\n\n${extra}` : ''}`, { title: 'KherveSlide' })
+  const addFlowchart = () => notInKherveOS('The flowchart builder', 'Draw the chart with the shapes, lines and arrows of the left toolbar, or in KhervePaint, and add it as a picture.')
+  const addDrawing = () =>
+    notInKherveOS('The drawing editor', 'Draw in KhervePaint, export a PNG and add it with Add image (or drop it on the slide).')
+
+  const insertIntoText = (latex: string) => {
+    const ta = activeEditor()
+    if (ta) {
+      editTextarea(ta, (v, a, b) => ({ value: v.slice(0, a) + latex + v.slice(b), a: a + latex.length, b: a + latex.length }))
+      return
+    }
+    const i = sel.length === 1 && slide.objects[sel[0]]?.type === 'SlideText' ? sel[0] : -1
+    if (i >= 0) editSlide((s) => ((s.objects[i] as SlideText).text += latex))
+    else addObject(makeObject('SlideText', { text: latex }))
+  }
+
+  const insertSymbol = () =>
     setModal(
-      <FieldsDialog
-        title="Insert a table"
-        fields={[
-          { key: 'rows', label: 'Rows', kind: 'number', min: 1, max: 30, step: 1 },
-          { key: 'cols', label: 'Columns', kind: 'number', min: 1, max: 12, step: 1 },
-          { key: 'header', label: 'Header row', kind: 'bool' },
-        ]}
-        values={{ rows: 3, cols: 3, header: true }}
-        onDone={(v) => {
+      <SymbolDialog
+        onDone={(latex) => {
           setModal(null)
-          if (!v) return
-          const rows = Array.from({ length: Math.round(Number(v.rows)) }, (_, r) =>
-            Array.from({ length: Math.round(Number(v.cols)) }, (_, c) => (r === 0 && v.header ? `Heading ${c + 1}` : '')),
-          )
-          addObject(makeObject('SlideTable', { rows, header: !!v.header, x: 0.1, y: 0.25, w: 0.8, h: 0.08 * rows.length, locked: false }))
+          if (latex) insertIntoText(TEXT_MODE_SYMBOLS.has(latex) ? latex : `$${latex}$`)
         }}
       />,
     )
 
-  const addShape = (shape: string) => addObject(makeObject('SlideShape', { shape, locked: false, fill: '#DDEBF7', border_color: look.structure }))
-  const addLine = (arrow: boolean) => addObject(makeObject('SlideLine', { arrow_end: arrow, locked: false, color: arrow ? '#555555' : '#000000', width_pt: arrow ? 2 : 1.5 }))
-  const addBlock = (block: string) => addText('Block text', { block, block_title: block === 'block' ? 'Title' : '', font_pt: 16, x: 0.1, w: 0.8, h: 0.25 })
+  const insertList = (numbered: boolean) => {
+    const ta = activeEditor()
+    const env = numbered ? 'enumerate' : 'itemize'
+    if (ta) {
+      editTextarea(ta, (v, a, b) => {
+        const lines = (v.slice(a, b) || 'First point').split('\n').map((l) => `  \\item ${l}`)
+        const block = `\\begin{${env}}\n${lines.join('\n')}\n\\end{${env}}`
+        return { value: v.slice(0, a) + block + v.slice(b), a, b: a + block.length }
+      })
+      return
+    }
+    insertIntoText(`\\begin{${env}}\n  \\item First point\n  \\item Second point\n\\end{${env}}`)
+  }
+
+  const addLine = (arrow: boolean) => addObject(makeObject('SlideLine', arrow ? { arrow_end: true } : {}))
+  const addRect = () => addObject(makeObject('SlideShape', { shape: 'rect' }), 'offset')
+  const addEllipse = () => addObject(makeObject('SlideShape', { shape: 'ellipse', w: 0.22, h: 0.22 }), 'offset')
+  const addShape = (key: string) => {
+    const square = ['circle', 'ellipse', 'star4', 'star5', 'star6', 'plus', 'pentagon', 'hexagon', 'heptagon', 'octagon'].includes(key)
+    addObject(makeObject('SlideShape', { shape: key, w: 0.22, h: square ? 0.22 : 0.18 }), 'offset')
+  }
 
   const dropFiles = async (paths: string[], at: { x: number; y: number }) => {
     let k = 0
     for (const p of paths.filter(isPicture)) {
-      const { w, h } = await pictureBox(p, 0.35)
-      const o = makeObject('SlidePicture', { path: p, x: Math.max(0, Math.min(1 - w, at.x - w / 2 + k * 0.03)), y: Math.max(0, Math.min(1 - h, at.y - h / 2 + k * 0.03)), w, h, locked: false })
+      const w = 0.3
+      const h = 0.3
+      const o = makeObject('SlidePicture', { path: p, x: Math.max(0, Math.min(1 - w, at.x - w / 2 + k * 0.03)), y: Math.max(0, Math.min(1 - h, at.y - h / 2 + k * 0.03)), w, h, keep_aspect: true })
       editSlide((s) => s.objects.push(o))
       k++
     }
     const decks = paths.filter((p) => /\.kslide$/i.test(p))
-    if (!k && decks.length && (await confirmDiscard())) await openPath(decks[0])
+    if (!k && decks.length && (await confirmDiscard(`opening ${P.basename(decks[0])}`))) await openPath(decks[0])
   }
 
   const selected = () => live.current.sel.filter((i) => i < slide.objects.length)
@@ -492,22 +1068,59 @@ export default function KherveSlide({ win, args }: AppProps) {
     if (!s.length) return
     objectClipboard = s.map((i) => structuredClone(slide.objects[i]))
     if (cut) deleteSelected()
+    else flash('Copied')
   }
 
-  const paste = () => {
-    if (!objectClipboard.length) return
-    const n = slide.objects.length
-    const copies = objectClipboard.map((o) => ({ ...structuredClone(o), x: o.x + 0.02, y: o.y + 0.02 }))
-    objectClipboard = copies.map((o) => structuredClone(o))
-    editSlide((s) => s.objects.push(...copies))
-    setSel(copies.map((_, k) => n + k))
+  /** Paste objects copied in KherveSlide, else a picture from the system clipboard. */
+  const paste = async () => {
+    if (objectClipboard.length) {
+      const n = slide.objects.length
+      const copies = objectClipboard.map((o) => {
+        const c = structuredClone(o)
+        offset(c)
+        return c
+      })
+      objectClipboard = copies.map((o) => structuredClone(o))
+      editSlide((s) => s.objects.push(...copies))
+      setSel(copies.map((_, k) => n + k))
+      return
+    }
+    try {
+      const items = await navigator.clipboard.read()
+      for (const it of items) {
+        const type = it.types.find((t) => t.startsWith('image/'))
+        if (!type) continue
+        const data = new Uint8Array(await (await it.getType(type)).arrayBuffer())
+        const dir = filePath ? P.dirname(filePath) : P.join(HOME, 'Documents', 'KherveSlide figures')
+        let n = 1
+        while (fs.exists(P.join(dir, `pasted_${String(n).padStart(3, '0')}.png`))) n++
+        const p = P.join(dir, `pasted_${String(n).padStart(3, '0')}.png`)
+        await fs.writeBytes(p, data, { mkdirs: true })
+        const i = sel.length === 1 && slide.objects[sel[0]]?.type === 'SlidePicture' ? sel[0] : -1
+        if (i >= 0) {
+          editSlide((s) => ((s.objects[i] as SlidePicture).path = p))
+          flash('Image pasted into the picture box')
+        } else addObject(makeObject('SlidePicture', { path: p, x: 0.35, y: 0.35, w: 0.3, h: 0.3, keep_aspect: true }))
+        return
+      }
+    } catch {
+      /* no permission or nothing to paste */
+    }
   }
 
   const duplicateSelected = () => {
     const s = selected()
     if (!s.length) return
     const n = slide.objects.length
-    editSlide((sl) => sl.objects.push(...s.map((i) => ({ ...structuredClone(sl.objects[i]), x: sl.objects[i].x + 0.02, y: sl.objects[i].y + 0.02 }))))
+    editSlide((sl) =>
+      sl.objects.push(
+        ...s.map((i) => {
+          const c = structuredClone(sl.objects[i])
+          offset(c)
+          return c
+        }),
+      ),
+    )
     setSel(s.map((_, k) => n + k))
   }
 
@@ -534,34 +1147,45 @@ export default function KherveSlide({ win, args }: AppProps) {
     })
   }
 
-  const zOrder = (how: 'front' | 'back' | 'up' | 'down') => {
+  const zOrder = (how: 'front' | 'back' | 'raise' | 'lower') => {
     const s = selected()
-    if (s.length !== 1) return
+    if (!s.length) return
     let ni = s[0]
     editSlide((sl) => {
-      ni = how === 'front' ? toFront(sl, s[0]) : how === 'back' ? toBack(sl, s[0]) : how === 'up' ? raiseObject(sl, s[0]) : lowerObject(sl, s[0])
+      ni = how === 'front' ? toFront(sl, s[0]) : how === 'back' ? toBack(sl, s[0]) : how === 'raise' ? raiseObject(sl, s[0]) : lowerObject(sl, s[0])
     })
     setSel([ni])
   }
 
   const group = (on: boolean) => {
     const s = selected()
-    if (!s.length) return
-    const next = on ? Math.max(0, ...deckRef.current.slides.flatMap((x) => x.objects.map((o) => o.group)), ...deckRef.current.master.objects.map((o) => o.group)) + 1 : 0
+    if (on && s.length < 2) return flash('Select two or more objects to group', 4000)
+    if (!on && !s.some((i) => slide.objects[i].group)) return flash('No group selected', 4000)
+    const gid = Math.max(0, ...slide.objects.map((o) => o.group)) + 1
+    const gids = new Set(s.map((i) => slide.objects[i].group).filter(Boolean))
+    let n = 0
     editSlide((sl) => {
-      for (const i of s) sl.objects[i].group = next
+      if (on) for (const i of s) sl.objects[i].group = gid
+      else
+        for (const o of sl.objects)
+          if (gids.has(o.group)) {
+            o.group = 0
+            n++
+          }
     })
+    flash(on ? `Grouped ${s.length} objects` : `Ungrouped ${n} objects`, 4000)
   }
 
-  const properties = (i: number) => {
+  /** A property sheet for one object (the desktop's per-type property dialogs). */
+  const fieldsFor = (i: number, title: string, fields: FieldSpec[], extra?: (set: (v: Values) => void) => ReactNode) => {
     const o = slide.objects[i]
     if (!o) return
-    const fields = OBJECT_FIELDS[o.type]
     setModal(
       <FieldsDialog
-        title={`${OBJECT_LABEL[o.type][0].toUpperCase()}${OBJECT_LABEL[o.type].slice(1)} properties`}
+        title={title}
         fields={fields}
         values={{ ...o } as unknown as Values}
+        extra={extra}
         onDone={(v) => {
           setModal(null)
           if (!v) return
@@ -569,6 +1193,7 @@ export default function KherveSlide({ win, args }: AppProps) {
             const t = s.objects[i] as unknown as Record<string, unknown>
             if (!t) return
             for (const f of fields) {
+              if (!(f.key in t)) continue
               const val = v[f.key]
               t[f.key] = f.kind === 'number' && (f.key === 'font_pt' || f.key === 'group') ? Math.round(Number(val)) : val
             }
@@ -578,45 +1203,266 @@ export default function KherveSlide({ win, args }: AppProps) {
     )
   }
 
+  /** Crop & rotate… (picture_editor.PictureEditDialog): path, crop, rotation, opacity and the picture effects. */
+  const editPicture = (i: number) =>
+    fieldsFor(i, 'Picture', OBJECT_FIELDS.SlidePicture, (set) => (
+      <button
+        className="k-btn"
+        onClick={async () => {
+          const p = await os.dialog.openFile({ title: 'Choose image', extensions: PICTURE_EXTENSIONS })
+          if (p) set({ path: p })
+        }}
+      >
+        Choose another picture…
+      </button>
+    ))
+
+  const replaceImage = async (i: number) => {
+    const p = await os.dialog.openFile({ title: 'Choose image', extensions: PICTURE_EXTENSIONS })
+    if (p) editSlide((s) => ((s.objects[i] as SlidePicture).path = p))
+  }
+
+  const rotatePicture = (i: number, delta: number) =>
+    editSlide((s) => {
+      const o = s.objects[i] as SlidePicture
+      const a = (((o.rotation + delta) % 360) + 360) % 360
+      o.rotation = a > 180 ? a - 360 : a
+    })
+
+  const exportPicturePng = async (i: number) => {
+    const o = slide.objects[i] as SlidePicture
+    const data = o.path ? await media.bytes(o.path) : null
+    if (!data) return void os.dialog.alert('This box has no image.', { title: 'Export to PNG' })
+    const p = await os.dialog.saveFile({ title: 'Export image to PNG', extensions: ['.png'], defaultName: 'image.png' })
+    if (!p) return
+    const img = new Image()
+    img.src = URL.createObjectURL(new Blob([data as BlobPart]))
+    await img.decode()
+    const sw = Math.max(1, (1 - o.crop_l - o.crop_r) * img.naturalWidth)
+    const sh = Math.max(1, (1 - o.crop_t - o.crop_b) * img.naturalHeight)
+    const rad = (o.rotation * Math.PI) / 180
+    const cw = Math.abs(sw * Math.cos(rad)) + Math.abs(sh * Math.sin(rad))
+    const ch = Math.abs(sw * Math.sin(rad)) + Math.abs(sh * Math.cos(rad))
+    const c = document.createElement('canvas')
+    c.width = Math.round(cw)
+    c.height = Math.round(ch)
+    const ctx = c.getContext('2d')!
+    ctx.translate(cw / 2, ch / 2)
+    ctx.rotate(rad)
+    ctx.drawImage(img, o.crop_l * img.naturalWidth, o.crop_t * img.naturalHeight, sw, sh, -sw / 2, -sh / 2, sw, sh)
+    URL.revokeObjectURL(img.src)
+    const blob = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/png'))
+    if (!blob) return
+    await fs.writeBytes(p.endsWith('.png') ? p : `${p}.png`, new Uint8Array(await blob.arrayBuffer()), { mkdirs: true })
+    flash(`Exported image to ${P.pretty(p)}`)
+  }
+
+  const transparency = async (i: number) => {
+    const o = slide.objects[i] as SlidePicture
+    const v = await os.dialog.prompt('Opacity (%):', { title: 'Transparency', defaultValue: String(Math.round(o.opacity * 100)) })
+    if (v === null) return
+    const n = Math.max(0, Math.min(100, Math.round(Number(v))))
+    if (Number.isFinite(n)) editSlide((s) => ((s.objects[i] as SlidePicture).opacity = n / 100))
+  }
+
+  const blockTitle = async (i: number) => {
+    const o = slide.objects[i] as SlideText
+    const t = await os.dialog.prompt('Block title:', { title: 'Block title', defaultValue: o.block_title })
+    if (t !== null) editSlide((s) => ((s.objects[i] as SlideText).block_title = t))
+  }
+
+  const TABLE_PROPS: FieldSpec[] = [
+    { key: 'nrows', label: 'Rows', kind: 'number', min: 1, max: 50, step: 1 },
+    { key: 'ncols', label: 'Columns', kind: 'number', min: 1, max: 20, step: 1 },
+    { key: 'header', label: 'First row is a header', kind: 'bool' },
+    { key: 'header_bg', label: 'Header fill', kind: 'color' },
+    { key: 'header_fg', label: 'Header text', kind: 'color' },
+    { key: 'align', label: 'Cell alignment', kind: 'select', options: [['left', 'left'], ['center', 'center'], ['right', 'right']] },
+    { key: 'font_pt', label: 'Font size (pt)', kind: 'number', min: 6, max: 60, step: 1 },
+    { key: 'color', label: 'Text colour', kind: 'color' },
+    { key: 'grid', label: 'Grid lines', kind: 'select', options: [['all', 'all'], ['horizontal', 'horizontal'], ['outer', 'outer'], ['none', 'none']] },
+    { key: 'rule_color', label: 'Rule colour', kind: 'color' },
+    { key: 'rule_width', label: 'Rule width (pt)', kind: 'number', min: 0.1, max: 6, step: 0.2 },
+    { key: 'striped', label: 'Zebra-stripe body rows', kind: 'bool' },
+    { key: 'stripe_color', label: 'Stripe colour', kind: 'color' },
+    { key: 'caption', label: 'Caption', kind: 'text' },
+    { key: 'fill', label: 'Box fill', kind: 'color' },
+    { key: 'border_color', label: 'Box frame', kind: 'color' },
+  ]
+
+  const tableProps = (i: number) => {
+    const o = slide.objects[i] as SlideTable
+    setModal(
+      <FieldsDialog
+        title="Table properties"
+        fields={TABLE_PROPS}
+        values={{ ...o, nrows: o.rows.length, ncols: Math.max(1, ...o.rows.map((r) => r.length)) } as unknown as Values}
+        onDone={(v) => {
+          setModal(null)
+          if (!v) return
+          editSlide((s) => {
+            const t = s.objects[i] as SlideTable
+            const nr = Math.round(Number(v.nrows))
+            const nc = Math.round(Number(v.ncols))
+            t.rows = Array.from({ length: nr }, (_, r) => Array.from({ length: nc }, (_, c) => t.rows[r]?.[c] ?? ''))
+            const r = t as unknown as Record<string, unknown>
+            for (const f of TABLE_PROPS) if (f.key !== 'nrows' && f.key !== 'ncols') r[f.key] = f.key === 'font_pt' ? Math.round(Number(v[f.key])) : v[f.key]
+            t.color = t.color || '#000000'
+            t.border = t.grid !== 'none'
+          })
+        }}
+      />,
+    )
+  }
+
+  const tableOp = (op: 'add_row' | 'add_col' | 'del_row' | 'del_col' | 'header' | 'caption', at = sel.length === 1 ? sel[0] : -1) => {
+    if (slide.objects[at]?.type !== 'SlideTable') return flash('Select a table first', 4000)
+    if (op === 'caption') {
+      void os.dialog.prompt('Caption:', { title: 'Table caption', defaultValue: (slide.objects[at] as SlideTable).caption }).then((c) => {
+        if (c !== null) editSlide((s) => ((s.objects[at] as SlideTable).caption = c))
+      })
+      return
+    }
+    editSlide((s) => {
+      const t = s.objects[at] as SlideTable
+      const cols = Math.max(1, ...t.rows.map((r) => r.length))
+      if (op === 'add_row') t.rows.push(Array.from({ length: cols }, () => ''))
+      else if (op === 'add_col') t.rows.forEach((r) => r.push(''))
+      else if (op === 'del_row' && t.rows.length > 1) t.rows.pop()
+      else if (op === 'del_col' && cols > 1) t.rows.forEach((r) => r.length > 1 && r.pop())
+      else if (op === 'header') t.header = !t.header
+    })
+  }
+
+  // ------------------------------------------------------------------ the Format toolbar
+
+  const one = sel.length === 1 ? slide.objects[sel[0]] : undefined
+  const t0 = one?.type === 'SlideText' ? one : undefined
+
+  /** Bold / italic: the selection while editing in place, else the whole box. */
+  const toggleRunOrBox = (kind: 'bold' | 'italic') => {
+    const ta = activeEditor()
+    if (ta) {
+      const cmd = kind === 'bold' ? '\\textbf{' : '\\textit{'
+      editTextarea(ta, (v, a, b) => ({ value: `${v.slice(0, a)}${cmd}${v.slice(a, b)}}${v.slice(b)}`, a: a + cmd.length, b: b + cmd.length }))
+      return
+    }
+    if (t0) setOnSelected({ [kind]: !t0[kind] }, ['SlideText'])
+  }
+
+  /** Super / subscript: the selection while editing, else the whole box. */
+  const scriptSelection = (kind: 'super' | 'sub') => {
+    const cmd = kind === 'super' ? '\\textsuperscript{' : '\\textsubscript{'
+    const ta = activeEditor()
+    if (ta) {
+      editTextarea(ta, (v, a, b) => ({ value: `${v.slice(0, a)}${cmd}${v.slice(a, b)}}${v.slice(b)}`, a: a + cmd.length, b: b + cmd.length }))
+      return
+    }
+    if (!t0) return flash('Select a text box (or edit it) to apply super/subscript', 4000)
+    editSlide((s) => {
+      const o = s.objects[sel[0]] as SlideText
+      o.text = `${cmd}${o.text}}`
+    })
+  }
+
+  /** Box ▸ change the selected box's type in place (window._on_type_combo). */
+  const changeKind = (kind: string) => {
+    const i = sel[0]
+    const o = slide.objects[i]
+    if (!o || objKind(o) === kind) return
+    if (TEXT_KINDS.has(kind) && o.type === 'SlideText') {
+      editSlide((s) => {
+        const t = s.objects[i] as SlideText
+        t.block = kind === 'text' || kind === 'equation' ? '' : kind
+        if (COLOURED_BLOCKS.has(t.block) && !t.block_title) t.block_title = 'Block'
+        if (kind === 'equation' && !t.text.includes('$')) {
+          const x = t.text.trim()
+          t.text = x ? `$${x}$` : '$  $'
+          t.align = 'center'
+        }
+      })
+      if (kind !== 'text' && kind !== 'equation') flash('Block — right-click ▸ Block title… to rename it', 5000)
+      return
+    }
+    const geo = { x: o.x, y: o.y, w: o.w, h: o.h, locked: o.locked }
+    const convert = async (): Promise<SlideObject | null> => {
+      if (TEXT_KINDS.has(kind)) {
+        const text = 'text' in o ? String((o as SlideText).text ?? '') : ''
+        const block = kind === 'text' || kind === 'equation' ? '' : kind
+        const t = makeObject('SlideText', { ...geo, text: text || 'Text', block, block_title: COLOURED_BLOCKS.has(block) ? 'Block' : '' })
+        if (kind === 'equation') {
+          const x = text.trim()
+          t.text = x && !x.includes('$') ? `$${x}$` : x || '$  $'
+          t.align = 'center'
+        }
+        return t
+      }
+      if (kind === 'image') {
+        let path = 'path' in o ? String((o as SlidePicture).path ?? '') : ''
+        if (!path) path = (await os.dialog.openFile({ title: 'Choose image', extensions: PICTURE_EXTENSIONS })) ?? ''
+        return makeObject('SlidePicture', { ...geo, path, keep_aspect: true })
+      }
+      if (kind === 'table') return makeObject('SlideTable', geo)
+      return null
+    }
+    void convert().then((n) => {
+      if (n) editSlide((s) => (s.objects[i] = n))
+    })
+  }
+
   // ------------------------------------------------------------------ slides
 
   const goto = (i: number) => {
-    setMasterMode(false)
-    setCurrent(Math.max(0, Math.min(i, deckRef.current.slides.length - 1)))
+    if (live.current.masterMode) setView('normal')
+    const n = Math.max(0, Math.min(i, deckRef.current.slides.length - 1))
+    setCurrent(n)
+    setPageTick((t) => t + 1)
   }
 
-  const addSlide = (layout = 'Title + content', at = slideIndex + 1) => {
-    mutate((d) => d.slides.splice(at, 0, slideLayout(layout)))
+  const addSlide = (layoutName = 'Blank', row = slideIndex) => {
+    const at = row + 1
+    mutate((d) => d.slides.splice(at, 0, slideLayout(layoutName)))
     goto(at)
   }
   const duplicateSlide = (i = slideIndex) => {
     mutate((d) => d.slides.splice(i + 1, 0, structuredClone(d.slides[i])))
     goto(i + 1)
   }
-  const deleteSlide = (i = slideIndex) => {
-    mutate((d) => {
-      d.slides.splice(i, 1)
-      if (!d.slides.length) d.slides.push(makeSlide())
-    })
-    goto(Math.min(i, deckRef.current.slides.length - 1))
+  /** Slide ▸ Delete slide / Remove active slide (window._del_slide), or the slide right-clicked / Delete in the list (_delete_slide_at). */
+  const deleteSlide = (i = slideIndex, active = true) => {
+    if (deckRef.current.slides.length <= 1) return
+    mutate((d) => d.slides.splice(i, 1))
+    goto(active ? Math.max(0, i - 1) : Math.min(i, deckRef.current.slides.length - 1))
   }
-  const moveSlide = (from: number, to: number) => {
-    if (to < 0 || to >= deckRef.current.slides.length || from === to) return
+  const moveSlide = (from: number, delta: number) => {
+    const to = from + delta
+    if (to < 0 || to >= deckRef.current.slides.length) return
     mutate((d) => {
       const [s] = d.slides.splice(from, 1)
       d.slides.splice(to, 0, s)
     })
     goto(to)
   }
-  const toggleHidden = (i = slideIndex) => mutate((d) => (d.slides[i].hidden = !d.slides[i].hidden))
-  const applyLayout = (name: string, i = slideIndex) =>
-    mutate((d) => {
-      const fresh = slideLayout(name)
-      d.slides[i] = { ...d.slides[i], objects: fresh.objects, bg: fresh.bg || d.slides[i].bg }
-    })
+  const reorder = (order: number[]) => {
+    if (live.current.masterMode) return
+    const cur = live.current.slideIndex
+    mutate((d) => (d.slides = order.map((i) => d.slides[i])))
+    goto(Math.max(0, order.indexOf(cur)))
+  }
+  const toggleHidden = (i = slideIndex) => {
+    if (masterMode) return
+    const hidden = !deckRef.current.slides[i].hidden
+    mutate((d) => (d.slides[i].hidden = hidden))
+    setCurrent(i)
+    flash(hidden ? `Slide ${i + 1} hidden — not in the PDF or the slideshow` : `Slide ${i + 1} shown again`, 4000)
+  }
+  const applyLayoutTo = (i: number, name: string) => {
+    mutate((d) => (d.slides[i] = slideLayout(name)))
+    goto(i)
+  }
 
   const frameTitle = async () => {
-    const t = await os.dialog.prompt('The frame title (shown by the theme; leave empty for none):', { title: 'Frame title', defaultValue: slide.title })
+    const t = await os.dialog.prompt("Title shown in the theme's title bar (decorations on):", { title: 'Frame title', defaultValue: slide.title })
     if (t !== null) editSlide((s) => (s.title = t))
   }
 
@@ -624,11 +1470,12 @@ export default function KherveSlide({ win, args }: AppProps) {
     setModal(
       <FieldsDialog
         title="Slide background"
+        intro="The colour, and how strongly it shows (1 = full colour; lower gives a tint)."
         fields={[
           { key: 'bg', label: 'Colour', kind: 'color' },
-          { key: 'bg_alpha', label: 'Strength (0–1)', kind: 'number', min: 0, max: 1, step: 0.05 },
+          { key: 'bg_alpha', label: 'Opacity (0–1)', kind: 'number', min: 0, max: 1, step: 0.05 },
         ]}
-        values={{ bg: slide.bg, bg_alpha: slide.bg_alpha }}
+        values={{ bg: slide.bg || '#FFFFFF', bg_alpha: slide.bg_alpha }}
         onDone={(v) => {
           setModal(null)
           if (v) editSlide((s) => Object.assign(s, { bg: String(v.bg ?? ''), bg_alpha: Number(v.bg_alpha) }))
@@ -636,14 +1483,54 @@ export default function KherveSlide({ win, args }: AppProps) {
       />,
     )
 
-  // ------------------------------------------------------------------ the presentation
+  // ------------------------------------------------------------------ the presentation and its theme
 
-  const themeDialog = () => {
+  const setDeckField = async (key: 'title' | 'author', label: string) => {
+    const t = await os.dialog.prompt(`${label}:`, { title: key === 'title' ? 'Presentation title' : 'Author', defaultValue: deckRef.current[key] })
+    if (t !== null) mutate((d) => (d[key] = t))
+  }
+
+  const setTheme = (name: string) => {
+    mutate((d) => {
+      d.theme = name
+      d.theme_spec.enabled = false // a built-in theme replaces the custom layer
+    })
+    recompileNow()
+  }
+  const setColourTheme = (name: string) => {
+    mutate((d) => (d.color_theme = name))
+    recompileNow()
+  }
+
+  const themeGallery = () =>
+    setModal(
+      <ThemeGallery
+        deck={deck}
+        slide={slide}
+        media={media}
+        themes={BEAMER_THEMES}
+        colourThemes={BEAMER_COLOR_THEMES}
+        onDone={(r) => {
+          setModal(null)
+          if (!r) return
+          mutate((d) => {
+            d.theme = r.theme
+            d.color_theme = r.color
+            d.theme_spec.enabled = false
+            d.plain_frames = false
+          })
+          recompileNow()
+        }}
+      />,
+    )
+
+  /** The theme wizard / advanced builder: presets, colours, title bar, footer, logo. */
+  const themeBuilder = (title: string) => {
     const d = deckRef.current
     setModal(
       <FieldsDialog
-        title="Theme"
-        intro="A beamer theme, optionally with your own colours, title bar, footer and logo on top (the desktop's theme builder)."
+        title={title}
+        intro="A beamer theme, optionally with your own colours, title bar, footer and logo on top."
         fields={THEME_FIELDS}
         values={{ ...d.theme_spec, theme: d.theme, color_theme: d.color_theme } as unknown as Values}
         extra={(set) => (
@@ -677,30 +1564,185 @@ export default function KherveSlide({ win, args }: AppProps) {
             dd.color_theme = String(v.color_theme ?? '')
             const spec = dd.theme_spec as unknown as Record<string, unknown>
             for (const f of THEME_FIELDS) if (f.key in spec) spec[f.key] = v[f.key]
+            if (dd.theme_spec.enabled) dd.plain_frames = false // custom themes touch decorated elements: show them
           })
+          recompileNow()
         }}
       />,
     )
   }
 
-  const pageDialog = () => {
+  const pageSetup = () => {
     const d = deckRef.current
     setModal(
       <FieldsDialog
-        title="Presentation settings"
-        fields={PAGE_FIELDS}
-        values={{ ...d } as unknown as Values}
+        title="Page setup"
+        fields={[
+          { key: 'aspect', label: 'Aspect ratio', kind: 'select', options: ASPECTS },
+          { key: 'custom', label: 'Use custom size instead of aspect ratio', kind: 'bool' },
+          { key: 'page_w_cm', label: 'Width (cm)', kind: 'number', min: 1, max: 200, step: 0.1 },
+          { key: 'page_h_cm', label: 'Height (cm)', kind: 'number', min: 1, max: 200, step: 0.1 },
+          { key: 'gap', label: 'Margin / gap (%)', kind: 'number', min: 0, max: 45, step: 0.5 },
+        ]}
+        values={{ aspect: d.aspect, custom: d.page_w_cm > 0 && d.page_h_cm > 0, page_w_cm: d.page_w_cm || 12.8, page_h_cm: d.page_h_cm || 9.6, gap: d.gap * 100 }}
         onDone={(v) => {
           setModal(null)
           if (!v) return
           mutate((dd) => {
-            const r = dd as unknown as Record<string, unknown>
-            for (const f of PAGE_FIELDS) r[f.key] = v[f.key]
+            dd.aspect = String(v.aspect)
+            dd.page_w_cm = v.custom ? Number(v.page_w_cm) : 0
+            dd.page_h_cm = v.custom ? Number(v.page_h_cm) : 0
+            dd.gap = Number(v.gap) / 100
           })
+          recompileNow()
         }}
       />,
     )
   }
+
+  // ------------------------------------------------------------------ views, layouts, find
+
+  const pdfWin = useRef<string | null>(null)
+
+  const applyLayout = (mode: Layout) => {
+    if (mode !== layout) flash(LAYOUT_TEXT[mode][0], 3000)
+    setLayout(mode)
+    savePrefs({ layout: mode })
+  }
+
+  const setViewMode = (mode: ViewMode) => {
+    setEditingText(null)
+    setWelcome(false)
+    setLeftTab('visual')
+    setView(mode)
+    if (mode === 'overview') {
+      if (layout !== 'visual') {
+        setRightTab('overview')
+        if (pdfWin.current) useWindows.getState().focus(pdfWin.current)
+      }
+    } else if (rightTab === 'overview') setRightTab('pdf')
+  }
+
+  const toggleSlidesList = () => setNavShown((v) => !v)
+
+  const findQuery = useRef<{ q: string; matches: [number, number][]; idx: number }>({ q: '', matches: [], idx: -1 })
+  const latexView = useRef<EditorView | null>(null)
+  const findNext = (backwards = false) => {
+    const text = find.text
+    if (!text) return
+    if (leftTab === 'latex' && latexView.current) {
+      const v = latexView.current
+      const doc = v.state.doc.toString()
+      const low = doc.toLowerCase()
+      const q = text.toLowerCase()
+      const from = backwards ? v.state.selection.main.from - 1 : v.state.selection.main.to
+      let i = backwards ? low.lastIndexOf(q, Math.max(0, from)) : low.indexOf(q, from)
+      if (i < 0) i = backwards ? low.lastIndexOf(q) : low.indexOf(q)
+      if (i >= 0) v.dispatch({ selection: { anchor: i, head: i + q.length }, scrollIntoView: true })
+      setFind((f) => ({ ...f, count: i >= 0 ? '' : 'Not found' }))
+      return
+    }
+    setLeftTab('visual')
+    const q = text.toLowerCase()
+    const fq = findQuery.current
+    if (fq.q !== q) {
+      fq.q = q
+      fq.idx = -1
+      fq.matches = []
+      deck.slides.forEach((s, si) =>
+        s.objects.forEach((o, oi) => {
+          const hay = o.type === 'SlideText' ? o.text : o.type === 'SlideTable' ? o.rows.map((r) => r.join(' ')).join(' ') : ''
+          if (hay.toLowerCase().includes(q)) fq.matches.push([si, oi])
+        }),
+      )
+    }
+    if (!fq.matches.length) return setFind((f) => ({ ...f, count: '0 / 0' }))
+    fq.idx = (fq.idx + (backwards ? -1 : 1) + fq.matches.length) % fq.matches.length
+    const [si, oi] = fq.matches[fq.idx]
+    if (si !== slideIndex || masterMode) goto(si)
+    setTimeout(() => setSel([oi]), 0)
+    setFind((f) => ({ ...f, count: `${fq.idx + 1} / ${fq.matches.length}` }))
+  }
+
+  // ------------------------------------------------------------------ the PDF window (desktop _PdfWindow)
+
+  const L = useRef({ goto, reorder, applyLayout, setViewMode, slideMenu: (_e: React.MouseEvent, _i: number) => {}, setRightTab, view })
+  const linkActions = useMemo<PdfLinkActions>(
+    () => ({
+      goto: (i) => L.current.goto(i),
+      open: (i) => {
+        L.current.goto(i)
+        L.current.setViewMode('normal')
+      },
+      reorder: (order) => L.current.reorder(order),
+      slideMenu: (e, i) => L.current.slideMenu(e, i),
+      tab: (t) => {
+        // Picking the Overview tab by hand is the Overview view too (window._on_right_tab).
+        L.current.setRightTab(t)
+        if (t === 'overview') L.current.setViewMode('overview')
+        else if (L.current.view === 'overview') L.current.setViewMode('normal')
+      },
+      dock: () => {
+        pdfWin.current = null
+        L.current.applyLayout('side')
+      },
+    }),
+    [],
+  )
+
+  const linkData: PdfLink = {
+    title,
+    pdf: compile.pdf,
+    busy: compile.busy,
+    page: pdfPageOf(slideIndex),
+    pageTick,
+    tab: rightTab,
+    deck,
+    look,
+    media,
+    backdrop: backdrop.pages,
+    current: slideIndex,
+    menus: null,
+    windowId: pdfWin.current,
+    actions: linkActions,
+  }
+  const menusRef = useRef<MenuBarMenu[] | null>(null)
+  useEffect(() => {
+    useLinks.getState().put(win.id, { ...linkData, menus: menusRef.current })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, compile.pdf, compile.busy, slideIndex, pageTick, rightTab, deck, look, backdrop.pages])
+
+  // Open the PDF window to the right of this one (or close it when leaving that layout).
+  useEffect(() => {
+    const wm = useWindows.getState()
+    if (layout === 'window') {
+      if (pdfWin.current && wm.windows.some((w) => w.id === pdfWin.current)) return
+      const id = os.open('kherveslide', { pdfFor: win.id })
+      pdfWin.current = id
+      if (!id || isSmallScreen()) return
+      const desk = desktopSize()
+      const gap = 8
+      const mainW = Math.max(560, Math.round((desk.w - 3 * gap) * 0.62))
+      const me = wm.windows.find((w) => w.id === win.id)
+      if (me && (me.maximized || me.snapped)) wm.snap(win.id, null)
+      useWindows.getState().setBounds(win.id, { x: gap, y: gap, w: mainW, h: desk.h - 2 * gap })
+      useWindows.getState().setBounds(id, { x: 2 * gap + mainW, y: gap, w: Math.max(320, desk.w - 3 * gap - mainW), h: desk.h - 2 * gap })
+      useWindows.getState().focus(win.id)
+    } else if (pdfWin.current) {
+      const id = pdfWin.current
+      pdfWin.current = null
+      void wm.close(id, true)
+    }
+  }, [layout, win.id])
+
+  // Closing the main window closes its PDF window.
+  useEffect(
+    () => () => {
+      if (pdfWin.current) void useWindows.getState().close(pdfWin.current, true)
+      useLinks.getState().drop(win.id)
+    },
+    [win.id],
+  )
 
   // ------------------------------------------------------------------ AI tools (appManifest.ts: kherveslide_*)
 
@@ -792,8 +1834,8 @@ export default function KherveSlide({ win, args }: AppProps) {
       let p = typeof a.path === 'string' && a.path.trim() ? P.resolve(HOME, a.path.trim()) : defaultExportPath('.pdf')
       if (!/\.pdf$/i.test(p)) p += '.pdf'
       if (fs.exists(p) && !(await ctx.confirm(`replace ${P.pretty(p)}`))) throw new Error('The user kept the existing file.')
-      const pdf = await runCompile(false)
-      if (!pdf) throw new Error(`LaTeX could not compile the slides: ${lastCompileError.current || 'see the console in KherveSlide'}`)
+      const { pdf } = await slideshowPdf()
+      if (!pdf) throw new Error(`LaTeX could not compile the slides: ${compile.errors[0]?.message || 'see the console in KherveSlide'}`)
       await fs.writeBytes(p, pdf, { mkdirs: true })
       return { path: P.pretty(p), bytes: pdf.length }
     },
@@ -808,286 +1850,584 @@ export default function KherveSlide({ win, args }: AppProps) {
     },
   })
 
-  // ------------------------------------------------------------------ keyboard
-
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.defaultPrevented || modal || present) return
-    const t = e.target as HTMLElement
-    if (t.closest('input, textarea, select, [contenteditable="true"]')) return
-    const mod = e.metaKey || e.ctrlKey
-    const k = e.key.toLowerCase()
-    let handled = true
-    if (mod && k === 'z') e.shiftKey ? redo() : undo()
-    else if (mod && k === 'y') redo()
-    else if (mod && k === 's') void (e.shiftKey ? saveAs() : save())
-    else if (mod && k === 'o') void openDialog()
-    else if (mod && k === 'r') void runCompile()
-    else if (mod && k === 'c') copySelected()
-    else if (mod && k === 'x') copySelected(true)
-    else if (mod && k === 'v') paste()
-    else if (mod && k === 'd') duplicateSelected()
-    else if (mod && k === 'a') setSel(slide.objects.map((_, i) => i))
-    else if (mod && k === 'g') group(!e.shiftKey)
-    else if (mod && k === 'b') setOnSelected({ bold: !(slide.objects[sel[0]] as SlideText | undefined)?.bold }, ['SlideText'])
-    else if (mod && k === 'i') setOnSelected({ italic: !(slide.objects[sel[0]] as SlideText | undefined)?.italic }, ['SlideText'])
-    else if (mod) handled = false
-    else if (k === 'delete' || k === 'backspace') sel.length ? deleteSelected() : (handled = false)
-    else if (k === 'escape') setSel([])
-    else if (k === 'f5') void startShow(e.shiftKey, false)
-    else if ((k === 'enter' || k === 'f2') && sel.length === 1 && slide.objects[sel[0]]?.type === 'SlideText') setEditingText(sel[0])
-    else if (k.startsWith('arrow') && sel.length) {
-      const step = e.shiftKey ? 0.02 : 0.004
-      nudge(k === 'arrowleft' ? -step : k === 'arrowright' ? step : 0, k === 'arrowup' ? -step : k === 'arrowdown' ? step : 0)
-    } else if ((k === 'arrowdown' || k === 'arrowright' || k === 'pagedown') && !masterMode) goto(slideIndex + 1)
-    else if ((k === 'arrowup' || k === 'arrowleft' || k === 'pageup') && !masterMode) goto(slideIndex - 1)
-    else handled = false
-    if (handled) e.preventDefault()
-  }
-
   // ------------------------------------------------------------------ context menus
 
-  const objectMenu = (e: React.MouseEvent, i: number | null) => {
+  const layoutThumb = (name: string): ReactNode => {
+    const s = slideLayout(name)
+    const d = { ...deck, slides: [s] }
+    return (
+      <span className="ks2-app ks2-layout-thumb">
+        <SlideView deck={d} slide={s} look={look} media={media} width={78} />
+      </span>
+    )
+  }
+  const layoutItems = (pick: (name: string) => void): MenuItem[] => Object.keys(SLIDE_LAYOUTS).map((n) => ({ label: n, image: layoutThumb(n), onClick: () => pick(n) }))
+
+  const slideMenu = (e: React.MouseEvent, row: number) => {
+    if (masterMode || row < 0 || row >= deck.slides.length) return
+    os.contextMenu(
+      e,
+      [
+        { label: 'Apply layout to this slide', submenu: layoutItems((n) => applyLayoutTo(row, n)) },
+        '-',
+        { label: 'New slide after', submenu: layoutItems((n) => addSlide(n, row)) },
+        { label: 'Duplicate slide', onClick: () => duplicateSlide(row) },
+        '-',
+        { label: 'Move up', disabled: row === 0, onClick: () => moveSlide(row, -1) },
+        { label: 'Move down', disabled: row >= deck.slides.length - 1, onClick: () => moveSlide(row, 1) },
+        '-',
+        { label: deck.slides[row].hidden ? 'Show slide' : 'Hide slide', onClick: () => toggleHidden(row) },
+        { label: 'Delete slide', disabled: deck.slides.length <= 1, onClick: () => deleteSlide(row, false) },
+      ],
+      { className: 'ks2-layout-menu' },
+    )
+  }
+  L.current = { goto, reorder, applyLayout, setViewMode, slideMenu, setRightTab, view }
+
+  const canvasMenu = (e: React.MouseEvent, i: number | null) => {
     e.preventDefault()
     const o = i !== null ? slide.objects[i] : undefined
-    const items: MenuItem[] = o
-      ? [
-          ...(o.type === 'SlideText'
-            ? [
-                { label: 'Edit text', onClick: () => setEditingText(i) },
-                ...(/^\s*(\\\[|\$)/.test(o.text) ? [{ label: 'Edit equation…', icon: Sigma, onClick: () => editEquation(i!) }] : []),
-              ]
-            : []),
-          ...(o.type === 'SlidePicture' ? [{ label: 'Change picture…', icon: ImageIcon, onClick: () => void swapPicture(i!) }] : []),
-          ...(o.type === 'SlideTable'
-            ? [
-                { label: 'Add row', onClick: () => tableOp(i!, 'add_row') },
-                { label: 'Add column', onClick: () => tableOp(i!, 'add_col') },
-                { label: 'Delete last row', onClick: () => tableOp(i!, 'del_row') },
-                { label: 'Delete last column', onClick: () => tableOp(i!, 'del_col') },
-              ]
-            : []),
-          { label: 'Properties…', onClick: () => properties(i!) },
-          '-',
-          { label: 'Bring to front', icon: BringToFront, onClick: () => zOrder('front') },
-          { label: 'Bring forward', onClick: () => zOrder('up') },
-          { label: 'Send backward', onClick: () => zOrder('down') },
-          { label: 'Send to back', icon: SendToBack, onClick: () => zOrder('back') },
-          '-',
-          o.locked
-            ? { label: 'Unlock (free position)', icon: LockOpen, onClick: () => setOnSelected({ locked: false }) }
-            : { label: 'Lock (beamer places it)', icon: Lock, onClick: () => setOnSelected({ locked: true }) },
-          { label: 'Group', shortcut: '⌘G', disabled: sel.length < 2, onClick: () => group(true) },
-          { label: 'Ungroup', shortcut: '⇧⌘G', disabled: !o.group, onClick: () => group(false) },
-          '-',
-          { label: 'Cut', shortcut: '⌘X', onClick: () => copySelected(true) },
-          { label: 'Copy', shortcut: '⌘C', onClick: () => copySelected() },
-          { label: 'Duplicate', shortcut: '⌘D', onClick: duplicateSelected },
-          { label: 'Delete', danger: true, onClick: deleteSelected },
-        ]
-      : [
-          { label: 'Paste', shortcut: '⌘V', disabled: !objectClipboard.length, onClick: paste },
-          '-',
-          { label: 'Text box', icon: Type, onClick: () => addText() },
-          { label: 'Picture…', icon: ImageIcon, onClick: () => void addPicture() },
-          { label: 'Equation…', icon: Sigma, onClick: addEquation },
-          '-',
-          { label: 'Frame title…', onClick: () => void frameTitle() },
-          { label: 'Background colour…', onClick: slideBackground },
-          { label: 'Apply layout', submenu: Object.keys(SLIDE_LAYOUTS).map((n) => ({ label: n, onClick: () => applyLayout(n) })) },
-        ]
+    if (!o) {
+      os.contextMenu(e, [
+        { label: 'Add text box', onClick: addText },
+        { label: 'Add image…', onClick: () => void addPicture() },
+        { label: 'Add table', onClick: addTable },
+        { label: 'Equation builder...', image: menuIcon('equation_builder'), shortcut: K('⇧⌘E'), onClick: addEquation },
+        { label: 'Chemical reaction...', image: menuIcon('chemistry'), shortcut: K('⇧⌘R'), onClick: addChemistry },
+        { label: 'Chemical structure...', image: menuIcon('chemfig_structure'), shortcut: K('⇧⌘T'), onClick: () => void addChemStructure() },
+        { label: 'Flowchart builder...', image: menuIcon('flowchart_builder'), shortcut: K('⇧⌘F'), onClick: addFlowchart },
+        { label: 'Add drawing…', onClick: addDrawing },
+        '-',
+        { label: 'Paste', onClick: () => void paste() },
+      ])
+      return
+    }
+    const s = selected()
+    const grouped = s.some((k) => slide.objects[k]?.group)
+    const positioned = o.type === 'SlideLine' || o.type === 'SlideShape' || o.type === 'SlideVideo'
+    const items: MenuItem[] = [
+      { label: 'Copy', onClick: () => copySelected() },
+      { label: 'Paste', onClick: () => void paste() },
+      { label: 'Cut', onClick: () => copySelected(true) },
+      { label: 'Duplicate', onClick: duplicateSelected },
+      { label: 'Delete', onClick: deleteSelected },
+      '-',
+      ...(s.length > 1 ? [{ label: 'Group', onClick: () => group(true) }] : []),
+      ...(grouped ? [{ label: 'Ungroup', onClick: () => group(false) }] : []),
+      ...(s.length > 1 || grouped ? ['-' as const] : []),
+      { label: positioned ? 'Lock position (no dragging)' : 'Locked (beamer places it)', checked: o.locked, onClick: () => setOnSelected({ locked: !o.locked }) },
+      { label: 'Bring to front', onClick: () => zOrder('front') },
+      { label: 'Send to back', onClick: () => zOrder('back') },
+    ]
+    if (o.type === 'SlidePicture') {
+      items.push(
+        '-',
+        { label: 'Crop & rotate…', onClick: () => editPicture(i!) },
+        { label: 'Rotate left 90°', onClick: () => rotatePicture(i!, -90) },
+        { label: 'Rotate right 90°', onClick: () => rotatePicture(i!, 90) },
+        { label: 'Lock aspect ratio', checked: o.keep_aspect, onClick: () => editSlide((sl) => ((sl.objects[i!] as SlidePicture).keep_aspect = !o.keep_aspect)) },
+        { label: 'Transparency…', onClick: () => void transparency(i!) },
+        { label: 'Replace image…', onClick: () => void replaceImage(i!) },
+        { label: 'Paste image here', onClick: () => void paste() },
+        { label: 'Export to PNG…', disabled: !o.path, onClick: () => void exportPicturePng(i!) },
+      )
+    }
+    items.push('-')
+    if (o.type === 'SlideShape') items.push({ label: 'Shape properties…', onClick: () => fieldsFor(i!, 'Shape properties', OBJECT_FIELDS.SlideShape) })
+    else if (o.type === 'SlideLine') items.push({ label: 'Line / arrow properties…', onClick: () => fieldsFor(i!, 'Line / arrow properties', OBJECT_FIELDS.SlideLine) })
+    else if (o.type === 'SlideTable') items.push({ label: 'Table design…', onClick: tableDesign }, { label: 'Table properties…', onClick: () => tableProps(i!) })
+    else if (o.type === 'SlideVideo') items.push({ label: 'Video properties…', onClick: () => fieldsFor(i!, 'Video properties', OBJECT_FIELDS.SlideVideo) })
+    else items.push({ label: 'Box style (border / fill)…', onClick: () => fieldsFor(i!, 'Box style', FRAME) })
+    if (o.type === 'SlideText' && o.block) items.push({ label: 'Block title…', onClick: () => void blockTitle(i!) })
     os.contextMenu(e, items)
   }
 
-  const tableOp = (i: number, op: 'add_row' | 'add_col' | 'del_row' | 'del_col') =>
-    editSlide((s) => {
-      const t = s.objects[i]
-      if (t?.type !== 'SlideTable') return
-      const cols = Math.max(1, ...t.rows.map((r) => r.length))
-      if (op === 'add_row') {
-        t.rows.push(Array.from({ length: cols }, () => ''))
-        t.h += t.h / Math.max(1, t.rows.length - 1)
-      } else if (op === 'add_col') t.rows = t.rows.map((r) => [...r, ...Array.from({ length: cols + 1 - r.length }, () => '')])
-      else if (op === 'del_row' && t.rows.length > 1) {
-        t.rows.pop()
-        t.h -= t.h / (t.rows.length + 1)
-      } else if (op === 'del_col' && cols > 1) t.rows = t.rows.map((r) => r.slice(0, cols - 1))
-    })
+  // ------------------------------------------------------------------ header / footer fields
 
-  const slideMenu = (e: React.MouseEvent, i: number) =>
-    os.contextMenu(e, [
-      { label: 'New slide after', submenu: Object.keys(SLIDE_LAYOUTS).map((n) => ({ label: n, onClick: () => addSlide(n, i + 1) })) },
-      { label: 'Apply layout to this slide', submenu: Object.keys(SLIDE_LAYOUTS).map((n) => ({ label: n, onClick: () => applyLayout(n, i) })) },
-      { label: 'Duplicate slide', onClick: () => duplicateSlide(i) },
+  const hfExample = (token: string): string => {
+    const today = new Date()
+    const n = slideIndex + 1
+    const total = deck.slides.length
+    return (
+      {
+        '\\insertframenumber': String(n),
+        '\\insertframenumber\\,/\\,\\inserttotalframenumber': `${n} / ${total}`,
+        '\\inserttotalframenumber': String(total),
+        '\\today': `${today.getDate()} ${today.toLocaleString('en-GB', { month: 'long' })} ${today.getFullYear()}`,
+        '\\the\\day/\\the\\month/\\the\\year': `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`,
+        '\\the\\year': String(today.getFullYear()),
+        '\\inserttitle': deck.title,
+        '\\insertshorttitle': deck.title,
+        '\\insertframetitle': slide.title || '(none on this slide)',
+        '\\insertauthor': deck.author || '(no author set)',
+        '\\insertshortauthor': deck.author || '(no author set)',
+      } as Record<string, string>
+    )[token] ?? ''
+  }
+
+  const applyFrameTitle = (v: string) => {
+    if (!masterMode && slide.title !== v) editSlide((s) => (s.title = v))
+  }
+  const applyHeadFoot = (key: 'header' | 'foot_left' | 'foot_center' | 'foot_right', v: string) => {
+    if (deckRef.current[key] !== v) {
+      mutate((d) => (d[key] = v))
+      recompileNow()
+    }
+  }
+
+  const hfInsert = (el: HTMLInputElement, token: string, apply: (v: string) => void) => {
+    el.focus()
+    el.setRangeText(token, el.selectionStart ?? el.value.length, el.selectionEnd ?? el.value.length, 'end')
+    apply(el.value)
+  }
+
+  const hfField = (name: string, value: string, placeholder: string, apply: (v: string) => void, disabled = false) => (
+    <input
+      key={`${name}:${value}`}
+      className="ks2-hf-input"
+      defaultValue={value}
+      placeholder={placeholder}
+      disabled={disabled}
+      spellCheck={false}
+      title="Double-click to insert the slide number, date, title, author… (accepts LaTeX too, e.g. \today)."
+      onBlur={(e) => apply(e.currentTarget.value)}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Enter') e.currentTarget.blur()
+      }}
+      onDoubleClick={(e) => {
+        const el = e.currentTarget
+        const r = el.getBoundingClientRect()
+        os.contextMenu({ clientX: r.left, clientY: r.bottom }, [
+          { label: 'Insert into this field:', disabled: true },
+          ...HF_INSERTS.map((x): MenuItem => {
+            if (!x) return '-'
+            const ex = hfExample(x[1])
+            return { label: ex ? `${x[0]}    —  ${ex}` : x[0], onClick: () => hfInsert(el, x[1], apply) }
+          }),
+          '-',
+          {
+            label: 'Clear field',
+            onClick: () => {
+              el.value = ''
+              apply('')
+            },
+          },
+        ])
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        const el = e.currentTarget
+        os.contextMenu(e, [
+          { label: 'Insert', submenu: HF_INSERTS.map((x): MenuItem => (x ? { label: x[0], onClick: () => hfInsert(el, x[1], apply) } : '-')) },
+          '-',
+          {
+            label: 'Clear field',
+            onClick: () => {
+              el.value = ''
+              apply('')
+            },
+          },
+        ])
+      }}
+    />
+  )
+
+  // ------------------------------------------------------------------ menus (window._build_menus)
+
+  const themeMenuItems = (): MenuItem[] => [
+    { label: 'Presentation theme (whole look)', submenu: BEAMER_THEMES.map((t) => ({ label: t, checked: deck.theme === t, onClick: () => setTheme(t) })) },
+    {
+      label: 'Colour theme (colours only)',
+      submenu: ['', ...BEAMER_COLOR_THEMES].map((t) => ({ label: t || '(theme default)', checked: deck.color_theme === t, onClick: () => setColourTheme(t) })),
+    },
+    '-',
+    { label: 'Preview themes…', onClick: themeGallery },
+    { label: 'Generate all theme previews…', onClick: () => void os.dialog.alert('The previews are drawn by the Visual editor: there is nothing to generate in advance.', { title: 'Theme previews' }) },
+    { label: 'Theme wizard — make or import a theme…', onClick: () => themeBuilder('Theme wizard') },
+    { label: 'Advanced theme builder…', onClick: () => themeBuilder('Advanced theme builder') },
+    '-',
+    {
+      label: 'Show theme decorations',
+      checked: !deck.plain_frames,
+      onClick: () => {
+        mutate((d) => (d.plain_frames = !d.plain_frames))
+        recompileNow()
+      },
+    },
+  ]
+
+  const showMenuItems = (): MenuItem[] => [
+    { label: 'From the beginning', shortcut: 'F5', onClick: () => void startSlideshow('full', false) },
+    { label: 'From the current slide', shortcut: '⇧F5', onClick: () => void startSlideshow('full', true) },
+    { label: 'Presenter view', shortcut: '⌥F5', onClick: () => void startSlideshow('presenter', true) },
+    { label: 'Current + next slide (two screens)', onClick: () => void startSlideshow('next', true) },
+    { label: 'In a window', onClick: () => void startSlideshow('window', true) },
+    { label: 'Automatic slideshow…', onClick: autoSlideshow },
+    '-',
+    {
+      label: 'Show the slides on',
+      submenu: [
+        { label: 'Automatic (the other screen if there is one)', checked: true },
+        { label: 'This screen (the browser shows on one screen)', disabled: true },
+      ],
+    },
+  ]
+
+  const recentMenu = (): MenuItem[] => {
+    const files = loadPrefs().recent
+    if (!files.length) return [{ label: '(no recent files)', disabled: true }]
+    return [
+      ...files.map((p) => ({ label: P.basename(p), onClick: () => void confirmDiscard('opening another presentation').then((ok) => { if (ok) void openPath(p) }) })),
       '-',
-      { label: 'Move up', disabled: i === 0, onClick: () => moveSlide(i, i - 1) },
-      { label: 'Move down', disabled: i === deck.slides.length - 1, onClick: () => moveSlide(i, i + 1) },
-      { label: deck.slides[i]?.hidden ? 'Show slide' : 'Hide slide', onClick: () => toggleHidden(i) },
-      '-',
-      { label: 'Delete slide', danger: true, onClick: () => deleteSlide(i) },
-    ])
-
-  // ------------------------------------------------------------------ menus
-
-  const A = useRef({ save, saveAs, openDialog, newDeck, openExample, exportPdf, exportTex, exportZip, runCompile, startShow, undo, redo })
-  A.current = { save, saveAs, openDialog, newDeck, openExample, exportPdf, exportTex, exportZip, runCompile, startShow, undo, redo }
-  const B = useRef({ addText, addPicture, addVideo, addEquation, addTable, addShape, addLine, addBlock, addSlide, duplicateSlide, deleteSlide, toggleHidden, moveSlide, applyLayout, frameTitle, slideBackground, themeDialog, pageDialog, mutate, copySelected, paste, duplicateSelected, deleteSelected, group, properties, setOnSelected })
-  B.current = { addText, addPicture, addVideo, addEquation, addTable, addShape, addLine, addBlock, addSlide, duplicateSlide, deleteSlide, toggleHidden, moveSlide, applyLayout, frameTitle, slideBackground, themeDialog, pageDialog, mutate, copySelected, paste, duplicateSelected, deleteSelected, group, properties, setOnSelected }
-
-  const menuKey = [
-    past.current.length > 0, future.current.length > 0, sel.length, masterMode, panel, exact, deck.theme, deck.color_theme, deck.aspect, deck.page_number,
-    deck.nav_symbols, deck.plain_frames, examples?.length ?? -1, slideIndex, deck.slides.length, slide.hidden, filePath, compile.busy,
-  ].join('|')
-
-  useEffect(() => {
-    const b = () => B.current
-    const menus: MenuBarMenu[] = [
       {
-        label: 'File',
-        items: [
-          { label: 'New', icon: FilePlus, shortcut: '⌘N', onClick: () => void A.current.newDeck('Blank') },
-          { label: 'New from template', submenu: Object.keys(TEMPLATES).map((n) => ({ label: n, onClick: () => void A.current.newDeck(n) })) },
-          { label: 'Open…', icon: FolderOpen, shortcut: '⌘O', onClick: () => void A.current.openDialog() },
-          '-',
-          { label: 'Save', icon: Save, shortcut: '⌘S', onClick: () => void A.current.save() },
-          { label: 'Save As…', shortcut: '⇧⌘S', onClick: () => void A.current.saveAs() },
-          '-',
-          { label: 'Compile to PDF', shortcut: '⌘R', disabled: compile.busy, onClick: () => void A.current.runCompile() },
-          { label: 'Export PDF…', icon: FileDown, onClick: () => void A.current.exportPdf() },
-          { label: 'Export LaTeX (.tex)…', onClick: () => void A.current.exportTex() },
-          { label: 'Export LaTeX project (.zip)…', onClick: () => void A.current.exportZip() },
-          '-',
-          { label: 'Close', onClick: () => win.close() },
-        ],
-      },
-      {
-        label: 'Edit',
-        items: [
-          { label: 'Undo', icon: Undo2, shortcut: '⌘Z', disabled: !past.current.length, onClick: () => A.current.undo() },
-          { label: 'Redo', icon: Redo2, shortcut: '⇧⌘Z', disabled: !future.current.length, onClick: () => A.current.redo() },
-          '-',
-          { label: 'Cut', shortcut: '⌘X', disabled: !sel.length, onClick: () => b().copySelected(true) },
-          { label: 'Copy', shortcut: '⌘C', disabled: !sel.length, onClick: () => b().copySelected() },
-          { label: 'Paste', shortcut: '⌘V', onClick: () => b().paste() },
-          { label: 'Duplicate', shortcut: '⌘D', disabled: !sel.length, onClick: () => b().duplicateSelected() },
-          { label: 'Delete', disabled: !sel.length, onClick: () => b().deleteSelected() },
-          '-',
-          { label: 'Group', shortcut: '⌘G', disabled: sel.length < 2, onClick: () => b().group(true) },
-          { label: 'Ungroup', shortcut: '⇧⌘G', disabled: !sel.length, onClick: () => b().group(false) },
-          { label: 'Properties…', disabled: sel.length !== 1, onClick: () => b().properties(live.current.sel[0]) },
-        ],
-      },
-      {
-        label: 'View',
-        items: [
-          { label: 'Visual only', checked: panel === 'none', onClick: () => setPanel('none') },
-          { label: 'Visual + LaTeX', checked: panel === 'latex', onClick: () => setPanel('latex') },
-          { label: 'Visual + PDF', checked: panel === 'pdf', onClick: () => setPanel('pdf') },
-          { label: 'Visual + Console', checked: panel === 'console', onClick: () => setPanel('console') },
-          '-',
-          { label: 'Exact theme (compiled by LaTeX)', checked: exact, onClick: () => setExact((v) => !v) },
-          { label: 'Edit the master slide', checked: masterMode, onClick: () => setMasterMode((v) => !v) },
-          '-',
-          { label: 'Zoom in', icon: ZoomIn, onClick: () => setZoom((z) => Math.min(3, z * 1.25)) },
-          { label: 'Zoom out', icon: ZoomOut, onClick: () => setZoom((z) => Math.max(0.3, z / 1.25)) },
-          { label: 'Fit the slide', onClick: () => setZoom(1) },
-        ],
-      },
-      {
-        label: 'Insert',
-        items: [
-          { label: 'Text box', icon: Type, onClick: () => b().addText() },
-          { label: 'Bullet list', icon: List, onClick: () => b().addText(itemize(['First point', 'Second point'])) },
-          { label: 'Numbered list', icon: ListOrdered, onClick: () => b().addText(itemize(['First point', 'Second point'], true)) },
-          { label: 'Equation…', icon: Sigma, onClick: () => b().addEquation() },
-          {
-            label: 'Block',
-            submenu: [
-              ['block', 'Block'], ['alertblock', 'Alert block'], ['exampleblock', 'Example block'], ['theorem', 'Theorem'], ['definition', 'Definition'],
-              ['proof', 'Proof'],
-            ].map(([k, l]) => ({ label: l, onClick: () => b().addBlock(k) })),
-          },
-          '-',
-          { label: 'Picture…', icon: ImageIcon, onClick: () => void b().addPicture() },
-          { label: 'Video…', onClick: () => void b().addVideo() },
-          { label: 'Table…', icon: Table, onClick: () => b().addTable() },
-          '-',
-          { label: 'Line', icon: Slash, onClick: () => b().addLine(false) },
-          { label: 'Arrow', icon: MoveRight, onClick: () => b().addLine(true) },
-          { label: 'Shapes', icon: Shapes, submenu: SHAPE_GROUPS.map(([g, items]) => ({ label: g, submenu: items.map(([k, l]) => ({ label: l, onClick: () => b().addShape(k) })) })) },
-        ],
-      },
-      {
-        label: 'Slide',
-        items: [
-          { label: 'New slide', onClick: () => b().addSlide() },
-          { label: 'New slide with layout', submenu: Object.keys(SLIDE_LAYOUTS).map((n) => ({ label: n, onClick: () => b().addSlide(n) })) },
-          { label: 'Apply layout', submenu: Object.keys(SLIDE_LAYOUTS).map((n) => ({ label: n, onClick: () => b().applyLayout(n) })) },
-          { label: 'Duplicate slide', onClick: () => b().duplicateSlide() },
-          { label: 'Delete slide', disabled: masterMode, onClick: () => b().deleteSlide() },
-          { label: slide.hidden ? 'Show slide' : 'Hide slide', disabled: masterMode, onClick: () => b().toggleHidden() },
-          { label: 'Move slide up', disabled: slideIndex === 0, onClick: () => b().moveSlide(slideIndex, slideIndex - 1) },
-          { label: 'Move slide down', disabled: slideIndex >= deck.slides.length - 1, onClick: () => b().moveSlide(slideIndex, slideIndex + 1) },
-          '-',
-          { label: 'Frame title…', onClick: () => void b().frameTitle() },
-          { label: 'Background colour…', onClick: () => b().slideBackground() },
-          { label: 'Clear background', onClick: () => b().mutate((d) => ((masterMode ? d.master : d.slides[slideIndex]).bg = '')) },
-        ],
-      },
-      {
-        label: 'Design',
-        items: [
-          { label: 'Theme…', onClick: () => b().themeDialog() },
-          {
-            label: 'Ready-made themes',
-            submenu: THEME_PRESETS.map((k) => ({ label: k.name, onClick: () => b().mutate((d) => applyKit(d, { ...k, logo: d.theme_spec.logo || k.logo })) })),
-          },
-          {
-            label: 'Beamer theme',
-            submenu: BEAMER_THEMES.map((t) => ({ label: t, checked: deck.theme === t, onClick: () => b().mutate((d) => (d.theme = t)) })),
-          },
-          {
-            label: 'Colour theme',
-            submenu: ['', ...BEAMER_COLOR_THEMES].map((t) => ({ label: t || '(theme default)', checked: deck.color_theme === t, onClick: () => b().mutate((d) => (d.color_theme = t)) })),
-          },
-          {
-            label: 'Turn off my own theme colours',
-            disabled: !deck.theme_spec.enabled,
-            onClick: () => b().mutate((d) => (d.theme_spec.enabled = false)),
-          },
-          '-',
-          { label: 'Aspect ratio', submenu: ASPECTS.map(([k, l]) => ({ label: l, checked: deck.aspect === k && !deck.page_w_cm, onClick: () => b().mutate((d) => Object.assign(d, { aspect: k, page_w_cm: 0, page_h_cm: 0 })) })) },
-          {
-            label: 'Slide numbers',
-            submenu: [['none', 'None'], ['number', 'Number'], ['of_total', 'n / N']].map(([k, l]) => ({ label: l, checked: deck.page_number === k, onClick: () => b().mutate((d) => (d.page_number = k)) })),
-          },
-          { label: 'Navigation symbols (prev / next)', checked: deck.nav_symbols, onClick: () => b().mutate((d) => (d.nav_symbols = !d.nav_symbols)) },
-          { label: 'Theme decorations', checked: !deck.plain_frames, onClick: () => b().mutate((d) => (d.plain_frames = !d.plain_frames)) },
-          '-',
-          { label: 'Title, author, page and footer…', onClick: () => b().pageDialog() },
-        ],
-      },
-      {
-        label: 'Slideshow',
-        items: [
-          { label: 'From the beginning', icon: Play, shortcut: 'F5', onClick: () => void A.current.startShow(false, false) },
-          { label: 'From this slide', shortcut: '⇧F5', onClick: () => void A.current.startShow(true, false) },
-          { label: 'Presenter view', onClick: () => void A.current.startShow(true, false, true) },
-          '-',
-          { label: 'Present the PDF (compiled by LaTeX)', onClick: () => void A.current.startShow(false, true) },
-          { label: 'Present the PDF from this slide', onClick: () => void A.current.startShow(true, true) },
-        ],
-      },
-      {
-        label: 'Examples',
-        items: examples?.length
-          ? examples.map((x) => ({ label: x.title, onClick: () => void A.current.openExample(x) }))
-          : [{ label: examples ? 'No examples found' : 'Loading…', disabled: true }],
+        label: 'Clear recent files',
+        onClick: () => {
+          savePrefs({ recent: [] })
+          setPrefsTick((t) => t + 1)
+        },
       },
     ]
+  }
+
+  const tableMenu = (): MenuItem[] => [
+    { label: 'Insert table…', onClick: tablePicker },
+    { label: 'Table design…', onClick: tableDesign },
+    '-',
+    { label: 'Add row', onClick: () => tableOp('add_row') },
+    { label: 'Add column', onClick: () => tableOp('add_col') },
+    { label: 'Delete row', onClick: () => tableOp('del_row') },
+    { label: 'Delete column', onClick: () => tableOp('del_col') },
+    '-',
+    { label: 'Toggle header row', onClick: () => tableOp('header') },
+    { label: 'Caption…', onClick: () => tableOp('caption') },
+    '-',
+    { label: 'Table properties…', onClick: () => (one?.type === 'SlideTable' ? tableProps(sel[0]) : flash('Select a table first', 4000)) },
+  ]
+
+  const gitStub = (what: string) => () =>
+    notInKherveOS(`Git ▸ ${what}`, 'Every save writes the .kslide and its .tex; commit the folder from KhervePY’s Git panel to keep versions.')
+
+  const buildMenus = (): MenuBarMenu[] => [
+    {
+      label: 'File',
+      items: [
+        { label: 'New', shortcut: K('⌘N'), onClick: () => void newDeck('Blank') },
+        { label: 'New window', shortcut: K('⇧⌘N'), onClick: () => os.open('kherveslide', { _new: Date.now() }) },
+        { label: 'Open…', shortcut: K('⌘O'), onClick: () => void openDialog() },
+        { label: 'Import PowerPoint (.pptx)…', onClick: () => notInKherveOS('Importing PowerPoint files') },
+        { label: 'Open recent', submenu: recentMenu() },
+        {
+          label: 'Templates',
+          submenu: [
+            { label: 'New presentation from template', submenu: templateNames().map((n) => ({ label: n, onClick: () => void newDeck(n) })) },
+            '-',
+            { label: 'Save current presentation as template…', onClick: () => void saveAsTemplate() },
+            { label: 'Rename template…', onClick: renameTemplate },
+            { label: 'Delete template…', onClick: deleteTemplate },
+          ],
+        },
+        {
+          label: 'Example presentations',
+          submenu: examples?.length ? examples.map((x) => ({ label: x.title, onClick: () => void openExample(x) })) : [{ label: examples ? 'No examples found' : 'Loading…', disabled: true }],
+        },
+        '-',
+        { label: 'Save', shortcut: K('⌘S'), onClick: () => void save() },
+        { label: 'Save As…', shortcut: K('⇧⌘S'), onClick: () => void saveAs() },
+        {
+          label: 'Open file location',
+          onClick: () => (filePath ? os.open('files', { path: P.dirname(filePath) }) : void os.dialog.alert('Save the presentation first — it has no file yet.', { title: 'Open file location' })),
+        },
+        '-',
+        { label: 'Export LaTeX (.tex)…', onClick: () => void exportTex() },
+        { label: 'Export LaTeX project (.zip)…', onClick: () => void exportZip() },
+        { label: 'Export PDF…', onClick: () => void exportPdf() },
+        { label: 'Export PowerPoint (.pptx)…', onClick: () => notInKherveOS('Exporting to PowerPoint', 'Export a PDF instead (File ▸ Export PDF…).') },
+        { label: 'Compile to PDF', shortcut: K('⌘R'), onClick: compileNow },
+        '-',
+        { label: 'Print preview…', onClick: () => void print() },
+        { label: 'Print…', shortcut: K('⌘P'), onClick: () => void print() },
+        '-',
+        { label: 'Quit', shortcut: K('⌘Q'), onClick: () => win.close() },
+      ],
+    },
+    {
+      label: 'Edit',
+      items: [
+        { label: 'Undo', image: menuIcon('undo'), shortcut: K('⌘Z'), disabled: !past.current.length, onClick: undo },
+        { label: 'Redo', image: menuIcon('redo'), shortcut: K('⌘Y'), disabled: !future.current.length, onClick: redo },
+        '-',
+        { label: 'Copy', shortcut: K('⌘C'), onClick: () => copySelected() },
+        { label: 'Cut', shortcut: K('⌘X'), onClick: () => copySelected(true) },
+        { label: 'Paste', shortcut: K('⌘V'), onClick: () => void paste() },
+        { label: 'Duplicate', shortcut: K('⌘D'), onClick: duplicateSelected },
+        '-',
+        { label: 'Group', shortcut: K('⌘G'), onClick: () => group(true) },
+        { label: 'Ungroup', shortcut: K('⇧⌘G'), onClick: () => group(false) },
+        '-',
+        { label: 'Find…', shortcut: K('⌘F'), onClick: () => setFind((f) => ({ ...f, open: true })) },
+        {
+          label: 'Check spelling…',
+          shortcut: 'F7',
+          onClick: () => void os.dialog.alert('Spelling is checked as you type: misspelled words are underlined in the text box you edit (View ▸ Check spelling).', { title: 'Spell check' }),
+        },
+        { label: 'Page setup…', onClick: pageSetup },
+        '-',
+        {
+          label: 'Presentation',
+          submenu: [
+            { label: 'Title…', onClick: () => void setDeckField('title', 'Title') },
+            { label: 'Author…', onClick: () => void setDeckField('author', 'Author') },
+            {
+              label: 'Navigation symbols (prev / next)',
+              checked: deck.nav_symbols,
+              onClick: () => {
+                mutate((d) => (d.nav_symbols = !d.nav_symbols))
+                recompileNow()
+              },
+            },
+            {
+              label: 'Slide numbers',
+              submenu: (
+                [
+                  ['none', 'Off'],
+                  ['number', 'Slide number'],
+                  ['of_total', 'Slide number / total'],
+                ] as const
+              ).map(([k, l]) => ({
+                label: l,
+                checked: deck.page_number === k,
+                onClick: () => {
+                  mutate((d) => (d.page_number = k))
+                  recompileNow()
+                },
+              })),
+            },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'View',
+      items: [
+        ...(['side', 'window', 'visual'] as Layout[]).map((m, k) => ({ label: LAYOUT_TEXT[m][0], checked: layout === m, shortcut: K(`⌘${4 + k}`), onClick: () => applyLayout(m) })),
+        '-',
+        { label: 'Normal (one slide)', image: menuIcon('view_normal'), checked: view === 'normal', onClick: () => setViewMode('normal') },
+        { label: 'Overview of all the slides', image: menuIcon('view_overview'), checked: view === 'overview', onClick: () => setViewMode('overview') },
+        { label: 'Master (the template behind every slide)', image: menuIcon('view_master'), checked: view === 'master', onClick: () => setViewMode('master') },
+        '-',
+        { label: 'Show slides list', image: menuIcon('toggle_navigator'), checked: navShown, shortcut: K('⌘B'), onClick: toggleSlidesList },
+        {
+          label: 'Show the theme on the slide (as in the PDF)',
+          checked: showTheme,
+          onClick: () => {
+            setShowTheme(!showTheme)
+            savePrefs({ showTheme: !showTheme })
+          },
+        },
+        '-',
+        { label: 'Show grid', checked: showGrid, shortcut: K("⌘'"), onClick: () => setShowGrid((v) => !v) },
+        {
+          label: 'Grid size',
+          submenu: GRID_SIZES.map(([l, d]) => ({
+            label: l,
+            checked: gridDivisions === d,
+            onClick: () => {
+              setGridDivisions(d)
+              savePrefs({ gridDivisions: d })
+            },
+          })),
+        },
+        { label: 'Snap to grid', checked: snapGrid, onClick: () => setSnapGrid((v) => !v) },
+        { label: 'Snap to objects', checked: snapObjects, onClick: () => setSnapObjects((v) => !v) },
+        '-',
+        {
+          label: 'Check spelling',
+          checked: spell,
+          onClick: () => {
+            setSpell(!spell)
+            savePrefs({ spellcheck: !spell })
+          },
+        },
+        {
+          label: 'Spell-check language',
+          submenu: SPELL_LANGUAGES.map(([l, c]) => ({
+            label: l,
+            checked: spellLang === c,
+            onClick: () => {
+              setSpellLang(c)
+              savePrefs({ spellLang: c })
+            },
+          })),
+        },
+        {
+          label: 'Appearance',
+          submenu: [
+            { label: 'KherveOS (Settings › Appearance)', checked: true },
+            { label: 'Open Settings…', onClick: () => os.open('settings') },
+          ],
+        },
+        { label: 'LaTeX editor theme', submenu: [{ label: 'Match app theme', checked: true }] },
+        '-',
+        { label: 'Slide theme', submenu: themeMenuItems() },
+      ],
+    },
+    {
+      label: 'Slide',
+      items: [
+        { label: 'Add blank slide', onClick: () => addSlide('Blank') },
+        { label: 'Add slide with layout', submenu: Object.keys(SLIDE_LAYOUTS).map((n) => ({ label: n, onClick: () => addSlide(n) })) },
+        { label: 'Delete slide', disabled: masterMode || deck.slides.length <= 1, onClick: () => deleteSlide() },
+        { label: 'Hide / show slide', disabled: masterMode, onClick: () => toggleHidden() },
+        '-',
+        { label: 'Move slide up', shortcut: K('⇧⌘↑'), disabled: masterMode || slideIndex === 0, onClick: () => moveSlide(slideIndex, -1) },
+        { label: 'Move slide down', shortcut: K('⇧⌘↓'), disabled: masterMode || slideIndex >= deck.slides.length - 1, onClick: () => moveSlide(slideIndex, 1) },
+        '-',
+        { label: 'Frame title…', disabled: masterMode, onClick: () => void frameTitle() },
+        { label: 'Background colour…', onClick: slideBackground },
+        { label: 'Clear background', onClick: () => editSlide((s) => Object.assign(s, { bg: '', bg_alpha: 1 })) },
+      ],
+    },
+    {
+      label: 'Insert',
+      items: [
+        { label: 'Text box', onClick: addText },
+        { label: 'Picture', onClick: () => void addPicture() },
+        { label: 'Video…', onClick: () => void addVideo() },
+        { label: 'Equation builder...', image: menuIcon('equation_builder'), shortcut: K('⇧⌘E'), onClick: addEquation },
+        { label: 'Chemical reaction...', image: menuIcon('chemistry'), shortcut: K('⇧⌘R'), onClick: addChemistry },
+        { label: 'Chemical structure...', image: menuIcon('chemfig_structure'), shortcut: K('⇧⌘T'), onClick: () => void addChemStructure() },
+        { label: 'Flowchart builder...', image: menuIcon('flowchart_builder'), shortcut: K('⇧⌘F'), onClick: addFlowchart },
+        { label: 'Drawing…', onClick: addDrawing },
+        '-',
+        {
+          label: 'Shapes',
+          submenu: [
+            { label: 'Line', onClick: () => addLine(false) },
+            { label: 'Arrow', onClick: () => addLine(true) },
+            '-',
+            ...SHAPE_GROUPS.map(([g, items]): MenuItem => ({ label: g, submenu: items.map(([k, l]) => ({ label: l, onClick: () => addShape(k) })) })),
+          ],
+        },
+        { label: 'Table', submenu: tableMenu() },
+      ],
+    },
+    {
+      label: 'Compiler',
+      items: [
+        { label: 'Compile to PDF', onClick: compileNow },
+        '-',
+        { label: 'Compiler status…', onClick: () => setModal(<CompilerStatusDialog last={compileStatus.text} onClose={() => setModal(null)} />) },
+        {
+          label: 'Download offline bundle…',
+          onClick: () => void os.dialog.alert('In KherveOS the slides are typeset by tectonic on the server, which keeps its own package cache.', { title: 'Offline LaTeX packages' }),
+        },
+        {
+          label: 'Open the package cache folder',
+          onClick: () => void os.dialog.alert('The package cache is on the KherveOS server, not on your drive.', { title: 'Package cache' }),
+        },
+      ],
+    },
+    { label: 'Slideshow', items: showMenuItems() },
+    {
+      label: 'Git',
+      items: [
+        {
+          label: 'Save snapshot and upload',
+          image: menuIcon('commit'),
+          onClick: async () => {
+            if (await save()) gitStub('Save snapshot and upload')()
+          },
+        },
+        { label: 'Download latest from cloud', onClick: gitStub('Download latest from cloud') },
+        '-',
+        { label: 'View version history…', image: menuIcon('history'), onClick: gitStub('View version history') },
+        { label: 'Branches…', image: menuIcon('branch'), onClick: gitStub('Branches') },
+        '-',
+        { label: 'Connect to GitHub / GitLab…', onClick: gitStub('Connect to GitHub / GitLab') },
+      ],
+    },
+    {
+      label: 'AI',
+      items: [{ label: 'Connect to Claude…', onClick: () => os.open('kherveai') }],
+    },
+    {
+      label: 'Help',
+      items: [
+        { label: 'User Guide', shortcut: 'F1', onClick: () => setModal(<UserGuideDialog onClose={() => setModal(null)} />) },
+        { label: 'Welcome page…', onClick: () => setWelcome(true) },
+        '-',
+        { label: 'Check for updates (KherveOS updates its apps)', disabled: true },
+        '-',
+        { label: 'About KherveSlide', onClick: () => setModal(<AboutDialog onClose={() => setModal(null)} onLink={(u) => os.openUrl(u)} />) },
+      ],
+    },
+  ]
+
+  const B = useRef(buildMenus)
+  B.current = buildMenus
+  const menuKey = [
+    past.current.length > 0, future.current.length > 0, sel.length, view, layout, showTheme, deck.theme, deck.color_theme, deck.page_number, deck.nav_symbols,
+    deck.plain_frames, examples?.length ?? -1, slideIndex, deck.slides.length, filePath, navShown, showGrid, gridDivisions, snapGrid, snapObjects, spell, spellLang,
+    compileStatus.text, prefsTick, one?.type, sel.join(','), json, override ? 1 : 0, compile.pdf ? 1 : 0,
+  ].join('|')
+  useEffect(() => {
+    const menus = B.current()
+    menusRef.current = menus
     win.setMenus(menus)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useLinks.getState().put(win.id, { menus })
   }, [win, menuKey])
   useEffect(() => () => win.setMenus(null), [win])
+
+  // ------------------------------------------------------------------ keyboard (the desktop's shortcuts)
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.defaultPrevented || modal || present) return
+    const mod = e.metaKey || e.ctrlKey
+    const k = e.key.toLowerCase()
+    const inField = !!(e.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"], .cm-editor')
+    let handled = true
+    if (mod && k === 's') void (e.shiftKey ? saveAs() : save())
+    else if (mod && k === 'o') void openDialog()
+    else if (mod && k === 'r' && e.shiftKey) addChemistry()
+    else if (mod && k === 'r') compileNow()
+    else if (mod && k === 'p') void print()
+    else if (mod && k === 'f' && e.shiftKey) addFlowchart()
+    else if (mod && k === 'f') setFind((f) => ({ ...f, open: true }))
+    else if (mod && (k === '4' || k === '5' || k === '6')) applyLayout((['side', 'window', 'visual'] as Layout[])[Number(k) - 4])
+    else if (mod && k === 'e' && e.shiftKey) addEquation()
+    else if (mod && k === 't' && e.shiftKey) void addChemStructure()
+    else if (e.key === 'F1') setModal(<UserGuideDialog onClose={() => setModal(null)} />)
+    else if (e.key === 'F5') void startSlideshow(e.altKey ? 'presenter' : 'full', e.shiftKey || e.altKey)
+    else if (inField) handled = false
+    else if (mod && k === 'z') e.shiftKey ? redo() : undo()
+    else if (mod && k === 'y') redo()
+    else if (mod && k === 'c') copySelected()
+    else if (mod && k === 'x') copySelected(true)
+    else if (mod && k === 'v') void paste()
+    else if (mod && k === 'd') duplicateSelected()
+    else if (mod && k === 'a') setSel(slide.objects.map((_, i) => i))
+    else if (mod && k === 'g') group(!e.shiftKey)
+    else if (mod && k === 'b') toggleSlidesList()
+    else if (mod && k === "'") setShowGrid((v) => !v)
+    else if (mod && e.shiftKey && k === 'arrowup') moveSlide(slideIndex, -1)
+    else if (mod && e.shiftKey && k === 'arrowdown') moveSlide(slideIndex, 1)
+    else if (mod) handled = false
+    else if (e.key === 'F7') void os.dialog.alert('Spelling is checked as you type in the text box you edit.', { title: 'Spell check' })
+    else if (k === 'delete' || k === 'backspace') sel.length ? deleteSelected() : (handled = false)
+    else if (k === 'escape') {
+      if (welcome) setWelcome(false)
+      else if (find.open) setFind((f) => ({ ...f, open: false, count: '' }))
+      else setSel([])
+    } else if ((k === 'enter' || k === 'f2') && sel.length === 1 && slide.objects[sel[0]]?.type === 'SlideText') setEditingText(sel[0])
+    else if (k.startsWith('arrow') && sel.length) {
+      const step = e.shiftKey ? 0.02 : 0.004
+      nudge(k === 'arrowleft' ? -step : k === 'arrowright' ? step : 0, k === 'arrowup' ? -step : k === 'arrowdown' ? step : 0)
+    } else if ((k === 'pagedown' || k === 'arrowdown' || k === 'arrowright') && !masterMode) goto(slideIndex + 1)
+    else if ((k === 'pageup' || k === 'arrowup' || k === 'arrowleft') && !masterMode) goto(slideIndex - 1)
+    else handled = false
+    if (handled) e.preventDefault()
+  }
 
   // ------------------------------------------------------------------ layout
 
@@ -1100,17 +2440,27 @@ export default function KherveSlide({ win, args }: AppProps) {
     ro.observe(el)
     setStage({ w: el.clientWidth, h: el.clientHeight })
     return () => ro.disconnect()
-  }, [loading, present])
+  }, [loading, present, welcome, view, leftTab])
   const g = geometry(deck)
-  const fitWidth = Math.max(160, Math.min(stage.w - 48, ((stage.h - 48) * g.W) / g.H))
+  const fitWidth = Math.max(160, Math.min(stage.w - 24, ((stage.h - 24) * g.W) / g.H))
   const canvasWidth = fitWidth * zoom
 
-  const one = sel.length === 1 ? slide.objects[sel[0]] : undefined
-  const texts = sel.map((i) => slide.objects[i]).filter((o): o is SlideText => o?.type === 'SlideText')
-  const t0 = texts[0]
-  const framed = sel.map((i) => slide.objects[i]).filter((o) => o && 'fill' in o) as unknown as { fill: string; border_color: string }[]
-  const tex = useMemo(() => (panel === 'latex' ? serializeDeck(deck) : ''), [deck, panel])
-  const pdfStale = !!compile.pdf && compile.of !== json
+  const splitRef = useRef<HTMLDivElement>(null)
+  const dragSplit = (e: React.PointerEvent) => {
+    const el = splitRef.current
+    if (!el) return
+    e.preventDefault()
+    const r = el.getBoundingClientRect()
+    const move = (ev: PointerEvent) => setRightWidth(Math.max(0.2, Math.min(0.7, (r.right - ev.clientX) / r.width)))
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      document.body.classList.remove('k-dragging')
+    }
+    document.body.classList.add('k-dragging')
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
 
   if (present) {
     return (
@@ -1123,8 +2473,11 @@ export default function KherveSlide({ win, args }: AppProps) {
           pdf={present.pdf}
           start={present.start}
           presenter={present.presenter}
+          windowed={present.windowed}
+          auto={present.auto}
           onExit={(shown) => {
             setPresent(null)
+            // Land on the slide the show ended on.
             const at = deck.slides.map((x, i) => (x.hidden ? -1 : i)).filter((i) => i >= 0)[shown]
             if (at !== undefined) goto(at)
           }}
@@ -1133,207 +2486,403 @@ export default function KherveSlide({ win, args }: AppProps) {
     )
   }
 
-  return (
-    <div className="k-app ks2-app" tabIndex={-1} onKeyDown={onKeyDown}>
-      <div className="k-toolbar ks2-toolbar">
-        <button className="k-icon-btn" title="New (⌘N)" onClick={() => void newDeck()}>
-          <FilePlus size={16} />
-        </button>
-        <button className="k-icon-btn" title="Open (⌘O)" onClick={() => void openDialog()}>
-          <FolderOpen size={16} />
-        </button>
-        <button className="k-icon-btn" title="Save (⌘S)" onClick={() => void save()}>
-          <Save size={16} />
-        </button>
-        <span className="ks2-sep" />
-        <button className="k-icon-btn" title="Undo (⌘Z)" disabled={!past.current.length} onClick={undo}>
-          <Undo2 size={16} />
-        </button>
-        <button className="k-icon-btn" title="Redo (⇧⌘Z)" disabled={!future.current.length} onClick={redo}>
-          <Redo2 size={16} />
-        </button>
-        <span className="ks2-sep" />
-        <button className="k-icon-btn" title="Text box" onClick={() => addText()}>
-          <Type size={16} />
-        </button>
-        <button className="k-icon-btn" title="Bullet list" onClick={() => addText(itemize(['First point', 'Second point']))}>
-          <List size={16} />
-        </button>
-        <button className="k-icon-btn" title="Equation" onClick={addEquation}>
-          <Sigma size={16} />
-        </button>
-        <button className="k-icon-btn" title="Picture from the drive" onClick={() => void addPicture()}>
-          <ImageIcon size={16} />
-        </button>
-        <button className="k-icon-btn" title="Table" onClick={addTable}>
-          <Table size={16} />
-        </button>
-        <button className="k-icon-btn" title="Rectangle (more in Insert ▸ Shapes)" onClick={() => addShape('rounded_rect')}>
-          <Square size={16} />
-        </button>
-        <button className="k-icon-btn" title="Arrow" onClick={() => addLine(true)}>
-          <MoveRight size={16} />
-        </button>
-        <span className="ks2-sep" />
-        {/* The Format toolbar: follows the selection. */}
-        <select
-          className="k-input ks2-select"
-          title="Font size (pt)"
-          disabled={!t0}
-          value={t0 ? String(t0.font_pt) : ''}
-          onChange={(e) => setOnSelected({ font_pt: Number(e.target.value) }, ['SlideText', 'SlideTable'])}
-        >
-          {!t0 && <option value="">pt</option>}
-          {[...new Set([...(t0 ? [t0.font_pt] : []), ...FONT_SIZES])].sort((a, b) => a - b).map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        <button className={`k-icon-btn${t0?.bold ? ' active' : ''}`} title="Bold (⌘B)" disabled={!t0} onClick={() => setOnSelected({ bold: !t0?.bold }, ['SlideText'])}>
-          <Bold size={15} />
-        </button>
-        <button className={`k-icon-btn${t0?.italic ? ' active' : ''}`} title="Italic (⌘I)" disabled={!t0} onClick={() => setOnSelected({ italic: !t0?.italic }, ['SlideText'])}>
-          <Italic size={15} />
-        </button>
-        {(
-          [
-            ['left', AlignLeft],
-            ['center', AlignCenter],
-            ['right', AlignRight],
-          ] as const
-        ).map(([al, Icon]) => (
-          <button
-            key={al}
-            className={`k-icon-btn${t0?.align === al ? ' active' : ''}`}
-            title={`Align ${al}`}
-            disabled={!t0}
-            onClick={() => setOnSelected({ align: al }, ['SlideText', 'SlideTable'])}
-          >
-            <Icon size={15} />
-          </button>
-        ))}
-        <ColorButton icon={<Type size={13} />} title="Text colour" value={t0?.color ?? ''} disabled={!texts.length && one?.type !== 'SlideLine'} allowNone={false} onChange={(c) => setOnSelected({ color: c || '#000000' })} />
-        <ColorButton icon={<PaintBucket size={13} />} title="Fill" value={framed[0]?.fill ?? ''} disabled={!framed.length} onChange={(c) => setOnSelected({ fill: c })} />
-        <ColorButton icon={<Square size={13} />} title="Border / outline" value={framed[0]?.border_color ?? ''} disabled={!framed.length} onChange={(c) => setOnSelected({ border_color: c })} />
-        <button className="k-icon-btn" title="Bring to front" disabled={sel.length !== 1} onClick={() => zOrder('front')}>
-          <ArrowUpToLine size={15} />
-        </button>
-        <button className="k-icon-btn" title="Send to back" disabled={sel.length !== 1} onClick={() => zOrder('back')}>
-          <ArrowDownToLine size={15} />
-        </button>
-        <button
-          className="k-icon-btn"
-          title={one?.locked ? 'Unlock: free position' : 'Lock: beamer places it'}
-          disabled={!one}
-          onClick={() => setOnSelected({ locked: !one?.locked })}
-        >
-          {one?.locked ? <Lock size={15} /> : <Unlock size={15} />}
-        </button>
-        <span className="ks2-flex" />
-        <button className="k-btn ks2-compile" disabled={compile.busy} title="Typeset with LaTeX (⌘R)" onClick={() => void runCompile()}>
-          <FileDown size={15} />
-          {compile.busy ? 'Compiling…' : 'PDF'}
-        </button>
-        <button className="k-btn primary" title="Slideshow (F5)" onClick={() => void startShow(false, false)}>
-          <Play size={15} />
-          Present
-        </button>
-      </div>
+  // ---- the toolbars (window._build_toolbar / _build_slide_toolbar)
 
-      {loading ? (
-        <div className="k-center k-muted">Opening…</div>
+  const T = (key: string, shortcut = '') => tip(key, shortcut)
+  const isText = !!t0
+  const isPic = one?.type === 'SlidePicture'
+  const noType = one?.type === 'SlideLine' || one?.type === 'SlideShape'
+  /** A toolbar button with the desktop's tooltip (tooltips.py) for `key`. */
+  const btn = (key: string, icon: Extract<TBItem, { kind: 'btn' }>['icon'], label: string, onClick: () => void, extra: Partial<Extract<TBItem, { kind: 'btn' }>> = {}, shortcut = ''): TBItem => ({
+    kind: 'btn', key, icon, label, tip: TIPS[key] ? T(key, shortcut) : label, onClick, ...extra,
+  })
+  const sep = (key: string): TBItem => ({ kind: 'sep', key })
+
+  const topItems: TBItem[] = [
+    btn('new', 'file_new', 'New', () => void newDeck('Blank'), {}, K('⌘N')),
+    btn('open', 'file_open', 'Open', () => void openDialog(), {}, K('⌘O')),
+    btn('save', 'file_save', 'Save', () => void save(), {}, K('⌘S')),
+    sep('s1'),
+    btn('undo', 'undo', 'Undo', undo, { disabled: !past.current.length }, K('⌘Z')),
+    btn('redo', 'redo', 'Redo', redo, { disabled: !future.current.length }, K('⌘Y')),
+    sep('s2'),
+    btn('templates', 'templates_icon', 'Templates', templatesChooser),
+    btn('export_pdf', 'export_pdf', 'Export PDF', () => void exportPdf()),
+    sep('s3'),
+    btn('zoom_out', 'zoom_out', 'Zoom out', () => setZoom((z) => Math.max(0.2, z / 1.25))),
+    btn('fit', 'fit_width', 'Fit slide to window', () => setZoom(1)),
+    btn('zoom_in', 'zoom_in', 'Zoom in', () => setZoom((z) => Math.min(5, z * 1.25))),
+    sep('s4'),
+    {
+      kind: 'widget',
+      key: 'box',
+      node: (
+        <>
+          <span className="ks2-tb-label">Box</span>
+          <select className="ks2-combo" title={T('box_type')} disabled={!one || noType || sel.length > 1} value={objKind(one)} onChange={(e) => changeKind(e.target.value)}>
+            {BOX_KINDS.map(([k, l]) => (
+              <option key={k} value={k}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </>
+      ),
+    },
+    sep('s5'),
+    {
+      kind: 'widget',
+      key: 'font',
+      node: (
+        <>
+          <span className="ks2-tb-label">Font</span>
+          <select className="ks2-combo" title={T('font_family')} disabled={!isText} value={t0?.font_family ?? ''} onChange={(e) => setOnSelected({ font_family: e.target.value }, ['SlideText'])}>
+            <option value="">Default</option>
+            <option value="sf">Sans-serif</option>
+            <option value="rm">Serif</option>
+            <option value="tt">Monospace</option>
+          </select>
+          <FontSpin value={t0?.font_pt ?? null} disabled={!isText} title={T('font_size')} onChange={(n) => setOnSelected({ font_pt: n }, ['SlideText'])} />
+        </>
+      ),
+    },
+    btn('bold', 'bold', 'Bold', () => toggleRunOrBox('bold'), { disabled: !isText, checked: !!t0?.bold, keepFocus: true }),
+    btn('italic', 'italic', 'Italic', () => toggleRunOrBox('italic'), { disabled: !isText, checked: !!t0?.italic, keepFocus: true }),
+    btn('superscript', 'superscript', 'Superscript', () => scriptSelection('super'), { disabled: !isText, keepFocus: true }),
+    btn('subscript', 'subscript', 'Subscript', () => scriptSelection('sub'), { disabled: !isText, keepFocus: true }),
+    sep('s6'),
+    btn('align_left', 'align_left', 'Align left', () => setOnSelected({ align: 'left' }, ['SlideText']), { disabled: !isText, checked: isText && (t0!.align || 'left') === 'left' }),
+    btn('align_center', 'align_center', 'Centre', () => setOnSelected({ align: 'center' }, ['SlideText']), { disabled: !isText, checked: t0?.align === 'center' }),
+    btn('align_right', 'align_right', 'Align right', () => setOnSelected({ align: 'right' }, ['SlideText']), { disabled: !isText, checked: t0?.align === 'right' }),
+    sep('s7'),
+    {
+      kind: 'widget',
+      key: 'colours',
+      node: (
+        <>
+          <ColorButton plain icon={<Ico name="text_colour" />} title={T('text_colour')} value={t0?.color ?? ''} disabled={!isText} allowNone={false} onChange={(c) => setOnSelected({ color: c || '#000000' }, ['SlideText'])} />
+          <ColorButton plain icon={<Ico name="fill_colour" />} title={T('fill_colour')} value={t0?.fill ?? ''} disabled={!isText} onChange={(c) => setOnSelected({ fill: c }, ['SlideText'])} />
+        </>
+      ),
+    },
+    sep('s8'),
+    btn('bullets', 'bullet_list', 'Insert bullet list', () => insertList(false), { keepFocus: true }),
+    btn('numbered', 'numbered_list', 'Insert numbered list', () => insertList(true), { keepFocus: true }),
+    sep('s9'),
+    btn('replace_image', 'image_box', 'Replace image…', () => void replaceImage(sel[0]), { disabled: !isPic }),
+    { kind: 'spacer', key: 'spacer' },
+    btn('pdf_side', 'pdf_side_panel', 'Visual + PDF side by side', () => applyLayout(layout === 'side' ? 'visual' : 'side'), { checked: layout === 'side' }, K('⌘4')),
+    sep('s10'),
+    btn(
+      'skip_images',
+      'compile_no_images',
+      'Skip images',
+      () => {
+        const on = !skipImages
+        setSkipImages(on)
+        savePrefs({ skipImages: on })
+        flash(on ? 'Skip images ON — faster compiles (placeholders shown)' : 'Skip images OFF — pictures included', 3000)
+      },
+      { checked: skipImages },
+    ),
+    btn('compile', 'play', 'Compile now', compileNow, {}, K('⌘R')),
+    btn(
+      'auto_compile',
+      autoCompile ? 'auto_compile_on' : 'auto_compile_off',
+      'Auto-compile',
+      () => {
+        const on = !autoCompile
+        setAutoCompile(on)
+        savePrefs({ autoCompile: on })
+        if (on) latexDown.current = false
+        flash(on ? 'Auto-compile ON' : 'Auto-compile OFF — use the play button to compile', 3000)
+      },
+      { checked: autoCompile, disabled: layout === 'visual' },
+    ),
+  ]
+
+  const sideItems: TBItem[] = [
+    btn('prev_slide', 'prev_slide', 'Previous slide', () => !masterMode && goto(slideIndex - 1)),
+    btn('next_slide', 'next_slide', 'Next slide', () => !masterMode && goto(slideIndex + 1)),
+    btn('slides_list', 'toggle_navigator', 'Show slides list', toggleSlidesList, { checked: navShown }, K('⌘B')),
+    sep('v1'),
+    btn('add_slide', 'slide_add', 'Add slide', () => addSlide('Blank'), { menu: () => layoutItems((n) => addSlide(n)), menuClass: 'ks2-layout-menu' }),
+    btn('remove_slide', 'slide_remove', 'Remove active slide', () => deleteSlide()),
+    sep('v2'),
+    btn('text_box', 'text_box', 'Add text box', addText),
+    btn('picture', 'image_box', 'Add image', () => void addPicture()),
+    btn('video', 'video_box', 'Add video', () => void addVideo()),
+    btn('table', 'table', 'Add table', addTable),
+    btn('equation', 'equation_builder', 'Equation builder', addEquation, {}, K('⇧⌘E')),
+    btn('chemistry', 'chemistry', 'Chemical reaction', addChemistry, {}, K('⇧⌘R')),
+    btn('chemfig', 'chemfig_structure', 'Chemical structure', () => void addChemStructure(), {}, K('⇧⌘T')),
+    btn('flowchart', 'flowchart_builder', 'Flowchart builder', addFlowchart, {}, K('⇧⌘F')),
+    btn('symbol', 'symbol', 'Insert symbol…', insertSymbol, { keepFocus: true }),
+    btn('drawing', 'drawing', 'Add drawing', addDrawing),
+    btn('line', 'line_tool', 'Add line', () => addLine(false)),
+    btn('arrow', 'arrow_tool', 'Add arrow', () => addLine(true)),
+    btn('rect', 'rect_tool', 'Add rectangle', addRect),
+    btn('ellipse', 'ellipse_tool', 'Add circle / ellipse', addEllipse),
+    sep('v3'),
+    btn('raise', 'raise_box', 'Raise object', () => zOrder('raise')),
+    btn('lower', 'lower_box', 'Lower object', () => zOrder('lower')),
+    btn('front', 'to_front', 'Bring to front', () => zOrder('front')),
+    btn('back', 'to_back', 'Send to back', () => zOrder('back')),
+    sep('v4'),
+    btn('delete', 'delete_box', 'Delete object', deleteSelected),
+  ]
+
+  // ---- the Visual tab
+
+  const recent = loadPrefs().recent
+  void prefsTick
+  const navWidth = 176
+
+  const visualTab = (
+    <div className="ks2-visual">
+      {navShown ? (
+        <div className="ks2-nav-panel">
+          <div className="ks2-nav-head">
+            <b>{welcome ? 'Recent' : 'Slides'}</b>
+            <button className="ks2-fold" title={`Hide the slides list (${K('⌘B')})`} onClick={() => setNavShown(false)}>
+              «
+            </button>
+          </div>
+          {welcome ? (
+            <RecentPanel files={recent} exists={(p) => fs.exists(p)} onChoose={(p) => void confirmDiscard('opening another presentation').then((ok) => { if (ok) void openPath(p) })} onOpen={() => void openDialog(false)} />
+          ) : (
+            <Navigator
+              deck={deck}
+              look={look}
+              media={media}
+              backdrop={backdrop.pages}
+              current={slideIndex}
+              masterOf={masterMode ? slideIndex : null}
+              width={navWidth}
+              onSelect={goto}
+              onReorder={reorder}
+              onContextMenu={slideMenu}
+              onDelete={(i) => deleteSlide(i, false)}
+            />
+          )}
+        </div>
       ) : (
-        <div className="ks2-main">
-          <Sorter
-            deck={deck}
-            look={look}
+        <button className="ks2-nav-strip" title={`Show the slides list (${K('⌘B')})`} onClick={() => setNavShown(true)}>
+          {'»\nS\nl\ni\nd\ne\ns'}
+        </button>
+      )}
+      <div className="ks2-right-stack">
+        {welcome ? (
+          <StartPage
+            templates={templateNames().map((n) => [n, () => instantiateTemplate(n)])}
+            examples={examples}
             media={media}
-            backdrop={backdrop.pages}
-            current={masterMode ? -1 : slideIndex}
-            disabled={masterMode}
-            onSelect={goto}
-            onMove={moveSlide}
-            onContextMenu={slideMenu}
-            onAdd={() => addSlide()}
+            layout={layout}
+            showAtStart={loadPrefs().showWelcome}
+            onShowAtStart={(on) => {
+              savePrefs({ showWelcome: on })
+              setPrefsTick((t) => t + 1)
+            }}
+            onLayout={applyLayout}
+            onNew={() => void newDeck('Blank')}
+            onOpen={() => void openDialog()}
+            onImport={() => notInKherveOS('Importing PowerPoint files')}
+            onContinue={() => setWelcome(false)}
+            onTemplate={(n) => void newDeck(n)}
+            onExample={(x) => void openExample(x)}
           />
-          <div className="ks2-stage" ref={stageRef} onPointerDown={(e) => e.target === e.currentTarget && setSel([])}>
+        ) : view === 'overview' && layout === 'visual' ? (
+          <Overview deck={deck} look={look} media={media} backdrop={backdrop.pages} current={slideIndex} onGo={goto} onOpen={(i) => (goto(i), setViewMode('normal'))} onReorder={reorder} onMenu={slideMenu} />
+        ) : (
+          <div className="ks2-canvas-box">
             {masterMode && (
-              <div className="ks2-banner">
-                Master slide: its objects are drawn behind every slide.
-                <button className="k-btn small" onClick={() => setMasterMode(false)}>
-                  Done
+              <div className="ks2-master-banner">
+                <span>
+                  <b>Master</b> — what you put here (logo, text, lines, pictures…) shows on every slide, behind the slide's own content.
+                </span>
+                <button className="k-btn small" onClick={() => setViewMode('normal')}>
+                  Close master view
                 </button>
               </div>
             )}
-            <div className="ks2-stage-inner" style={{ minWidth: canvasWidth + 48 }} onPointerDown={(e) => e.target === e.currentTarget && setSel([])}>
-              <Canvas
-                deck={deck}
-                slide={slide}
-                look={look}
-                media={media}
-                backdrop={masterMode ? null : (backdrop.pages?.[slideIndex] ?? null)}
-                master={!masterMode}
-                width={canvasWidth}
-                selection={sel.filter((i) => i < slide.objects.length)}
-                setSelection={setSel}
-                edit={editSlide}
-                begin={begin}
-                editingText={editingText}
-                setEditingText={setEditingText}
-                onPickPicture={(i) => void swapPicture(i)}
-                onProperties={properties}
-                onContextMenu={objectMenu}
-                onDropFiles={(p, at) => void dropFiles(p, at)}
-              />
+            <div className="ks2-hf-row">
+              <span>Frame:</span>
+              {hfField('frame', masterMode ? '' : slide.title, 'Frame title (this slide)', applyFrameTitle, masterMode)}
+              <span>Header:</span>
+              {hfField('header', deck.header, 'Header', (v) => applyHeadFoot('header', v))}
+              <label className="ks2-navcheck" title="Show beamer's prev/next navigation symbols at the bottom-right of every slide">
+                <input
+                  type="checkbox"
+                  checked={deck.nav_symbols}
+                  onChange={() => {
+                    mutate((d) => (d.nav_symbols = !d.nav_symbols))
+                    recompileNow()
+                  }}
+                />
+                Nav ▾▴
+              </label>
+            </div>
+            <div className="ks2-stage" ref={stageRef} onPointerDown={(e) => e.target === e.currentTarget && setSel([])}>
+              {loading ? (
+                <div className="k-center k-muted">Opening…</div>
+              ) : (
+                <div className="ks2-stage-inner" style={{ minWidth: canvasWidth + 24, minHeight: (canvasWidth * g.H) / g.W + 24 }} onPointerDown={(e) => e.target === e.currentTarget && setSel([])}>
+                  <div className="ks2-gridwrap">
+                    <Canvas
+                      deck={deck}
+                      slide={slide}
+                      look={look}
+                      media={media}
+                      backdrop={masterMode ? null : (backdrop.pages?.[slideIndex] ?? null)}
+                      master={!masterMode}
+                      width={canvasWidth}
+                      selection={sel.filter((i) => i < slide.objects.length)}
+                      setSelection={setSel}
+                      edit={editSlide}
+                      begin={begin}
+                      editingText={editingText}
+                      setEditingText={(i) => {
+                        if (i !== null && editMathBox(i)) return
+                        setEditingText(i)
+                      }}
+                      onPickPicture={(i) => editPicture(i)}
+                      onProperties={(i) => {
+                        const o = slide.objects[i]
+                        if (o?.type === 'SlideVideo') fieldsFor(i, 'Video properties', OBJECT_FIELDS.SlideVideo)
+                        else if (o?.type === 'SlideShape') fieldsFor(i, 'Shape properties', OBJECT_FIELDS.SlideShape)
+                        else if (o?.type === 'SlideLine') fieldsFor(i, 'Line / arrow properties', OBJECT_FIELDS.SlideLine)
+                        else if (o) fieldsFor(i, 'Properties', OBJECT_FIELDS[o.type])
+                      }}
+                      onContextMenu={canvasMenu}
+                      onDropFiles={(p, at) => void dropFiles(p, at)}
+                      snapGrid={snapGrid ? gridDivisions : 0}
+                      snapObjects={snapObjects}
+                      spellcheck={spell}
+                      lang={spellLang}
+                    />
+                    {showGrid && <div className="ks2-grid" style={{ backgroundSize: `${canvasWidth / gridDivisions}px ${canvasWidth / gridDivisions}px` }} />}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="ks2-hf-row">
+              <span>Foot:</span>
+              {hfField('l', deck.foot_left, 'Left foot', (v) => applyHeadFoot('foot_left', v))}
+              {hfField('c', deck.foot_center, 'Centre foot', (v) => applyHeadFoot('foot_center', v))}
+              {hfField('r', deck.foot_right, 'Right foot', (v) => applyHeadFoot('foot_right', v))}
             </div>
           </div>
-          {panel !== 'none' && (
-            <div className="ks2-panel">
-              <div className="ks2-tabs">
-                {(['latex', 'pdf', 'console'] as const).map((t) => (
-                  <button key={t} className={`ks2-tab${panel === t ? ' active' : ''}`} onClick={() => setPanel(t)}>
-                    {t === 'latex' ? 'LaTeX' : t === 'pdf' ? `PDF${pdfStale ? ' •' : ''}` : `Console${compile.errors.length ? ` (${compile.errors.length})` : ''}`}
+        )}
+      </div>
+    </div>
+  )
+
+  const tabs: ['visual' | 'latex' | 'console', string][] = [['visual', 'Visual'], ['latex', 'LaTeX'], ['console', 'Console']]
+
+  return (
+    <div className="k-app ks2-app" tabIndex={-1} onKeyDown={onKeyDown}>
+      <TopToolbar items={topItems} />
+      <div className="ks2-body">
+        <SideToolbar items={sideItems} />
+        <div className="ks2-central">
+          <div className="ks2-split" ref={splitRef}>
+            <div className="ks2-lefttabs">
+              <div className="ks2-qtabs">
+                {tabs.map(([k, l]) => (
+                  <button key={k} className={`ks2-qtab${leftTab === k ? ' active' : ''}`} onClick={() => setLeftTab(k)}>
+                    {l}
                   </button>
                 ))}
-                <span className="ks2-flex" />
-                <button className="k-icon-btn" title="Close the panel" onClick={() => setPanel('none')}>
-                  ×
-                </button>
               </div>
-              {panel === 'latex' && <LatexPanel tex={tex} />}
-              {panel === 'pdf' && <PdfPanel pdf={compile.pdf} busy={compile.busy} />}
-              {panel === 'console' && <ConsolePanel log={compile.log} errors={compile.errors} missing={compile.missing} />}
+              <div className="ks2-qtab-body">
+                <div className="ks2-tabpage" hidden={leftTab !== 'visual'}>
+                  {visualTab}
+                </div>
+                <div className="ks2-tabpage" hidden={leftTab !== 'latex'}>
+                  <LatexTab
+                    source={latexSource}
+                    overridden={!!override}
+                    onEdit={(text) => setOverride((o) => ({ text, base: o?.base ?? generated }))}
+                    onRegenerate={() => {
+                      setOverride(null)
+                      flash('LaTeX regenerated from the slides', 3000)
+                    }}
+                    onView={(v) => (latexView.current = v)}
+                  />
+                </div>
+                <div className="ks2-tabpage" hidden={leftTab !== 'console'}>
+                  <ConsoleTab log={compile.log} errors={compile.errors} missing={compile.missing} />
+                </div>
+              </div>
+            </div>
+            {layout === 'side' && (
+              <>
+                <div className="ks2-splitter" onPointerDown={dragSplit} />
+                <div className="ks2-sidepanel" style={{ width: `${rightWidth * 100}%` }}>
+                  <RightTabs link={linkData} />
+                </div>
+              </>
+            )}
+          </div>
+          {find.open && (
+            <div className="ks2-findbar">
+              <input
+                autoFocus
+                className="k-input"
+                placeholder="Find in slides / LaTeX…"
+                value={find.text}
+                onChange={(e) => {
+                  findQuery.current.q = ''
+                  setFind({ open: true, text: e.target.value, count: '' })
+                }}
+                onKeyDown={(e) => {
+                  e.stopPropagation()
+                  if (e.key === 'Enter') findNext(e.shiftKey)
+                  if (e.key === 'Escape') setFind((f) => ({ ...f, open: false, count: '' }))
+                }}
+              />
+              <span className="ks2-find-count">{find.count}</span>
+              <button className="k-btn small" title="Previous match" onClick={() => findNext(true)}>
+                ▲
+              </button>
+              <button className="k-btn small" title="Next match" onClick={() => findNext(false)}>
+                ▼
+              </button>
+              <button className="k-btn small" onClick={() => setFind((f) => ({ ...f, open: false, count: '' }))}>
+                ✕
+              </button>
             </div>
           )}
         </div>
-      )}
-
-      <div className="k-statusbar ks2-status">
-        <span>{masterMode ? 'Master slide' : `Slide ${slideIndex + 1} of ${deck.slides.length}${slide.hidden ? ' (hidden)' : ''}`}</span>
-        <span>
-          {deck.theme}
-          {deck.color_theme ? ` · ${deck.color_theme}` : ''}
-          {deck.theme_spec.enabled ? ' · own colours' : ''} · {ASPECTS.find(([k]) => k === deck.aspect)?.[1] ?? deck.aspect}
+      </div>
+      <div className="ks2-statusbar">
+        <span className="ks2-status-msg" title={backdrop.error || undefined}>
+          {message}
         </span>
-        <span title={backdrop.error || undefined}>
-          {!exact
-            ? 'Theme: drawn approximately'
-            : backdrop.state === 'ready'
-              ? 'Theme: exact'
-              : backdrop.state === 'compiling'
-                ? 'Theme: compiling…'
-                : backdrop.state === 'failed'
-                  ? 'Theme: approximate (LaTeX unavailable)'
-                  : 'Theme: …'}
-        </span>
-        {sel.length > 0 && <span>{sel.length === 1 && one ? OBJECT_LABEL[one.type] : `${sel.length} objects`}</span>}
-        {usedPictures(deck).some((p) => !media.has(p)) && <span className="ks2-warn">Some pictures are missing</span>}
-        <span className="ks2-flex" />
-        <span>{Math.round(zoom * 100)}%</span>
+        <span className={`ks2-status-state ${compileStatus.kind}`}>{compileStatus.text}</span>
+        <ViewBar
+          counter={masterMode ? 'Master' : `Slide ${slideIndex + 1} of ${deck.slides.length}`}
+          view={view}
+          tips={{
+            theme: T('theme'),
+            normal: T('view_normal'),
+            overview: T('view_overview'),
+            master: T('view_master'),
+            slideshow: T('slideshow', '⇧F5'),
+            zoom_out: T('zoom_out'),
+            fit: T('fit'),
+            zoom_in: T('zoom_in'),
+          }}
+          themeMenu={themeMenuItems}
+          showMenu={showMenuItems}
+          onView={setViewMode}
+          onSlideshow={() => void startSlideshow('full', true)}
+          onZoomOut={() => setZoom((z) => Math.max(0.2, z / 1.25))}
+          onFit={() => setZoom(1)}
+          onZoomIn={() => setZoom((z) => Math.min(5, z * 1.25))}
+        />
       </div>
       {modal}
     </div>
   )
 }
-

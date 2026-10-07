@@ -280,6 +280,8 @@ export interface Bundle {
   files: Record<string, string | Uint8Array>
   /** Pictures that could not be found (shown as empty frames in the PDF). */
   missing: string[]
+  /** Stored picture path → its file in the bundle (to compile hand-edited LaTeX). */
+  paths: Map<string, string>
 }
 
 const safeName = (s: string) => s.replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^\.+/, '') || 'picture'
@@ -336,7 +338,7 @@ async function bundle(deck: Deck, media: Media, backdrop: boolean): Promise<Bund
   }
   const tex = backdrop ? serializeBackdrop(deck, options) : serializeDeck(deck, options)
   files['presentation.tex'] = tex
-  return { tex, files, missing }
+  return { tex, files, missing, paths: names }
 }
 
 /** The presentation's LaTeX and every file it needs, ready for compileLatex('presentation.tex', files). */

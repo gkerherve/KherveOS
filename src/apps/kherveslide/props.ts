@@ -20,7 +20,7 @@ const GEOMETRY: FieldSpec[] = [
   { key: 'h', label: 'Height', kind: 'number', step: 0.01 },
 ]
 
-const FRAME: FieldSpec[] = [
+export const FRAME: FieldSpec[] = [
   { key: 'fill', label: 'Fill', kind: 'color', section: 'Box' },
   { key: 'fill2', label: 'Gradient to', kind: 'color' },
   { key: 'gradient', label: 'Gradient', kind: 'select', options: GRADIENT },

@@ -1,108 +1,160 @@
-// The right-hand side, as on the desktop: the generated beamer LaTeX (live),
-// the compiler console and the compiled PDF.
+// The main window's LaTeX and Console tabs, as on the desktop.
+//
+// LaTeX (latex_view.py): the generated beamer source, live and editable, with
+// line numbers and LaTeX colouring. Editing it enters "manual edit" mode: the
+// banner says the slides won't overwrite the edits, the compile uses the
+// edited text, and "Regenerate from slides" goes back. A real slide edit also
+// regenerates it (window._refresh_latex).
+// Console: the compiler's log, in the desktop's terminal look.
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Copy } from 'lucide-react'
-import { openPdf, type PdfDocument } from '@/os/services/pdf'
+import { useMemo, useRef } from 'react'
+import { StreamLanguage, syntaxHighlighting, HighlightStyle } from '@codemirror/language'
+import { StateEffect } from '@codemirror/state'
+import type { EditorView } from '@codemirror/view'
+import { tags as t } from '@lezer/highlight'
+import { CodeEditor } from '@/os/ui/CodeEditor'
 import type { LatexError } from '@/os/services/latex'
 
-export function LatexPanel({ tex }: { tex: string }) {
+// ------------------------------------------------------------------ LaTeX colouring
+
+interface TexState {
+  math: false | '$' | '$$' | '\\[' | '\\('
+  env: boolean
+}
+
+const texLanguage = StreamLanguage.define<TexState>({
+  name: 'latex',
+  startState: () => ({ math: false, env: false }),
+  token(stream, state) {
+    if (state.env) {
+      // The name after \begin / \end.
+      if (stream.match(/^\{[A-Za-z*@]+\}/)) {
+        state.env = false
+        return 'typeName'
+      }
+      state.env = false
+    }
+    if (stream.match('%')) {
+      stream.skipToEnd()
+      return 'comment'
+    }
+    if (state.math) {
+      if ((state.math === '$$' && stream.match('$$')) || (state.math === '$' && stream.match('$')) || (state.math === '\\[' && stream.match('\\]')) || (state.math === '\\(' && stream.match('\\)'))) {
+        state.math = false
+        return 'string'
+      }
+      if (stream.match(/^\\[A-Za-z@]+/)) return 'string'
+      stream.next()
+      return 'string'
+    }
+    if (stream.match('$$')) {
+      state.math = '$$'
+      return 'string'
+    }
+    if (stream.match('\\[')) {
+      state.math = '\\['
+      return 'string'
+    }
+    if (stream.match('\\(')) {
+      state.math = '\\('
+      return 'string'
+    }
+    if (stream.match('$')) {
+      state.math = '$'
+      return 'string'
+    }
+    const cmd = stream.match(/^\\(begin|end)\b/)
+    if (cmd) {
+      state.env = true
+      return 'keyword'
+    }
+    if (stream.match(/^\\(section|subsection|frametitle|title|author|date|usetheme|usecolortheme|documentclass|usepackage)\b/)) return 'heading'
+    if (stream.match(/^\\[A-Za-z@]+\*?/) || stream.match(/^\\./)) return 'function'
+    if (stream.match(/^[{}]/)) return 'bracket'
+    if (stream.match(/^\[[^\]\n]*\]/)) return 'number'
+    if (stream.match(/^[&#^_~]/)) return 'atom'
+    stream.next()
+    return null
+  },
+  tokenTable: { typeName: t.typeName, heading: t.heading, function: t.function(t.variableName), bracket: t.bracket, atom: t.atom },
+})
+
+const texHighlight = HighlightStyle.define([
+  { tag: t.typeName, color: 'var(--k-syn-type)' },
+  { tag: t.function(t.variableName), color: 'var(--k-syn-function)' },
+  { tag: t.heading, color: 'var(--k-syn-keyword)', fontWeight: '600' },
+  { tag: t.keyword, color: 'var(--k-syn-keyword)' },
+  { tag: t.string, color: 'var(--k-syn-string)' },
+  { tag: t.number, color: 'var(--k-syn-number)' },
+  { tag: t.atom, color: 'var(--k-syn-number)' },
+  { tag: t.bracket, color: 'var(--k-muted)' },
+  { tag: t.comment, color: 'var(--k-syn-comment)', fontStyle: 'italic' },
+])
+
+/** The LaTeX tab: shows `source`; `onEdit` gets the user's edits (manual mode). */
+export function LatexTab({
+  source, overridden, onEdit, onRegenerate, onView,
+}: {
+  source: string
+  overridden: boolean
+  onEdit: (text: string) => void
+  onRegenerate: () => void
+  onView?: (v: EditorView) => void
+}) {
+  const shown = useRef(source)
+  shown.current = source
+  const ready = useMemo(
+    () => (v: EditorView) => {
+      v.dispatch({ effects: StateEffect.appendConfig.of([texLanguage, syntaxHighlighting(texHighlight)]) })
+      onView?.(v)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
   return (
-    <div className="ks2-panel-body">
-      <div className="ks2-panel-tools">
-        <span className="k-muted">Generated beamer source (read-only; it follows the slides)</span>
-        <button className="k-icon-btn" title="Copy" onClick={() => void navigator.clipboard?.writeText(tex)}>
-          <Copy size={14} />
-        </button>
-      </div>
-      <pre className="ks2-code">{tex}</pre>
+    <div className="ks2-latextab">
+      {overridden && (
+        <div className="ks2-latex-banner">
+          <span>Manual LaTeX edits — the slides won't overwrite them.</span>
+          <button className="k-btn small" title="Discard the manual LaTeX edits and rebuild the source from the Visual slides" onClick={onRegenerate}>
+            Regenerate from slides
+          </button>
+        </div>
+      )}
+      <CodeEditor
+        className="ks2-latex-editor"
+        value={source}
+        lineNumbers
+        language="plain"
+        fontSize={12.5}
+        onReady={ready}
+        onChange={(v) => {
+          if (v !== shown.current) onEdit(v)
+        }}
+      />
     </div>
   )
 }
 
-export function ConsolePanel({ log, errors, missing }: { log: string; errors: LatexError[]; missing: string[] }) {
+// ------------------------------------------------------------------ Console
+
+export function ConsoleTab({ log, errors, missing }: { log: string; errors: LatexError[]; missing: string[] }) {
   return (
-    <div className="ks2-panel-body">
+    <div className="ks2-console">
       {(errors.length > 0 || missing.length > 0) && (
-        <ul className="ks2-errors">
+        <div className="ks2-console-errors">
           {missing.map((m) => (
-            <li key={m}>Picture not found: {m} (an empty frame is printed instead)</li>
+            <div key={m}>Picture not found: {m} (an empty frame is printed instead)</div>
           ))}
           {errors.map((e, i) => (
-            <li key={i}>
-              {e.line ? <b>line {e.line}: </b> : null}
+            <div key={i}>
+              {e.line ? `line ${e.line}: ` : ''}
               {e.message}
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
-      <pre className="ks2-code">{log || 'Compile (⌘R) to see the LaTeX log here.'}</pre>
-    </div>
-  )
-}
-
-function PdfPageCanvas({ doc, index, width }: { doc: PdfDocument; index: number; width: number }) {
-  const ref = useRef<HTMLCanvasElement>(null)
-  useEffect(() => {
-    const info = doc.pages[index]
-    if (!info || width < 10) return
-    const ac = new AbortController()
-    const dpr = window.devicePixelRatio || 1
-    void doc
-      .renderPage(index, (width / info.width) * dpr, { signal: ac.signal, priority: index < 3 ? 'high' : 'low' })
-      .then((bmp) => {
-        const c = ref.current
-        if (!c) return bmp.close()
-        c.width = bmp.width
-        c.height = bmp.height
-        c.style.width = `${width}px`
-        c.getContext('2d')!.drawImage(bmp, 0, 0)
-        bmp.close()
-      })
-      .catch(() => {})
-    return () => ac.abort()
-  }, [doc, index, width])
-  const info = doc.pages[index]
-  return <canvas ref={ref} className="ks2-pdfpage" style={{ width, height: info ? (width * info.height) / info.width : undefined }} />
-}
-
-export function PdfPanel({ pdf, busy }: { pdf: Uint8Array | null; busy: boolean }) {
-  const [doc, setDoc] = useState<PdfDocument | null>(null)
-  const [error, setError] = useState('')
-  const box = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(300)
-  useLayoutEffect(() => {
-    const el = box.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setWidth(Math.max(80, el.clientWidth - 24)))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-  useEffect(() => {
-    if (!pdf) {
-      setDoc(null)
-      return
-    }
-    let alive = true
-    let d: PdfDocument | null = null
-    openPdf(pdf.slice())
-      .then((x) => {
-        if (!alive) return x.close()
-        d = x
-        setDoc(x)
-        setError('')
-      })
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
-    return () => {
-      alive = false
-      d?.close()
-    }
-  }, [pdf])
-  return (
-    <div className="ks2-panel-body ks2-pdfpanel" ref={box}>
-      {!pdf && <div className="k-empty">{busy ? 'Compiling…' : 'Compile (⌘R) to typeset the slides with LaTeX.'}</div>}
-      {error && <div className="k-error">{error}</div>}
-      {doc && Array.from({ length: doc.pageCount }, (_, i) => <PdfPageCanvas key={i} doc={doc} index={i} width={width} />)}
+      <pre className="ks2-console-log">{log}</pre>
     </div>
   )
 }

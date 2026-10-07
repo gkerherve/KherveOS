@@ -1,6 +1,8 @@
-/* KherveSlide. The window chrome follows the KherveOS theme (--k-*: black and
-   green); the slides keep their own theme colours, like the PDF. Everything is
-   scoped under .ks2-app. */
+/* KherveSlide. The window is laid out as the desktop's (window.py): toolbars,
+   tabs and bars in KherveOS's chrome (--k-*: black and green, or the light
+   theme for a window set to Light); the slides keep their own theme colours,
+   like the PDF. Everything is scoped under .ks2-app, except the icons and the
+   layout-menu thumbnails, which also show in menus. */
 
 .ks2-app {
   position: relative;
@@ -9,40 +11,184 @@
   outline: none;
 }
 
-/* ---------------------------------------------------------------- toolbar */
+/* ---------------------------------------------------------------- the desktop's icons (icons.tsx) */
 
-.ks2-app .ks2-toolbar {
-  flex-wrap: wrap;
-  row-gap: 2px;
+.ks2-ico {
+  display: inline-block;
+  flex: none;
+  line-height: 0;
 }
-.ks2-app .ks2-toolbar .k-icon-btn {
-  width: 28px;
-  height: 28px;
+.ks2-ico img {
+  display: block;
+  pointer-events: none;
 }
-.ks2-app .k-icon-btn.active {
-  background: var(--k-selection);
-  color: var(--k-accent);
+.ks2-ico-l {
+  display: none !important;
 }
-.ks2-app .ks2-sep {
-  width: 1px;
-  height: 20px;
-  background: var(--k-border);
-  margin: 0 4px;
+[data-dark='0'] .ks2-ico-l {
+  display: block !important;
 }
-.ks2-app .ks2-flex {
+[data-dark='0'] .ks2-ico-d {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------- toolbars (Toolbars.tsx) */
+
+.ks2-app .ks2-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  height: 38px;
+  padding: 0 6px;
+  overflow: hidden;
+  flex: none;
+  position: relative;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+}
+.ks2-app .ks2-tb-wrap,
+.ks2-app .ks2-tb-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.ks2-app .ks2-tb-spacer {
   flex: 1;
+  min-width: 8px;
 }
-.ks2-app .ks2-select {
-  height: 28px;
-  width: 58px;
-  padding: 0 4px;
+.ks2-app .ks2-tb {
+  display: inline-grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: var(--k-text);
+  cursor: pointer;
+  flex: none;
+}
+.ks2-app .ks2-tb:hover:not(:disabled) {
+  background: var(--k-button-hover);
+}
+.ks2-app .ks2-tb.checked {
+  background: var(--k-selection);
+  border-color: color-mix(in srgb, var(--k-accent) 55%, transparent);
+}
+.ks2-app .ks2-tb:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+.ks2-app .ks2-tb-split {
+  display: inline-flex;
+  align-items: center;
+}
+.ks2-app .ks2-tb-split.vertical {
+  position: relative;
+}
+.ks2-app .ks2-tb-arrow {
+  width: 12px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--k-muted);
+  font-size: 9px;
+  cursor: pointer;
+}
+.ks2-app .ks2-tb-split.vertical .ks2-tb-arrow {
+  position: absolute;
+  right: -11px;
+  top: 0;
+}
+.ks2-app .ks2-tb-split.small .ks2-tb-arrow {
+  height: 22px;
+}
+.ks2-app .ks2-tb-arrow:hover {
+  color: var(--k-text);
+}
+.ks2-app .ks2-tb-sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 5px;
+  background: var(--k-border);
+  flex: none;
+}
+.ks2-app .ks2-tb-hsep {
+  height: 1px;
+  width: 24px;
+  margin: 4px 0;
+  background: var(--k-border);
+  flex: none;
+}
+.ks2-app .ks2-tb-label {
   font-size: 12px;
+  color: var(--k-text);
+  padding: 0 1px 0 4px;
 }
-.ks2-app .ks2-compile,
-.ks2-app .ks2-toolbar .k-btn {
+.ks2-app .ks2-combo {
+  height: 24px;
+  font-size: 12px;
+  padding: 0 4px;
+  max-width: 112px;
+  border: 1px solid var(--k-border);
+  border-radius: 3px;
+  background: var(--k-bg);
+  color: var(--k-text);
+}
+.ks2-app .ks2-combo:disabled,
+.ks2-app .ks2-spin:disabled {
+  opacity: 0.5;
+}
+.ks2-app .ks2-spin {
+  width: 46px;
+  height: 24px;
+  font-size: 12px;
+  padding: 0 2px 0 5px;
+  border: 1px solid var(--k-border);
+  border-radius: 3px;
+  background: var(--k-bg);
+  color: var(--k-text);
+}
+.ks2-app .ks2-tb-more {
+  position: absolute;
+  right: 2px;
+  top: 4px;
+  width: 22px;
+  height: 30px;
+  border: none;
+  background: var(--k-chrome);
+  color: var(--k-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ks2-app .ks2-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.ks2-app .ks2-sidebar .ks2-tb {
   height: 28px;
-  gap: 5px;
-  padding: 0 10px;
+}
+.ks2-app .ks2-sidebar {
+  width: 36px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  background: var(--k-chrome);
+  border-right: 1px solid var(--k-border);
+}
+.ks2-app .ks2-sidebar .ks2-tb-split.vertical {
+  padding-right: 0;
 }
 
 .ks2-app .ks2-colorbtn {
@@ -68,9 +214,7 @@
   border: 1px solid var(--k-border);
 }
 .ks2-app .ks2-palette {
-  position: absolute;
-  top: 32px;
-  left: 0;
+  position: fixed;
   z-index: 50;
   width: 168px;
   display: grid;
@@ -108,185 +252,896 @@
   cursor: pointer;
 }
 
-/* ---------------------------------------------------------------- layout */
+/* ---------------------------------------------------------------- tabs (QTabWidget) */
 
-.ks2-app .ks2-main {
+.ks2-app .ks2-central {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ks2-app .ks2-split {
   flex: 1;
   min-height: 0;
   display: flex;
 }
-.ks2-app .ks2-sorter {
-  width: 184px;
-  flex: none;
-  overflow-y: auto;
-  padding: 10px 8px 16px;
+.ks2-app .ks2-lefttabs,
+.ks2-app .ks2-righttabs {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  padding: 4px 4px 0;
   background: var(--k-chrome);
+}
+.ks2-app .ks2-sidepanel {
+  flex: none;
+  min-width: 240px;
+  display: flex;
+}
+.ks2-app .ks2-splitter {
+  width: 5px;
+  flex: none;
+  cursor: col-resize;
+  background: var(--k-chrome);
+}
+.ks2-app .ks2-splitter:hover {
+  background: var(--k-selection);
+}
+.ks2-app .ks2-qtabs {
+  display: flex;
+  gap: 0;
+  flex: none;
+  padding-left: 6px;
+}
+.ks2-app .ks2-qtabs.wrap {
+  flex-wrap: wrap;
+  padding-left: 0;
+}
+.ks2-app .ks2-qtab {
+  border: 1px solid var(--k-border);
+  border-bottom: none;
+  margin-right: -1px;
+  padding: 4px 13px 5px;
+  font-size: 12.5px;
+  border-radius: 4px 4px 0 0;
+  background: var(--k-surface);
+  color: var(--k-muted);
+  cursor: pointer;
+  position: relative;
+}
+.ks2-app .ks2-qtab:hover {
+  color: var(--k-text);
+}
+.ks2-app .ks2-qtab.active {
+  background: var(--k-bg);
+  color: var(--k-text);
+  z-index: 1;
+  margin-bottom: -1px;
+  padding-bottom: 6px;
+}
+.ks2-app .ks2-qtab-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+}
+.ks2-app .ks2-tabpage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ks2-app .ks2-tabpage[hidden] {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- the Visual tab */
+
+.ks2-app .ks2-visual {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.ks2-app .ks2-nav-panel {
+  width: 214px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  gap: 2px;
   border-right: 1px solid var(--k-border);
 }
-.ks2-app .ks2-sorter.disabled {
-  opacity: 0.45;
-  pointer-events: none;
-}
-.ks2-app .ks2-thumb {
+.ks2-app .ks2-nav-head {
   display: flex;
-  gap: 5px;
-  align-items: flex-start;
-  cursor: pointer;
-  border-radius: 6px;
-  padding: 3px;
-  border: 2px solid transparent;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 0 2px;
+  font-size: 12.5px;
 }
-.ks2-app .ks2-thumb:hover {
-  background: var(--k-button-hover);
-}
-.ks2-app .ks2-thumb.current {
-  border-color: var(--k-accent);
-}
-.ks2-app .ks2-thumb.drop {
-  box-shadow: 0 -3px 0 var(--k-accent);
-}
-.ks2-app .ks2-thumb.hidden .ks2-thumb-pic {
-  opacity: 0.4;
-}
-.ks2-app .ks2-thumb-num {
-  width: 16px;
-  font-size: 11px;
-  color: var(--k-muted);
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-.ks2-app .ks2-thumb-pic {
-  pointer-events: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  line-height: 0;
-}
-.ks2-app .ks2-thumb-add {
-  align-self: center;
-  width: 148px;
-  margin-left: 21px;
-  height: 34px;
-  border: 1px dashed var(--k-border);
-  border-radius: 6px;
+.ks2-app .ks2-fold {
+  border: none;
   background: none;
   color: var(--k-muted);
   cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
 }
-.ks2-app .ks2-thumb-add:hover {
-  color: var(--k-accent);
-  border-color: var(--k-accent);
+.ks2-app .ks2-fold:hover {
+  color: var(--k-text);
+}
+.ks2-app .ks2-nav-strip {
+  width: 22px;
+  flex: none;
+  border: none;
+  border-right: 1px solid var(--k-border);
+  background: none;
+  color: var(--k-muted);
+  white-space: pre;
+  line-height: 1.25;
+  font-size: 12px;
+  padding: 8px 0;
+  cursor: pointer;
+  text-align: center;
+}
+.ks2-app .ks2-nav-strip:hover {
+  background: var(--k-selection);
+}
+.ks2-app .ks2-nav-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 6px 12px 4px;
+  outline: none;
+  border: 1px solid var(--k-border);
+  background: var(--k-surface);
+}
+.ks2-app .ks2-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 2px;
+  cursor: pointer;
+  flex: none;
+}
+.ks2-app .ks2-nav-item:hover {
+  background: var(--k-button-hover);
+}
+.ks2-app .ks2-nav-item.current {
+  background: var(--k-accent);
+}
+.ks2-app .ks2-nav-item.drop-before::before,
+.ks2-app .ks2-nav-item.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--k-accent);
+}
+.ks2-app .ks2-nav-item.drop-before::before {
+  top: -5px;
+}
+.ks2-app .ks2-nav-item.drop-after::after {
+  bottom: -5px;
+}
+.ks2-app .ks2-nav-pic {
+  position: relative;
+  line-height: 0;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.ks2-app .ks2-nav-item.hidden .ks2-nav-pic,
+.ks2-app .ks2-ov-item.hidden .ks2-ov-pic {
+  opacity: 0.45;
+}
+.ks2-app .ks2-nav-item.hidden .ks2-nav-label,
+.ks2-app .ks2-ov-item.hidden .ks2-ov-num {
+  text-decoration: line-through;
+  color: var(--k-muted);
+}
+.ks2-app .ks2-nav-eye {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(55, 65, 81, 0.85);
+  color: #fff;
+}
+.ks2-app .ks2-nav-label {
+  position: absolute;
+  left: 6px;
+  bottom: 5px;
+  font-size: 10px;
+  color: #444;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 3px;
+  padding: 0 3px;
+  line-height: 1.4;
+}
+
+.ks2-app .ks2-right-stack {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ks2-app .ks2-canvas-box {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ks2-app .ks2-master-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 4px 10px;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--k-warning) 22%, var(--k-bg));
+  color: var(--k-text);
+}
+.ks2-app .ks2-master-banner span {
+  flex: 1;
+}
+.ks2-app .ks2-hf-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  flex: none;
+}
+.ks2-app .ks2-hf-input {
+  flex: 2;
+  min-width: 40px;
+  height: 22px;
+  padding: 0 4px;
+  font-size: 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 2px;
+  background: var(--k-bg);
+  color: var(--k-text);
+  user-select: text;
+}
+.ks2-app .ks2-hf-input::placeholder {
+  color: var(--k-placeholder);
+}
+.ks2-app .ks2-hf-input:focus {
+  outline: 1px solid var(--k-accent);
+}
+.ks2-app .ks2-navcheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
 }
 
 .ks2-app .ks2-stage {
   flex: 1;
-  min-width: 0;
+  min-height: 0;
   overflow: auto;
   position: relative;
-  background: var(--k-alt);
+  /* The grey desk around the page (SlideScene.drawBackground), in the chrome's tone. */
+  background: color-mix(in srgb, var(--k-text) 26%, var(--k-bg));
 }
 .ks2-app .ks2-stage-inner {
   min-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 12px;
   box-sizing: border-box;
 }
-.ks2-app .ks2-banner {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 6px;
-  font-size: 12px;
-  background: var(--k-selection);
-  color: var(--k-text);
+.ks2-app .ks2-gridwrap {
+  position: relative;
+  line-height: 0;
+}
+.ks2-app .ks2-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(to right, rgba(40, 120, 220, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(40, 120, 220, 0.25) 1px, transparent 1px);
 }
 
-.ks2-app .ks2-panel {
-  width: 38%;
-  min-width: 260px;
-  max-width: 640px;
-  flex: none;
+/* ---------------------------------------------------------------- LaTeX and Console tabs (Panels.tsx) */
+
+.ks2-app .ks2-latextab {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--k-border);
-  background: var(--k-bg);
 }
-.ks2-app .ks2-tabs {
+.ks2-app .ks2-latex-banner {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 4px 6px 0;
-  background: var(--k-chrome);
-  border-bottom: 1px solid var(--k-border);
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--k-warning) 20%, var(--k-bg));
 }
-.ks2-app .ks2-tab {
-  border: none;
-  background: none;
-  color: var(--k-muted);
-  padding: 6px 12px;
-  font-size: 12.5px;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
+.ks2-app .ks2-latex-banner span {
+  flex: 1;
 }
-.ks2-app .ks2-tab.active {
-  color: var(--k-text);
-  border-bottom-color: var(--k-accent);
+.ks2-app .ks2-latex-editor {
+  flex: 1;
+  min-height: 0;
+  user-select: text;
 }
-.ks2-app .ks2-panel-body {
+.ks2-app .ks2-latex-editor .cm-editor {
+  height: 100%;
+}
+.ks2-app .ks2-console {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  display: flex;
-  flex-direction: column;
+  /* The desktop's terminal look: black, light text, whatever the theme. */
+  background: #0c0c0c;
+  color: #e6e6e6;
   user-select: text;
 }
-.ks2-app .ks2-panel-tools {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 10px;
-  font-size: 11.5px;
+.ks2-app .ks2-console-errors {
+  padding: 8px 10px 0;
+  color: #ff8a80;
+  font: 12px/1.45 var(--k-mono);
 }
-.ks2-app .ks2-code {
+.ks2-app .ks2-console-log {
   margin: 0;
-  padding: 10px 12px;
-  font-family: var(--k-mono);
-  font-size: 11.5px;
-  line-height: 1.45;
+  padding: 8px 10px;
+  font: 12px/1.45 var(--k-mono);
   white-space: pre-wrap;
   word-break: break-word;
-  color: var(--k-text);
-}
-.ks2-app .ks2-errors {
-  margin: 8px 10px 0;
-  padding-left: 18px;
-  font-size: 12px;
-  color: var(--k-danger);
-}
-.ks2-app .ks2-pdfpanel {
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--k-alt);
-}
-.ks2-app .ks2-pdfpage {
-  background: #fff;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-  flex: none;
 }
 
-.ks2-app .ks2-status .ks2-warn {
+/* ---------------------------------------------------------------- PDF | Overview (PdfPane.tsx) */
+
+.ks2-app.ks2-pdfwindow {
+  display: flex;
+  flex-direction: column;
+}
+.ks2-app .ks2-pdfview {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: color-mix(in srgb, var(--k-text) 26%, var(--k-bg));
+}
+.ks2-app .ks2-pdfpages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ks2-app .ks2-pdfpage {
+  display: block;
+  background: #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  flex: none;
+}
+.ks2-app .ks2-pdf-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--k-muted);
+  font-size: 12.5px;
+}
+.ks2-app .ks2-overview {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  gap: 4px;
+}
+.ks2-app .ks2-overview-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.ks2-app .ks2-overview-hint {
+  flex: 1;
+  color: var(--k-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ks2-app .ks2-overview-head input[type='range'] {
+  width: 110px;
+  accent-color: var(--k-accent);
+}
+.ks2-app .ks2-overview-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--k-text) 12%, var(--k-bg));
+}
+.ks2-app .ks2-ov-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.ks2-app .ks2-ov-item.current {
+  border-color: var(--k-accent);
+  background: color-mix(in srgb, var(--k-accent) 14%, transparent);
+}
+.ks2-app .ks2-ov-item.drop {
+  box-shadow: -4px 0 0 var(--k-accent);
+}
+.ks2-app .ks2-ov-pic {
+  position: relative;
+  line-height: 0;
+  pointer-events: none;
+  outline: 1px solid rgba(0, 0, 0, 0.25);
+}
+.ks2-app .ks2-ov-num {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--k-text);
+}
+
+/* ---------------------------------------------------------------- find bar, status bar, view bar */
+
+.ks2-app .ks2-findbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  background: var(--k-chrome);
+  border-top: 1px solid var(--k-border);
+}
+.ks2-app .ks2-findbar .k-input {
+  flex: 1;
+  height: 26px;
+}
+.ks2-app .ks2-find-count {
+  font-size: 12px;
+  color: var(--k-muted);
+  min-width: 50px;
+}
+.ks2-app .ks2-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  flex: none;
+  font-size: 12px;
+  background: var(--k-chrome);
+  border-top: 1px solid var(--k-border);
+  color: var(--k-text);
+}
+.ks2-app .ks2-status-msg {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--k-muted);
+}
+.ks2-app .ks2-status-state {
+  padding: 0 10px;
+  white-space: nowrap;
+  color: var(--k-muted);
+}
+.ks2-app .ks2-status-state.busy {
   color: var(--k-warning);
+}
+.ks2-app .ks2-status-state.ok {
+  color: var(--k-success);
+}
+.ks2-app .ks2-status-state.err {
+  color: var(--k-danger);
+}
+.ks2-app .ks2-viewbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+.ks2-app .ks2-vb-counter {
+  padding: 0 8px;
+  white-space: nowrap;
+  color: var(--k-muted);
+}
+.ks2-app .ks2-vb-sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 3px;
+  background: var(--k-border);
+}
+.ks2-app .ks2-vb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  min-width: 24px;
+  justify-content: center;
+  padding: 0 2px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  color: var(--k-text);
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.ks2-app .ks2-vb-btn.text {
+  padding: 0 4px;
+}
+.ks2-app .ks2-vb-btn:hover {
+  background: var(--k-button-hover);
+}
+.ks2-app .ks2-vb-btn.checked {
+  background: var(--k-selection);
+  border-color: color-mix(in srgb, var(--k-accent) 55%, transparent);
+}
+.ks2-app .ks2-vb-caret {
+  font-size: 10px;
+  color: var(--k-muted);
+  align-self: flex-end;
+}
+
+/* ---------------------------------------------------------------- layout thumbnails in menus */
+
+.k-menu.ks2-layout-menu .k-menu-item:has(.ks2-layout-thumb) {
+  height: auto;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.k-menu.ks2-layout-menu .k-menu-icon.image:has(.ks2-layout-thumb) {
+  width: 80px;
+  height: auto;
+}
+.ks2-app.ks2-layout-thumb {
+  display: block;
+  line-height: 0;
+  outline: 1px solid rgba(0, 0, 0, 0.3);
+}
+.k-menu-icon.image .ks2-ico img {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------------------------------------------------------------- the Welcome page (Start.tsx) */
+
+.ks2-app .ks2-start {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  outline: none;
+  background: linear-gradient(135deg, var(--k-desk), var(--k-surface));
+}
+.ks2-app .ks2-start-slide {
+  width: min(100%, 980px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 26px 30px 22px;
+  border-radius: 10px;
+  border-top: 8px solid var(--k-accent);
+  background: var(--k-bg);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+.ks2-app .ks2-start-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ks2-app .ks2-start-titles {
+  flex: 1;
+}
+.ks2-app .ks2-start-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+.ks2-app .ks2-start-sub {
+  color: var(--k-muted);
+}
+.ks2-app .ks2-start-check {
+  align-self: flex-start;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.ks2-app .ks2-start-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ks2-app .ks2-start-buttons button {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  background: var(--k-surface);
+  color: var(--k-text);
+  cursor: pointer;
+}
+.ks2-app .ks2-start-buttons button:hover {
+  border-color: var(--k-accent);
+}
+.ks2-app .ks2-start-h {
+  font-weight: 700;
+  font-size: 15px;
+  margin-top: 4px;
+}
+.ks2-app .ks2-start-h.small {
+  font-size: 13.5px;
+}
+.ks2-app .ks2-cards {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.ks2-app .ks2-card {
+  flex: none;
+  width: 166px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--k-text);
+  cursor: pointer;
+  font-size: 12px;
+}
+.ks2-app .ks2-card:hover {
+  background: var(--k-selection);
+}
+.ks2-app .ks2-card-pic {
+  line-height: 0;
+  pointer-events: none;
+  outline: 1px solid var(--k-border);
+}
+.ks2-app .ks2-card-blank {
+  display: block;
+  width: 150px;
+  height: 84px;
+  background: linear-gradient(#fff 90%, var(--k-accent) 90%);
+}
+.ks2-app .ks2-start-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12.5px;
+}
+.ks2-app .ks2-recent {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ks2-app .ks2-recent-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--k-border);
+  background: var(--k-surface);
+}
+.ks2-app .ks2-recent-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 6px 6px;
+  border: none;
+  background: none;
+  color: var(--k-text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.ks2-app .ks2-recent-item span {
+  color: var(--k-muted);
+  font-size: 11px;
+  word-break: break-all;
+}
+.ks2-app .ks2-recent-item:hover:not(:disabled) {
+  background: var(--k-selection);
+}
+.ks2-app .ks2-recent-item:disabled {
+  opacity: 0.45;
+}
+.ks2-app .ks2-recent-empty {
+  padding: 8px;
+  color: var(--k-muted);
+  font-size: 12px;
+}
+
+/* ---------------------------------------------------------------- the desktop's small dialogs (desktopDialogs.tsx) */
+
+.ks2-app .ks2-symbols {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+.ks2-app .ks2-symbols .k-btn {
+  height: 34px;
+  padding: 0;
+  font-size: 16px;
+}
+.ks2-app .ks2-tstyles,
+.ks2-app .ks2-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+.ks2-app .ks2-gallery {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+.ks2-app .ks2-tstyle,
+.ks2-app .ks2-gallery-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--k-text);
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.ks2-app .ks2-tstyle:hover,
+.ks2-app .ks2-gallery-item:hover {
+  background: var(--k-selection);
+}
+.ks2-app .ks2-gallery-item.current {
+  border-color: var(--k-accent);
+}
+.ks2-app .ks2-gallery-item .ks2-slide {
+  pointer-events: none;
+}
+.ks2-app .ks2-tswatch {
+  outline: 1px solid var(--k-border);
+}
+.ks2-app .ks2-tgrid {
+  display: grid;
+  grid-template-columns: repeat(10, 22px);
+  gap: 3px;
+  justify-content: center;
+}
+.ks2-app .ks2-tgrid-cell {
+  width: 22px;
+  height: 18px;
+  border: 1px solid var(--k-border);
+  background: var(--k-surface);
+  cursor: pointer;
+}
+.ks2-app .ks2-tgrid-cell.on {
+  background: color-mix(in srgb, var(--k-accent) 45%, transparent);
+  border-color: var(--k-accent);
+}
+.ks2-app .ks2-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ks2-app .ks2-inline .k-input {
+  width: 80px;
+}
+.ks2-app .ks2-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ks2-app .ks2-mini {
+  width: 64px;
+  height: 24px;
+  display: inline-block;
+}
+.ks2-app .ks2-guide {
+  display: flex;
+  gap: 10px;
+  height: min(70vh, 640px);
+  padding: 4px 16px 10px;
+}
+.ks2-app .ks2-guide-toc {
+  width: 220px;
+  flex: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ks2-app .ks2-guide-toc .k-input {
+  margin-bottom: 6px;
+  height: 26px;
+}
+.ks2-app .ks2-guide-link {
+  border: none;
+  background: none;
+  color: var(--k-text);
+  text-align: left;
+  font-size: 12px;
+  padding: 3px 4px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.ks2-app .ks2-guide-link:hover {
+  background: var(--k-selection);
+}
+.ks2-app .ks2-guide-link.l3 {
+  padding-left: 16px;
+  color: var(--k-muted);
+}
+.ks2-app .ks2-guide-link.l4 {
+  padding-left: 28px;
+  color: var(--k-muted);
+}
+.ks2-app .ks2-guide-body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  user-select: text;
+}
+.ks2-app .ks2-guide-body table {
+  border-collapse: collapse;
+}
+.ks2-app .ks2-guide-body td,
+.ks2-app .ks2-guide-body th {
+  border: 1px solid var(--k-border);
+  padding: 3px 6px;
+}
+.ks2-app .ks2-guide-body code {
+  font-family: var(--k-mono);
+  font-size: 12px;
+}
+.ks2-app .ks2-about h3 {
+  margin: 8px 0 2px;
+  font-size: 14px;
+}
+.ks2-app .ks2-about p,
+.ks2-app .ks2-about ul {
+  margin: 2px 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.ks2-app .ks2-about a {
+  color: var(--k-link);
+}
+.ks2-app .ks2-about-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ks2-app .ks2-about-name {
+  font-size: 22px;
+  font-weight: 700;
+}
+.ks2-app .ks2-status-table td {
+  padding: 3px 8px 3px 0;
+  font-size: 12.5px;
+  vertical-align: top;
 }
 
 /* ---------------------------------------------------------------- the slide page */

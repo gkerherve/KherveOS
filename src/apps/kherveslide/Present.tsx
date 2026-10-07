@@ -26,7 +26,18 @@ interface Props {
   /** Index into the shown slides (hidden ones are left out). */
   start: number
   presenter: boolean
+  /** In a window (Slideshow ▸ In a window): no full screen. */
+  windowed?: boolean
+  /** Slideshow ▸ Automatic slideshow: the slides advance by themselves (S pauses). */
+  auto?: AutoPlay | null
   onExit: (shownIndex: number) => void
+}
+
+/** The desktop's slideshow.AutoPlay: seconds per slide; once through, loop, or loop for some minutes. */
+export interface AutoPlay {
+  seconds: number
+  repeat: 'once' | 'loop' | 'for'
+  minutes: number
 }
 
 function useSize(ref: React.RefObject<HTMLElement | null>, dep: unknown = null) {
@@ -68,7 +79,7 @@ function PdfPage({ doc, index, w, h }: { doc: PdfDocument; index: number; w: num
   return <canvas ref={ref} className="ks2-present-pdf" />
 }
 
-export function Present({ deck, look, media, backdrop, pdf, start, presenter: presenterAtStart, onExit }: Props) {
+export function Present({ deck, look, media, backdrop, pdf, start, presenter: presenterAtStart, windowed, auto, onExit }: Props) {
   const stageRef = useRef<HTMLDivElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
   const nextRef = useRef<HTMLDivElement>(null)
@@ -114,6 +125,7 @@ export function Present({ deck, look, media, backdrop, pdf, start, presenter: pr
     const el = stageRef.current
     if (!el) return
     el.focus({ preventScroll: true })
+    if (windowed) return
     void el.requestFullscreen?.().catch(() => {})
     const onChange = () => {
       if (document.fullscreenElement !== el) exit()
@@ -124,12 +136,27 @@ export function Present({ deck, look, media, backdrop, pdf, start, presenter: pr
       document.removeEventListener('fullscreenchange', onChange)
       if (document.fullscreenElement === el) void document.exitFullscreen().catch(() => {})
     }
-  }, [exit])
+  }, [exit, windowed])
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(t)
   }, [])
+
+  // The automatic slideshow: S pauses and resumes; the arrows still work.
+  const [paused, setPaused] = useState(false)
+  const autoStart = useRef(Date.now())
+  useEffect(() => {
+    if (!auto || paused) return
+    const t = setTimeout(() => {
+      const { page: p, count: n } = live.current
+      if (p + 1 < n) goto(p + 1)
+      else if (auto.repeat === 'once') exit()
+      else if (auto.repeat === 'for' && Date.now() - autoStart.current >= auto.minutes * 60_000) exit()
+      else goto(0)
+    }, Math.max(1, auto.seconds) * 1000)
+    return () => clearTimeout(t)
+  }, [auto, paused, page, goto, exit])
 
   const onKey = (e: React.KeyboardEvent) => {
     const p = live.current.page
@@ -151,6 +178,7 @@ export function Present({ deck, look, media, backdrop, pdf, start, presenter: pr
     else if (k === 'b' || k === 'B' || k === '.') setScreen((s) => (s === 'black' ? '' : 'black'))
     else if (k === 'w' || k === 'W' || k === ',') setScreen((s) => (s === 'white' ? '' : 'white'))
     else if (k === 'p' || k === 'P') setPresenter((v) => !v)
+    else if ((k === 's' || k === 'S') && auto) setPaused((v) => !v)
     else if (k === 'Escape') exit()
     else return
     e.preventDefault()

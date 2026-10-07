@@ -21,7 +21,7 @@ export interface FieldSpec {
 
 export type Values = Record<string, unknown>
 
-function Modal({ title, children, onCancel, wide }: { title: string; children: ReactNode; onCancel: () => void; wide?: boolean }) {
+export function Modal({ title, children, onCancel, wide }: { title: string; children: ReactNode; onCancel: () => void; wide?: boolean }) {
   return (
     <div
       className="ks2-modal-back"
@@ -174,16 +174,25 @@ const SWATCHES = [
 ]
 
 /** A Format-toolbar colour: a swatch that opens a palette (with "none" and a custom colour). */
-export function ColorButton({ icon, title, value, onChange, disabled, allowNone = true }: {
+export function ColorButton({ icon, title, value, onChange, disabled, allowNone = true, plain = false }: {
   icon: ReactNode
   title: string
   value: string
   onChange: (c: string) => void
   disabled?: boolean
   allowNone?: boolean
+  /** Just the icon (the desktop toolbar's text / fill colour buttons). */
+  plain?: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const [at, setAt] = useState({ left: 0, top: 0 })
   const ref = useRef<HTMLSpanElement>(null)
+  const toggle = () => {
+    // The palette is fixed-positioned under the button, so a toolbar that clips its overflow can't cut it.
+    const r = ref.current?.getBoundingClientRect()
+    if (r) setAt({ left: r.left, top: r.bottom + 2 })
+    setOpen((o) => !o)
+  }
   useEffect(() => {
     if (!open) return
     const close = (e: PointerEvent) => {
@@ -194,15 +203,21 @@ export function ColorButton({ icon, title, value, onChange, disabled, allowNone 
   }, [open])
   return (
     <span className="ks2-colorbtn" ref={ref}>
-      <button className="k-icon-btn" title={title} disabled={disabled} onClick={() => setOpen((o) => !o)}>
-        <span className="ks2-colorbtn-icon">
+      {plain ? (
+        <button className="ks2-tb" title={title} disabled={disabled} onMouseDown={(e) => e.preventDefault()} onClick={toggle}>
           {icon}
-          <span className="ks2-colorbtn-bar" style={{ background: value || 'transparent' }} />
-        </span>
-        <ChevronDown size={10} />
-      </button>
+        </button>
+      ) : (
+        <button className="k-icon-btn" title={title} disabled={disabled} onClick={toggle}>
+          <span className="ks2-colorbtn-icon">
+            {icon}
+            <span className="ks2-colorbtn-bar" style={{ background: value || 'transparent' }} />
+          </span>
+          <ChevronDown size={10} />
+        </button>
+      )}
       {open && (
-        <div className="ks2-palette">
+        <div className="ks2-palette" style={at}>
           {SWATCHES.map((c) => (
             <button
               key={c}
@@ -240,6 +255,11 @@ export function ColorButton({ icon, title, value, onChange, disabled, allowNone 
 
 // ------------------------------------------------------------------ equation editor
 
+export const CHEM_SNIPPETS: [string, string][] = [
+  ['->', '→'], ['<=>', '⇌'], ['<-', '←'], ['^', '↑ gas'], ['v', '↓ precipitate'], ['H2O', 'H₂O'], ['^{2+}', 'ion²⁺'], ['^-', 'ion⁻'],
+  ['(aq)', '(aq)'], ['(s)', '(s)'], ['(l)', '(l)'], ['(g)', '(g)'], ['->[\\Delta]', '→ Δ'],
+]
+
 const SNIPPETS: [string, string][] = [
   ['\\frac{a}{b}', 'a/b'], ['x^{2}', 'xⁿ'], ['x_{i}', 'xᵢ'], ['\\sqrt{x}', '√'], ['\\int_{a}^{b}', '∫'], ['\\sum_{i=1}^{n}', 'Σ'],
   ['\\alpha', 'α'], ['\\beta', 'β'], ['\\gamma', 'γ'], ['\\Delta', 'Δ'], ['\\lambda', 'λ'], ['\\mu', 'μ'], ['\\pi', 'π'], ['\\theta', 'θ'],
@@ -247,11 +267,17 @@ const SNIPPETS: [string, string][] = [
   ['\\partial', '∂'], ['\\nabla', '∇'], ['\\hbar', 'ℏ'], ['\\ce{H2O}', 'H₂O'],
 ]
 
-/** Edit an equation (LaTeX maths) with a live preview. Resolves with the LaTeX, or null. */
-export function EquationDialog({ initial, onDone }: { initial: string; onDone: (tex: string | null) => void }) {
+/** Edit an equation (LaTeX maths) with a live preview. Resolves with the LaTeX, or null.
+ *  `chemistry`: the desktop's Chemical reaction editor — mhchem, the result goes inside \ce{…}. */
+export function EquationDialog({ initial, onDone, title = 'Equation builder', chemistry = false }: {
+  initial: string
+  onDone: (tex: string | null) => void
+  title?: string
+  chemistry?: boolean
+}) {
   const [tex, setTex] = useState(initial)
   const area = useRef<HTMLTextAreaElement>(null)
-  const preview = useMemo(() => mathHtml(tex || '\\square', true), [tex])
+  const preview = useMemo(() => mathHtml(tex ? (chemistry ? `\\ce{${tex}}` : tex) : '\\square', true), [tex, chemistry])
   useEffect(() => area.current?.focus(), [])
   const insert = (s: string) => {
     const el = area.current
@@ -266,10 +292,10 @@ export function EquationDialog({ initial, onDone }: { initial: string; onDone: (
     })
   }
   return (
-    <Modal title="Equation" onCancel={() => onDone(null)} wide>
+    <Modal title={title} onCancel={() => onDone(null)} wide>
       <div className="ks2-modal-body">
         <div className="ks2-snippets">
-          {SNIPPETS.map(([s, label]) => (
+          {(chemistry ? CHEM_SNIPPETS : SNIPPETS).map(([s, label]) => (
             <button key={s} className="k-btn" title={s} onClick={() => insert(s)}>
               {label}
             </button>
@@ -281,14 +307,18 @@ export function EquationDialog({ initial, onDone }: { initial: string; onDone: (
           value={tex}
           rows={4}
           spellCheck={false}
-          placeholder="E = mc^2"
+          placeholder={chemistry ? '2H2 + O2 -> 2H2O' : 'E = mc^2'}
           onChange={(e) => setTex(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onDone(tex)
           }}
         />
         <div className="ks2-eq-preview" dangerouslySetInnerHTML={{ __html: preview }} />
-        <div className="ks2-modal-intro">LaTeX maths, as in \[ … \]. The preview is KaTeX; the PDF is typeset by LaTeX. ⌘Enter inserts.</div>
+        <div className="ks2-modal-intro">
+          {chemistry
+            ? 'A reaction or formula in mhchem notation, e.g. 2H2 + O2 -> 2H2O. The preview is KaTeX; the PDF is typeset by LaTeX. ⌘Enter inserts.'
+            : 'LaTeX maths, as in $ … $. The preview is KaTeX; the PDF is typeset by LaTeX. ⌘Enter inserts.'}
+        </div>
       </div>
       <div className="ks2-modal-buttons">
         <button className="k-btn" onClick={() => onDone(null)}>
