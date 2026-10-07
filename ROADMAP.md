@@ -116,7 +116,12 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       =PY, printing, spell check.
 - [x] KhervePaint (`../KhervePaint`) — raster + vector canvas — done 2026-10-07, tested in the
       browser (draw, properties). Not ported: molecule/crystal/3D palettes; PDF is raster
-- [x] KherveFitting (`../KherveFitting`, develop) — done 2026-10-07 (main fitting workflow; PCA, Thickogram, AutoID, EELS… not ported) — first extract a wx-free fitting
+- [ ] KherveFitting — REDO (user, 2026-10-07): it must be exactly like the newest desktop app,
+      **../KherveFittingPro, branch dev-AI** (KherveFitting-AI), not ../KherveFitting develop: the
+      desktop's toolbar and icons, left plot toolbar, Peak Fitting Parameters grid with green
+      constraint rows, Results grid, floating Peak Fitting window, menus incl. AI. References:
+      the dev-AI wx code and ../khervefitting-web/public/screenshots/. A first port (develop,
+      own layout) is committed; a rebuild is in progress. — first extract a wx-free fitting
       core (`Peak_Functions.py`, backgrounds, file readers) to run in Pyodide, then the
       web UI (spectrum plot, peak table, fit)
 
