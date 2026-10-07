@@ -171,6 +171,23 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       in the Ꝃ menu, frosted see-through KApps menu — done 2026-10-07.
 - [x] Wallpaper: the user's Tech Lab picture only, AI-upscaled 3× (Real-ESRGAN) — done.
 
+### Parity review (user, 2026-10-07) — NEXT, highest priority
+The user: the ports kept formats and logic but laid apps out differently from the
+desktop. Every app must look and work like the user's desktop app. Reference: the
+desktop source (dev branches) and ../khervefitting-web/public/screenshots/tools/<app>/.
+- [ ] **KherveSlide**: default view = main window (left tool column, Visual | LaTeX |
+      Console tabs, slide sorter, Frame/Header fields, Foot fields, status bar
+      "Compiled ✓ · Slide n of m · Theme") AND a separate PDF window beside it (PDF |
+      Overview tabs) that follows the compile. A LaTeX tab must show the source.
+      See screenshots/tools/kherveslide/editor.png.
+- [ ] **KherveTeX**: same: main window (left symbol/insert column, Documents panel,
+      Visual | Code | Console tabs, zoom + "LaTeX (tectonic): OK" status) AND a separate
+      PDF window beside it. See screenshots/tools/khervetex/main.png.
+- [ ] **KherveFitting**: rebuild to KherveFittingPro dev-AI in progress (agent).
+- [ ] Then review every other port the same way (KherveBook, KhervePY, KhervePDF,
+      KherveSheet, KhervePaint, KherveRef, KherveNote, KherveDB, KherveLAB) against its
+      screenshots and source, and fix the differences.
+
 ### Later
 - Email bridge: block private addresses and rate-limit account tests before sharing
   a server. Messages: unread badge on the Dock icon. Deployment.
