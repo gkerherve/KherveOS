@@ -125,6 +125,15 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       Solitaire, MiniGame, ChemistryLab) as TypeScript ports in the same style.
 
 ### Requested 2026-10-07 (to do next)
+- [ ] **KherveDB 5.0 parity** (user, 2026-10-07): the desktop KherveDB-React 5.0 has a tabbed
+      "Other Databases & Properties" window with embedded browsers that follow the selected
+      element (commit 2026-09-27 07:48, src-tauri/src/references.rs). The KherveOS port opened
+      those sites in new browser tabs instead. Do it inside KherveOS: the periodic table
+      drives the embedded database tabs. Most sites refuse framing, so add a server-side
+      fetcher for an allowlist of the KherveDB database hosts only (no open proxy: SSRF),
+      shown in sandboxed iframes without allow-same-origin (third-party scripts must not
+      reach KherveOS cookies/storage); decline cookie banners like the desktop does; Google
+      Scholar may still need a real tab.
 - [ ] **Copy and paste of files**: Copy / Cut / Paste in Files and on the Desktop (menus,
       right-click, ⌘C/⌘X/⌘V). On this computer by default; when signed in, Copy also puts
       the files on the KherveOS server (per-user clipboard, size limit) so another computer
