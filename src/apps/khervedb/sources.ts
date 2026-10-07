@@ -1,4 +1,5 @@
-// The other databases KherveDB links to, for the selected element.
+// The other databases KherveDB shows for the selected element (the tabs of
+// the Other Databases & Properties window).
 
 import type { ElementMeta } from './data'
 
@@ -16,6 +17,9 @@ export interface Source {
     sortable?: boolean
   }
   url: (el: string, meta: ElementMeta) => string
+  /** The site lets itself be framed (no X-Frame-Options / frame-ancestors, checked 2026-10-07):
+   *  shown directly when the KherveOS page fetcher can't be used. */
+  framable?: boolean
 }
 
 const scholar = (q: string, newest = false) =>
@@ -30,18 +34,21 @@ export const SOURCES: Source[] = [
     title: 'XPS Fitting',
     help: 'XPSfitting.com (M. Biesinger): practical notes, reference spectra and fitting parameters for the element.',
     url: (_el, m) => m.urls.xpsfitting,
+    framable: true,
   },
   {
     id: 'harwell',
     title: 'Harwell XPS Guru',
     help: 'Harwell XPS knowledge base: peak positions, fitting advice and pitfalls for the element.',
     url: (_el, m) => m.urls.harwell,
+    framable: true,
   },
   {
     id: 'thermo',
     title: 'Thermo Knowledge',
     help: 'Thermo Fisher XPS periodic table: main peaks, overlaps, spin-orbit splitting and chemical-state tables.',
     url: (_el, m) => m.urls.thermo,
+    framable: true,
   },
   {
     id: 'sss',

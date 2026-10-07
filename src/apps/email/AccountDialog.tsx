@@ -3,6 +3,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import { ChevronRight, CircleAlert, ExternalLink, Info, LoaderCircle, Lock, Mail, TriangleAlert, X } from 'lucide-react'
+import { os } from '@/os'
 import { errorMessage, mail, MailApiError, type Account, type Provider, type Security } from './api'
 
 let providersCache: Promise<Provider[]> | null = null
@@ -213,7 +214,13 @@ export function AccountDialog({ account, defaultName, onClose, onSaved }: Accoun
               <div>
                 <p>{provider.note}</p>
                 {provider.help_url && (
-                  <a href={provider.help_url} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={provider.help_url}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      os.openUrl(provider.help_url!)
+                    }}
+                  >
                     Open {helpHost(provider.help_url)} <ExternalLink size={12} />
                   </a>
                 )}

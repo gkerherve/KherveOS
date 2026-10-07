@@ -544,7 +544,7 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
 
   function followLink(link: PdfLink) {
     if (link.page !== undefined) tab.goto(link.page)
-    else if (/^(https?|mailto):/i.test(link.uri)) os.open('browser', { url: link.uri })
+    else if (/^(https?|mailto):/i.test(link.uri)) os.openUrl(link.uri)
   }
 
   function openNote(a: PdfAnnot) {

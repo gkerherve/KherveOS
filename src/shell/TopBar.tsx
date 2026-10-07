@@ -15,6 +15,7 @@ import { KLogo } from './KLogo'
 import { openLaunchpad } from './ui'
 import { appGroups } from './appsMenu'
 import { toggleFullscreen, useFullscreen } from '@/os/fullscreen'
+import { openUrl } from '@/os/web'
 
 interface TopMenu {
   key: string
@@ -163,7 +164,7 @@ export function TopBar() {
           if (fs.exists(p)) wm.open('notepad', { path: p })
           else wm.open('settings', { section: 'about' })
         } },
-        { label: 'Ktools website', onClick: () => wm.open('browser', { url: 'https://khervetools.com' }) },
+        { label: 'Ktools website', onClick: () => openUrl('https://khervetools.com') },
       ],
     }
     // macOS order: the app's menus, then Window, then Help (the app's own Help if it has one).

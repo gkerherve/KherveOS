@@ -155,7 +155,7 @@ function GameFrame({ win, name, icon: Icon, url, managed, onRestart }: GameFrame
     setFrameKey((k) => k + 1)
   }, [])
   const openReal = useCallback(() => {
-    window.open(url, '_blank', 'noopener')
+    os.openInRealBrowser(url)
   }, [url])
 
   // Keys belong to the game: give it the keyboard whenever its window comes to the front.

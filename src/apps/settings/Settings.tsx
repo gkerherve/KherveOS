@@ -248,7 +248,17 @@ function About() {
         </div>
       </div>
       <p>
-        The <a href="https://khervetools.com" target="_blank" rel="noreferrer">Ktools</a> desktop in your browser:
+        The{' '}
+        <a
+          href="https://khervetools.com"
+          onClick={(e) => {
+            e.preventDefault()
+            os.openUrl('https://khervetools.com')
+          }}
+        >
+          Ktools
+        </a>{' '}
+        desktop in your browser:
         KherveFitting, KherveSheet, KherveTeX, KherveSlide, KhervePDF, KherveRef, KherveNote, KherveBook and more, for
         anyone, on any computer, without installing anything.
       </p>

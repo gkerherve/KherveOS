@@ -730,6 +730,15 @@ export default function KherveTeX({ win, args }: AppProps) {
     if (bytes) os.downloadBlob(`${suggestedName()}.pdf`, new Blob([bytes as BlobPart], { type: 'application/pdf' }))
   }
 
+  /** The PDF in KhervePDF (a copy in /tmp): stays inside KherveOS. */
+  async function openPdf() {
+    const bytes = live.current.pdf?.bytes ?? (await fullPdf())
+    if (!bytes) return
+    const target = `/tmp/${suggestedName()}.pdf`
+    await fs.writeBytes(target, bytes)
+    os.open('khervepdf', { path: target })
+  }
+
   async function print() {
     const bytes = await fullPdf()
     if (!bytes) return
@@ -742,7 +751,7 @@ export default function KherveTeX({ win, args }: AppProps) {
         frame.contentWindow?.focus()
         frame.contentWindow?.print()
       } catch {
-        window.open(url, '_blank', 'noopener')
+        void downloadPdf() // no print dialog from here: download it instead (never a new tab)
       }
       window.setTimeout(() => {
         frame.remove()
@@ -1829,6 +1838,7 @@ export default function KherveTeX({ win, args }: AppProps) {
                 notice={pdfNotice}
                 onCompile={() => void compile(true)}
                 onDownload={() => void downloadPdf()}
+                onOpen={() => void openPdf()}
                 onClose={() => togglePdf(false)}
               />
             </div>

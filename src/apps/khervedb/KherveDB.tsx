@@ -4,13 +4,15 @@
 // KherveDB: Export Filtered Data, copying a reference, the plot's bin width and
 // smooth curve, the Simplified Periodic Table.
 //
-// Opened with { element: 'Fe' } it starts on that element.
+// Opened with { element: 'Fe' } it starts on that element. Opened with
+// { references: true } it is the Other Databases & Properties window (RefBar.tsx),
+// which follows the element selected here.
 
 import {
   useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent,
 } from 'react'
 import {
-  Atom, ChartColumn, ClipboardCopy, Copy, FileDown, FilterX, GraduationCap, Info, PanelRight, PanelRightClose, PanelRightOpen, Search,
+  Atom, ChartColumn, ClipboardCopy, Copy, FileDown, FilterX, GraduationCap, Info, PanelRight, PanelRightOpen, Search,
 } from 'lucide-react'
 import { os, fs, path, HOME, type AppProps, type MenuItem } from '@/os'
 import {
@@ -21,20 +23,17 @@ import PeriodicTable from './PeriodicTable'
 import ResultsTable from './ResultsTable'
 import BePlot from './BePlot'
 import { FloatingWindow, InfoContent, RowDetails } from './Popups'
-import { RefPanel, SOURCE_ICONS } from './RefBar'
-import { SOURCES, elementName, sourceUrl } from './sources'
-import { openInBrowser } from './platform'
+import ReferencesWindow, { SOURCE_ICONS } from './RefBar'
+import { PROPS_TAB, SOURCES, elementName } from './sources'
+import { closeReferences, followElement, openInBrowser, openReferences, useRefs } from './platform'
 import { SplashScreen, VERSION, Welcome } from './Startup'
-import { loadPrefs, savePrefs, type PanelTab, type Prefs } from './prefs'
+import { loadPrefs, savePrefs, type Prefs } from './prefs'
 import { tableLayout } from './layout'
 import './khervedb.css'
 
 const DATA = `${import.meta.env.BASE_URL}apps/khervedb/`
 /** Keep the starting screen up for at least this long, so it does not just flash. */
 const MIN_SPLASH_MS = 1200
-/** Below this width the Other Databases panel floats over the table instead of standing beside it
- *  (beside it, the table keeps tiles big enough for their labels). */
-const DOCK_MIN_WIDTH = 1050
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
 const MOD = isMac ? '⌘' : 'Ctrl+'
@@ -69,7 +68,11 @@ function startElement(arg: unknown, d: KdbData | null): string {
   return !d || (d.meta.elements[el] && d.db.elementsWithData().has(el)) ? el : 'C'
 }
 
-export default function KherveDB({ win, args }: AppProps) {
+export default function KherveDB(props: AppProps) {
+  return props.args.references ? <ReferencesWindow {...props} /> : <KherveDBMain {...props} />
+}
+
+function KherveDBMain({ win, args }: AppProps) {
   const [data, setData] = useState<KdbData | null>(loadedData)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -79,18 +82,18 @@ export default function KherveDB({ win, args }: AppProps) {
   const [name, setName] = useState('')
   const [sort, setSort] = useState<Sort>({ key: 'be', dir: 1 })
   const [popup, setPopup] = useState<Popup>(null)
-  const [panelOpen, setPanelOpen] = useState(false)
+  const refsOpen = useRefs((s) => s.win !== null)
   const [prefs, setPrefsState] = useState<Prefs>(loadPrefs)
   const [flash, setFlash] = useState<string | null>(null)
-  const [root, setRoot] = useState<HTMLDivElement | null>(null)
   const [main, setMain] = useState<HTMLElement | null>(null)
   const formulaRef = useRef<HTMLInputElement>(null)
   const nameRef = useRef<HTMLInputElement>(null)
-  const rootSize = useSize(root)
   const mainSize = useSize(main)
 
-  const setPrefs = useCallback((patch: Partial<Prefs>) => setPrefsState((p) => ({ ...p, ...patch })), [])
-  useEffect(() => savePrefs(prefs), [prefs])
+  const setPrefs = useCallback((patch: Partial<Prefs>) => {
+    setPrefsState((p) => ({ ...p, ...patch }))
+    savePrefs(patch)
+  }, [])
 
   // ------------------------------------------------------------- loading
 
@@ -146,20 +149,18 @@ export default function KherveDB({ win, args }: AppProps) {
     setElement(el)
     setLine('')
   }, [])
-  const openPanel = useCallback(
-    (tab?: PanelTab) => {
-      setPanelOpen(true)
-      if (tab) setPrefs({ panelTab: tab })
-    },
-    [setPrefs],
-  )
+  // The Other Databases & Properties window follows the element selected here.
+  useEffect(() => {
+    if (data) followElement(element)
+  }, [data, element])
   const open = useCallback(
     (el: string) => {
       select(el)
-      openPanel()
+      openReferences(el)
     },
-    [select, openPanel],
+    [select],
   )
+  const toggleReferences = () => (refsOpen ? closeReferences() : openReferences(element))
   const showInfo = useCallback((el: string, x?: number, y?: number) => setPopup({ kind: 'info', el, x, y }), [])
   const sortBy = useCallback(
     (key: SortKey) => setSort((s) => (s.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: 1 })),
@@ -235,7 +236,8 @@ export default function KherveDB({ win, args }: AppProps) {
         `The NIST X-ray Photoelectron Spectroscopy database, recorded in 2019, with a periodic-table browser: ` +
         `${db ? db.n.toLocaleString() : 'about 56,000'} binding energies.\n\n` +
         `Click an element for its NIST entries, right-click it for its electronic structure, XPS peaks and overlaps, ` +
-        `double-click it for XPS Fitting (M. Biesinger), Harwell XPS Guru, Thermo Knowledge and Google Scholar.\n\n` +
+        `double-click it for XPS Fitting (M. Biesinger), Harwell XPS Guru, Thermo Knowledge and Google Scholar, ` +
+        `shown inside KherveOS in the Other Databases & Properties window.\n\n` +
         `Developer: Gwilherm Kerherve`,
       { title: 'About KherveDB' },
     )
@@ -244,12 +246,12 @@ export default function KherveDB({ win, args }: AppProps) {
 
   useEffect(() => {
     const el = m ? element : null
-    // Each site opens on the selected element, in a new browser tab.
+    // Each site opens on the selected element, in its tab of the Other Databases & Properties window.
     const sourceItems: MenuItem[] = SOURCES.map((s) => ({
       label: el ? `${s.title} — ${elName}` : s.title,
       icon: SOURCE_ICONS[s.id],
       disabled: !el,
-      onClick: () => el && m && openInBrowser(sourceUrl(s, el, m, '', prefs.newestFirst)),
+      onClick: () => el && openReferences(el, s.id),
     }))
     win.setMenus([
       {
@@ -276,7 +278,7 @@ export default function KherveDB({ win, args }: AppProps) {
       {
         label: 'View',
         items: [
-          { label: 'Other Databases & Properties', icon: PanelRight, checked: panelOpen, disabled: !data, onClick: () => setPanelOpen((v) => !v) },
+          { label: 'Other Databases & Properties', icon: PanelRight, checked: refsOpen, disabled: !data, onClick: toggleReferences },
           { label: 'Plot Results…', icon: ChartColumn, disabled: !rows.length, onClick: () => setPopup({ kind: 'plot' }) },
           '-',
           { label: 'Simplified Periodic Table', checked: prefs.simplified, onClick: () => setPrefs({ simplified: !prefs.simplified }) },
@@ -286,7 +288,7 @@ export default function KherveDB({ win, args }: AppProps) {
         label: 'Databases',
         items: [
           { label: el ? `XPS Information for ${el}…` : 'XPS Information…', icon: Atom, shortcut: `${MOD}I`, disabled: !el, onClick: () => el && showInfo(el) },
-          { label: el ? `General Properties of ${elName}` : 'General Properties', icon: Info, disabled: !el, onClick: () => openPanel('properties') },
+          { label: el ? `General Properties of ${elName}` : 'General Properties', icon: Info, disabled: !el, onClick: () => el && openReferences(el, PROPS_TAB.id) },
           '-',
           ...sourceItems,
         ],
@@ -309,9 +311,6 @@ export default function KherveDB({ win, args }: AppProps) {
       if (popup) {
         e.preventDefault()
         setPopup(null)
-      } else if (panelOpen && rootSize.w < DOCK_MIN_WIDTH) {
-        e.preventDefault()
-        setPanelOpen(false)
       }
       return
     }
@@ -331,7 +330,6 @@ export default function KherveDB({ win, args }: AppProps) {
 
   // --------------------------------------------------------------- layout
 
-  const docked = rootSize.w >= DOCK_MIN_WIDTH
   const layout = tableLayout(mainSize.w, mainSize.h)
   const plotValues = useMemo(() => {
     if (popup?.kind !== 'plot' || !db) return []
@@ -349,7 +347,7 @@ export default function KherveDB({ win, args }: AppProps) {
 
   if (!db || !meta) {
     return (
-      <div className="k-app kdb-app" ref={setRoot}>
+      <div className="k-app kdb-app">
         <SplashScreen
           error={error}
           onRetry={() => {
@@ -365,8 +363,8 @@ export default function KherveDB({ win, args }: AppProps) {
 
   return (
     // Focusable, so clicks anywhere keep the keyboard here (Escape, shortcuts).
-    <div className="k-app kdb-app" ref={setRoot} onKeyDown={onKeyDown} tabIndex={-1}>
-      <div className={`kdb-body${panelOpen && docked ? ' kdb-with-panel' : ''}`}>
+    <div className="k-app kdb-app" onKeyDown={onKeyDown} tabIndex={-1}>
+      <div className="kdb-body">
         <main
           className="kdb-main"
           ref={setMain}
@@ -436,10 +434,10 @@ export default function KherveDB({ win, args }: AppProps) {
             <button
               type="button"
               className="k-btn primary kdb-big"
-              onClick={() => setPanelOpen((v) => !v)}
-              aria-pressed={panelOpen}
+              onClick={() => openReferences(element)}
+              aria-pressed={refsOpen}
               title={
-                'Open the reference panel for the selected element:\n' +
+                'Open the reference window for the selected element (it follows the element you click):\n' +
                 '  • XPS Fitting (Biesinger), Harwell XPS Guru, Thermo Knowledge\n' +
                 '  • Surface Science Spectra and electronic-structure papers on Google Scholar\n' +
                 '  • General physical and atomic properties\n' +
@@ -447,7 +445,7 @@ export default function KherveDB({ win, args }: AppProps) {
               }
             >
               <span>{layout.narrow ? 'Databases' : 'Other Databases & Properties'}</span>
-              {panelOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+              <PanelRightOpen size={15} />
             </button>
           </section>
 
@@ -463,18 +461,6 @@ export default function KherveDB({ win, args }: AppProps) {
           />
         </main>
 
-        {panelOpen && m && (
-          <RefPanel
-            element={element}
-            meta={meta}
-            tab={prefs.panelTab}
-            onTab={(t) => setPrefs({ panelTab: t })}
-            newestFirst={prefs.newestFirst}
-            onNewestFirst={(v) => setPrefs({ newestFirst: v })}
-            onClose={() => setPanelOpen(false)}
-            overlay={!docked}
-          />
-        )}
       </div>
 
       {popup?.kind === 'welcome' && (

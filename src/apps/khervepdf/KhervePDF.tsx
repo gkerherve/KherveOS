@@ -698,11 +698,26 @@ export default function KhervePDF({ win, args }: AppProps) {
   const print = async (t: PdfTab) => {
     await run('Could not print', async () => {
       const bytes = await t.bytes()
+      // The browser's print dialog from a hidden frame: KherveOS stays where it is (no new tab).
       const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/pdf' }))
-      const w = window.open(url, '_blank')
-      if (!w) throw new Error('The browser blocked the new tab. Allow pop-ups for KherveOS, or use Download.')
-      setStatus('Opened in a browser tab — print it from there')
-      setTimeout(() => URL.revokeObjectURL(url), 120_000)
+      const frame = document.createElement('iframe')
+      frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden'
+      frame.src = url
+      frame.onload = () => {
+        try {
+          frame.contentWindow?.focus()
+          frame.contentWindow?.print()
+          setStatus('Printing — choose a printer in the print dialog')
+        } catch {
+          os.downloadBlob(`${stem(t.name)}.pdf`, new Blob([bytes as BlobPart], { type: 'application/pdf' }))
+          setStatus('This browser can’t print from KherveOS: the PDF was downloaded, print it from there')
+        }
+        window.setTimeout(() => {
+          frame.remove()
+          URL.revokeObjectURL(url)
+        }, 120_000)
+      }
+      document.body.appendChild(frame)
     })
   }
 

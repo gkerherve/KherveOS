@@ -6,17 +6,27 @@
 //   file:///home/user/x.html  a file on the KherveOS drive
 //   https://…  /  http://…    a web page
 
-import { DEFAULT_SEARCH_ENGINE, FRAME_BLOCKING_SITES, SEARCH_ENGINES, type SearchEngine } from './sites'
+import {
+  DEFAULT_SEARCH_ENGINE, FETCHABLE_EXCEPTIONS, FRAME_BLOCKING_SITES, REAL_BROWSER_PAGES, REAL_BROWSER_SITES, SEARCH_ENGINES,
+  type SearchEngine,
+} from './sites.ts'
 
 export const START_PAGE = 'kherve:start'
+
+/**
+ * How a web page is shown: framed directly, through the KherveOS page fetcher
+ * (sites that refuse to be framed), or not at all — a page offering the real
+ * browser (sign-ins, sites that turn automated visits away).
+ */
+export type Via = 'direct' | 'fetch' | 'real'
 
 export type Page =
   | { kind: 'start' }
   | { kind: 'file'; path: string }
-  | { kind: 'web'; url: string; host: string; blocked: boolean }
+  | { kind: 'web'; url: string; host: string; via: Via }
 
-/** Navigate here, or (for engines that refuse to be framed) open this in a real browser tab. */
-export type Target = { address: string } | { external: string }
+/** Where typed text leads. */
+export type Target = { address: string }
 
 export function engineById(id: string | null | undefined): SearchEngine {
   return SEARCH_ENGINES.find((e) => e.id === id) ?? SEARCH_ENGINES.find((e) => e.id === DEFAULT_SEARCH_ENGINE) ?? SEARCH_ENGINES[0]
@@ -47,17 +57,21 @@ function safeDecode(text: string): string {
   }
 }
 
-export function pageFor(address: string): Page {
+/**
+ * What an address shows. `fetchHosts`: sites the user chose to show through
+ * KherveOS ("Show through KherveOS" on a page that stayed blank).
+ */
+export function pageFor(address: string, fetchHosts: readonly string[] = []): Page {
   if (address.startsWith('file://')) return { kind: 'file', path: address.slice(7) || '/' }
   const url = parseWeb(address)
   if (!url) return { kind: 'start' }
-  return { kind: 'web', url: url.href, host: url.hostname, blocked: isFrameBlocked(url) }
+  return { kind: 'web', url: url.href, host: url.hostname, via: viaFor(url, fetchHosts) }
 }
 
 /** Does showing this address mean waiting for a frame to load? */
-export function loadsInFrame(address: string): boolean {
-  const page = pageFor(address)
-  return page.kind === 'file' || (page.kind === 'web' && !page.blocked)
+export function loadsInFrame(address: string, fetchHosts: readonly string[] = []): boolean {
+  const page = pageFor(address, fetchHosts)
+  return page.kind === 'file' || (page.kind === 'web' && page.via !== 'real')
 }
 
 // ------------------------------------------------------------- typed text
@@ -88,8 +102,7 @@ export function resolveInput(text: string, opts: ResolveOptions): Target | null 
     const url = host && parseWeb(`${isLocalHost(host) ? 'http' : 'https'}://${raw}`)
     if (url) return { address: webAddress(url) }
   }
-  const url = searchUrl(opts.engine, raw)
-  return opts.engine.framable ? { address: url } : { external: url }
+  return { address: searchUrl(opts.engine, raw) }
 }
 
 /** The host in "example.org/page" or "localhost:8000", when the text looks like an address. */
@@ -113,20 +126,51 @@ function webAddress(url: URL): string {
 
 // ----------------------------------------------------------------- framing
 
-const BLOCKERS: ((host: string) => boolean)[] = FRAME_BLOCKING_SITES.map((site) => {
+function siteMatcher(site: string): (host: string) => boolean {
   if (site.endsWith('.*')) {
     const name = site.slice(0, -2).replace(/\./g, '\\.')
     const re = new RegExp(`(^|\\.)${name}\\.((co|com|org|net|ac|gov|edu)\\.[a-z]{2}|com|[a-z]{2})$`)
     return (host) => re.test(host)
   }
   return (host) => host === site || host.endsWith(`.${site}`)
-})
+}
+
+const BLOCKERS = FRAME_BLOCKING_SITES.map(siteMatcher)
+const REAL_ONLY = REAL_BROWSER_SITES.map(siteMatcher)
+const FETCHABLE = FETCHABLE_EXCEPTIONS.map(siteMatcher)
+
+function cleanHost(url: URL): string {
+  return url.hostname.toLowerCase().replace(/\.$/, '')
+}
 
 /** Is this a site known to refuse being shown inside other pages? */
 export function isFrameBlocked(url: URL): boolean {
-  const host = url.hostname.toLowerCase().replace(/\.$/, '')
+  const host = cleanHost(url)
   if (/(^|\.)youtube\.com$/.test(host) && url.pathname.startsWith('/embed/')) return false
   return BLOCKERS.some((blocks) => blocks(host))
+}
+
+/** Only a real browser can show this page: sign-ins, apps that need their own cookies, bot checks. */
+export function needsRealBrowser(url: URL): boolean {
+  const host = cleanHost(url)
+  if (/(^|\.)youtube\.com$/.test(host) && url.pathname.startsWith('/embed/')) return false
+  const page = host.replace(/^www\./, '') + url.pathname
+  const under = (p: string) => (p.endsWith('.') ? host.startsWith(p) : page === p || page.startsWith(`${p}/`))
+  if (REAL_BROWSER_PAGES.some(under)) return true
+  if (FETCHABLE.some((ok) => ok(host))) return false
+  return REAL_ONLY.some((only) => only(host))
+}
+
+/** How to show a web page (see Via). */
+export function viaFor(url: URL, fetchHosts: readonly string[] = []): Via {
+  if (needsRealBrowser(url)) return 'real'
+  if (isFrameBlocked(url) || fetchHosts.includes(cleanHost(url))) return 'fetch'
+  return 'direct'
+}
+
+/** Does this search engine's results page need a real browser? */
+export function engineNeedsRealBrowser(engine: SearchEngine): boolean {
+  return needsRealBrowser(new URL(searchUrl(engine, 'x')))
 }
 
 /** "90", "90s", "1m30s", "1h2m3s" → seconds. */
@@ -152,6 +196,15 @@ export function youtubeEmbed(url: URL): string | null {
   const list = url.searchParams.get('list')
   if (list) embed.searchParams.set('list', list)
   return embed.href
+}
+
+/** The same web address once normalised ("https://Example.org" and "https://example.org/"). */
+export function sameAddress(a: string, b: string): boolean {
+  const norm = (x: string) => {
+    const u = parseWeb(x)
+    return u ? u.href : x
+  }
+  return norm(a) === norm(b)
 }
 
 /** The address to open in a real browser tab (a YouTube player goes back to its watch page). */
@@ -183,7 +236,7 @@ function searchQuery(url: URL): string | null {
 }
 
 /** `title` labels the tab; `name` (host or page name) goes in the window title. */
-export function describe(address: string): { title: string; name: string } {
+export function describe(address: string, pageTitle?: string): { title: string; name: string } {
   const page = pageFor(address)
   if (page.kind === 'start') return { title: 'Start page', name: 'Start page' }
   if (page.kind === 'file') {
@@ -195,7 +248,7 @@ export function describe(address: string): { title: string; name: string } {
   const query = searchQuery(url)
   if (query) return { title: query, name }
   if (/youtube(-nocookie)?\.com$/.test(name) && url.pathname.startsWith('/embed/')) return { title: 'YouTube video', name }
-  return { title: name, name }
+  return { title: pageTitle?.trim() || name, name }
 }
 
 /** The address as the address bar shows it while not being edited. */

@@ -1,35 +1,14 @@
-// What a Browser tab shows: the start page, a web page or a file from the
-// drive (each in a sandboxed iframe), or the "won't be shown here" page.
+// What a Browser tab shows: the start page, a web page (os/ui/WebView: framed
+// directly or through the KherveOS page fetcher), a file from the drive (in a
+// sandboxed iframe), or the "needs your real browser" page.
 
 import { useEffect, useState, type MouseEvent } from 'react'
 import { ChevronDown, ExternalLink, FileX, Globe, LoaderCircle, Search, ShieldOff } from 'lucide-react'
 import { os, fs, path as vpath } from '@/os'
 import { mimeType } from '@/os/fileIcons'
+import { FRAME_ALLOW, OPAQUE_SANDBOX } from '@/os/ui/WebView'
 import { FAVOURITES, SEARCH_ENGINES, type SearchEngine } from './sites'
-
-/** Web pages may do everything except navigate KherveOS itself away (no allow-top-navigation). */
-const SANDBOX =
-  'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads'
-/** Files from the drive (and KherveOS's own origin) get an origin of their own: they can't reach KherveOS's storage. */
-const SANDBOX_OPAQUE = SANDBOX.replace(' allow-same-origin', '')
-const ALLOW = 'fullscreen; clipboard-write; autoplay; encrypted-media'
-
-// ---------------------------------------------------------------- web page
-
-export function WebFrame({ url, title, onLoad }: { url: string; title: string; onLoad: () => void }) {
-  const ownOrigin = new URL(url).origin === window.location.origin
-  return (
-    <iframe
-      className="br-frame"
-      src={url}
-      title={title}
-      sandbox={ownOrigin ? SANDBOX_OPAQUE : SANDBOX}
-      allow={ALLOW}
-      referrerPolicy="strict-origin-when-cross-origin"
-      onLoad={onLoad}
-    />
-  )
-}
+import { engineNeedsRealBrowser } from './urls'
 
 // ------------------------------------------------------- file on the drive
 
@@ -97,27 +76,28 @@ export function FileFrame({ path, onLoad }: { path: string; onLoad: () => void }
       className="br-frame"
       src={shown.url}
       title={vpath.basename(path)}
-      sandbox={SANDBOX_OPAQUE}
-      allow={ALLOW}
+      sandbox={OPAQUE_SANDBOX}
+      allow={FRAME_ALLOW}
       referrerPolicy="strict-origin-when-cross-origin"
       onLoad={onLoad}
     />
   )
 }
 
-// ----------------------------------------------------- refuses to be framed
+// ------------------------------------------------- needs a real browser
 
 export function BlockedPage({ host, onOpenReal, onBack }: { host: string; onOpenReal: () => void; onBack?: () => void }) {
   return (
     <div className="k-center br-message">
       <ShieldOff size={40} className="br-message-icon" />
-      <h2>This site doesn't allow being shown inside other pages</h2>
+      <h2>This site only works in your real browser</h2>
       <p className="k-muted">
-        <strong>{host}</strong> asks browsers never to display it inside another app — a common protection against
-        look-alike pages. KherveOS has no proxy to get around that, but it opens fine in a real browser tab.
+        <strong>{host}</strong> needs things KherveOS deliberately doesn't give the sites it shows: a sign-in kept in
+        its own cookies, or a check that a person (not a program) is visiting. Pages that merely refuse to be framed are
+        shown through KherveOS; this one isn't, to keep your KherveOS session separate from it.
       </p>
       <button className="k-btn primary br-big-btn" onClick={onOpenReal}>
-        <ExternalLink size={16} /> Open in a real tab
+        <ExternalLink size={16} /> Open in your real browser
       </button>
       {onBack && (
         <button className="k-link-btn" onClick={onBack}>
@@ -149,9 +129,9 @@ export function StartPage({ active, engine, onEngine, onSubmit, onOpen }: StartP
     os.contextMenu(
       { clientX: r.left, clientY: r.bottom + 4 },
       SEARCH_ENGINES.map((en) => ({
-        label: en.framable ? en.name : `${en.name} — opens a real tab`,
+        label: engineNeedsRealBrowser(en) ? `${en.name} — needs your real browser` : en.name,
         checked: en.id === engine.id,
-        icon: en.framable ? undefined : ExternalLink,
+        icon: engineNeedsRealBrowser(en) ? ExternalLink : undefined,
         onClick: () => onEngine(en.id),
       })),
     )
@@ -213,8 +193,9 @@ export function StartPage({ active, engine, onEngine, onSubmit, onOpen }: StartP
           ))}
         </div>
         <p className="br-start-note">
-          Pages open right here when the site allows it. Many big sites — Google, YouTube, GitHub… — refuse to be shown
-          inside other apps, so KherveOS opens those in a real browser tab.
+          Pages open right here. Sites that refuse to be shown inside other apps (GitHub, Stack Overflow, arXiv…) come
+          through the KherveOS page fetcher, sealed off from your KherveOS session. Sign-ins and a few sites that turn
+          programs away (Google search, YouTube's own pages…) need your real browser.
         </p>
       </div>
     </div>

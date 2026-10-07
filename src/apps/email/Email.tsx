@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CircleAlert, Forward, Mail, Pencil, Plus, RefreshCw, Reply, ReplyAll, SquarePen } from 'lucide-react'
 import { os } from '@/os'
-import type { AppProps, MenuBarMenu, WindowApi } from '@/os'
+import type { AppArgs, AppProps, MenuBarMenu, WindowApi } from '@/os'
 import { useAuth } from '@/os/server'
 import { ServerGate, Spinner } from '@/os/ui/ServerGate'
 import { mail, type Account, type MessageSummary } from './api'
@@ -25,10 +25,11 @@ import './email.css'
 
 const CHECK_EVERY = 2 * 60_000
 
-export default function Email({ win }: AppProps) {
+// Opened with { writeTo: 'someone@example.org' } (a mailto: link, os.openUrl) it starts a new message.
+export default function Email({ win, args }: AppProps) {
   return (
     <ServerGate app="Email" icon={Mail}>
-      <MailApp win={win} />
+      <MailApp win={win} args={args} />
     </ServerGate>
   )
 }
@@ -56,7 +57,7 @@ function announce(win: WindowApi, store: MailStore, account: Account, messages: 
   })
 }
 
-function MailApp({ win }: { win: WindowApi }) {
+function MailApp({ win, args }: { win: WindowApi; args: AppArgs }) {
   const [store] = useState(() => {
     const created: MailStore = createMailStore({
       onNewMail: (account, messages) => announce(win, created, account, messages),
@@ -66,7 +67,7 @@ function MailApp({ win }: { win: WindowApi }) {
   })
   return (
     <MailContext.Provider value={store}>
-      <MailLayout win={win} />
+      <MailLayout win={win} args={args} />
     </MailContext.Provider>
   )
 }
@@ -173,7 +174,7 @@ function Welcome({ onAdd }: { onAdd(): void }) {
 const unreadInboxes = (s: MailState) =>
   Object.values(s.folders).reduce((n, list) => n + (list?.find((f) => f.role === 'inbox')?.unread ?? 0), 0)
 
-function MailLayout({ win }: { win: WindowApi }) {
+function MailLayout({ win, args }: { win: WindowApi; args: AppArgs }) {
   const store = useMailStore()
   const userName = useAuth((s) => s.user?.display_name ?? '')
   const accounts = useMail((s) => s.accounts)
@@ -225,6 +226,13 @@ function MailLayout({ win }: { win: WindowApi }) {
     [store],
   )
   const newMessage = useCallback((to = '') => openCompose((_s, a) => blankCompose(a.id, to)), [openCompose])
+  // A mailto: link (os.openUrl): a new message to that address, once the accounts are known.
+  const wrote = useRef<AppArgs | null>(null)
+  useEffect(() => {
+    if (typeof args.writeTo !== 'string' || wrote.current === args || !accounts?.length) return
+    wrote.current = args
+    newMessage(args.writeTo)
+  }, [args, accounts, newMessage])
   const reply = useCallback(
     (all: boolean) =>
       openCompose((s, a) => {

@@ -1,6 +1,9 @@
 // What the Browser knows about the outside web, in one place so it is easy to
-// adjust: search engines, the start page's favourites, and the sites known to
-// refuse being shown inside another page.
+// adjust: search engines, the start page's favourites, the sites known to
+// refuse being shown inside another page (shown through the KherveOS page
+// fetcher instead), and the ones that only work in a real browser.
+//
+// Node can import this (and urls.ts) for the tests in tests/web.test.mjs.
 
 import type { LucideIcon } from 'lucide-react'
 import { BookOpen, Braces, Cpu, FileCode, GraduationCap, Map as MapIcon, Wrench } from 'lucide-react'
@@ -10,18 +13,17 @@ export interface SearchEngine {
   name: string
   /** The search address; the URL-encoded query is appended. */
   url: string
-  /** False when the engine refuses to be framed: its results open in a real browser tab. */
-  framable: boolean
 }
 
 // Checked 2026-10-06 (X-Frame-Options / CSP frame-ancestors, and a real frame):
-// Bing and Wikipedia can be shown inside KherveOS; DuckDuckGo, Google, Brave,
-// Startpage, Ecosia and Qwant refuse.
+// Bing and Wikipedia can be shown inside KherveOS. DuckDuckGo and Google turn
+// automated visits away (2026-10-07: DuckDuckGo answers the fetcher with a bot
+// check, Google search needs its own scripts), so they need a real browser.
 export const SEARCH_ENGINES: SearchEngine[] = [
-  { id: 'bing', name: 'Bing', url: 'https://www.bing.com/search?q=', framable: true },
-  { id: 'wikipedia', name: 'Wikipedia', url: 'https://en.wikipedia.org/w/index.php?search=', framable: true },
-  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=', framable: false },
-  { id: 'google', name: 'Google', url: 'https://www.google.com/search?q=', framable: false },
+  { id: 'bing', name: 'Bing', url: 'https://www.bing.com/search?q=' },
+  { id: 'wikipedia', name: 'Wikipedia', url: 'https://en.wikipedia.org/w/index.php?search=' },
+  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=' },
+  { id: 'google', name: 'Google', url: 'https://www.google.com/search?q=' },
 ]
 
 /** The search engine used until the user picks another one. Change this line to switch. */
@@ -53,9 +55,10 @@ export const FAVOURITES: Favourite[] = [
 
 /**
  * Sites known to refuse being shown inside other pages (X-Frame-Options or
- * CSP frame-ancestors). Each entry also covers its subdomains; "name.*" covers
- * every country domain (google.fr, amazon.co.uk…). YouTube is allowed under
- * /embed/, and watch links are rewritten to youtube-nocookie.com embeds.
+ * CSP frame-ancestors): the Browser shows them through the KherveOS page
+ * fetcher. Each entry also covers its subdomains; "name.*" covers every country
+ * domain (google.fr, amazon.co.uk…). YouTube is allowed under /embed/, and
+ * watch links are rewritten to youtube-nocookie.com embeds.
  */
 export const FRAME_BLOCKING_SITES: string[] = [
   'google.*', 'gmail.com', 'youtube.com',
@@ -70,4 +73,30 @@ export const FRAME_BLOCKING_SITES: string[] = [
   'apple.com', 'icloud.com',
   'dropbox.com', 'notion.so', 'slack.com', 'zoom.us',
   'chatgpt.com', 'openai.com', 'claude.ai',
+]
+
+/**
+ * Sites that can't be shown even through the fetcher, so the Browser offers
+ * the real browser straight away: sign-ins and apps that live on their own
+ * cookies (the fetcher never keeps a site's cookies), sites that turn automated
+ * visits away, and pages built entirely by their scripts. Same patterns as above.
+ */
+export const REAL_BROWSER_SITES: string[] = [
+  'google.*', 'gmail.com', 'youtube.com',
+  'facebook.com', 'messenger.com', 'instagram.com', 'threads.net', 'whatsapp.com',
+  'x.com', 'twitter.com', 'linkedin.com', 'tiktok.com', 'discord.com', 'twitch.tv',
+  'netflix.com', 'paypal.com',
+  'live.com', 'outlook.com', 'office.com', 'microsoftonline.com', 'icloud.com',
+  'dropbox.com', 'notion.so', 'slack.com', 'zoom.us',
+  'duckduckgo.com', 'search.brave.com', 'startpage.com',
+  'chatgpt.com', 'claude.ai',
+]
+
+/** …except these, which the fetcher shows well enough (Google Scholar may still ask for a bot check). */
+export const FETCHABLE_EXCEPTIONS: string[] = ['scholar.google.*']
+
+/** Pages (host + path prefix) that are sign-ins or account settings: a real browser only. */
+export const REAL_BROWSER_PAGES: string[] = [
+  'github.com/login', 'github.com/settings', 'github.com/sessions', 'gitlab.com/users/sign_in',
+  'console.anthropic.com', 'platform.openai.com', 'login.', 'signin.', 'auth.', 'accounts.',
 ]

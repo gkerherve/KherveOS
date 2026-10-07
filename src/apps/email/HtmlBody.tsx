@@ -2,14 +2,17 @@
 //
 // The HTML is sanitised with DOMPurify (its own instance, so these hooks don't
 // touch other apps), then shown in an iframe with `srcdoc` and a sandbox
-// WITHOUT allow-scripts or allow-same-origin: nothing in the message can run
-// or reach KherveOS. Links open in a new tab (<base target="_blank"> and
-// allow-popups). Until the user asks for them, remote images, stylesheets and
-// fonts are removed and also blocked by a Content-Security-Policy, so opening
-// a message doesn't tell the sender (tracking pixels).
+// WITHOUT allow-same-origin or allow-popups: nothing in the message can reach
+// KherveOS or open a browser tab. Its Content-Security-Policy lets exactly one
+// script run (by nonce): ours, which posts link clicks out (mailLinks.ts), and
+// they open inside KherveOS with os.openUrl. Until the user asks for them,
+// remote images, stylesheets and fonts are removed and also blocked by the
+// CSP, so opening a message doesn't tell the sender (tracking pixels).
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import DOMPurify from 'dompurify'
+import { os } from '@/os'
+import { MAIL_LINK_SCRIPT, mailCsp, makeNonce, parseMailLink } from './mailLinks'
 
 const purifier = DOMPurify(window)
 let blockRemote = true
@@ -42,12 +45,9 @@ purifier.addHook('uponSanitizeElement', (node, data) => {
 
 purifier.addHook('afterSanitizeAttributes', (el) => {
   if (el.tagName === 'A' || el.tagName === 'AREA') {
-    if ((el.getAttribute('href') ?? '').startsWith('#')) {
-      el.setAttribute('target', '_self') // a jump inside the message
-    } else {
-      el.setAttribute('target', '_blank')
-      el.setAttribute('rel', 'noopener noreferrer')
-    }
+    // Jumps inside the message stay in the frame; other links are posted out (MAIL_LINK_SCRIPT).
+    el.setAttribute('target', '_self')
+    el.setAttribute('rel', 'noopener noreferrer')
   }
   if (!blockRemote) return
   for (const attr of ['src', 'background', 'poster', 'lowsrc', 'dynsrc']) {
@@ -80,9 +80,6 @@ blockquote{margin:0 0 0 4px;padding-left:12px;border-left:3px solid #d0d7de;colo
 a{color:#0969da}
 `
 
-const CSP_BLOCKED = "default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src data:; media-src data:"
-const CSP_ALLOWED = "default-src 'none'; img-src data: blob: http: https:; style-src 'unsafe-inline' http: https:; font-src data: http: https:; media-src data: http: https:"
-
 export interface PreparedHtml {
   doc: string
   /** How many remote images/resources were held back. */
@@ -110,16 +107,18 @@ export function prepareHtml(html: string, showRemote: boolean): PreparedHtml {
     for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v)
     return el
   }
-  const base = doc.createElement('base')
-  base.setAttribute('target', '_blank')
+  const nonce = makeNonce()
   const style = doc.createElement('style')
   style.textContent = BASE_CSS
+  const script = doc.createElement('script')
+  script.setAttribute('nonce', nonce)
+  script.textContent = MAIL_LINK_SCRIPT
   head.prepend(
     meta({ charset: 'utf-8' }),
-    meta({ 'http-equiv': 'Content-Security-Policy', content: showRemote ? CSP_ALLOWED : CSP_BLOCKED }),
+    meta({ 'http-equiv': 'Content-Security-Policy', content: mailCsp(showRemote, nonce) }),
     meta({ name: 'referrer', content: 'no-referrer' }),
-    base,
     style,
+    script,
   )
   return { doc: '<!doctype html>' + root.outerHTML, remote }
 }
@@ -136,14 +135,26 @@ export function HtmlBody({
   onRemote: (count: number) => void
 }) {
   const prepared = useMemo(() => prepareHtml(html, showRemote), [html, showRemote])
+  const frameRef = useRef<HTMLIFrameElement>(null)
   useEffect(() => {
     if (!showRemote) onRemote(prepared.remote)
   }, [prepared, showRemote, onRemote])
+  // Link clicks come out of the frame as messages: open them inside KherveOS.
+  useEffect(() => {
+    const listen = (e: MessageEvent) => {
+      if (!frameRef.current || e.source !== frameRef.current.contentWindow || e.origin !== 'null') return
+      const link = parseMailLink(e.data)
+      if (link) os.openUrl(link.url, { background: link.background })
+    }
+    window.addEventListener('message', listen)
+    return () => window.removeEventListener('message', listen)
+  }, [])
   return (
     <iframe
+      ref={frameRef}
       className="mail-html"
       title={title}
-      sandbox="allow-popups allow-popups-to-escape-sandbox"
+      sandbox="allow-scripts"
       referrerPolicy="no-referrer"
       srcDoc={prepared.doc}
     />

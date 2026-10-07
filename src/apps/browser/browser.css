@@ -192,6 +192,14 @@
   margin-left: auto;
   color: var(--k-muted);
 }
+/* What a fetched page could not do (a form, a bot check…). */
+.br-notice {
+  color: var(--k-text);
+  background: color-mix(in srgb, var(--k-warning) 12%, var(--k-surface));
+}
+.br-notice .br-hint-icon {
+  color: var(--k-warning);
+}
 
 /* ------------------------------------------------------------------ pages */
 

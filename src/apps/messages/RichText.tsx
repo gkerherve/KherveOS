@@ -36,12 +36,9 @@ export function RichText({ text }: { text: string }) {
         key={start}
         className="msg-link"
         href={url}
-        target="_blank"
-        rel="noreferrer noopener"
         onClick={(e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey) return
           e.preventDefault()
-          os.open('browser', { url })
+          os.openUrl(url, { background: e.metaKey || e.ctrlKey })
         }}
       >
         {url}

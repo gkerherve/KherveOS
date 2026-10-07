@@ -757,7 +757,7 @@ export default function KhervePY({ win, args }: AppProps) {
           { label: 'About KhervePY', icon: Info, onClick: () => void about() },
           { label: 'Keyboard Shortcuts', onClick: () => void shortcuts() },
           '-',
-          { label: 'Create a GitHub Token…', icon: ExternalLink, onClick: () => window.open(git.CREATE_TOKEN_URL, '_blank', 'noopener') },
+          { label: 'Create a GitHub Token…', icon: ExternalLink, onClick: () => os.openUrl(git.CREATE_TOKEN_URL) },
         ],
       },
     ]

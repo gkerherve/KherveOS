@@ -224,7 +224,14 @@ function PlainBody({ text, onWrite }: { text: string; onWrite(to: string): void 
       {blocks.map((b, i) => {
         const content = linkify(b.text).map((p, j) =>
           p.href ? (
-            <a key={j} href={p.href} target="_blank" rel="noopener noreferrer">
+            <a
+              key={j}
+              href={p.href}
+              onClick={(e) => {
+                e.preventDefault()
+                os.openUrl(p.href!, { background: e.metaKey || e.ctrlKey })
+              }}
+            >
               {p.text}
             </a>
           ) : p.email ? (

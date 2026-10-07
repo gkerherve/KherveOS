@@ -1,14 +1,17 @@
-// KherveDB's remembered settings (this browser only).
+// KherveDB's remembered settings (this browser only). The main window and the
+// Other Databases & Properties window each save only what they change
+// (savePrefs merges), so neither undoes the other's choices.
 
-export type PanelTab = 'databases' | 'properties'
+/** The tabs of the Other Databases & Properties window: a source id (sources.ts) or 'props'. */
+export type RefTab = string
 
 export interface Prefs {
   /** "Don't show this again" in the welcome window. */
   hideWelcome: boolean
   /** Plain tiles with the symbol only (the Python app's Simplified Periodic Table). */
   simplified: boolean
-  /** The tab of the Other Databases & Properties panel. */
-  panelTab: PanelTab
+  /** The tab shown in the Other Databases & Properties window. */
+  refTab: RefTab
   /** Histogram bin width in eV; 0 picks one from the range shown. */
   plotBin: number
   /** The smooth curve over the histogram. */
@@ -22,7 +25,7 @@ const KEY = 'kherveos.khervedb.prefs'
 export const DEFAULT_PREFS: Prefs = {
   hideWelcome: false,
   simplified: false,
-  panelTab: 'databases',
+  refTab: 'xpsfitting',
   plotBin: 0,
   plotSmooth: true,
   newestFirst: false,
@@ -30,12 +33,13 @@ export const DEFAULT_PREFS: Prefs = {
 
 export function loadPrefs(): Prefs {
   try {
-    const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Partial<Prefs> | null
+    const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null') as (Partial<Prefs> & { panelTab?: string }) | null
     if (!saved || typeof saved !== 'object') return DEFAULT_PREFS
     return {
       hideWelcome: saved.hideWelcome === true,
       simplified: saved.simplified === true,
-      panelTab: saved.panelTab === 'properties' ? 'properties' : 'databases',
+      // (the panel of earlier versions remembered 'properties')
+      refTab: typeof saved.refTab === 'string' && /^[a-z]{1,20}$/.test(saved.refTab) ? saved.refTab : saved.panelTab === 'properties' ? 'props' : DEFAULT_PREFS.refTab,
       plotBin: typeof saved.plotBin === 'number' && saved.plotBin >= 0 && saved.plotBin <= 5 ? saved.plotBin : 0,
       plotSmooth: saved.plotSmooth !== false,
       newestFirst: saved.newestFirst === true,
@@ -45,9 +49,10 @@ export function loadPrefs(): Prefs {
   }
 }
 
-export function savePrefs(p: Prefs): void {
+/** Remember these settings (merged into what is saved). */
+export function savePrefs(patch: Partial<Prefs>): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(p))
+    localStorage.setItem(KEY, JSON.stringify({ ...loadPrefs(), ...patch }))
   } catch {
     /* storage unavailable: settings last for this session only */
   }

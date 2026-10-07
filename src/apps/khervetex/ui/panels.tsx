@@ -92,12 +92,14 @@ export function ConsoleTab({ view, onGoto }: { view: CompileView; onGoto: (err: 
 // ----------------------------------------------------------------- PDF panel
 
 export function PdfPanel({
-  url, view, onCompile, onDownload, onClose, notice,
+  url, view, onCompile, onDownload, onOpen, onClose, notice,
 }: {
   url: string | null
   view: CompileView
   onCompile: () => void
   onDownload: () => void
+  /** Open the PDF in KhervePDF (inside KherveOS, not a browser tab). */
+  onOpen: () => void
   onClose: () => void
   notice: string | null
 }) {
@@ -112,7 +114,7 @@ export function PdfPanel({
         <button className="k-icon-btn" title="Compile now (⌘↩)" onClick={onCompile}>
           <Play size={14} />
         </button>
-        <button className="k-icon-btn" title="Open in a browser tab" disabled={!url} onClick={() => url && window.open(url, '_blank', 'noopener')}>
+        <button className="k-icon-btn" title="Open in KhervePDF" disabled={!url} onClick={onOpen}>
           <ExternalLink size={14} />
         </button>
         <button className="k-icon-btn" title="Download the PDF" disabled={!url} onClick={onDownload}>
