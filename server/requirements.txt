@@ -2,3 +2,5 @@ fastapi>=0.115
 uvicorn[standard]>=0.30
 cryptography>=42
 mcp>=1.10
+anthropic>=1.11
+httpx>=0.27
