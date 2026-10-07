@@ -124,6 +124,20 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       KherveFitting mini-games (`libraries/Games`: TetrisGame, Asteroid, Flappybird,
       Solitaire, MiniGame, ChemistryLab) as TypeScript ports in the same style.
 
+### Requested 2026-10-07 (to do next)
+- [ ] **Copy and paste of files**: Copy / Cut / Paste in Files and on the Desktop (menus,
+      right-click, ⌘C/⌘X/⌘V). On this computer by default; when signed in, Copy also puts
+      the files on the KherveOS server (per-user clipboard, size limit) so another computer
+      signed in to the same account can Paste them. Plus a small card at the top right of
+      the desktop explaining this (files stay on this computer; sign in to copy between
+      computers), dismissible.
+- [ ] **Gmail breaks the Email app** (user's own account, added 09:21; the server listed
+      folders and INBOX fine). App crashes now reach the server log as `[crash]` lines
+      (`server/kherveos_server/crashes.py`): read them, fix the cause.
+- [x] Minimise like macOS (window flies into a Dock tile showing its picture), Applications
+      in the Ꝃ menu, frosted see-through KApps menu — done 2026-10-07.
+- [x] Wallpaper: the user's Tech Lab picture only, AI-upscaled 3× (Real-ESRGAN) — done.
+
 ### Later
 - Email bridge: block private addresses and rate-limit account tests before sharing
   a server. Messages: unread badge on the Dock icon. Deployment.
