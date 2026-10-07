@@ -17,12 +17,11 @@ server in `server/`. See README.md for the layout.
 ## Look
 
 macOS-flavoured: thin menu bar (`src/shell/TopBar.tsx`) showing the focused app's menus
-(`win.setMenus`), a Dock (`Dock.tsx`), Launchpad, traffic-light window buttons. Default theme
-"Kherve Red" (dark) with "Kherve Paper" as its light companion (`src/os/themes.extra.ts`).
-Apps listed in Settings › "Light apps in dark mode" get light theme variables scoped to their
-window (`useWindowTheme`, `data-dark="0"` on the window). Wallpapers: `public/wallpapers/ktool-fist.webp`
-(the user's own image), its green twin `ktool-fist-green.webp` (the default; `tools/recolor_wallpaper.py`), and "Together" — people
-holding hands around the emblem (`tools/make_wallpaper.py`). Message to convey: an OS for the people —
+(`win.setMenus`), a Dock (`Dock.tsx`), Launchpad, traffic-light window buttons. One theme,
+"Kherve Green" (dark black + green, `src/os/themes.extra.ts`): no theme or style choices.
+One wallpaper, `public/wallpapers/ktools-tech-lab.webp`: the user's "Ktools – Advanced Tech Lab"
+artwork, with a fading floor reflection added below so its caption clears the Dock; Settings
+only sets how strongly it shows. Message to convey: an OS for the people —
 free, open source, helping people. Avoid communist imagery (stars, hammer & sickle, propaganda styling). The logo (`src/shell/KLogo.tsx`, `public/kherveos.svg`) is the ringed Ꝃ from that image.
 
 ## Conventions

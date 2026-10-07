@@ -1,11 +1,10 @@
 // Settings: appearance, storage, server & account, AI & MCP, Python, about.
 
 import { useEffect, useState } from 'react'
-import { Cpu, HardDrive, ImagePlus, Info, Palette, Server, Sparkles, type LucideIcon } from 'lucide-react'
-import { os, fs, formatSize, useFsVersion, HOME, type AppProps } from '@/os'
+import { Cpu, HardDrive, Info, Palette, Server, Sparkles, type LucideIcon } from 'lucide-react'
+import { os, fs, formatSize, useFsVersion, type AppProps } from '@/os'
 import { useSettings } from '@/os/settings'
-import { WALLPAPERS } from '@/shell/wallpapers'
-import { IMAGE_EXTS } from '@/os/fileIcons'
+import { WALLPAPER } from '@/shell/wallpapers'
 import { useAuth, useServer } from '@/os/server'
 import { KHERVEOS_VERSION, PYODIDE_VERSION } from '@/os/version'
 import { McpSection } from './McpSection'
@@ -53,27 +52,14 @@ export default function Settings({ win, args }: AppProps) {
 }
 
 function Appearance() {
-  const { wallpaper, wallpaperOpacity, desktopIcons, dockZoom, set } = useSettings()
-
-  const pickPicture = async () => {
-    const p = await os.dialog.openFile({ title: 'Choose a wallpaper', startDir: `${HOME}/Pictures`, extensions: IMAGE_EXTS })
-    if (p) set({ wallpaper: `file:${p}` })
-  }
+  const { wallpaperOpacity, desktopIcons, dockZoom, set } = useSettings()
 
   return (
     <>
       <h2>Wallpaper</h2>
-      <div className="st-wallpapers">
-        {WALLPAPERS.map((w) => (
-          <button key={w.id} className={`st-wallpaper${wallpaper === w.id ? ' active' : ''}`} onClick={() => set({ wallpaper: w.id })}>
-            <span className="st-wallpaper-preview" style={{ background: w.css }} />
-            <span>{w.name}</span>
-          </button>
-        ))}
-        <button className={`st-wallpaper${wallpaper.startsWith('file:') ? ' active' : ''}`} onClick={pickPicture}>
-          <span className="st-wallpaper-preview st-wallpaper-pick"><ImagePlus size={22} /></span>
-          <span>{wallpaper.startsWith('file:') ? wallpaper.slice(wallpaper.lastIndexOf('/') + 1) : 'Picture…'}</span>
-        </button>
+      <div className="st-wallpaper-one">
+        <span className="st-wallpaper-preview" style={{ background: WALLPAPER.css }} />
+        <span>{WALLPAPER.name}</span>
       </div>
 
       <label className="st-inline st-slider">

@@ -106,49 +106,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.st-wallpapers {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-  gap: 10px;
-}
-.st-wallpaper {
+.st-wallpaper-one {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 6px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-  cursor: pointer;
+  width: 260px;
   color: var(--k-text);
   font-size: 12px;
-  text-align: left;
-}
-.st-wallpaper:hover {
-  background: var(--k-button-hover);
-}
-.st-wallpaper.active {
-  border-color: var(--k-accent);
-  background: var(--k-selection);
-}
-.st-wallpaper span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .st-wallpaper-preview {
   display: block;
-  height: 64px;
+  height: 150px;
   border-radius: 7px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-.st-wallpaper-pick {
-  display: grid;
-  place-items: center;
-  background: var(--k-alt);
-  color: var(--k-muted);
-  border: 1px dashed var(--k-border);
-  box-shadow: none;
 }
 .st-check {
   display: flex;

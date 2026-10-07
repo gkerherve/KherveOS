@@ -29,7 +29,7 @@ One theme only: dark, black + green ("Kherve Green") — no theme/style choices.
 White classic Mac OS X menu bar (white, darker only at the very bottom, green
 highlight); modern macOS frosted Dock with full fisheye magnification; flat window
 title bars; translucent Terminal; classic bright Ktools icons. Wallpaper: the
-user's green Ktools fist. Message: "an OS for the people — free, open source".
+user's "Ktools – Advanced Tech Lab" picture, the only one (2026-10-07). Message: "an OS for the people — free, open source".
 Rejected: grunge or dark-glass icons, 3D window title bars, 3D dock shelf,
 red/brown accents, communist imagery.
 

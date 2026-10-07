@@ -33,8 +33,7 @@ Tips
   • The menu bar at the top shows the menus of the app in front. The Ꝃ menu has Settings.
   • Double-click a file to open it; right-click for more.
   • Drag a window to the screen edge to snap it; double-click its title bar to zoom.
-  • Settings › Appearance: themes (KherveOS's own plus the 24 desktop Kherve themes),
-    wallpapers, and which apps stay light in dark mode.
+  • Settings › Appearance: how strongly the wallpaper shows, and the Dock's magnification.
 `
 
 const HELLO_PY = `"""A small example — run it from the Terminal with:  python hello.py"""

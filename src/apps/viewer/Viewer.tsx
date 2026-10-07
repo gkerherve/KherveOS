@@ -2,10 +2,9 @@
 // viewer until KhervePDF arrives.
 
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Download, FolderOpen, ImageIcon, Maximize, RotateCw, ZoomIn, ZoomOut } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, FolderOpen, ImageIcon, RotateCw, ZoomIn, ZoomOut } from 'lucide-react'
 import { os, fs, path, HOME, useFsVersion, type AppProps } from '@/os'
 import { IMAGE_EXTS, mimeType } from '@/os/fileIcons'
-import { useSettings } from '@/os/settings'
 import './viewer.css'
 
 export const VIEWER_TYPES = [...IMAGE_EXTS, '.pdf']
@@ -16,7 +15,6 @@ export default function Viewer({ win, args }: AppProps) {
   const [zoom, setZoom] = useState<number | 'fit'>('fit')
   const [rotation, setRotation] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const setSettings = useSettings((s) => s.set)
   const version = useFsVersion()
 
   useEffect(() => {
@@ -105,10 +103,6 @@ export default function Viewer({ win, args }: AppProps) {
             <button className="k-icon-btn" title="Zoom in" onClick={() => setZoom((z) => Math.min(8, (z === 'fit' ? 1 : z) * 1.25))}><ZoomIn size={16} /></button>
             <button className="k-icon-btn" title="Rotate" onClick={() => setRotation((r) => (r + 90) % 360)}><RotateCw size={16} /></button>
             <span className="k-spacer" />
-            <button className="k-btn small" onClick={() => {
-              setSettings({ wallpaper: `file:${file}` })
-              os.notify({ title: 'Wallpaper changed' })
-            }}><Maximize size={13} /> Set as wallpaper</button>
           </>
         )}
       </div>

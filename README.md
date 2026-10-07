@@ -7,12 +7,10 @@ messages, email and games, all in one web page.
 **An OS for the people: free, open source, made to help.** KherveOS is free
 software under the GNU GPL v3, like the rest of Ktools.
 
-Dark by default ("Kherve Red", or "Kherve Green"). Wallpapers: the **Ktools** fist —
-a raised fist tattooed with the Ꝃ emblem (the Breton barred K, "ker"), green by
-default, or red — and "Together": people holding hands around the emblem. App
-icons are Ktools-style ("KFiles", "KTerm", "KBook"…) in a grunge look to match. Some apps
-(KherveBook, Email) keep a light, paper-like look inside dark mode; choose which
-in Settings.
+One look for everyone: dark black and green ("Kherve Green"). The wallpaper is the
+**Ktools – Advanced Tech Lab**: a lab of machines under the Ꝃ emblem (the Breton barred
+K, "ker"), with a raised fist. App icons are the classic, bright Ktools ones ("KFiles",
+"KTerm", "KBook"…).
 
 ## Start it
 
@@ -49,7 +47,7 @@ Viewer and Settings work without the server. Messages, Email and the games need 
 | **Messages** | Real-time chat between people with accounts on the same KherveOS server |
 | **Email** | Your own mailboxes (Gmail, iCloud, Fastmail… with app passwords, or any IMAP/SMTP server) through the server |
 | **Viewer** | Pictures and PDFs |
-| **Settings** | The 24 Kherve themes, wallpapers, storage, server and account |
+| **Settings** | Wallpaper visibility, the Dock, storage, server and account, AI & MCP |
 | **Games** | PlanetCraft, SimAI and FaceCraft, each run by its own server from the sibling folders |
 
 Your files live in this browser (IndexedDB), on this computer. Nothing is
@@ -95,8 +93,7 @@ Environment variables: `KHERVEOS_HOST`, `KHERVEOS_PORT`, `KHERVEOS_DATA`,
 4. Style it with the theme variables (`--k-bg`, `--k-text`, `--k-accent`…) and the shared
    `k-*` classes in `src/styles/global.css`, so it works with every theme.
 
-Wallpapers live in `public/wallpapers/`. `tools/recolor_wallpaper.py` makes colour variants
-(the green fist is the red one turned 140°); `tools/make_wallpaper.py` draws the "Together" ones.
+The wallpaper lives in `public/wallpapers/`.
 
 ## Tests
 

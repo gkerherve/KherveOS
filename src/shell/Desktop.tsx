@@ -15,31 +15,6 @@ import { wallpaperCss } from './wallpapers'
 
 const DESKTOP = `${HOME}/Desktop`
 
-/** CSS background for the chosen wallpaper (built-in, or a picture from the drive). */
-function useWallpaper(id: string): string {
-  const [url, setUrl] = useState<string | null>(null)
-  const file = id.startsWith('file:') ? id.slice(5) : null
-  useEffect(() => {
-    if (!file || !fs.isFile(file)) {
-      setUrl(null)
-      return
-    }
-    let objectUrl: string | null = null
-    let cancelled = false
-    fs.readBytes(file).then((bytes) => {
-      if (cancelled) return
-      objectUrl = URL.createObjectURL(new Blob([bytes as BlobPart], { type: mimeType(file) }))
-      setUrl(objectUrl)
-    })
-    return () => {
-      cancelled = true
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-    }
-  }, [file])
-  if (file) return url ? `center / cover no-repeat url("${url}"), var(--k-desk)` : 'var(--k-desk)'
-  return wallpaperCss(id)
-}
-
 interface Item {
   key: string
   name: string
@@ -49,13 +24,12 @@ interface Item {
 }
 
 export function Desktop() {
-  const wallpaper = useSettings((s) => s.wallpaper)
   const wallpaperOpacity = useSettings((s) => s.wallpaperOpacity)
   const showApps = useSettings((s) => s.desktopIcons)
   const files = useDir(DESKTOP) ?? []
   const [selected, setSelected] = useState<string | null>(null)
   const [dropping, setDropping] = useState(false)
-  const background = useWallpaper(wallpaper)
+  const background = wallpaperCss()
   const open = useWindows((s) => s.open)
 
   const items: Item[] = useMemo(() => {
@@ -121,7 +95,7 @@ export function Desktop() {
         showContextMenu(
           e,
           folderMenu(DESKTOP, [
-            { label: 'Change wallpaper…', icon: ImageIcon, onClick: () => open('settings', { section: 'appearance' }) },
+            { label: 'Wallpaper…', icon: ImageIcon, onClick: () => open('settings', { section: 'appearance' }) },
             { label: 'Settings', icon: SettingsIcon, onClick: () => open('settings') },
           ]),
         )

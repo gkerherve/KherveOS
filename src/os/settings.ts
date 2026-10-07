@@ -6,7 +6,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 export interface SettingsState {
   /** "Auto" follows the system light/dark setting; otherwise a theme name. */
   theme: string
-  /** A built-in wallpaper id, or "file:<vfs path>" for a picture from the drive. */
+  /** The wallpaper's id: KherveOS has one, 'ktools-lab'. */
   wallpaper: string
   /** How strongly the wallpaper shows over the theme's desktop colour (0.1–1). */
   wallpaperOpacity: number
@@ -50,8 +50,8 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       theme: 'Kherve Green',
-      wallpaper: 'ktool-green',
-      wallpaperOpacity: 0.5,
+      wallpaper: 'ktools-lab',
+      wallpaperOpacity: 1,
       desktopIcons: false,
       iconStyle: 'classic',
       lightApps: [],
@@ -65,7 +65,7 @@ export const useSettings = create<SettingsState>()(
     {
       name: 'kherveos.settings',
       storage: safeStorage,
-      version: 7,
+      version: 9,
       migrate: (old, version) => {
         let s = { ...((old ?? {}) as Partial<SettingsState>) }
         // Version 1 had a blue/Auto look: move early installs to the dark look.
@@ -95,6 +95,10 @@ export const useSettings = create<SettingsState>()(
           const i = s.dock.indexOf('khervebook')
           s.dock = [...s.dock.slice(0, i + 1), 'kherveai', ...s.dock.slice(i + 1)]
         }
+        // Version 8: one wallpaper for everyone, the Ktools Advanced Tech Lab.
+        if (version < 8) s.wallpaper = 'ktools-lab'
+        // Version 9: shown in full (the 50% visibility was for the brighter fist picture).
+        if (version < 9) s.wallpaperOpacity = 1
         return s as SettingsState
       },
     },

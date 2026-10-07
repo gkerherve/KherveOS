@@ -1,5 +1,5 @@
 // The KherveOS mark: the Breton barred K (Ꝃ, "ker") in a ring, its diagonal
-// running right through — as tattooed on the wrist in the wallpaper.
+// running right through — the Ktools emblem, as on the wallpaper.
 
 export function KLogo({ size = 14, className }: { size?: number; className?: string }) {
   return (
