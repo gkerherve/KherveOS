@@ -2,7 +2,7 @@
 // downloaded the first time a window of theirs opens.
 
 import {
-  Atom, BookMarked, BookOpen, Castle, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
+  Atom, Blocks, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sigma, Sparkles, SquareTerminal,
 } from 'lucide-react'
 import type { AppManifest } from './types'
@@ -230,6 +230,49 @@ export const APPS: AppManifest[] = [
     minSize: { w: 560, h: 380 },
     singleton: true,
     desktop: true,
+  },
+  // Little arcade games: small, fixed-size windows like the classic Mac games.
+  {
+    id: 'tetris',
+    name: 'Tetris',
+    icon: Blocks,
+    color: '#22b357',
+    brand: { label: 'Tetris', from: '#8ef0a8', to: '#1d8f46' },
+    category: 'games',
+    group: 'Games',
+    description: 'Stack the falling blocks and clear lines',
+    load: () => import('@/apps/minigames/Tetris'),
+    defaultSize: { w: 450, h: 640 },
+    minSize: { w: 360, h: 520 },
+    fixedSize: true,
+  },
+  {
+    id: 'breakout',
+    name: 'Breakout',
+    icon: BrickWall,
+    color: '#ff9b2f',
+    brand: { label: 'Breakout', from: '#ffc77a', to: '#d9701a' },
+    category: 'games',
+    group: 'Games',
+    description: 'Knock out every brick with the ball',
+    load: () => import('@/apps/minigames/Breakout'),
+    defaultSize: { w: 644, h: 540 },
+    minSize: { w: 520, h: 440 },
+    fixedSize: true,
+  },
+  {
+    id: 'pinball',
+    name: 'Pinball',
+    icon: CircleDot,
+    color: '#ff4fd8',
+    brand: { label: 'Pinball', from: '#ff9ce9', to: '#c21fa0' },
+    category: 'games',
+    group: 'Games',
+    description: 'Flippers, bumpers and a plunger: keep the ball in play',
+    load: () => import('@/apps/minigames/Pinball'),
+    defaultSize: { w: 470, h: 720 },
+    minSize: { w: 400, h: 620 },
+    fixedSize: true,
   },
   {
     id: 'planetcraft',

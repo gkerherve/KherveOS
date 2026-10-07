@@ -1,0 +1,473 @@
+/* The mini-games (Tetris, Breakout, Pinball): a playfield letterboxed on
+   black beside a KherveOS side panel, with cards over the playfield for
+   start, pause, game over, high scores and help. Everything is scoped under
+   .mg-app; colours come from the theme variables (the playfields draw their
+   own bright colours on the canvas). */
+
+.mg-app {
+  --mg-panel: 136px;
+  flex-direction: row;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mg-app:focus,
+.mg-app:focus-visible {
+  outline: none;
+}
+
+/* ------------------------------------------------------------- playfield */
+
+.mg-app .mg-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  background:
+    radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--k-accent) 7%, transparent), transparent 70%),
+    color-mix(in srgb, var(--k-bg) 70%, #000);
+  overflow: hidden;
+}
+.mg-app .mg-screen {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--k-accent) 30%, transparent),
+    0 0 26px color-mix(in srgb, var(--k-accent) 14%, transparent),
+    0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.mg-app .mg-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.mg-app.mg-hide-cursor.mg-playing .mg-stage {
+  cursor: none;
+}
+
+/* ------------------------------------------------------------ side panel */
+
+.mg-app .mg-panel {
+  width: var(--mg-panel);
+  flex: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 12px 12px;
+  background: var(--k-surface);
+  border-left: 1px solid var(--k-border);
+  overflow-y: auto;
+}
+.mg-app .mg-brand {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--k-accent);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--k-accent) 45%, transparent);
+  line-height: 1.1;
+}
+.mg-app .mg-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--k-bg) 80%, #000);
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+}
+.mg-app .mg-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-muted);
+}
+.mg-app .mg-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.mg-app .mg-value {
+  font-family: var(--k-mono);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mg-app .mg-value.mg-big {
+  font-size: 20px;
+  color: var(--k-accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--k-accent) 35%, transparent);
+}
+.mg-app .mg-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.mg-app .mg-hint {
+  font-size: 10.5px;
+  line-height: 1.55;
+  color: var(--k-muted);
+}
+.mg-app .mg-hint .mg-key {
+  font-size: 9.5px;
+  padding: 0 4px;
+  min-width: 0;
+}
+.mg-app .mg-panel-foot {
+  margin-top: auto;
+  display: flex;
+  gap: 6px;
+}
+.mg-app .mg-panel-foot .k-btn:first-child {
+  flex: 1;
+}
+.mg-app .mg-panel-foot .k-btn {
+  padding: 0 8px;
+}
+
+/* piece previews (Tetris) and little badges */
+.mg-app .mg-preview {
+  display: block;
+  width: 100%;
+}
+.mg-app .mg-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 20px;
+}
+.mg-app .mg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-text);
+  background: var(--k-button);
+  border: 1px solid var(--k-border);
+}
+.mg-app .mg-badge i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--k-accent);
+}
+.mg-app .mg-level-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--k-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mg-app .mg-lives {
+  display: flex;
+  gap: 5px;
+  min-height: 12px;
+  padding-top: 3px;
+}
+.mg-app .mg-life {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--k-text), var(--k-muted) 70%);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--k-text) 30%, transparent);
+}
+.mg-app .mg-life.mg-off {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--k-border);
+}
+.mg-app .mg-lights {
+  display: flex;
+  gap: 4px;
+}
+.mg-app .mg-light {
+  flex: 1;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  font: 700 10px var(--k-mono);
+  color: var(--k-muted);
+  background: var(--k-button);
+  border: 1px solid var(--k-border);
+}
+.mg-app .mg-light.mg-on {
+  color: var(--k-accent-text);
+  background: var(--k-accent);
+  border-color: transparent;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--k-accent) 55%, transparent);
+}
+
+/* ----------------------------------------------------------------- cards */
+
+.mg-app .mg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: color-mix(in srgb, var(--k-bg) 50%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: mg-fade 0.15s ease-out;
+}
+.mg-app .mg-card {
+  width: min(300px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  padding: 18px 16px 16px;
+  text-align: center;
+  color: var(--k-text);
+  background: color-mix(in srgb, var(--k-surface) 94%, transparent);
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  box-shadow: var(--k-shadow-lg);
+  animation: mg-pop 0.18s ease-out;
+}
+.mg-app .mg-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k-accent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--k-accent) 55%, transparent);
+}
+.mg-app .mg-title.mg-small {
+  font-size: 16px;
+  letter-spacing: 0.12em;
+}
+.mg-app .mg-title.mg-danger {
+  color: var(--k-danger);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--k-danger) 45%, transparent);
+}
+.mg-app .mg-press {
+  font-size: 13px;
+  font-weight: 600;
+}
+.mg-app .mg-blink {
+  animation: mg-blink 1.2s ease-in-out infinite;
+}
+.mg-app .mg-muted {
+  margin: 0;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.mg-app .mg-num {
+  font-family: var(--k-mono);
+  color: var(--k-text);
+}
+.mg-app .mg-key {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 5px;
+  border: 1px solid var(--k-border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--k-button);
+  font: 600 11px/16px var(--k-mono);
+  color: var(--k-text);
+  text-align: center;
+  vertical-align: 1px;
+}
+.mg-app .mg-controls {
+  display: grid;
+  gap: 5px;
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+.mg-app .mg-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.mg-app .mg-control dt {
+  display: flex;
+  justify-content: flex-end;
+  gap: 3px;
+}
+.mg-app .mg-control dd {
+  margin: 0;
+  text-align: left;
+  color: var(--k-muted);
+}
+.mg-app .mg-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mg-app .mg-final {
+  font: 800 30px var(--k-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-text);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--k-text) 25%, transparent);
+}
+.mg-app .mg-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--k-warning);
+}
+.mg-app .mg-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.mg-app .mg-entry-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+.mg-app .mg-name {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* high scores */
+.mg-app .mg-scores {
+  width: min(320px, 100%);
+}
+.mg-app .mg-table {
+  list-style: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mg-app .mg-table li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: left;
+}
+.mg-app .mg-table li:nth-child(odd) {
+  background: var(--k-alt);
+}
+.mg-app .mg-table li.mg-hl {
+  background: var(--k-selection);
+}
+.mg-app .mg-rank {
+  font: 700 12px var(--k-mono);
+  color: var(--k-muted);
+}
+.mg-app .mg-table li:first-child .mg-rank {
+  color: var(--k-warning);
+}
+.mg-app .mg-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mg-app .mg-who-name,
+.mg-app .mg-who-sum {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mg-app .mg-who-name {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.mg-app .mg-who-sum {
+  font-size: 10.5px;
+  color: var(--k-muted);
+}
+.mg-app .mg-pts {
+  font: 700 13px var(--k-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* how to play */
+.mg-app .mg-help {
+  width: min(360px, 100%);
+}
+.mg-app .mg-help-body {
+  width: 100%;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.mg-app .mg-help-body h4 {
+  margin: 10px 0 3px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-accent);
+}
+.mg-app .mg-help-body h4:first-child {
+  margin-top: 0;
+}
+.mg-app .mg-help-body p {
+  margin: 0;
+}
+.mg-app .mg-help-body ul {
+  margin: 0;
+  padding-left: 16px;
+}
+.mg-app .mg-help-body li {
+  margin: 1px 0;
+}
+.mg-app .mg-help-keys {
+  font-size: 11px;
+  color: var(--k-muted);
+}
+
+@keyframes mg-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes mg-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes mg-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+/* Pinball: a narrower panel, the table is tall */
+.mg-app.mg-pinball {
+  --mg-panel: 124px;
+}
