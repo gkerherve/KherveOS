@@ -3,7 +3,7 @@
 
 import {
   BookMarked, BookOpen, Castle, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
-  Settings, Sigma, SquareTerminal,
+  Settings, Sigma, Sparkles, SquareTerminal,
 } from 'lucide-react'
 import type { AppManifest } from './types'
 
@@ -81,6 +81,20 @@ export const APPS: AppManifest[] = [
     defaultSize: { w: 1100, h: 700 },
     minSize: { w: 560, h: 380 },
     fileTypes: ['.bib'],
+  },
+  {
+    id: 'kherveai',
+    name: 'KherveAI',
+    icon: Sparkles,
+    color: '#22b357',
+    brand: { label: 'KAI', from: '#3ddc84', to: '#127a3c' },
+    category: 'kherve',
+    group: 'Tools',
+    description: 'Chat with AI — Ollama on this computer, Claude or ChatGPT — and let it work in KherveOS',
+    load: () => import('@/apps/kherveai/KherveAI'),
+    defaultSize: { w: 900, h: 640 },
+    minSize: { w: 420, h: 360 },
+    singleton: true,
   },
   {
     id: 'notepad',

@@ -28,7 +28,7 @@ export interface SettingsState {
   set(patch: Partial<Omit<SettingsState, 'set'>>): void
 }
 
-export const DEFAULT_DOCK = ['files', 'browser', 'terminal', 'khervebook', 'notepad', 'messages', 'email', 'settings']
+export const DEFAULT_DOCK = ['files', 'browser', 'terminal', 'khervebook', 'kherveai', 'notepad', 'messages', 'email', 'settings']
 
 const safeStorage = createJSONStorage(() => {
   try {
@@ -65,7 +65,7 @@ export const useSettings = create<SettingsState>()(
     {
       name: 'kherveos.settings',
       storage: safeStorage,
-      version: 6,
+      version: 7,
       migrate: (old, version) => {
         let s = { ...((old ?? {}) as Partial<SettingsState>) }
         // Version 1 had a blue/Auto look: move early installs to the dark look.
@@ -89,6 +89,11 @@ export const useSettings = create<SettingsState>()(
           s.theme = 'Kherve Green'
           s.lightApps = []
           s.iconStyle = 'classic'
+        }
+        // Version 7: KherveAI joins the Dock.
+        if (version < 7 && s.dock && !s.dock.includes('kherveai')) {
+          const i = s.dock.indexOf('khervebook')
+          s.dock = [...s.dock.slice(0, i + 1), 'kherveai', ...s.dock.slice(i + 1)]
         }
         return s as SettingsState
       },
