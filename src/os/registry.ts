@@ -36,6 +36,8 @@ export const APPS: AppManifest[] = [
     defaultSize: { w: 980, h: 700 },
     minSize: { w: 480, h: 360 },
     fileTypes: ['.pdf'],
+    // Like the desktop app: PDFs opened from Files arrive as tabs in one window.
+    singleton: true,
   },
   {
     id: 'khervepy',

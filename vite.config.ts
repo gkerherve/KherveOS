@@ -20,5 +20,7 @@ export default defineConfig({
       '/api': { target: SERVER, ws: true, xfwd: true },
     },
   },
+  // MuPDF's recommended setup: its wasm loader must not be pre-bundled.
+  optimizeDeps: { exclude: ['mupdf'] },
   worker: { format: 'es' },
 })
