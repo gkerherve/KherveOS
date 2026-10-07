@@ -126,7 +126,7 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       web UI (spectrum plot, peak table, fit)
 
 ### 5. KherveLAB and the mini-games
-- [ ] KherveLAB (`../KherveLAB`) — instrument booking as a KherveOS server module
+- [x] KherveLAB (`../KherveLAB`) — instrument booking as a KherveOS server module — done 2026-10-07 (not ported: reports/statements, PPMS import, month view)
 - [x] **Little games** (requested 2026-10-07; Tetris, Breakout, Pinball done 2026-10-07) — each a
       small window (fixed size, like a classic Mac game), TypeScript + canvas, keyboard
       controls, high scores kept, the Ktools green look; group Games. Also the
