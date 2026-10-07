@@ -49,8 +49,9 @@ Still open in stage 1:
 - [x] Assistant app (from the "AI chatbox and Claude integration" session): Claude
       through the server's ANTHROPIC_API_KEY (`server/kherveos_server/ai.py`,
       `/api/ai/status`, `/api/ai/chat`), or Ollama; client `src/os/ai/index.ts`.
-      To do: fold it into KherveAI as its "KherveOS server" provider, so there is
-      one AI app.
+      Folded into KherveAI on 2026-10-07: without a key of one's own, KherveAI's Claude
+      goes through the server's relay `/api/ai/anthropic/messages` (tools included);
+      the Assistant app is removed.
 - [x] KherveOS tool registry (`src/os/ai/tools.ts`): files, apps, windows, Python,
       notebooks — shared by KherveAI and MCP; delete/overwrite and AI-run Python need
       the user's OK — done 2026-10-07
