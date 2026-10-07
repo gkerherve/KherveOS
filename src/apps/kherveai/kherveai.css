@@ -1,0 +1,1476 @@
+/* KherveAI. Colours come only from the theme variables (--k-*). Below 700px
+   wide the chat list slides over the conversation; below ~560px the toolbar
+   and code blocks drop their labels (container queries on .kai-main). */
+
+.kai-app {
+  position: relative;
+  overflow: hidden;
+}
+
+.kai-layout {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* ------------------------------------------------------------------ sidebar */
+
+.kai-side {
+  width: 250px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--k-surface);
+  border-right: 1px solid var(--k-border);
+}
+
+.kai-app.narrow .kai-side {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(290px, 86%);
+  box-shadow: var(--k-shadow-lg);
+  animation: kai-slide-in 0.16s ease-out;
+}
+@keyframes kai-slide-in {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+}
+.kai-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: color-mix(in srgb, var(--k-bg) 55%, transparent);
+  animation: k-fade 0.12s;
+}
+
+.kai-side-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 10px 8px;
+}
+.kai-new {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--k-accent) 45%, var(--k-border));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--k-accent) 12%, var(--k-surface));
+  color: var(--k-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.kai-new svg {
+  color: var(--k-accent);
+}
+.kai-new:hover {
+  background: color-mix(in srgb, var(--k-accent) 22%, var(--k-surface));
+}
+
+.kai-search {
+  position: relative;
+  padding: 0 10px 8px;
+}
+.kai-search .k-input {
+  height: 30px;
+  padding-left: 28px;
+  padding-right: 26px;
+  border-radius: 8px;
+}
+.kai-search-icon {
+  position: absolute;
+  left: 20px;
+  top: 9px;
+  color: var(--k-muted);
+  pointer-events: none;
+}
+.kai-search-clear {
+  position: absolute;
+  right: 13px;
+  top: 3px;
+  width: 24px;
+  height: 24px;
+  color: var(--k-muted);
+}
+
+.kai-chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 6px 8px;
+}
+.kai-group-label {
+  padding: 10px 8px 4px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--k-muted);
+}
+.kai-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  margin-bottom: 1px;
+}
+.kai-row:hover {
+  background: var(--k-button-hover);
+}
+.kai-row.active {
+  background: var(--k-selection);
+}
+.kai-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 4px 0 9px;
+  border: none;
+  background: transparent;
+  color: var(--k-text);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.kai-row-main:focus-visible,
+.kai-row-more:focus-visible {
+  outline: 2px solid var(--k-accent);
+  outline-offset: -2px;
+}
+.kai-row-icon {
+  flex: none;
+  color: var(--k-muted);
+}
+.kai-row.active .kai-row-icon {
+  color: var(--k-accent);
+}
+.kai-row-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.kai-row-time {
+  flex: none;
+  font-size: 11px;
+  color: var(--k-muted);
+}
+.kai-row-more {
+  display: none;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  margin-right: 3px;
+  place-items: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+}
+.kai-row:hover .kai-row-more,
+.kai-row.active .kai-row-more,
+.kai-row-more:focus-visible {
+  display: grid;
+}
+.kai-row:hover .kai-row-time,
+.kai-row.active .kai-row-time {
+  display: none;
+}
+.kai-row-more:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.kai-side-empty {
+  padding: 18px 10px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--k-muted);
+}
+.kai-side-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 9px 14px;
+  border: none;
+  border-top: 1px solid var(--k-border);
+  background: transparent;
+  color: var(--k-muted);
+  font-size: 11.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.kai-side-foot:hover {
+  color: var(--k-text);
+}
+.kai-side-foot span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------- main */
+
+.kai-main {
+  container: kai / inline-size;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg);
+}
+
+.kai-toolbar {
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.kai-select {
+  height: 28px;
+  width: auto;
+  padding: 0 4px 0 8px;
+  border-radius: 7px;
+  background: var(--k-bg);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.kai-select:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.kai-provider {
+  flex: none;
+  max-width: 110px;
+}
+.kai-model {
+  flex: 0 1 230px;
+  min-width: 80px;
+  text-overflow: ellipsis;
+}
+.kai-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 0 2px;
+}
+.kai-dot.ok {
+  background: var(--k-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-success) 22%, transparent);
+}
+.kai-dot.bad {
+  background: var(--k-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-danger) 22%, transparent);
+}
+.kai-dot.warn {
+  background: var(--k-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-warning) 22%, transparent);
+}
+.kai-dot-spin {
+  flex: none;
+  color: var(--k-muted);
+}
+
+/* "Act in KherveOS" switch */
+.kai-act {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 6px 0 9px;
+  border: 1px solid var(--k-border);
+  border-radius: 999px;
+  background: var(--k-bg);
+  color: var(--k-muted);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.kai-act:hover:not(:disabled) {
+  color: var(--k-text);
+}
+.kai-act.on {
+  color: var(--k-text);
+  border-color: color-mix(in srgb, var(--k-accent) 55%, var(--k-border));
+  background: color-mix(in srgb, var(--k-accent) 10%, var(--k-bg));
+}
+.kai-act.on svg {
+  color: var(--k-accent);
+}
+.kai-act:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.kai-switch {
+  position: relative;
+  width: 26px;
+  height: 15px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--k-text) 22%, transparent);
+  transition: background 0.15s;
+}
+.kai-switch i {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--k-bg);
+  transition: transform 0.15s;
+}
+.kai-act.on .kai-switch {
+  background: var(--k-accent);
+}
+.kai-act.on .kai-switch i {
+  transform: translateX(11px);
+  background: var(--k-accent-text);
+}
+
+/* ------------------------------------------------------------------ banners */
+
+.kai-banner {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 10px 14px 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  border: 1px solid var(--k-border);
+}
+.kai-banner.bad {
+  background: color-mix(in srgb, var(--k-danger) 12%, var(--k-bg));
+  border-color: color-mix(in srgb, var(--k-danger) 45%, transparent);
+}
+.kai-banner.warn {
+  background: color-mix(in srgb, var(--k-warning) 12%, var(--k-bg));
+  border-color: color-mix(in srgb, var(--k-warning) 45%, transparent);
+}
+.kai-banner-text {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.kai-banner-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+/* ------------------------------------------------------------------- thread */
+
+.kai-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.kai-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+.kai-thread {
+  max-width: 820px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 18px 22px 26px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kai-msg {
+  margin-top: 16px;
+  min-width: 0;
+}
+.kai-msg:first-child {
+  margin-top: 0;
+}
+
+/* yours */
+.kai-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.kai-bubble {
+  max-width: min(620px, 86%);
+  padding: 9px 14px;
+  border-radius: 16px 16px 4px 16px;
+  background: color-mix(in srgb, var(--k-accent) 16%, var(--k-surface));
+  border: 1px solid color-mix(in srgb, var(--k-accent) 28%, transparent);
+  color: var(--k-text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.kai-attached {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: 86%;
+  margin-bottom: 6px;
+}
+.kai-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  background: var(--k-surface);
+  color: var(--k-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.kai-file:hover {
+  border-color: var(--k-accent);
+}
+.kai-file svg {
+  flex: none;
+  color: var(--k-accent);
+}
+.kai-file-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 550;
+}
+.kai-file-meta {
+  flex: none;
+  color: var(--k-muted);
+  font-size: 11px;
+}
+
+/* KherveAI's */
+.kai-assistant {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+}
+.kai-avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--k-accent-text);
+  background: var(--k-accent);
+}
+.kai-reply {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kai-reply-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 28px;
+  line-height: 28px;
+  margin-bottom: -6px;
+}
+.kai-reply-name {
+  font-weight: 650;
+}
+.kai-reply-model {
+  font-size: 11.5px;
+  color: var(--k-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kai-msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 24px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.kai-msg:hover .kai-msg-actions,
+.kai-msg:focus-within .kai-msg-actions,
+
+.kai-assistant:last-child .kai-msg-actions {
+  opacity: 1;
+}
+.kai-user-actions {
+  margin-top: 3px;
+}
+.kai-act-btn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+}
+.kai-act-btn:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.kai-time {
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--k-muted);
+  white-space: nowrap;
+}
+
+.kai-typing {
+  display: inline-flex;
+  gap: 4px;
+  padding: 8px 2px;
+}
+.kai-typing i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--k-accent);
+  animation: kai-bounce 1.2s infinite ease-in-out;
+}
+.kai-typing i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.kai-typing i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes kai-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.kai-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--k-danger) 50%, transparent);
+  background: color-mix(in srgb, var(--k-danger) 10%, var(--k-bg));
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.kai-error > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--k-danger);
+}
+.kai-error-text {
+  flex: 1 1 240px;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.kai-error-actions {
+  display: flex;
+  gap: 6px;
+}
+.kai-note {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--k-muted);
+  font-style: italic;
+}
+.kai-note .k-btn {
+  font-style: normal;
+}
+
+/* thinking */
+.kai-thinking {
+  border-left: 2px solid var(--k-border);
+  padding-left: 10px;
+}
+.kai-thinking-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  border: none;
+  background: transparent;
+  color: var(--k-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.kai-thinking-head:hover {
+  color: var(--k-text);
+}
+.kai-thinking.open .kai-call-chev {
+  transform: rotate(90deg);
+}
+.kai-thinking-text,
+.kai-thinking-peek {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--k-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.kai-thinking-text {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-top: 4px;
+  user-select: text;
+}
+.kai-thinking-peek {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+}
+
+/* tool calls */
+.kai-calls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kai-call {
+  border: 1px solid var(--k-border);
+  border-radius: 9px;
+  background: var(--k-surface);
+  overflow: hidden;
+}
+.kai-call-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 10px 4px 7px;
+  border: none;
+  background: transparent;
+  color: var(--k-text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.kai-call-head:hover {
+  background: var(--k-button-hover);
+}
+.kai-call-chev {
+  flex: none;
+  color: var(--k-muted);
+  transition: transform 0.12s;
+}
+.kai-call.open .kai-call-chev {
+  transform: rotate(90deg);
+}
+.kai-call-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--k-muted);
+}
+.kai-call.done .kai-call-icon {
+  color: var(--k-success);
+  background: color-mix(in srgb, var(--k-success) 16%, transparent);
+}
+.kai-call.error .kai-call-icon {
+  color: var(--k-danger);
+  background: color-mix(in srgb, var(--k-danger) 16%, transparent);
+}
+.kai-call.running .kai-call-icon {
+  color: var(--k-accent);
+}
+.kai-call-wrench {
+  flex: none;
+  color: var(--k-muted);
+}
+.kai-call-name {
+  flex: none;
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.kai-call-args {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--k-mono);
+  font-size: 11px;
+  color: var(--k-muted);
+}
+.kai-call-status {
+  flex: none;
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--k-muted);
+  white-space: nowrap;
+}
+.kai-call.error .kai-call-status {
+  color: var(--k-danger);
+}
+.kai-call-error {
+  padding: 0 12px 7px 54px;
+  font-size: 11.5px;
+  color: var(--k-danger);
+  overflow-wrap: anywhere;
+}
+.kai-call.skipped .kai-call-error {
+  color: var(--k-muted);
+}
+.kai-call-body {
+  padding: 4px 12px 10px;
+  border-top: 1px solid var(--k-border);
+  background: var(--k-bg);
+}
+.kai-call-label {
+  margin: 8px 0 4px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--k-muted);
+}
+.kai-call-body pre {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--k-alt);
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.kai-call-body pre.error {
+  color: var(--k-danger);
+}
+
+/* ----------------------------------------------------------------- markdown */
+
+.kai-md {
+  min-width: 0;
+  line-height: 1.6;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.kai-md-part {
+  display: contents;
+}
+.kai-md p,
+.kai-md ul,
+.kai-md ol,
+.kai-md blockquote,
+.kai-md table,
+.kai-md pre,
+.kai-md .kai-code,
+.kai-md .kai-math-block {
+  margin: 0 0 10px;
+}
+.kai-md > :last-child,
+.kai-md > .kai-md-part:last-child > :last-child {
+  margin-bottom: 0;
+}
+.kai-md h1,
+.kai-md h2,
+.kai-md h3,
+.kai-md h4,
+.kai-md h5,
+.kai-md h6 {
+  margin: 16px 0 8px;
+  line-height: 1.3;
+  font-weight: 650;
+}
+.kai-md h1 {
+  font-size: 19px;
+}
+.kai-md h2 {
+  font-size: 16.5px;
+}
+.kai-md h3 {
+  font-size: 14.5px;
+}
+.kai-md h4,
+.kai-md h5,
+.kai-md h6 {
+  font-size: 13.5px;
+}
+.kai-md > .kai-md-part:first-child > :is(h1, h2, h3, h4, h5, h6):first-child {
+  margin-top: 2px;
+}
+.kai-md ul,
+.kai-md ol {
+  padding-left: 22px;
+}
+.kai-md li {
+  margin: 3px 0;
+}
+.kai-md li > p {
+  margin: 0 0 4px;
+}
+.kai-md li > ul,
+.kai-md li > ol {
+  margin: 2px 0 4px;
+}
+.kai-md a {
+  color: var(--k-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.kai-md strong {
+  font-weight: 650;
+}
+.kai-md blockquote {
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid color-mix(in srgb, var(--k-accent) 55%, var(--k-border));
+  color: var(--k-muted);
+}
+.kai-md hr {
+  margin: 14px 0;
+  border: none;
+  border-top: 1px solid var(--k-border);
+}
+.kai-md :not(pre) > code {
+  font-size: 0.88em;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--k-alt);
+  border: 1px solid color-mix(in srgb, var(--k-border) 70%, transparent);
+}
+.kai-md table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.kai-md th,
+.kai-md td {
+  padding: 5px 10px;
+  border: 1px solid var(--k-border);
+  text-align: left;
+  vertical-align: top;
+}
+.kai-md th {
+  background: var(--k-surface);
+  font-weight: 650;
+}
+.kai-md tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--k-alt) 60%, transparent);
+}
+.kai-md img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+.kai-md input[type='checkbox'] {
+  margin: 0 6px 0 0;
+  vertical-align: -1px;
+}
+.kai-math-block {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+.kai-md .katex {
+  font-size: 1.06em;
+}
+.kai-pre {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--k-border);
+  background: var(--k-alt);
+  overflow-x: auto;
+  font-family: var(--k-mono);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* code blocks */
+.kai-code {
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--k-alt);
+}
+.kai-code-head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 30px;
+  padding: 2px 4px 2px 12px;
+  background: var(--k-surface);
+  border-bottom: 1px solid var(--k-border);
+}
+.kai-code-lang {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--k-mono);
+  font-size: 11px;
+  color: var(--k-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kai-code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--k-muted);
+  font-size: 11.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.kai-code-btn:hover:not(:disabled) {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.kai-code-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.kai-code-body {
+  margin: 0;
+  padding: 10px 14px 12px;
+  overflow-x: auto;
+  font-family: var(--k-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  tab-size: 4;
+  user-select: text;
+}
+.kai-code-body code,
+.kai-pre code {
+  font: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  white-space: pre;
+}
+
+/* syntax colours (the theme's) */
+.kai-k {
+  color: var(--k-syn-keyword);
+}
+.kai-s {
+  color: var(--k-syn-string);
+}
+.kai-n {
+  color: var(--k-syn-number);
+}
+.kai-c {
+  color: var(--k-syn-comment);
+  font-style: italic;
+}
+.kai-f {
+  color: var(--k-syn-function);
+}
+.kai-d {
+  color: var(--k-syn-def);
+}
+.kai-t {
+  color: var(--k-syn-type);
+}
+.kai-p {
+  color: var(--k-syn-property);
+}
+.kai-x {
+  color: var(--k-danger);
+}
+
+/* ------------------------------------------------------------------ welcome */
+
+.kai-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--k-muted);
+}
+.kai-welcome-icon {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+  border-radius: 21px;
+  color: var(--k-accent);
+  background: color-mix(in srgb, var(--k-accent) 14%, var(--k-bg));
+  border: 1px solid color-mix(in srgb, var(--k-accent) 30%, transparent);
+}
+.kai-welcome h2 {
+  margin: 0;
+  font-size: 19px;
+  color: var(--k-text);
+}
+.kai-welcome p {
+  margin: 0;
+  max-width: 460px;
+  line-height: 1.55;
+}
+.kai-welcome-note {
+  font-size: 12px;
+}
+.kai-suggestions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: min(560px, 100%);
+  margin-top: 14px;
+}
+.kai-suggestion {
+  padding: 10px 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  background: var(--k-surface);
+  color: var(--k-text);
+  font-size: 12.5px;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.kai-suggestion:hover {
+  border-color: color-mix(in srgb, var(--k-accent) 60%, var(--k-border));
+  background: color-mix(in srgb, var(--k-accent) 8%, var(--k-surface));
+}
+
+.kai-jump {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 999px;
+  background: var(--k-surface);
+  color: var(--k-text);
+  font-size: 12px;
+  box-shadow: var(--k-shadow);
+  cursor: pointer;
+  animation: k-fade 0.15s;
+}
+
+/* ----------------------------------------------------------------- composer */
+
+.kai-composer {
+  flex: none;
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 6px 18px 10px;
+}
+.kai-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 2px 6px;
+}
+.kai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 4px 0 9px;
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  background: var(--k-surface);
+  font-size: 12px;
+}
+.kai-chip > svg {
+  flex: none;
+  color: var(--k-accent);
+}
+.kai-chip-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 550;
+}
+.kai-chip-meta {
+  flex: none;
+  font-size: 11px;
+  color: var(--k-muted);
+}
+.kai-chip-x {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+}
+.kai-chip-x:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+
+.kai-composer-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--k-border);
+  border-radius: 16px;
+  background: var(--k-surface);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.kai-composer-box:focus-within {
+  border-color: var(--k-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-accent) 20%, transparent);
+}
+.kai-composer.dragging .kai-composer-box {
+  border-style: dashed;
+  border-color: var(--k-accent);
+  background: color-mix(in srgb, var(--k-accent) 8%, var(--k-surface));
+}
+.kai-attach {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: var(--k-muted);
+}
+.kai-attach:hover {
+  color: var(--k-text);
+}
+.kai-input {
+  flex: 1;
+  min-width: 0;
+  max-height: 220px;
+  padding: 7px 2px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--k-text);
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.45;
+  overflow-y: auto;
+}
+.kai-input::placeholder {
+  color: var(--k-placeholder);
+}
+.kai-send {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 10px;
+  background: var(--k-accent);
+  color: var(--k-accent-text);
+  cursor: pointer;
+  transition: filter 0.12s, opacity 0.12s;
+}
+.kai-send:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.kai-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.kai-send.stop {
+  background: var(--k-text);
+  color: var(--k-bg);
+}
+.kai-hint {
+  margin: 5px 6px 0;
+  font-size: 11px;
+  color: var(--k-muted);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ dialogs */
+
+.kai-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 36px 14px 14px;
+  background: color-mix(in srgb, var(--k-bg) 55%, transparent);
+  backdrop-filter: blur(3px);
+  animation: k-fade 0.12s;
+}
+.kai-dialog {
+  width: min(500px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg);
+  color: var(--k-text);
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  box-shadow: var(--k-shadow-lg);
+  overflow: hidden;
+  animation: k-pop 0.14s ease-out;
+}
+.kai-dialog.wide {
+  width: min(680px, 100%);
+}
+.kai-dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px 6px 16px;
+  font-weight: 650;
+  font-size: 14px;
+}
+.kai-dialog-head > svg {
+  color: var(--k-accent);
+}
+.kai-dialog-head span {
+  flex: 1;
+}
+.kai-dialog-form {
+  display: contents;
+}
+.kai-dialog-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.kai-dialog-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--k-border);
+}
+.kai-spacer {
+  flex: 1;
+}
+
+.kai-privacy {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--k-accent) 10%, var(--k-bg));
+  border: 1px solid color-mix(in srgb, var(--k-accent) 35%, transparent);
+}
+.kai-privacy svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--k-accent);
+}
+.kai-set-section {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.kai-set-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 650;
+}
+.kai-set-title svg {
+  color: var(--k-muted);
+}
+.kai-set-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kai-set-row > .k-input {
+  flex: 1;
+  min-width: 0;
+}
+.kai-set-inline {
+  font-size: 12.5px;
+  color: var(--k-muted);
+}
+.kai-set-inline span {
+  flex: none;
+}
+.kai-key-input {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+.kai-key-input .k-input {
+  padding-right: 34px;
+  font-family: var(--k-mono);
+  font-size: 12px;
+}
+.kai-key-input .k-icon-btn {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  color: var(--k-muted);
+}
+.kai-set-help {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--k-muted);
+}
+.kai-set-help a {
+  color: var(--k-link);
+  cursor: pointer;
+}
+.kai-set-help a svg {
+  vertical-align: -1px;
+}
+.kai-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.kai-check svg {
+  flex: none;
+  margin-top: 2px;
+}
+.kai-check.ok {
+  color: var(--k-success);
+}
+.kai-check.error {
+  color: var(--k-danger);
+}
+.kai-check.busy {
+  color: var(--k-muted);
+}
+.kai-system-text {
+  min-height: 300px;
+  font-family: var(--k-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+/* ------------------------------------------------------------ narrow sizes */
+
+@container kai (max-width: 560px) {
+  .kai-thread {
+    padding: 14px 12px 22px;
+  }
+  .kai-composer {
+    padding: 6px 10px 8px;
+  }
+  .kai-avatar {
+    display: none;
+  }
+  .kai-bubble,
+  .kai-attached {
+    max-width: 92%;
+  }
+  .kai-code-btn span {
+    display: none;
+  }
+  .kai-code-btn {
+    padding: 0 7px;
+  }
+  .kai-suggestions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .kai-hint {
+    display: none;
+  }
+  .kai-provider {
+    max-width: 92px;
+  }
+  .kai-banner {
+    margin: 8px 10px 0;
+  }
+  .kai-call-args {
+    display: none;
+  }
+}
+
+@container kai (max-width: 440px) {
+  .kai-toolbar {
+    gap: 3px;
+    padding: 4px 6px;
+  }
+  .kai-model {
+    flex-basis: 140px;
+  }
+}
