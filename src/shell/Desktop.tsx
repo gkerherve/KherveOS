@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { AppWindow, ImageIcon, LayoutGrid, Maximize2, Minimize2, Settings as SettingsIcon } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
+import { AppWindow, ImageIcon, Info, LayoutGrid, Maximize2, Minimize2, Settings as SettingsIcon } from 'lucide-react'
 import { fs, useDir } from '@/os/vfs'
 import { HOME } from '@/os/path'
 import { APPS } from '@/os/registry'
 import { useSettings } from '@/os/settings'
 import { useWindows } from '@/os/windows'
-import { fileIcon, mimeType } from '@/os/fileIcons'
+import { fileIcon } from '@/os/fileIcons'
 import { showContextMenu } from '@/os/overlays'
 import { DRAG_MIME, deleteItems, folderMenu, itemMenu, moveItems, renameItem } from '@/os/fileActions'
 import { os } from '@/os'
@@ -15,6 +15,9 @@ import { wallpaperCss } from './wallpapers'
 import { appGroups } from './appsMenu'
 import { openLaunchpad } from './ui'
 import { isFullscreen, toggleFullscreen } from '@/os/fullscreen'
+import { copyMenuItems, handleClipboardKey, pasteMenuItems, usePasteSource } from '@/apps/files/clipboard'
+import { endDragOut, prepareDragOut, startDragOut } from '@/apps/files/dragOut'
+import { ClipboardCard, PasteProgress, showClipboardCard } from './ClipboardCard'
 
 const DESKTOP = `${HOME}/Desktop`
 /** The desktop's menus are frosted, see-through glass, like the Dock's Applications menu. */
@@ -32,8 +35,14 @@ export function Desktop() {
   const wallpaperOpacity = useSettings((s) => s.wallpaperOpacity)
   const showApps = useSettings((s) => s.desktopIcons)
   const files = useDir(DESKTOP) ?? []
-  const [selected, setSelected] = useState<string | null>(null)
+  // Selected icons ("app:<id>" for app shortcuts, else file paths); ⌘/Shift-click adds.
+  const [selection, setSelection] = useState<string[]>([])
   const [dropping, setDropping] = useState(false)
+  const [cardHeight, setCardHeight] = useState(0)
+  const onCardHeight = useCallback((h: number) => setCardHeight(h), [])
+  usePasteSource() // re-render the menus when the clipboard changes
+  const select = (keys: string[]) => setSelection(keys)
+  const selectedFiles = selection.filter((k) => !k.startsWith('app:') && fs.exists(k))
   const background = wallpaperCss()
   const open = useWindows((s) => s.open)
 
@@ -58,42 +67,42 @@ export function Desktop() {
     return [...apps, ...docs]
   }, [showApps, files, open])
 
-  // Dragging a file out to the computer (Chrome/Edge "DownloadURL") needs a URL
-  // that is ready at dragstart, so prepare it when the pointer goes down.
-  const blobUrls = useRef(new Map<string, string>())
-  useEffect(() => () => blobUrls.current.forEach((u) => URL.revokeObjectURL(u)), [])
-  const prepareDragOut = (path: string) => {
-    const st = fs.stat(path)
-    const key = `${path}@${st?.mtime}`
-    if (!st || st.type !== 'file' || blobUrls.current.has(key) || st.size > 200 * 1024 * 1024) return
-    void fs.readBytes(path).then((b) => {
-      blobUrls.current.set(key, URL.createObjectURL(new Blob([b as BlobPart], { type: mimeType(path) })))
-    })
-  }
-  const dragOut = (path: string, e: React.DragEvent) => {
-    const st = fs.stat(path)
-    e.dataTransfer.setData(DRAG_MIME, JSON.stringify([path]))
-    e.dataTransfer.setData('text/plain', path)
-    const url = blobUrls.current.get(`${path}@${st?.mtime}`)
-    if (url && st) e.dataTransfer.setData('DownloadURL', `${mimeType(path)}:${st.name}:${url}`)
-    e.dataTransfer.effectAllowed = 'copyMove'
+  // What a drag or a right-click on this icon acts on: the selection if it is part of it.
+  const dragSet = (key: string) =>
+    selection.includes(key) ? selection.filter((k) => !k.startsWith('app:') && fs.exists(k)) : [key]
+
+  const onIconPointerDown = (item: Item, e: React.PointerEvent) => {
+    if (e.button !== 0) return
+    if (e.metaKey || e.ctrlKey) {
+      select(selection.includes(item.key) ? selection.filter((k) => k !== item.key) : [...selection, item.key])
+      return
+    }
+    if (e.shiftKey) {
+      if (!selection.includes(item.key)) select([...selection, item.key])
+    } else if (!selection.includes(item.key)) select([item.key])
+    // Dragging out to the computer needs its download ready when the drag starts.
+    if (!item.key.startsWith('app:')) prepareDragOut(dragSet(item.key))
   }
 
   const onItemMenu = (e: React.MouseEvent, item: Item) => {
     e.preventDefault()
     e.stopPropagation()
-    setSelected(item.key)
     if (item.key.startsWith('app:')) {
+      select([item.key])
       const id = item.key.slice(4)
       showContextMenu(e, [{ label: `Open ${item.name}`, onClick: () => open(id) }], GLASS)
-    } else showContextMenu(e, itemMenu([item.key], { onRename: (p) => setSelected(p) }), GLASS)
+      return
+    }
+    const paths = dragSet(item.key)
+    if (!selection.includes(item.key)) select([item.key])
+    showContextMenu(e, itemMenu(paths, { onRename: (p) => select([p]), clipboard: copyMenuItems(paths) }), GLASS)
   }
 
   return (
     <div
       className={`k-desktop${dropping ? ' dropping' : ''}`}
       tabIndex={-1}
-      onPointerDown={(e) => e.target === e.currentTarget && setSelected(null)}
+      onPointerDown={(e) => e.target === e.currentTarget && select([])}
       onContextMenu={(e) => {
         e.preventDefault()
         // Icons have their own menu; anywhere else on the desktop gets this one.
@@ -112,22 +121,28 @@ export function Desktop() {
             },
             { label: full ? 'Exit Full Screen' : 'Enter Full Screen', icon: full ? Minimize2 : Maximize2, onClick: () => void toggleFullscreen() },
             '-',
+            { label: 'About Files & Clipboard', icon: Info, onClick: showClipboardCard },
             { label: 'Settings…', icon: SettingsIcon, onClick: () => open('settings') },
-          ]),
+          ], pasteMenuItems(DESKTOP, select)),
           GLASS,
         )
       }}
       onKeyDown={async (e) => {
-        if (!selected || selected.startsWith('app:')) {
-          if (e.key === 'Enter' && selected) items.find((i) => i.key === selected)?.open()
-          return
+        const t = e.target as HTMLElement
+        if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable || t.closest('.k-clipcard')) return
+        if (handleClipboardKey(e, selectedFiles, DESKTOP, select)) return
+        const mod = e.metaKey || e.ctrlKey
+        if (mod && e.key.toLowerCase() === 'a') {
+          e.preventDefault()
+          select(items.map((i) => i.key))
+        } else if (e.key === 'Enter') {
+          selection.forEach((k) => items.find((i) => i.key === k)?.open())
+        } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedFiles.length) {
+          if (await deleteItems(selectedFiles)) select([])
+        } else if (e.key === 'F2' && selectedFiles.length === 1) {
+          const np = await renameItem(selectedFiles[0])
+          if (np) select([np])
         }
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-          if (await deleteItems([selected])) setSelected(null)
-        } else if (e.key === 'F2') {
-          const np = await renameItem(selected)
-          if (np) setSelected(np)
-        } else if (e.key === 'Enter') void os.openFile(selected)
       }}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes('Files') || e.dataTransfer.types.includes(DRAG_MIME)) {
@@ -147,22 +162,29 @@ export function Desktop() {
     >
       {/* The picture sits over the theme's desktop colour; its opacity is the "transparency" setting. */}
       <div className="k-wallpaper" style={{ background, opacity: wallpaperOpacity }} />
-      <div className="k-desktop-icons" onPointerDown={(e) => e.target === e.currentTarget && setSelected(null)}>
+      <ClipboardCard desktop={DESKTOP} onHeight={onCardHeight} />
+      <PasteProgress />
+      <div
+        className="k-desktop-icons"
+        style={cardHeight ? { top: 24 + 10 + cardHeight } : undefined}
+        onPointerDown={(e) => e.target === e.currentTarget && select([])}
+      >
         {items.map((item) => {
           const FileGlyph = item.file?.icon
           return (
             <button
               key={item.key}
-              className={`k-desktop-icon${selected === item.key ? ' selected' : ''}`}
+              className={`k-desktop-icon${selection.includes(item.key) ? ' selected' : ''}`}
               title={item.name}
               draggable={!item.key.startsWith('app:')}
-              onDragStart={(e) => dragOut(item.key, e)}
-              onPointerDown={() => {
-                setSelected(item.key)
-                if (!item.key.startsWith('app:')) prepareDragOut(item.key)
+              onDragStart={(e) => startDragOut(dragSet(item.key), e)}
+              onDragEnd={endDragOut}
+              onPointerDown={(e) => onIconPointerDown(item, e)}
+              onClick={(e) => {
+                // A plain click (not a drag) inside a multiple selection selects just this one, like macOS.
+                if (!e.metaKey && !e.ctrlKey && !e.shiftKey && selection.length > 1) select([item.key])
               }}
               onDoubleClick={item.open}
-              onKeyDown={(e) => e.key === 'Enter' && item.open()}
               onContextMenu={(e) => onItemMenu(e, item)}
             >
               {item.app ? (

@@ -7,8 +7,10 @@ import {
 import { os, fs, path, HOME, useDir, formatSize, type AppProps, type Stat } from '@/os'
 import { fileIcon, IMAGE_EXTS, mimeType } from '@/os/fileIcons'
 import { PLACES } from '@/os/ui/places'
-import { DRAG_MIME, deleteItems, folderMenu, itemMenu, moveItems, newFolder, newTextFile, renameItem } from '@/os/fileActions'
+import { DRAG_MIME, deleteItems, downloadItems, folderMenu, itemMenu, moveItems, newFolder, newTextFile, renameItem } from '@/os/fileActions'
 import { useSettings } from '@/os/settings'
+import { clearClipboard, copyMenuItems, handleClipboardKey, pasteMenuItems, useClipboard, usePasteSource } from './clipboard'
+import { endDragOut, prepareDragOut, startDragOut } from './dragOut'
 import './files.css'
 
 type SortKey = 'name' | 'mtime' | 'size'
@@ -77,6 +79,7 @@ export default function Files({ win, args }: AppProps) {
   const showHidden = useSettings((st) => st.showHidden)
   const setSettings = useSettings((st) => st.set)
   const mainRef = useRef<HTMLDivElement>(null)
+  usePasteSource() // re-render (and so refresh the Edit menu) when the clipboard changes
   const dirRef = useRef(dir)
   dirRef.current = dir
 
@@ -176,6 +179,7 @@ export default function Files({ win, args }: AppProps) {
 
   const onKeyDown = async (e: React.KeyboardEvent) => {
     if ((e.target as HTMLElement).tagName === 'INPUT') return
+    if (handleClipboardKey(e, sel(), dir, (paths) => setSelected(new Set(paths)))) return
     const mod = e.metaKey || e.ctrlKey
     if (e.key === 'Delete' || (e.key === 'Backspace' && mod)) {
       e.preventDefault()
@@ -216,26 +220,13 @@ export default function Files({ win, args }: AppProps) {
   }
 
   // ---- drag and drop
-  // Dragging a file out to the computer's desktop (Chrome/Edge "DownloadURL") needs a
-  // ready URL at dragstart, so prepare one as soon as the pointer goes down on a file.
-  const blobUrls = useRef(new Map<string, string>())
-  useEffect(() => () => blobUrls.current.forEach((u) => URL.revokeObjectURL(u)), [])
-  const prepareDragOut = (s: Stat) => {
-    const key = `${s.path}@${s.mtime}`
-    if (s.type !== 'file' || blobUrls.current.has(key) || s.size > 200 * 1024 * 1024) return
-    void fs.readBytes(s.path).then((b) => {
-      blobUrls.current.set(key, URL.createObjectURL(new Blob([b as BlobPart], { type: mimeType(s.path) })))
-    })
-  }
+  // What a drag (or right-click) on an item acts on: the whole selection if the item is in it.
+  const dragPaths = (s: Stat) => (selected.has(s.path) ? sel() : [s.path])
 
   const dragStart = (s: Stat, e: React.DragEvent) => {
-    const paths = selected.has(s.path) ? sel() : [s.path]
     if (!selected.has(s.path)) setSelected(new Set([s.path]))
-    e.dataTransfer.setData(DRAG_MIME, JSON.stringify(paths))
-    e.dataTransfer.setData('text/plain', paths.join('\n'))
-    const out = paths.length === 1 ? blobUrls.current.get(`${s.path}@${s.mtime}`) : undefined
-    if (out) e.dataTransfer.setData('DownloadURL', `${mimeType(s.path)}:${s.name}:${out}`)
-    e.dataTransfer.effectAllowed = 'copyMove'
+    // Inside KherveOS this moves; dropped on the computer's desktop it downloads (see dragOut.ts).
+    startDragOut(dragPaths(s), e)
   }
 
   const accepts = (e: React.DragEvent) => e.dataTransfer.types.includes(DRAG_MIME) || e.dataTransfer.types.includes('Files')
@@ -270,8 +261,10 @@ export default function Files({ win, args }: AppProps) {
   const itemProps = (s: Stat) => ({
     'data-path': s.path,
     draggable: true,
-    onPointerDown: () => prepareDragOut(s),
+    // The download for a drag out to the computer must be ready when the drag starts.
+    onPointerDown: (e: React.PointerEvent) => e.button === 0 && prepareDragOut(dragPaths(s)),
     onDragStart: (e: React.DragEvent) => dragStart(s, e),
+    onDragEnd: endDragOut,
     onClick: (e: React.MouseEvent) => {
       e.stopPropagation()
       click(s, e)
@@ -280,9 +273,9 @@ export default function Files({ win, args }: AppProps) {
     onContextMenu: (e: React.MouseEvent) => {
       e.preventDefault()
       e.stopPropagation()
-      const paths = selected.has(s.path) ? sel() : [s.path]
+      const paths = dragPaths(s)
       if (!selected.has(s.path)) setSelected(new Set([s.path]))
-      os.contextMenu(e, itemMenu(paths, { onRename: (np) => setSelected(new Set([np])) }))
+      os.contextMenu(e, itemMenu(paths, { onRename: (np) => setSelected(new Set([np])), clipboard: copyMenuItems(paths) }))
     },
     ...folderDragProps(s),
   })
@@ -303,6 +296,7 @@ export default function Files({ win, args }: AppProps) {
   // Menus in the top menu bar.
   useEffect(() => {
     const selectedPaths = items.filter((s) => selected.has(s.path)).map((s) => s.path)
+    const clip = useClipboard.getState()
     win.setMenus([
       {
         label: 'File',
@@ -316,7 +310,22 @@ export default function Files({ win, args }: AppProps) {
           { label: 'Delete', danger: true, disabled: !selectedPaths.length, onClick: () => void deleteItems(selectedPaths) },
           '-',
           { label: 'Upload Files…', icon: Upload, onClick: () => void os.upload(dir) },
-          { label: 'Download', disabled: !selectedPaths.some((p) => fs.isFile(p)), onClick: () => selectedPaths.forEach((p) => fs.isFile(p) && void os.download(p)) },
+          { label: 'Download', disabled: !selectedPaths.length, onClick: () => void downloadItems(selectedPaths) },
+        ],
+      },
+      {
+        label: 'Edit',
+        items: [
+          ...copyMenuItems(selectedPaths),
+          ...pasteMenuItems(dir, (paths) => setSelected(new Set(paths))).slice(0, 1),
+          '-',
+          { label: 'Select All', shortcut: '⌘A', onClick: () => setSelected(new Set(items.map((s) => s.path))) },
+          '-',
+          {
+            label: clip.server ? 'Clear Clipboard (all computers)' : 'Clear Clipboard',
+            disabled: !clip.local && !clip.server,
+            onClick: () => void clearClipboard(),
+          },
         ],
       },
       {
@@ -431,11 +440,15 @@ export default function Files({ win, args }: AppProps) {
             setSelected(new Set())
             os.contextMenu(
               e,
-              folderMenu(dir, [
-                { label: 'View as list', checked: view === 'list', onClick: () => setView('list') },
-                { label: 'View as icons', checked: view === 'grid', onClick: () => setView('grid') },
-                { label: 'Select all', onClick: () => setSelected(new Set(items.map((s) => s.path))) },
-              ]),
+              folderMenu(
+                dir,
+                [
+                  { label: 'View as list', checked: view === 'list', onClick: () => setView('list') },
+                  { label: 'View as icons', checked: view === 'grid', onClick: () => setView('grid') },
+                  { label: 'Select all', onClick: () => setSelected(new Set(items.map((s) => s.path))) },
+                ],
+                pasteMenuItems(dir, (paths) => setSelected(new Set(paths))),
+              ),
             )
           }}
           onDragOver={(e) => {

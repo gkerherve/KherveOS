@@ -1,0 +1,157 @@
+/* The "Files & Clipboard" card: frosted glass like .k-glass-menu, under the menu bar, top right. */
+
+.k-clipcard {
+  position: absolute;
+  top: 34px;
+  right: 12px;
+  z-index: 1;
+  width: min(300px, calc(100vw - 24px));
+  padding: 9px 12px 10px;
+  background: rgba(14, 18, 16, 0.42);
+  color: #f1f7f3;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35), inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  font-family: var(--k-font, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.k-clipcard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+.k-clipcard-close {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(241, 247, 243, 0.75);
+  cursor: pointer;
+  padding: 0;
+}
+.k-clipcard-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.k-clipcard p {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 5px;
+  color: rgba(241, 247, 243, 0.86);
+}
+.k-clipcard p > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--k-accent);
+}
+.k-clipcard b {
+  color: #fff;
+  font-weight: 600;
+}
+.k-clipcard-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--k-accent) 70%, transparent);
+  color: #fff;
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.k-clipcard-btn:hover {
+  background: var(--k-accent);
+}
+.k-clipcard-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(241, 247, 243, 0.78);
+}
+.k-clipcard-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+.k-clipcard-bar {
+  display: block;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.k-clipcard-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--k-accent);
+  transition: width 0.15s;
+}
+
+/* Progress of a paste, above the windows; small pastes finish before it fades in. */
+.k-paste-progress {
+  position: fixed;
+  top: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 85000;
+  width: min(360px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px 12px;
+  background: rgba(14, 18, 16, 0.6);
+  color: #f1f7f3;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  font-size: 12px;
+  opacity: 0;
+  animation: k-paste-in 0.2s ease 0.4s forwards;
+}
+.k-paste-progress .k-clipcard-btn {
+  align-self: flex-end;
+  background: rgba(255, 255, 255, 0.12);
+}
+.k-paste-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.k-paste-detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(241, 247, 243, 0.7);
+  font-size: 11px;
+}
+.k-paste-detail > span:first-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+@keyframes k-paste-in {
+  to {
+    opacity: 1;
+  }
+}

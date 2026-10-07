@@ -4,9 +4,10 @@
 import {
   AppWindow, Copy, Download, ExternalLink, FilePlus, FolderPlus, Pencil, SquareTerminal, Trash2, Upload,
 } from 'lucide-react'
+import { zip, type AsyncZippable } from 'fflate'
 import { fs, FsError } from './vfs'
 import { basename, dirname, join } from './path'
-import { dialog, notify } from './overlays'
+import { dialog } from './overlays'
 import { useWindows } from './windows'
 import { APPS } from './registry'
 import type { MenuItem } from './ui/Menu'
@@ -86,17 +87,69 @@ export async function moveItems(paths: string[], dir: string): Promise<void> {
   }
 }
 
+/** Every file and folder in `paths` (folders with all they hold), named relative to their parents. */
+export function collectItems(paths: string[]): { path: string; rel: string; type: 'file' | 'dir'; size: number }[] {
+  const out: { path: string; rel: string; type: 'file' | 'dir'; size: number }[] = []
+  for (const p of paths) {
+    const st = fs.stat(p)
+    if (!st) continue
+    out.push({ path: p, rel: st.name, type: st.type, size: st.size })
+    if (st.type === 'dir') {
+      const base = dirname(p) === '/' ? 1 : dirname(p).length + 1
+      for (const s of fs.walk(p)) out.push({ path: s.path, rel: s.path.slice(base), type: s.type, size: s.size })
+    }
+  }
+  return out
+}
+
+/**
+ * Zip files and folders (keeping the folders, empty ones too). `level` 0 only
+ * stores (fast, for drag-out); 6 compresses (for sending over the network).
+ */
+export async function zipItems(
+  paths: string[],
+  opts: { level?: 0 | 1 | 6; onProgress?: (done: number, total: number) => void; cancelled?: () => boolean } = {},
+): Promise<Uint8Array> {
+  const items = collectItems(paths)
+  const total = items.reduce((n, i) => n + (i.type === 'file' ? i.size : 0), 0)
+  const entries: AsyncZippable = {}
+  let done = 0
+  for (const it of items) {
+    if (opts.cancelled?.()) throw new Error('cancelled')
+    if (it.type === 'dir') entries[`${it.rel}/`] = new Uint8Array(0)
+    else {
+      entries[it.rel] = await fs.readBytes(it.path)
+      done += it.size
+      opts.onProgress?.(done, total)
+    }
+  }
+  return new Promise((ok, fail) => zip(entries, { level: opts.level ?? 6 }, (err, data) => (err ? fail(err) : ok(data))))
+}
+
+/** The name for a zip of these items: "Folder.zip", "Archive.zip". */
+export function zipName(paths: string[]): string {
+  return paths.length === 1 ? `${basename(paths[0])}.zip` : 'Archive.zip'
+}
+
+/** Download to the computer: a file as itself, a folder or several items as one zip. */
 export async function downloadItems(paths: string[]): Promise<void> {
-  const files = paths.filter((p) => fs.isFile(p))
-  if (!files.length) {
-    notify({ title: 'Only files can be downloaded', body: 'Folders cannot be downloaded yet.' })
+  const existing = paths.filter((p) => fs.exists(p))
+  if (!existing.length) return
+  if (existing.length === 1 && fs.isFile(existing[0])) {
+    await guard(() => os.download(existing[0]))
     return
   }
-  for (const p of files) await guard(() => os.download(p))
+  await guard(async () => {
+    const data = await zipItems(existing, { level: 1 })
+    os.downloadBlob(zipName(existing), new Blob([data as BlobPart], { type: 'application/zip' }))
+  })
 }
 
 /** Right-click menu for selected files/folders. */
-export function itemMenu(paths: string[], opts: { onRename?: (newPath: string) => void } = {}): MenuItem[] {
+export function itemMenu(
+  paths: string[],
+  opts: { onRename?: (newPath: string) => void; clipboard?: MenuItem[] } = {},
+): MenuItem[] {
   const single = paths.length === 1 ? paths[0] : null
   const isFile = single ? fs.isFile(single) : false
   const openWith: MenuItem[] = single && isFile
@@ -114,15 +167,17 @@ export function itemMenu(paths: string[], opts: { onRename?: (newPath: string) =
       if (np) opts.onRename?.(np)
     } },
     { label: 'Duplicate', icon: Copy, disabled: !single, onClick: () => single && void duplicateItem(single) },
-    { label: 'Download', icon: Download, disabled: !paths.some((p) => fs.isFile(p)), onClick: () => void downloadItems(paths) },
+    { label: 'Download', icon: Download, onClick: () => void downloadItems(paths) },
+    ...(opts.clipboard?.length ? (['-', ...opts.clipboard] as MenuItem[]) : []),
     '-',
     { label: 'Delete', icon: Trash2, danger: true, shortcut: 'Del', onClick: () => void deleteItems(paths) },
   ]
 }
 
 /** Right-click menu for the empty space of a folder (or the desktop). */
-export function folderMenu(dir: string, extra: MenuItem[] = []): MenuItem[] {
+export function folderMenu(dir: string, extra: MenuItem[] = [], clipboard: MenuItem[] = []): MenuItem[] {
   return [
+    ...(clipboard.length ? ([...clipboard, '-'] as MenuItem[]) : []),
     { label: 'New folder', icon: FolderPlus, onClick: () => void newFolder(dir) },
     { label: 'New text file', icon: FilePlus, onClick: async () => {
       const p = await newTextFile(dir)

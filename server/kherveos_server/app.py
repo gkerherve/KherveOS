@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket
 
-from . import __version__, ai, auth, crashes, db, games, gitproxy, latex, mail, mcp_server, messages, refs
+from . import __version__, ai, auth, clipboard, crashes, db, games, gitproxy, latex, mail, mcp_server, messages, refs
 from .realtime import hub
 
 
@@ -31,6 +31,7 @@ app.include_router(refs.router)
 app.include_router(ai.router)
 app.include_router(mcp_server.router)
 app.include_router(crashes.router)
+app.include_router(clipboard.router)
 
 
 @app.get("/api/health")
