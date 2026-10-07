@@ -358,6 +358,51 @@ export const APP_TOOL_SETS: AppToolSet[] = [
     ],
   },
   {
+    app: 'khervenote',
+    name: 'KherveNote',
+    summary: 'notes of lectures and talks, with the speech transcript beside them, exported to LaTeX/PDF.',
+    keywords: ['khervenote', 'knote', 'lecture', 'lectures', 'talk', 'seminar', 'transcript', 'speech', 'notes'],
+    tools: [
+      {
+        action: 'list_notes',
+        description: 'List the notes in the KherveNote library (~/Documents/KherveNote, in folders): path, title, speaker, date, folder.',
+        inputSchema: object({ query: str('Only notes containing these words (title, people, text).') }),
+        readOnly: true,
+      },
+      {
+        action: 'read_note',
+        description:
+          'Read a note: title, speaker, date, summary, every section (index, title) with its paragraphs (kind, time, text), and what was said (speech transcript, with times). Without "path", the note open in KherveNote.',
+        inputSchema: object({ path: str('A .knote path from khervenote_list_notes (default: the open note).'), max_chars: int('Cut the speech to this many characters (default 12000).') }),
+        readOnly: true,
+      },
+      {
+        action: 'add_text',
+        description:
+          'Add text to the note open in KherveNote: at the end of a section, or as a new section with "title". Light Markdown: paragraphs, "- " / "1. " items (indent to nest), "## " subheadings, **bold**, maths as $…$ or $$…$$. One undo step.',
+        inputSchema: object(
+          {
+            text: str('What to add (light Markdown).'),
+            section: int('Section index from khervenote_read_note (default: the last section).'),
+            title: str('Add it as a new section with this title, at the end of the note.'),
+            kind: { type: 'string', enum: ['text', 'important', 'question', 'transcript'], description: 'Paragraph style: text (default), important (key-point box), question, transcript.' },
+          },
+          ['text'],
+        ),
+      },
+      {
+        action: 'export_pdf',
+        description: 'Typeset the open note to PDF with LaTeX: "continuous" is one page as long as the note, "paged" is A4. Returns the PDF path.',
+        inputSchema: object({
+          path: str('Where to write the PDF, e.g. "~/Documents/lecture.pdf" (default: next to the note, named after its title).'),
+          layout: { type: 'string', enum: ['continuous', 'paged'], description: 'Default: the note\'s own layout.' },
+          show_times: bool('Each paragraph\'s time in the margin.'),
+          transcript: bool('Add what was said, with its times, as a last section.'),
+        }),
+      },
+    ],
+  },
+  {
     app: 'files',
     name: 'Files',
     summary: 'the file manager window.',

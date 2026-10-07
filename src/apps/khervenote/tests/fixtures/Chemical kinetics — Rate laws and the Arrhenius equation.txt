@@ -1,0 +1,41 @@
+# Chemical kinetics — Rate laws and the Arrhenius equation
+Lecturer: Dr M. Haddad
+08 October 2026
+Chemistry building, LT1
+
+## Rate laws
+For $aA + bB \rightarrow$ products, the rate is $r = -\frac{1}{a}\frac{d[A]}{dt} = k[A]^m[B]^n$.
+Key point: The orders $m$ and $n$ are measured; they need not equal $a$ and $b$.
+- overall order $m + n$; units of $k$ depend on it
+- method of initial rates: change one concentration, watch the initial rate
+
+## Integrated rate laws
+1. zero order: $[A] = [A]_0 - kt$; $t_{1/2} = [A]_0/(2k)$
+1. first order: $\ln[A] = \ln[A]_0 - kt$; $t_{1/2} = \ln 2 / k$, independent of $[A]_0$
+1. second order: $\dfrac{1}{[A]} = \dfrac{1}{[A]_0} + kt$; $t_{1/2} = 1/(k[A]_0)$
+- plot $[A]$, $\ln[A]$ and $1/[A]$ against $t$: the straight one gives the order
+- radioactive decay and many isomerisations are first order
+
+## Temperature: the Arrhenius equation
+$$k = A\exp\left(-\frac{E_a}{RT}\right), \qquad \ln k = \ln A - \frac{E_a}{R}\cdot\frac{1}{T}$$ A plot of $\ln k$ against $1/T$ has slope $-E_a/R$.
+
+### Worked example
+With $E_a = 50$ kJ mol$^{-1}$, going from 298 K to 308 K: $\ln(k_2/k_1) = \frac{E_a}{R}\left(\frac{1}{T_1} - \frac{1}{T_2}\right) = \frac{50000}{8.314}\times 1.09\times10^{-4} \approx 0.66$, so $k_2/k_1 \approx 1.9$.
+Key point: The "rate doubles every 10 °C" rule of thumb holds for $E_a$ around 50 kJ mol$^{-1}$ near room temperature.
+
+## Mechanisms
+- elementary steps have orders equal to their molecularity
+- the rate-determining step sets the rate law
+- steady-state approximation for reactive intermediates: $d[I]/dt \approx 0$
+- a catalyst lowers $E_a$ by a different path; it does not change $K$
+Question: Why can a rate law contain the concentration of a species that is not in the overall equation?
+
+## What was said (transcript)
+[14:00:40] Kinetics is about how fast, thermodynamics only tells you whether.
+[14:04:20] The big warning: you cannot read the orders off the balanced equation, you have to measure them.
+[14:10:30] The easiest way to find the order is to integrate the rate law and see which plot comes out straight.
+[14:16:00] For first order the half-life doesn't depend on how much you start with, that's the signature.
+[14:22:10] Now temperature. Arrhenius noticed that log k against one over T is a straight line.
+[14:27:40] Take fifty kilojoules per mole and warm by ten degrees, the rate constant almost doubles.
+[14:34:00] Real reactions happen in steps, and the slowest step controls the overall rate.
+[14:38:20] A catalyst gives a lower barrier, but the equilibrium constant stays exactly the same.

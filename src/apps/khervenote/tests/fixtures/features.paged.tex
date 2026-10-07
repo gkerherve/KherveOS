@@ -1,0 +1,116 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Features \& tests: 100\% of \$x\$},pdfauthor={Dr Ø. Ñandú},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\newenvironment{knotechunk}{}{}
+\pagestyle{plain}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Features \& tests: 100\% of $x$}\par
+{\large Dr Ø. Ñandú}\hfill{\color{knotemuted}7 October 2026 \textperiodcentered{} Room \#4 \{B\}}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+\knotesummary{\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item first point
+  \item second with $E=mc^2$
+\end{itemize}
+
+A closing line.}
+
+\knotetime{00:12}Lead-in before any section, at 12:30.
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Marks \& maths}
+
+\knotetime{01:01}\underline{\textbf{Bold}}\underline{, }\underline{\textit{italic}} and \underline{underlined} words, then line\newline
+breaks.
+
+It costs \$5 and \$10; inline $E = h\nu - \phi$ and $k_1$ and \[k = A\exp(-E_a/RT)\] then \[\int_0^1 x\,dx\] end.
+
+Symbols: \ensuremath{\alpha} \ensuremath{\beta} \ensuremath{\Delta} \ensuremath{\approx} \ensuremath{\rightarrow} ° × ± µ H\textsubscript{2}O Al\textsuperscript{3+} cm\textsuperscript{-1} \textasciitilde{} \textasciicircum{} \textbackslash{} \_ \# \& \% \{ \} and $\lambda  = 2^{\circ}$.
+
+\knotekey[\knotetime{01:10}]{Remember: $\Delta G < 0$.}
+
+\knotequestion[\knotetime{01:20}]{Why is it **so**?}
+
+\begin{knotetranscript}
+\knotetime{01:30}so um the next slide shows
+\end{knotetranscript}
+
+\subsection{A subsection}
+
+\subsubsection{A sub-subsection}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Lists}
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item first
+  \begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+    \item nested
+    \begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+      \item deeper bullet
+    \end{itemize}
+    \item \textbf{back} to two
+  \end{enumerate}
+  \item second
+\end{enumerate}
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item a bullet list now
+\end{itemize}
+
+Typed list:
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item one
+  \begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+    \item one.a
+  \end{itemize}
+\end{itemize}
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item numbered
+\end{enumerate}
+
+New paragraph.
+
+\begin{center}
+\includegraphics[width=0.85\linewidth,height=110mm,keepaspectratio]{assets/abc123.png}
+\captionof{figure}{A caption $x^2$}
+\end{center}
+
+{\color{knotemuted}\textbf{Attached document:} Slides.pdf}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{What was said}
+\begin{knotetranscript}
+\knotetime{14:00:05}Good afternoon, everyone.
+
+\knotetime{14:01:05}The energy is $E = h\nu$ \& that's 100\%.
+
+\knotetime{15:02:05}One hour later.
+\end{knotetranscript}
+\end{knotechunk}
+\end{document}

@@ -1,0 +1,36 @@
+# Mechanical properties — Dislocations and strengthening
+Lecturer: Prof. J. Adeyemi
+16 October 2026
+Materials building, LT3
+
+## Stress and strain
+Engineering stress $\sigma = F/A_0$, strain $\varepsilon = \Delta L/L_0$; in the elastic range Hooke's law $\sigma = E\varepsilon$.
+- yield strength: the 0.2 % offset stress
+- ultimate tensile strength (UTS): the maximum of the engineering curve
+- ductility: elongation at fracture
+Key point: Metals yield at stresses far below the theoretical shear strength (≈ G/10) — because of dislocations.
+
+## Dislocations and slip
+- edge dislocation: Burgers vector $\mathbf{b} \perp$ line; screw: $\mathbf{b} \parallel$ line
+- slip happens on close-packed planes along close-packed directions
+- FCC: $\{111\}\langle 110\rangle$, 12 slip systems — hence ductile (Cu, Al, Au)
+- Schmid's law: resolved shear stress $\tau_R = \sigma\cos\phi\cos\lambda$; slip starts when $\tau_R$ reaches the critical value
+
+## Strengthening mechanisms
+Every mechanism makes dislocations harder to move:
+1. grain refinement — Hall–Petch: $\sigma_y = \sigma_0 + k_y d^{-1/2}$
+1. solid-solution strengthening: solute atoms strain the lattice
+1. precipitation hardening: particles pinned or bypassed by Orowan bowing (Al alloys, Ni superalloys)
+1. work hardening: dislocation density $\rho$ rises, $\tau \approx \alpha G b\sqrt{\rho}$ (Taylor)
+Key point: Most mechanisms trade strength for ductility; grain refinement improves both, down to the nanocrystalline range.
+Question: Why does Hall–Petch break down for grain sizes below about 10–20 nm?
+
+## What was said (transcript)
+[10:00:40] Today, why metals are so much weaker than their bonds suggest, and how we make them stronger.
+[10:07:30] The theoretical shear strength is around G over ten, but real metals yield a thousand times lower.
+[10:10:50] The answer is dislocations: you move one line of atoms at a time, like a ruck in a carpet.
+[10:16:20] FCC metals have twelve slip systems, which is why copper and aluminium are so ductile.
+[10:21:00] Schmid's law: only the shear stress resolved on the slip plane and direction matters.
+[10:23:50] So every strengthening mechanism is a way of getting in the way of dislocations.
+[10:28:30] Smaller grains mean more boundaries to pile up against, that's Hall–Petch, one over root d.
+[10:33:40] Work hardening comes from dislocations tangling with each other, stress goes as root of the density.

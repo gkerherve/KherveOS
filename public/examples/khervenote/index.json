@@ -1,0 +1,52 @@
+{
+ "items": [
+  {
+   "title": "Linear algebra 7 — Eigenvalues and diagonalisation",
+   "speaker": "Lecturer: Dr A. Martin",
+   "place": "Maths building, Room 140",
+   "file": "Linear algebra 7 — Eigenvalues and diagonalisation.knote"
+  },
+  {
+   "title": "Quantum mechanics 4 — The particle in a box",
+   "speaker": "Lecturer: Prof. R. Okafor",
+   "place": "Physics lecture theatre 1",
+   "file": "Quantum mechanics 4 — The particle in a box.knote"
+  },
+  {
+   "title": "Thermodynamics 3 — The laws and entropy",
+   "speaker": "Lecturer: Dr S. Lindqvist",
+   "place": "Chemistry building, LT2",
+   "file": "Thermodynamics 3 — The laws and entropy.knote"
+  },
+  {
+   "title": "Chemical kinetics — Rate laws and the Arrhenius equation",
+   "speaker": "Lecturer: Dr M. Haddad",
+   "place": "Chemistry building, LT1",
+   "file": "Chemical kinetics — Rate laws and the Arrhenius equation.knote"
+  },
+  {
+   "title": "Surface analysis — X-ray photoelectron spectroscopy (XPS)",
+   "speaker": "Lecturer: Dr L. Moreau",
+   "place": "Materials building, LG11",
+   "file": "Surface analysis — X-ray photoelectron spectroscopy (XPS).knote"
+  },
+  {
+   "title": "Crystallography — X-ray diffraction and crystal structure",
+   "speaker": "Lecturer: Dr K. Nakamura",
+   "place": "Materials building, Room 202",
+   "file": "Crystallography — X-ray diffraction and crystal structure.knote"
+  },
+  {
+   "title": "Seminar — Garnet solid electrolytes for lithium metal batteries",
+   "speaker": "Speaker: Dr P. Varga",
+   "place": "Materials building, Seminar room",
+   "file": "Seminar — Garnet solid electrolytes for lithium metal batteries.knote"
+  },
+  {
+   "title": "Mechanical properties — Dislocations and strengthening",
+   "speaker": "Lecturer: Prof. J. Adeyemi",
+   "place": "Materials building, LT3",
+   "file": "Mechanical properties — Dislocations and strengthening.knote"
+  }
+ ]
+}

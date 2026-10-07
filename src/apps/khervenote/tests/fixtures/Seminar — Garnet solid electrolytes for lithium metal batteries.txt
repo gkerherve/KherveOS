@@ -1,0 +1,43 @@
+# Seminar — Garnet solid electrolytes for lithium metal batteries
+Speaker: Dr P. Varga
+14 October 2026
+Materials building, Seminar room
+
+## Why solid electrolytes
+- replace the flammable liquid electrolyte
+- enable a lithium metal anode: much higher energy density
+- requirements: ionic conductivity ≥ $10^{-4}$ S cm$^{-1}$, electronic insulation, stability against Li, good interfaces
+
+## Garnet LLZO
+$\mathrm{Li_7La_3Zr_2O_{12}}$ exists in two forms:
+1. tetragonal (ordered Li): about $10^{-6}$ S cm$^{-1}$
+1. cubic (disordered Li): $10^{-4}$–$10^{-3}$ S cm$^{-1}$ at room temperature
+Key point: The cubic phase is stabilised by aliovalent doping — Al³⁺ or Ga³⁺ on Li sites, or Ta⁵⁺ / Nb⁵⁺ on Zr sites; Ga-doped LLZO is among the best conductors.
+- wide electrochemical window and kinetically stable against Li metal
+
+## The interface problem
+- in air, LLZO reacts with H₂O and CO₂: a LiOH / Li₂CO₃ layer forms on the surface
+- this layer is a poor Li⁺ conductor and is not wetted by lithium → high interfacial resistance
+- remedies: polishing, acid etching, heat treatment in inert gas, thin interlayers (e.g. Au, Al₂O₃)
+- dendrites: lithium can still penetrate, often along grain boundaries; the critical current density (CCD) is the measure
+
+### Chemical inhomogeneity
+- dopants and impurities segregate to grain boundaries and the surface after processing
+- surface-sensitive techniques see it: XPS (chemical state), ToF-SIMS (mapping, depth profiles), LEIS (low-energy ion scattering: the outermost atomic layer)
+
+## Measuring it
+- impedance spectroscopy: separate bulk, grain-boundary and interface arcs with an equivalent circuit
+- galvanostatic cycling of Li | LLZO | Li cells at rising current to find the CCD
+- stack pressure strongly changes the interface: report it
+Question: How much of the improvement after surface treatment is chemistry, and how much is better contact?
+
+## What was said (transcript)
+[16:01:00] Thank you for having me. I'll talk about why lithium metal needs a solid electrolyte, and why garnets.
+[16:06:10] The garnet LLZO is attractive because it does not react with lithium metal, at least not quickly.
+[16:10:40] Undoped it's tetragonal and conducts poorly; with gallium or aluminium you get the cubic phase, a thousand times better.
+[16:16:50] The problem is the surface. Leave it in air and you get lithium carbonate and hydroxide within minutes to hours.
+[16:21:30] That layer doesn't conduct lithium and lithium doesn't wet it, so the interface resistance shoots up.
+[16:26:00] We looked at what surface treatments really do with XPS, ToF-SIMS and LEIS together.
+[16:29:20] LEIS sees only the outermost atomic layer, which is exactly where the lithium touches.
+[16:33:30] In the impedance we can separate the bulk, the grain boundaries and the interface.
+[16:37:10] And please always report the stack pressure, it changes the critical current density a lot.

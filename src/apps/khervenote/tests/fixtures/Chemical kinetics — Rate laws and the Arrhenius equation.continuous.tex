@@ -1,0 +1,108 @@
+\documentclass[11pt]{article}
+\usepackage[paperwidth=210mm,paperheight=5000mm,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Chemical kinetics — Rate laws and the Arrhenius equation},pdfauthor={Lecturer: Dr M. Haddad},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\makeatletter
+\newdimen\knote@limit \knote@limit=4950mm
+\newbox\knote@page \newbox\knote@chunk
+\def\knote@ht#1{\dimexpr\ht#1+\dp#1\relax}
+\def\knote@setheight#1{\global\pdfpageheight=#1\relax
+  \special{pdf:pagesize width \the\paperwidth\space height \the\pdfpageheight}}
+\def\knote@flush{\ifvoid\knote@page\else
+  \knote@setheight{\dimexpr\knote@ht\knote@page+40mm+2mm\relax}%
+  \box\knote@page\par\clearpage\global\pdfpageheight=\paperheight\fi}
+\newenvironment{knotechunk}
+  {\par\setbox\knote@chunk=\vbox\bgroup\hsize=\textwidth\linewidth=\textwidth}
+  {\par\egroup
+   \ifdim\knote@ht\knote@chunk>\knote@limit
+     \knote@flush\unvbox\knote@chunk\par\clearpage
+   \else\ifvoid\knote@page
+     \global\setbox\knote@page=\vbox{\unvbox\knote@chunk}%
+   \else\ifdim\dimexpr\knote@ht\knote@page+\knote@ht\knote@chunk\relax>\knote@limit
+     \knote@flush\global\setbox\knote@page=\vbox{\unvbox\knote@chunk}%
+   \else
+     \global\setbox\knote@page=\vbox{\unvbox\knote@page\unvbox\knote@chunk}%
+   \fi\fi\fi}
+\AtEndDocument{\knote@flush}
+\makeatother
+\pagestyle{empty}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Chemical kinetics — Rate laws and the Arrhenius equation}\par
+{\large Lecturer: Dr M. Haddad}\hfill{\color{knotemuted}08 October 2026 \textperiodcentered{} Chemistry building, LT1}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+\knotesummary{Rate laws are found by experiment, not from the balanced equation. Integrated rate laws give straight-line plots that reveal the order; the Arrhenius equation links the rate constant to the activation energy, and a catalyst works by offering a path with a lower one.}
+
+\section{Rate laws}
+
+For $aA + bB \rightarrow$ products, the rate is $r = -\frac{1}{a}\frac{d[A]}{dt} = k[A]^m[B]^n$.
+
+\knotekey{The orders $m$ and $n$ are measured; they need not equal $a$ and $b$.}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item overall order $m + n$; units of $k$ depend on it
+  \item method of initial rates: change one concentration, watch the initial rate
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Integrated rate laws}
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item zero order: $[A] = [A]_0 - kt$; $t_{1/2} = [A]_0/(2k)$
+  \item first order: $\ln[A] = \ln[A]_0 - kt$; $t_{1/2} = \ln 2 / k$, independent of $[A]_0$
+  \item second order: $\dfrac{1}{[A]} = \dfrac{1}{[A]_0} + kt$; $t_{1/2} = 1/(k[A]_0)$
+\end{enumerate}
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item plot $[A]$, $\ln[A]$ and $1/[A]$ against $t$: the straight one gives the order
+  \item radioactive decay and many isomerisations are first order
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Temperature: the Arrhenius equation}
+
+\[k = A\exp\left(-\frac{E_a}{RT}\right), \qquad \ln k = \ln A - \frac{E_a}{R}\cdot\frac{1}{T}\] A plot of $\ln k$ against $1/T$ has slope $-E_a/R$.
+
+\subsection{Worked example}
+
+With $E_a = 50$ kJ mol$^{-1}$, going from 298 K to 308 K: $\ln(k_2/k_1) = \frac{E_a}{R}\left(\frac{1}{T_1} - \frac{1}{T_2}\right) = \frac{50000}{8.314}\times 1.09\times10^{-4} \approx 0.66$, so $k_2/k_1 \approx 1.9$.
+
+\knotekey{The "rate doubles every 10 °C" rule of thumb holds for $E_a$ around 50 kJ mol$^{-1}$ near room temperature.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Mechanisms}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item elementary steps have orders equal to their molecularity
+  \item the rate-determining step sets the rate law
+  \item steady-state approximation for reactive intermediates: $d[I]/dt \approx 0$
+  \item a catalyst lowers $E_a$ by a different path; it does not change $K$
+\end{itemize}
+
+\knotequestion{Why can a rate law contain the concentration of a species that is not in the overall equation?}
+\end{knotechunk}
+\end{document}

@@ -1,0 +1,114 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Seminar — Garnet solid electrolytes for lithium metal batteries},pdfauthor={Speaker: Dr P. Varga},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\newenvironment{knotechunk}{}{}
+\pagestyle{plain}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Seminar — Garnet solid electrolytes for lithium metal batteries}\par
+{\large Speaker: Dr P. Varga}\hfill{\color{knotemuted}14 October 2026 \textperiodcentered{} Materials building, Seminar room}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+\knotesummary{Garnet Li\textsubscript{7}La\textsubscript{3}Zr\textsubscript{2}O\textsubscript{12} (LLZO) is a promising solid electrolyte: stable against lithium metal and fast-conducting in its cubic form, which needs a dopant such as Al or Ga. Its weak point is the surface — Li\textsubscript{2}CO\textsubscript{3}/LiOH from air and chemical inhomogeneity at grain boundaries raise the interface resistance and let lithium penetrate.}
+
+\section{Why solid electrolytes}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item replace the flammable liquid electrolyte
+  \item enable a lithium metal anode: much higher energy density
+  \item requirements: ionic conductivity \ensuremath{\geq} $10^{-4}$ S cm$^{-1}$, electronic insulation, stability against Li, good interfaces
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Garnet LLZO}
+
+\knotetime{08:25}$\mathrm{Li_7La_3Zr_2O_{12}}$ exists in two forms:
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item tetragonal (ordered Li): about $10^{-6}$ S cm$^{-1}$
+  \item cubic (disordered Li): $10^{-4}$–$10^{-3}$ S cm$^{-1}$ at room temperature
+\end{enumerate}
+
+\knotekey[\knotetime{09:40}]{The cubic phase is stabilised by aliovalent doping — Al\textsuperscript{3+} or Ga\textsuperscript{3+} on Li sites, or Ta\textsuperscript{5+} / Nb\textsuperscript{5+} on Zr sites; Ga-doped LLZO is among the best conductors.}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item wide electrochemical window and kinetically stable against Li metal
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{The interface problem}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item in air, LLZO reacts with H\textsubscript{2}O and CO\textsubscript{2}: a LiOH / Li\textsubscript{2}CO\textsubscript{3} layer forms on the surface
+  \item this layer is a poor Li\textsuperscript{+} conductor and is not wetted by lithium \ensuremath{\rightarrow} high interfacial resistance
+  \item remedies: polishing, acid etching, heat treatment in inert gas, thin interlayers (e.g. Au, Al\textsubscript{2}O\textsubscript{3})
+  \item dendrites: lithium can still penetrate, often along grain boundaries; the critical current density (CCD) is the measure
+\end{itemize}
+
+\subsection{Chemical inhomogeneity}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item dopants and impurities segregate to grain boundaries and the surface after processing
+  \item surface-sensitive techniques see it: XPS (chemical state), ToF-SIMS (mapping, depth profiles), LEIS (low-energy ion scattering: the outermost atomic layer)
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Measuring it}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item impedance spectroscopy: separate bulk, grain-boundary and interface arcs with an equivalent circuit
+  \item galvanostatic cycling of Li | LLZO | Li cells at rising current to find the CCD
+  \item stack pressure strongly changes the interface: report it
+\end{itemize}
+
+\knotequestion[\knotetime{33:40}]{How much of the improvement after surface treatment is chemistry, and how much is better contact?}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{What was said}
+\begin{knotetranscript}
+\knotetime{16:01:00}Thank you for having me. I'll talk about why lithium metal needs a solid electrolyte, and why garnets.
+
+\knotetime{16:06:10}The garnet LLZO is attractive because it does not react with lithium metal, at least not quickly.
+
+\knotetime{16:10:40}Undoped it's tetragonal and conducts poorly; with gallium or aluminium you get the cubic phase, a thousand times better.
+
+\knotetime{16:16:50}The problem is the surface. Leave it in air and you get lithium carbonate and hydroxide within minutes to hours.
+
+\knotetime{16:21:30}That layer doesn't conduct lithium and lithium doesn't wet it, so the interface resistance shoots up.
+
+\knotetime{16:26:00}We looked at what surface treatments really do with XPS, ToF-SIMS and LEIS together.
+
+\knotetime{16:29:20}LEIS sees only the outermost atomic layer, which is exactly where the lithium touches.
+
+\knotetime{16:33:30}In the impedance we can separate the bulk, the grain boundaries and the interface.
+
+\knotetime{16:37:10}And please always report the stack pressure, it changes the critical current density a lot.
+\end{knotetranscript}
+\end{knotechunk}
+\end{document}

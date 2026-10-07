@@ -1,0 +1,106 @@
+\documentclass[11pt]{article}
+\usepackage[paperwidth=210mm,paperheight=5000mm,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Quantum mechanics 4 — The particle in a box},pdfauthor={Lecturer: Prof. R. Okafor},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\makeatletter
+\newdimen\knote@limit \knote@limit=4950mm
+\newbox\knote@page \newbox\knote@chunk
+\def\knote@ht#1{\dimexpr\ht#1+\dp#1\relax}
+\def\knote@setheight#1{\global\pdfpageheight=#1\relax
+  \special{pdf:pagesize width \the\paperwidth\space height \the\pdfpageheight}}
+\def\knote@flush{\ifvoid\knote@page\else
+  \knote@setheight{\dimexpr\knote@ht\knote@page+40mm+2mm\relax}%
+  \box\knote@page\par\clearpage\global\pdfpageheight=\paperheight\fi}
+\newenvironment{knotechunk}
+  {\par\setbox\knote@chunk=\vbox\bgroup\hsize=\textwidth\linewidth=\textwidth}
+  {\par\egroup
+   \ifdim\knote@ht\knote@chunk>\knote@limit
+     \knote@flush\unvbox\knote@chunk\par\clearpage
+   \else\ifvoid\knote@page
+     \global\setbox\knote@page=\vbox{\unvbox\knote@chunk}%
+   \else\ifdim\dimexpr\knote@ht\knote@page+\knote@ht\knote@chunk\relax>\knote@limit
+     \knote@flush\global\setbox\knote@page=\vbox{\unvbox\knote@chunk}%
+   \else
+     \global\setbox\knote@page=\vbox{\unvbox\knote@page\unvbox\knote@chunk}%
+   \fi\fi\fi}
+\AtEndDocument{\knote@flush}
+\makeatother
+\pagestyle{empty}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Quantum mechanics 4 — The particle in a box}\par
+{\large Lecturer: Prof. R. Okafor}\hfill{\color{knotemuted}06 October 2026 \textperiodcentered{} Physics lecture theatre 1}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+\knotesummary{A particle confined to a box of width L can only have energies E\textsubscript{n} = n\textsuperscript{2}h\textsuperscript{2}/(8mL\textsuperscript{2}): energy is quantised, the lowest level is not zero, and the levels spread apart as the box shrinks — the origin of quantum confinement in nanoparticles and quantum dots.}
+
+\section{Setting up the problem}
+
+Potential $V = 0$ for $0 < x < L$ and $V = \infty$ outside: the particle cannot leave the box. Inside, the time-independent Schrödinger equation is \[-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} = E\psi\] with boundary conditions $\psi(0) = \psi(L) = 0$.
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Solutions}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item general solution $\psi = A\sin kx + B\cos kx$, with $k = \sqrt{2mE}/\hbar$
+  \item $\psi(0) = 0 \Rightarrow B = 0$
+  \item $\psi(L) = 0 \Rightarrow kL = n\pi$, $n = 1, 2, 3, \dots$
+\end{itemize}
+
+Normalised wavefunctions and energies: \[\psi_n(x) = \sqrt{\tfrac{2}{L}}\,\sin\frac{n\pi x}{L}, \qquad E_n = \frac{n^2\pi^2\hbar^2}{2mL^2} = \frac{n^2 h^2}{8 m L^2}\]
+
+\knotekey{Energy is quantised by the boundary conditions alone, and $E_1 > 0$: zero-point energy, consistent with the uncertainty principle.}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item $\psi_n$ has $n - 1$ nodes inside the box
+  \item level spacing $E_{n+1} - E_n \propto 2n + 1$ grows with $n$
+  \item probability density $|\psi_n|^2$ is not uniform; for large $n$ it averages to $1/L$ (correspondence principle)
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Numbers: an electron in a 1 nm box}
+
+$E_1 = h^2/(8 m_e L^2) = (6.626\times10^{-34})^2 / (8 \times 9.109\times10^{-31} \times 10^{-18}) \approx 6.0\times10^{-20}$ J $\approx 0.38$ eV.
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item $E_2 = 4E_1 \approx 1.5$ eV, so the $1 \to 2$ transition is about 1.1 eV (in the near infrared)
+  \item for a 1 g marble in a 1 cm box the spacing is immeasurably small — classical behaviour
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Quantum confinement in materials}
+
+$E \propto 1/L^2$: the smaller the box, the larger the gap.
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item quantum dots (e.g. CdSe): smaller dots emit bluer light
+  \item quantum wells in semiconductor lasers; conjugated molecules (free-electron model of polyenes)
+\end{itemize}
+
+\knotequestion{Why does a finite well always have at least one bound state, while the infinite one starts at n = 1?}
+\end{knotechunk}
+\end{document}

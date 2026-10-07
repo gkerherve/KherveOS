@@ -1,0 +1,47 @@
+# Linear algebra 7 — Eigenvalues and diagonalisation
+Lecturer: Dr A. Martin
+05 October 2026
+Maths building, Room 140
+
+## Eigenvalues and eigenvectors
+A non-zero vector $\mathbf{v}$ is an eigenvector of a square matrix $A$ when $$A\mathbf{v} = \lambda\mathbf{v}$$ for some scalar $\lambda$, its eigenvalue: $A$ only stretches $\mathbf{v}$, it does not turn it.
+- eigenvectors are only defined up to a scale factor
+- $\lambda = 0$ is allowed; then $A$ is singular
+- the eigenvalues of a triangular matrix are its diagonal entries
+Key point: Sum of the eigenvalues = trace of $A$; product of the eigenvalues = $\det A$.
+
+## The characteristic polynomial
+$(A - \lambda I)\mathbf{v} = 0$ has a non-zero solution only if $$\det(A - \lambda I) = 0$$ — a polynomial of degree $n$ in $\lambda$, so an $n \times n$ matrix has $n$ eigenvalues counted with multiplicity (possibly complex).
+
+### Worked example
+For $A = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}$: $\det(A-\lambda I) = (2-\lambda)^2 - 1 = (\lambda-3)(\lambda-1)$.
+1. $\lambda_1 = 3$: $\mathbf{v}_1 = (1, 1)^T$
+1. $\lambda_2 = 1$: $\mathbf{v}_2 = (1, -1)^T$
+Check: trace $= 4 = 3 + 1$, det $= 3 = 3 \times 1$.
+Question: What happens when an eigenvalue is repeated — are there always enough eigenvectors?
+
+## Diagonalisation
+If $A$ has $n$ linearly independent eigenvectors, put them as the columns of $P$ and the eigenvalues on the diagonal of $D$: $$A = P D P^{-1}, \qquad A^k = P D^k P^{-1}$$
+- distinct eigenvalues ⇒ independent eigenvectors ⇒ diagonalisable
+- a repeated eigenvalue may give too few eigenvectors (a defective matrix, e.g. $\begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$)
+Key point: Spectral theorem: a real symmetric matrix has real eigenvalues and orthonormal eigenvectors, so $A = Q D Q^T$ with $Q^{-1} = Q^T$.
+
+## Applications
+- Markov chains: the steady state is the eigenvector with $\lambda = 1$
+- coupled oscillators: eigenvectors are the normal modes, eigenvalues give $\omega^2$
+- principal component analysis: eigenvectors of the covariance matrix
+- systems of ODEs $\dot{\mathbf{x}} = A\mathbf{x}$: solutions $e^{\lambda t}\mathbf{v}$
+Question: Problem sheet 7, questions 3–6 for Friday.
+
+## What was said (transcript)
+[09:00:40] Good morning. Today is eigenvalues, probably the most useful idea in this course.
+[09:01:30] An eigenvector is a direction the matrix doesn't rotate, it only stretches it, and the eigenvalue is how much.
+[09:05:10] Note that if lambda is zero the matrix sends that vector to zero, so it can't be invertible.
+[09:07:45] A quick check I always use: the eigenvalues add up to the trace and multiply to the determinant.
+[09:10:20] To find them, we ask when A minus lambda I can send a non-zero vector to zero, that's when its determinant vanishes.
+[09:15:00] For the two by two example we get lambda minus three times lambda minus one, so three and one.
+[09:19:40] Now the big idea: if you have enough eigenvectors you can change basis so the matrix becomes diagonal.
+[09:24:30] Powers become trivial, A to the k is P D to the k P inverse, you just raise the diagonal entries.
+[09:28:00] Careful with repeated eigenvalues, the matrix one one zero one only has one eigenvector.
+[09:31:30] Symmetric matrices are the nice case, real eigenvalues and orthogonal eigenvectors, that's the spectral theorem.
+[09:34:10] In physics you will meet this as normal modes, in data science as principal components.

@@ -1,0 +1,729 @@
+/* KherveNote. Everything is scoped under .kn-app and uses the KherveOS theme
+   (--k-*): the page is one seamless dark surface, no paper edges. */
+
+.kn-app {
+  position: relative;
+  min-width: 0;
+}
+
+.kn-app .kn-toolbar {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+.kn-app .kn-toolbar .k-icon-btn {
+  width: 28px;
+  height: 28px;
+}
+.kn-app .kn-style {
+  width: 136px;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 12.5px;
+}
+.kn-app .kn-q {
+  font-weight: 700;
+  font-size: 15px;
+}
+.kn-app .kn-listen.on {
+  background: var(--k-danger);
+  color: #fff;
+  border-color: transparent;
+}
+.kn-app .kn-tiny {
+  width: 20px;
+  height: 20px;
+}
+
+.kn-app .kn-main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* ------------------------------------------------------------- notes panel */
+
+.kn-app .kn-notes {
+  width: 250px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--k-surface);
+  border-right: 1px solid var(--k-border);
+}
+.kn-app .kn-notes-head {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--k-border);
+}
+.kn-app .kn-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 6px 0 8px;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-bg);
+  color: var(--k-muted);
+}
+.kn-app .kn-search:focus-within {
+  border-color: var(--k-accent);
+}
+.kn-app .kn-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--k-text);
+  font: inherit;
+  font-size: 12.5px;
+}
+.kn-app .kn-notes-buttons {
+  display: flex;
+  gap: 6px;
+}
+.kn-app .kn-notes-buttons .k-btn {
+  flex: 1;
+}
+.kn-app .kn-tree {
+  flex: 1;
+  overflow: auto;
+  padding: 4px 0 24px;
+}
+.kn-app .kn-tree.drop {
+  background: color-mix(in srgb, var(--k-accent) 8%, transparent);
+}
+.kn-app .kn-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 2px 8px;
+  font-size: 12.5px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.kn-app .kn-row:hover {
+  background: var(--k-button-hover);
+}
+.kn-app .kn-row-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kn-app .kn-row-date {
+  flex: none;
+  color: var(--k-muted);
+  font-size: 11px;
+}
+.kn-app .kn-folder-row {
+  color: var(--k-text);
+}
+.kn-app .kn-folder-row svg {
+  flex: none;
+  color: var(--k-muted);
+}
+.kn-app .kn-folder-row.selected {
+  background: var(--k-selection);
+}
+.kn-app .kn-folder-row.drop {
+  outline: 1px dashed var(--k-accent);
+  outline-offset: -2px;
+}
+.kn-app .kn-note-row.open {
+  font-weight: 700;
+  color: var(--k-accent);
+}
+.kn-app .kn-pending {
+  font-style: italic;
+  font-weight: 400;
+  cursor: default;
+}
+.kn-app .kn-outline-row {
+  font-size: 12px;
+  color: var(--k-muted);
+  min-height: 21px;
+}
+.kn-app .kn-outline-row:hover {
+  color: var(--k-text);
+}
+.kn-app .kn-empty-msg {
+  padding: 12px;
+  font-size: 12.5px;
+  color: var(--k-muted);
+  line-height: 1.5;
+  white-space: normal;
+}
+
+/* ------------------------------------------------------------------ page */
+
+.kn-app .kn-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg);
+}
+.kn-app .kn-scroll {
+  flex: 1;
+  overflow: auto;
+  cursor: text;
+}
+.kn-app .kn-sheet {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 22px 40px 120px 104px;
+  cursor: auto;
+}
+.kn-app .kn-header {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--k-border);
+}
+.kn-app .kn-title,
+.kn-app .kn-field {
+  display: block;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--k-text);
+  font: inherit;
+  padding: 2px 0;
+}
+.kn-app .kn-title {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.kn-app .kn-title::placeholder,
+.kn-app .kn-field::placeholder {
+  color: var(--k-placeholder, var(--k-muted));
+}
+.kn-app .kn-header-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 4px;
+}
+.kn-app .kn-field {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  color: var(--k-muted);
+}
+.kn-app .kn-field:focus,
+.kn-app .kn-title:focus {
+  color: var(--k-text);
+}
+.kn-app .kn-summary {
+  margin-top: 10px;
+  border: 1px solid color-mix(in srgb, var(--k-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--k-accent) 7%, transparent);
+  border-radius: var(--k-radius-sm);
+  padding: 6px 10px;
+}
+.kn-app .kn-summary-label {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--k-accent);
+}
+.kn-app .kn-summary-text {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: vertical;
+  background: transparent;
+  color: var(--k-text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.kn-app .kn-page .kn-prose {
+  outline: none;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 200px;
+  padding-bottom: 40px;
+  color: var(--k-text);
+}
+.kn-app .kn-prose > * {
+  position: relative;
+  margin: 0 0 0.45em;
+}
+/* The time a paragraph was written, in the margin. */
+.kn-app .kn-prose > [data-time]::before {
+  content: attr(data-time);
+  position: absolute;
+  left: -88px;
+  width: 72px;
+  text-align: right;
+  top: 0.32em;
+  font-family: var(--k-mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  line-height: 1.4;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--k-muted);
+  opacity: 0.8;
+  pointer-events: none;
+}
+.kn-app .kn-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--k-muted);
+  pointer-events: none;
+}
+
+.kn-app .kn-prose h1 {
+  font-size: 21px;
+  font-weight: 700;
+  margin: 1.1em 0 0.4em;
+  padding-bottom: 3px;
+  border-bottom: 2px solid color-mix(in srgb, var(--k-accent) 60%, transparent);
+}
+.kn-app .kn-prose h1:first-child {
+  margin-top: 0.2em;
+}
+.kn-app .kn-prose h2 {
+  font-size: 17.5px;
+  font-weight: 700;
+  margin: 0.9em 0 0.3em;
+}
+.kn-app .kn-prose h3 {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0.7em 0 0.25em;
+}
+.kn-app .kn-prose > h1[data-time]::before {
+  top: 0.75em;
+}
+.kn-app .kn-prose > h2[data-time]::before,
+.kn-app .kn-prose > h3[data-time]::before {
+  top: 0.55em;
+}
+
+.kn-app .kn-prose .kn-important {
+  background: color-mix(in srgb, var(--k-warning) 13%, transparent);
+  border-left: 3px solid var(--k-warning);
+  border-radius: var(--k-radius-sm);
+  padding: 5px 30px 5px 10px;
+}
+.kn-app .kn-prose .kn-important::after {
+  content: '★';
+  position: absolute;
+  right: 9px;
+  top: 5px;
+  color: var(--k-warning);
+}
+.kn-app .kn-prose .kn-important[data-time]::before {
+  top: calc(0.32em + 5px);
+}
+.kn-app .kn-prose .kn-question {
+  color: var(--k-link);
+  font-style: italic;
+  padding-left: 18px;
+}
+.kn-app .kn-prose .kn-question::after {
+  content: '?';
+  position: absolute;
+  left: 2px;
+  top: 0;
+  font-weight: 700;
+  font-style: normal;
+}
+.kn-app .kn-prose .kn-transcript {
+  color: var(--k-muted);
+  font-size: 13.5px;
+}
+
+/* List items: flat paragraphs with a nesting level, as in the note model. */
+.kn-app .kn-prose .kn-item {
+  padding-left: 1.6em;
+  margin-bottom: 0.15em;
+}
+.kn-app .kn-prose .kn-item[data-level='1'] {
+  padding-left: 3.2em;
+}
+.kn-app .kn-prose .kn-item[data-level='2'] {
+  padding-left: 4.8em;
+}
+.kn-app .kn-prose .kn-item[data-level='3'] {
+  padding-left: 6.4em;
+}
+.kn-app .kn-prose .kn-item::after {
+  content: attr(data-marker);
+  position: absolute;
+  left: 0;
+  width: 1.4em;
+  text-align: right;
+  color: var(--k-accent);
+  pointer-events: none;
+}
+.kn-app .kn-prose .kn-item[data-numbered='true']::after {
+  width: auto;
+  min-width: 1.4em;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+.kn-app .kn-prose .kn-item[data-level='1']::after {
+  left: 1.6em;
+}
+.kn-app .kn-prose .kn-item[data-level='2']::after {
+  left: 3.2em;
+}
+.kn-app .kn-prose .kn-item[data-level='3']::after {
+  left: 4.8em;
+}
+
+/* Maths: the LaTeX hides while KaTeX draws it; the cursor on it shows the LaTeX again. */
+.kn-app .kn-prose .kn-math-src {
+  display: none;
+}
+.kn-app .kn-prose .kn-math {
+  cursor: pointer;
+  border-radius: 3px;
+}
+.kn-app .kn-prose .kn-math:hover {
+  background: color-mix(in srgb, var(--k-accent) 12%, transparent);
+}
+.kn-app .kn-prose .kn-math-display {
+  display: block;
+  text-align: center;
+  margin: 0.3em 0;
+}
+.kn-app .kn-prose .kn-math .katex {
+  font-size: 1.05em;
+  color: var(--k-text);
+}
+.kn-app .kn-prose .kn-math-bad {
+  text-decoration: underline wavy var(--k-danger);
+  text-underline-offset: 3px;
+}
+
+.kn-app .kn-figure {
+  margin: 10px 0;
+  text-align: center;
+}
+.kn-app .kn-figure img {
+  max-width: 85%;
+  max-height: 440px;
+  border-radius: var(--k-radius-sm);
+  background: var(--k-surface);
+}
+.kn-app .kn-figure img.kn-missing {
+  min-width: 200px;
+  min-height: 80px;
+  outline: 1px dashed var(--k-border);
+}
+.kn-app .kn-figure figcaption {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--k-muted);
+}
+.kn-app .kn-figure figcaption.kn-empty {
+  opacity: 0;
+  font-style: italic;
+}
+.kn-app .kn-figure:hover figcaption.kn-empty {
+  opacity: 0.7;
+}
+.kn-app .kn-attachment {
+  margin: 6px 0;
+}
+.kn-app .kn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 10px;
+  border: 1px solid var(--k-border);
+  border-radius: 999px;
+  background: var(--k-surface);
+  color: var(--k-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.kn-app .kn-chip:hover {
+  border-color: var(--k-accent);
+  color: var(--k-accent);
+}
+.kn-app .kn-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kn-app .kn-prose .ProseMirror-selectednode {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 2px;
+  border-radius: var(--k-radius-sm);
+}
+.kn-app .kn-prose > .kn-flash {
+  animation: kn-flash 1.4s ease-out;
+}
+@keyframes kn-flash {
+  0% {
+    background: color-mix(in srgb, var(--k-accent) 35%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* --------------------------------------------------------------- AI bar */
+
+.kn-app .kn-aibar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  background: color-mix(in srgb, var(--k-accent) 10%, var(--k-chrome));
+  border-bottom: 1px solid var(--k-border);
+  flex: none;
+}
+.kn-app .kn-aibar-step {
+  flex: none;
+  font-weight: 600;
+}
+.kn-app .kn-aibar-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--k-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+/* ----------------------------------------------------------- speech panel */
+
+.kn-app .kn-speech {
+  width: 310px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--k-surface);
+  border-left: 1px solid var(--k-border);
+}
+.kn-app .kn-speech-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid var(--k-border);
+}
+.kn-app .kn-speech-title {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--k-muted);
+}
+.kn-app .kn-meter {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--k-bg);
+  overflow: hidden;
+}
+.kn-app .kn-meter > div {
+  height: 100%;
+  background: var(--k-accent);
+  transition: width 0.08s linear;
+}
+.kn-app .kn-speech-status {
+  padding: 6px 10px;
+  font-size: 11.5px;
+  color: var(--k-muted);
+  border-bottom: 1px solid var(--k-border);
+  line-height: 1.4;
+}
+.kn-app .kn-vocab {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--k-border);
+}
+.kn-app .kn-vocab-input {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-bg);
+  color: var(--k-text);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.kn-app .kn-vocab-input:focus {
+  border-color: var(--k-accent);
+}
+.kn-app .kn-seg-list {
+  flex: 1;
+  overflow: auto;
+  padding: 4px 0 12px;
+}
+.kn-app .kn-seg {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 3px 8px 3px 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  cursor: default;
+  border-left: 3px solid transparent;
+}
+.kn-app .kn-seg:hover {
+  background: var(--k-button-hover);
+}
+.kn-app .kn-seg.selected {
+  background: var(--k-selection);
+}
+.kn-app .kn-seg.hl {
+  border-left-color: var(--k-accent);
+  background: color-mix(in srgb, var(--k-accent) 9%, transparent);
+}
+.kn-app .kn-seg.playing {
+  border-left-color: var(--k-warning);
+}
+.kn-app .kn-seg-time {
+  flex: none;
+  border: none;
+  background: none;
+  padding: 0 2px;
+  font-family: var(--k-mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  line-height: 1.9;
+  color: var(--k-link);
+  cursor: pointer;
+}
+.kn-app .kn-seg-time:hover {
+  text-decoration: underline;
+}
+.kn-app .kn-seg-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.kn-app .kn-partial .kn-seg-text {
+  font-style: italic;
+  color: var(--k-muted);
+}
+.kn-app .kn-play,
+.kn-app .kn-play-gap {
+  flex: none;
+  width: 16px;
+  height: 18px;
+  margin-top: 1px;
+}
+.kn-app .kn-play {
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--k-muted);
+  cursor: pointer;
+  padding: 0;
+}
+.kn-app .kn-play:hover {
+  color: var(--k-accent);
+  background: var(--k-button-hover);
+}
+.kn-app .kn-player {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--k-muted);
+  border-top: 1px solid var(--k-border);
+}
+.kn-app .kn-player span {
+  flex: 1;
+}
+.kn-app .kn-speech-foot {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  border-top: 1px solid var(--k-border);
+}
+.kn-app .kn-speech-foot .k-btn {
+  flex: 1;
+  padding: 0 6px;
+}
+
+/* ------------------------------------------------------------ status, modal */
+
+.kn-app .kn-status-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kn-app .kn-rec {
+  color: var(--k-danger);
+  font-weight: 600;
+}
+
+.kn-app .kn-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--k-bg) 55%, transparent);
+}
+.kn-app .kn-modal-card {
+  width: min(520px, calc(100% - 40px));
+  max-height: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius, 10px);
+  background: var(--k-surface);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.kn-app .kn-modal-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+.kn-app .kn-modal-help {
+  font-size: 12.5px;
+  color: var(--k-muted);
+}
+.kn-app .kn-versions {
+  overflow: auto;
+  min-height: 0;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+}
+.kn-app .kn-version {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--k-border);
+}
+.kn-app .kn-version:last-child {
+  border-bottom: none;
+}
+.kn-app .kn-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+}

@@ -1,0 +1,117 @@
+\documentclass[11pt]{article}
+\usepackage[paperwidth=210mm,paperheight=5000mm,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Surface analysis — X-ray photoelectron spectroscopy (XPS)},pdfauthor={Lecturer: Dr L. Moreau},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\makeatletter
+\newdimen\knote@limit \knote@limit=4950mm
+\newbox\knote@page \newbox\knote@chunk
+\def\knote@ht#1{\dimexpr\ht#1+\dp#1\relax}
+\def\knote@setheight#1{\global\pdfpageheight=#1\relax
+  \special{pdf:pagesize width \the\paperwidth\space height \the\pdfpageheight}}
+\def\knote@flush{\ifvoid\knote@page\else
+  \knote@setheight{\dimexpr\knote@ht\knote@page+40mm+2mm\relax}%
+  \box\knote@page\par\clearpage\global\pdfpageheight=\paperheight\fi}
+\newenvironment{knotechunk}
+  {\par\setbox\knote@chunk=\vbox\bgroup\hsize=\textwidth\linewidth=\textwidth}
+  {\par\egroup
+   \ifdim\knote@ht\knote@chunk>\knote@limit
+     \knote@flush\unvbox\knote@chunk\par\clearpage
+   \else\ifvoid\knote@page
+     \global\setbox\knote@page=\vbox{\unvbox\knote@chunk}%
+   \else\ifdim\dimexpr\knote@ht\knote@page+\knote@ht\knote@chunk\relax>\knote@limit
+     \knote@flush\global\setbox\knote@page=\vbox{\unvbox\knote@chunk}%
+   \else
+     \global\setbox\knote@page=\vbox{\unvbox\knote@page\unvbox\knote@chunk}%
+   \fi\fi\fi}
+\AtEndDocument{\knote@flush}
+\makeatother
+\pagestyle{empty}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Surface analysis — X-ray photoelectron spectroscopy (XPS)}\par
+{\large Lecturer: Dr L. Moreau}\hfill{\color{knotemuted}09 October 2026 \textperiodcentered{} Materials building, LG11}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+\knotesummary{XPS measures the binding energies of core electrons ejected by X-rays, giving the elements present in the top few nanometres and their chemical states. Peak positions shift with oxidation state; spin–orbit doublets have fixed area ratios; quantification needs a background and sensitivity factors.}
+
+\section{Principle}
+
+A photon of energy $h\nu$ ejects a core electron; we measure its kinetic energy: \[E_B = h\nu - E_K - \phi_{\mathrm{sp}}\] with $\phi_{\mathrm{sp}}$ the spectrometer work function.
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item Al K\ensuremath{\alpha} (monochromated) 1486.6 eV; Mg K\ensuremath{\alpha} 1253.6 eV
+  \item every element except H and He can be detected
+\end{itemize}
+
+\knotekey{Surface sensitive: photoelectrons travel only \textasciitilde{}1–3 nm (the inelastic mean free path \ensuremath{\lambda}) without losing energy, so \textasciitilde{}95 \% of the signal comes from within 3\ensuremath{\lambda}, i.e. the top \ensuremath{\approx} 5–10 nm.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Chemical shifts}
+
+The binding energy rises with the oxidation state (less electron density, less screening).
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item Si 2p: Si\textsuperscript{0} \ensuremath{\approx} 99.3 eV, SiO\textsubscript{2} \ensuremath{\approx} 103.3 eV — about +4 eV
+  \item C 1s: C–C \ensuremath{\approx} 284.8 eV, C–O \ensuremath{\approx} 286.5 eV, C=O \ensuremath{\approx} 288 eV, O–C=O \ensuremath{\approx} 289 eV
+\end{itemize}
+
+\subsection{Spin–orbit splitting}
+
+Levels with $l > 0$ split into doublets with fixed area ratios:
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item p: $p_{1/2} : p_{3/2} = 1 : 2$
+  \item d: $d_{3/2} : d_{5/2} = 2 : 3$
+  \item f: $f_{5/2} : f_{7/2} = 3 : 4$
+\end{enumerate}
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item Au 4f\textsubscript{7}/\textsubscript{2} = 84.0 eV, splitting 3.67 eV — a common calibration
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Peak fitting and quantification}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item subtract a background first: Shirley (iterative, step-like), Tougaard (physical loss function) or linear
+  \item fit components with Voigt / pseudo-Voigt shapes; constrain doublet ratios and splittings
+  \item atomic fraction $x_i = \dfrac{I_i/S_i}{\sum_j I_j/S_j}$ with relative sensitivity factors $S$
+\end{itemize}
+
+\knotekey{Accuracy is typically 10–20 \% relative — report it with the fitting choices.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Practical issues}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item insulators charge positively: use a flood gun and reference the scale
+  \item adventitious carbon C 1s at 284.8 eV is the usual reference, but it is debated
+  \item sputtering for depth profiles can reduce oxides — beware of beam damage
+\end{itemize}
+
+\knotequestion{Is the adventitious carbon reference reliable on samples that were heated or sputtered?}
+\end{knotechunk}
+\end{document}

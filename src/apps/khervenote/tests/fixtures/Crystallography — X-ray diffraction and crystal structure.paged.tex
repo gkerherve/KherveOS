@@ -1,0 +1,101 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Crystallography — X-ray diffraction and crystal structure},pdfauthor={Lecturer: Dr K. Nakamura},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\newenvironment{knotechunk}{}{}
+\pagestyle{plain}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Crystallography — X-ray diffraction and crystal structure}\par
+{\large Lecturer: Dr K. Nakamura}\hfill{\color{knotemuted}12 October 2026 \textperiodcentered{} Materials building, Room 202}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+
+\section{Bragg's law}
+
+\knotetime{01:25}X-rays reflected from planes $d$ apart interfere constructively when \[n\lambda = 2d\sin\theta\]
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item Cu K\ensuremath{\alpha}: $\lambda = 1.5406$ Å (K\ensuremath{\alpha}\textsubscript{1})
+  \item a powder pattern plots intensity against $2\theta$
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Planes and Miller indices}
+
+\knotetime{08:25}For a cubic lattice with parameter $a$: \[d_{hkl} = \frac{a}{\sqrt{h^2 + k^2 + l^2}}\]
+
+\subsection{Worked example: copper}
+
+\knotetime{09:15}FCC Cu, $a = 3.615$ Å. For (111): $d = 3.615/\sqrt{3} = 2.087$ Å, so $\sin\theta = 1.5406/(2\times2.087) = 0.369$ and $2\theta \approx 43.3^{\circ}$.
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Systematic absences}
+
+\knotetime{18:25}The structure factor removes some reflections:
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item simple cubic: all $hkl$
+  \item body-centred cubic: $h + k + l$ even — (110), (200), (211)…
+  \item face-centred cubic: $h, k, l$ all even or all odd — (111), (200), (220), (311)…
+\end{enumerate}
+
+\knotekey[\knotetime{20:05}]{The pattern of absences identifies the lattice type before any refinement.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Peak widths and refinement}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item Scherrer: crystallite size $\tau = \dfrac{K\lambda}{\beta\cos\theta}$, $K \approx 0.9$, $\beta$ the FWHM in radians after removing the instrument broadening
+  \item strain also broadens peaks (as $\tan\theta$): Williamson–Hall separates the two
+  \item Rietveld refinement fits the whole pattern: lattice parameters, phase fractions, site occupancies
+\end{itemize}
+
+\knotequestion[\knotetime{29:40}]{Below what size does Scherrer stop being meaningful, and above which size can it not be used?}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{What was said}
+\begin{knotetranscript}
+\knotetime{11:00:30}Diffraction is how we know where atoms are, and it all starts with Bragg's law.
+
+\knotetime{11:05:00}With copper radiation the wavelength is one point five four angstrom, close to atomic spacings.
+
+\knotetime{11:10:20}For cubic crystals the spacing is a over the square root of h squared plus k squared plus l squared.
+
+\knotetime{11:14:40}For copper the one one one peak lands at about forty-three degrees two theta.
+
+\knotetime{11:19:50}Not every reflection appears; in FCC the indices must be all odd or all even.
+
+\knotetime{11:25:30}So the missing peaks tell you the lattice before you've refined anything.
+
+\knotetime{11:30:10}Broad peaks mean small crystallites, and Scherrer gives a size, but remove the instrument width first.
+
+\knotetime{11:34:00}For real quantitative work we fit the whole pattern with Rietveld refinement.
+\end{knotetranscript}
+\end{knotechunk}
+\end{document}

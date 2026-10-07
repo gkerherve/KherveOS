@@ -1,0 +1,38 @@
+# Quantum mechanics 4 — The particle in a box
+Lecturer: Prof. R. Okafor
+06 October 2026
+Physics lecture theatre 1
+
+## Setting up the problem
+Potential $V = 0$ for $0 < x < L$ and $V = \infty$ outside: the particle cannot leave the box. Inside, the time-independent Schrödinger equation is $$-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} = E\psi$$ with boundary conditions $\psi(0) = \psi(L) = 0$.
+
+## Solutions
+- general solution $\psi = A\sin kx + B\cos kx$, with $k = \sqrt{2mE}/\hbar$
+- $\psi(0) = 0 \Rightarrow B = 0$
+- $\psi(L) = 0 \Rightarrow kL = n\pi$, $n = 1, 2, 3, \dots$
+Normalised wavefunctions and energies: $$\psi_n(x) = \sqrt{\tfrac{2}{L}}\,\sin\frac{n\pi x}{L}, \qquad E_n = \frac{n^2\pi^2\hbar^2}{2mL^2} = \frac{n^2 h^2}{8 m L^2}$$
+Key point: Energy is quantised by the boundary conditions alone, and $E_1 > 0$: zero-point energy, consistent with the uncertainty principle.
+- $\psi_n$ has $n - 1$ nodes inside the box
+- level spacing $E_{n+1} - E_n \propto 2n + 1$ grows with $n$
+- probability density $|\psi_n|^2$ is not uniform; for large $n$ it averages to $1/L$ (correspondence principle)
+
+## Numbers: an electron in a 1 nm box
+$E_1 = h^2/(8 m_e L^2) = (6.626\times10^{-34})^2 / (8 \times 9.109\times10^{-31} \times 10^{-18}) \approx 6.0\times10^{-20}$ J $\approx 0.38$ eV.
+- $E_2 = 4E_1 \approx 1.5$ eV, so the $1 \to 2$ transition is about 1.1 eV (in the near infrared)
+- for a 1 g marble in a 1 cm box the spacing is immeasurably small — classical behaviour
+
+## Quantum confinement in materials
+$E \propto 1/L^2$: the smaller the box, the larger the gap.
+- quantum dots (e.g. CdSe): smaller dots emit bluer light
+- quantum wells in semiconductor lasers; conjugated molecules (free-electron model of polyenes)
+Question: Why does a finite well always have at least one bound state, while the infinite one starts at n = 1?
+
+## What was said (transcript)
+[11:00:50] Today we solve our first real problem, a particle trapped in a box with infinitely high walls.
+[11:06:20] Inside the box the potential is zero, so the Schrödinger equation is just the free particle one.
+[11:09:40] The wavefunction has to vanish at both walls, and that's what forces the energy to come in steps.
+[11:14:30] Notice the lowest energy is not zero. You cannot have a particle at rest in a box, that would violate uncertainty.
+[11:18:20] Let's put numbers in for an electron in a box one nanometre wide.
+[11:21:40] That gives about zero point four electronvolts for the ground state, so these are energies you can see with light.
+[11:27:10] Now make the box smaller and the levels spread apart as one over L squared.
+[11:30:30] This is exactly why small cadmium selenide quantum dots glow blue and larger ones red.

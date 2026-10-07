@@ -1,0 +1,38 @@
+# Crystallography — X-ray diffraction and crystal structure
+Lecturer: Dr K. Nakamura
+12 October 2026
+Materials building, Room 202
+
+## Bragg's law
+X-rays reflected from planes $d$ apart interfere constructively when $$n\lambda = 2d\sin\theta$$
+- Cu Kα: $\lambda = 1.5406$ Å (Kα₁)
+- a powder pattern plots intensity against $2\theta$
+
+## Planes and Miller indices
+For a cubic lattice with parameter $a$: $$d_{hkl} = \frac{a}{\sqrt{h^2 + k^2 + l^2}}$$
+
+### Worked example: copper
+FCC Cu, $a = 3.615$ Å. For (111): $d = 3.615/\sqrt{3} = 2.087$ Å, so $\sin\theta = 1.5406/(2\times2.087) = 0.369$ and $2\theta \approx 43.3°$.
+
+## Systematic absences
+The structure factor removes some reflections:
+1. simple cubic: all $hkl$
+1. body-centred cubic: $h + k + l$ even — (110), (200), (211)…
+1. face-centred cubic: $h, k, l$ all even or all odd — (111), (200), (220), (311)…
+Key point: The pattern of absences identifies the lattice type before any refinement.
+
+## Peak widths and refinement
+- Scherrer: crystallite size $\tau = \dfrac{K\lambda}{\beta\cos\theta}$, $K \approx 0.9$, $\beta$ the FWHM in radians after removing the instrument broadening
+- strain also broadens peaks (as $\tan\theta$): Williamson–Hall separates the two
+- Rietveld refinement fits the whole pattern: lattice parameters, phase fractions, site occupancies
+Question: Below what size does Scherrer stop being meaningful, and above which size can it not be used?
+
+## What was said (transcript)
+[11:00:30] Diffraction is how we know where atoms are, and it all starts with Bragg's law.
+[11:05:00] With copper radiation the wavelength is one point five four angstrom, close to atomic spacings.
+[11:10:20] For cubic crystals the spacing is a over the square root of h squared plus k squared plus l squared.
+[11:14:40] For copper the one one one peak lands at about forty-three degrees two theta.
+[11:19:50] Not every reflection appears; in FCC the indices must be all odd or all even.
+[11:25:30] So the missing peaks tell you the lattice before you've refined anything.
+[11:30:10] Broad peaks mean small crystallites, and Scherrer gives a size, but remove the instrument width first.
+[11:34:00] For real quantitative work we fit the whole pattern with Rietveld refinement.

@@ -1,0 +1,120 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Linear algebra 7 — Eigenvalues and diagonalisation},pdfauthor={Lecturer: Dr A. Martin},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\newenvironment{knotechunk}{}{}
+\pagestyle{plain}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Linear algebra 7 — Eigenvalues and diagonalisation}\par
+{\large Lecturer: Dr A. Martin}\hfill{\color{knotemuted}05 October 2026 \textperiodcentered{} Maths building, Room 140}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+\knotesummary{Eigenvectors are the directions a matrix only stretches; the eigenvalues are the stretch factors, found from det(A \ensuremath{-} \ensuremath{\lambda}I) = 0. A matrix with n independent eigenvectors can be written A = PDP\textsuperscript{-1}, which makes powers and many applications easy. Symmetric matrices always can, with an orthogonal P.}
+
+\section{Eigenvalues and eigenvectors}
+
+\knotetime{02:25}A non-zero vector $\mathbf{v}$ is an eigenvector of a square matrix $A$ when \[A\mathbf{v} = \lambda\mathbf{v}\] for some scalar $\lambda$, its eigenvalue: $A$ only stretches $\mathbf{v}$, it does not turn it.
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item eigenvectors are only defined up to a scale factor
+  \item $\lambda = 0$ is allowed; then $A$ is singular
+  \item the eigenvalues of a triangular matrix are its diagonal entries
+\end{itemize}
+
+\knotekey[\knotetime{04:05}]{Sum of the eigenvalues = trace of $A$; product of the eigenvalues = $\det A$.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{The characteristic polynomial}
+
+\knotetime{09:55}$(A - \lambda I)\mathbf{v} = 0$ has a non-zero solution only if \[\det(A - \lambda I) = 0\] — a polynomial of degree $n$ in $\lambda$, so an $n \times n$ matrix has $n$ eigenvalues counted with multiplicity (possibly complex).
+
+\subsection{Worked example}
+
+\knotetime{10:45}For $A = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}$: $\det(A-\lambda I) = (2-\lambda)^2 - 1 = (\lambda-3)(\lambda-1)$.
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item $\lambda_1 = 3$: $\mathbf{v}_1 = (1, 1)^T$
+  \item $\lambda_2 = 1$: $\mathbf{v}_2 = (1, -1)^T$
+\end{enumerate}
+
+\knotetime{12:00}Check: trace $= 4 = 3 + 1$, det $= 3 = 3 \times 1$.
+
+\knotequestion[\knotetime{12:25}]{What happens when an eigenvalue is repeated — are there always enough eigenvectors?}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Diagonalisation}
+
+\knotetime{21:25}If $A$ has $n$ linearly independent eigenvectors, put them as the columns of $P$ and the eigenvalues on the diagonal of $D$: \[A = P D P^{-1}, \qquad A^k = P D^k P^{-1}\]
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item distinct eigenvalues \ensuremath{\Rightarrow} independent eigenvectors \ensuremath{\Rightarrow} diagonalisable
+  \item a repeated eigenvalue may give too few eigenvectors (a defective matrix, e.g. $\begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$)
+\end{itemize}
+
+\knotekey[\knotetime{22:40}]{Spectral theorem: a real symmetric matrix has real eigenvalues and orthonormal eigenvectors, so $A = Q D Q^T$ with $Q^{-1} = Q^T$.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Applications}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item Markov chains: the steady state is the eigenvector with $\lambda = 1$
+  \item coupled oscillators: eigenvectors are the normal modes, eigenvalues give $\omega^2$
+  \item principal component analysis: eigenvectors of the covariance matrix
+  \item systems of ODEs $\dot{\mathbf{x}} = A\mathbf{x}$: solutions $e^{\lambda t}\mathbf{v}$
+\end{itemize}
+
+\knotequestion[\knotetime{35:05}]{Problem sheet 7, questions 3–6 for Friday.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{What was said}
+\begin{knotetranscript}
+\knotetime{09:00:40}Good morning. Today is eigenvalues, probably the most useful idea in this course.
+
+\knotetime{09:01:30}An eigenvector is a direction the matrix doesn't rotate, it only stretches it, and the eigenvalue is how much.
+
+\knotetime{09:05:10}Note that if lambda is zero the matrix sends that vector to zero, so it can't be invertible.
+
+\knotetime{09:07:45}A quick check I always use: the eigenvalues add up to the trace and multiply to the determinant.
+
+\knotetime{09:10:20}To find them, we ask when A minus lambda I can send a non-zero vector to zero, that's when its determinant vanishes.
+
+\knotetime{09:15:00}For the two by two example we get lambda minus three times lambda minus one, so three and one.
+
+\knotetime{09:19:40}Now the big idea: if you have enough eigenvectors you can change basis so the matrix becomes diagonal.
+
+\knotetime{09:24:30}Powers become trivial, A to the k is P D to the k P inverse, you just raise the diagonal entries.
+
+\knotetime{09:28:00}Careful with repeated eigenvalues, the matrix one one zero one only has one eigenvector.
+
+\knotetime{09:31:30}Symmetric matrices are the nice case, real eigenvalues and orthogonal eigenvectors, that's the spectral theorem.
+
+\knotetime{09:34:10}In physics you will meet this as normal modes, in data science as principal components.
+\end{knotetranscript}
+\end{knotechunk}
+\end{document}

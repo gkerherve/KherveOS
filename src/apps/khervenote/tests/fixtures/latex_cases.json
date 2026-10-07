@@ -1,0 +1,206 @@
+{
+ "tex": [
+  [
+   "plain & simple",
+   "plain \\& simple"
+  ],
+  [
+   "costs $5 and $10",
+   "costs \\$5 and \\$10"
+  ],
+  [
+   "$a$ and $b$5",
+   "$a$ and \\$b\\$5"
+  ],
+  [
+   "H₂O at 25 °C ≈ 298 K",
+   "H\\textsubscript{2}O at 25 °C \\ensuremath{\\approx} 298 K"
+  ],
+  [
+   "\\(x\\) \\[y\\] $$z$$",
+   "$x$ \\[y\\] \\[z\\]"
+  ],
+  [
+   "$α + β$",
+   "$\\alpha  + \\beta $"
+  ],
+  [
+   "a_b^c ~ {x} # % & \\ end",
+   "a\\_b\\textasciicircum{}c \\textasciitilde{} \\{x\\} \\# \\% \\& \\textbackslash{} end"
+  ],
+  [
+   "multi\nline",
+   "multi\nline"
+  ],
+  [
+   "$ not maths $",
+   "\\$ not maths \\$"
+  ],
+  [
+   "$x$y",
+   "$x$y"
+  ],
+  [
+   "100 µm × 3 ± 0.1",
+   "100 µm × 3 ± 0.1"
+  ]
+ ],
+ "escape": [
+  [
+   "plain & simple",
+   "plain \\& simple"
+  ],
+  [
+   "costs $5 and $10",
+   "costs \\$5 and \\$10"
+  ],
+  [
+   "$a$ and $b$5",
+   "\\$a\\$ and \\$b\\$5"
+  ],
+  [
+   "H₂O at 25 °C ≈ 298 K",
+   "H\\textsubscript{2}O at 25 °C \\ensuremath{\\approx} 298 K"
+  ],
+  [
+   "\\(x\\) \\[y\\] $$z$$",
+   "\\textbackslash{}(x\\textbackslash{}) \\textbackslash{}[y\\textbackslash{}] \\$\\$z\\$\\$"
+  ],
+  [
+   "$α + β$",
+   "\\$\\ensuremath{\\alpha} + \\ensuremath{\\beta}\\$"
+  ],
+  [
+   "a_b^c ~ {x} # % & \\ end",
+   "a\\_b\\textasciicircum{}c \\textasciitilde{} \\{x\\} \\# \\% \\& \\textbackslash{} end"
+  ],
+  [
+   "multi\nline",
+   "multi\nline"
+  ],
+  [
+   "$ not maths $",
+   "\\$ not maths \\$"
+  ],
+  [
+   "$x$y",
+   "\\$x\\$y"
+  ],
+  [
+   "100 µm × 3 ± 0.1",
+   "100 µm × 3 ± 0.1"
+  ]
+ ],
+ "text_to_latex": [
+  [
+   "- a\n- b\n  - c\n1. d",
+   "\\begin{itemize}\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}\n  \\item a\n  \\item b\n  \\begin{itemize}\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}\n    \\item c\n  \\end{itemize}\n\\end{itemize}\n\\begin{enumerate}\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}\n  \\item d\n\\end{enumerate}"
+  ],
+  [
+   "Para one\n\nPara two\nline two",
+   "Para one\n\nPara two\\newline\nline two"
+  ],
+  [
+   "Intro:\n  1. one\n  2. two\n     continued\nAfter",
+   "Intro:\n\\begin{enumerate}\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}\n  \\item one\n  \\item two\\newline continued\n\\end{enumerate}\nAfter"
+  ],
+  [
+   "- only\n\n- two lists",
+   "\\begin{itemize}\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}\n  \\item only\n\\end{itemize}\n\n\\begin{itemize}\\setlength{\\itemsep}{0pt}\\setlength{\\parskip}{0pt}\n  \\item two lists\n\\end{itemize}"
+  ],
+  [
+   "plain & simple",
+   "plain \\& simple"
+  ],
+  [
+   "costs $5 and $10",
+   "costs \\$5 and \\$10"
+  ],
+  [
+   "$a$ and $b$5",
+   "$a$ and \\$b\\$5"
+  ],
+  [
+   "H₂O at 25 °C ≈ 298 K",
+   "H\\textsubscript{2}O at 25 °C \\ensuremath{\\approx} 298 K"
+  ],
+  [
+   "\\(x\\) \\[y\\] $$z$$",
+   "$x$ \\[y\\] \\[z\\]"
+  ],
+  [
+   "$α + β$",
+   "$\\alpha  + \\beta $"
+  ],
+  [
+   "a_b^c ~ {x} # % & \\ end",
+   "a\\_b\\textasciicircum{}c \\textasciitilde{} \\{x\\} \\# \\% \\& \\textbackslash{} end"
+  ],
+  [
+   "multi\nline",
+   "multi\\newline\nline"
+  ],
+  [
+   "$ not maths $",
+   "\\$ not maths \\$"
+  ],
+  [
+   "$x$y",
+   "$x$y"
+  ],
+  [
+   "100 µm × 3 ± 0.1",
+   "100 µm × 3 ± 0.1"
+  ]
+ ],
+ "rich_to_latex": [
+  [
+   "Bold and italic",
+   [
+    [
+     0,
+     4,
+     "b"
+    ],
+    [
+     9,
+     6,
+     "i"
+    ]
+   ],
+   "\\textbf{Bold} and \\textit{italic}"
+  ],
+  [
+   "overlap here",
+   [
+    [
+     0,
+     7,
+     "b"
+    ],
+    [
+     3,
+     9,
+     "u"
+    ]
+   ],
+   "\\textbf{ove}\\underline{\\textbf{rlap}}\\underline{ here}"
+  ],
+  [
+   "line\nbreak $x$",
+   [
+    [
+     0,
+     4,
+     "i"
+    ]
+   ],
+   "\\textit{line}\\newline\nbreak $x$"
+  ],
+  [
+   "no marks $y$",
+   [],
+   "no marks $y$"
+  ]
+ ]
+}

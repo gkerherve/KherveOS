@@ -1,0 +1,205 @@
+{
+ "format": 1,
+ "meta": {
+  "title": "Features & tests: 100% of $x$",
+  "speaker": "Dr Ø. Ñandú",
+  "date": "7 October 2026",
+  "place": "Room #4 {B}",
+  "started": "2026-10-07T14:00:00",
+  "layout": "paged",
+  "id": "0123456789abcdef0123456789abcdef",
+  "vocabulary": "XPS, ToF-SIMS, LLZO"
+ },
+ "summary": "- first point\n- second with $E=mc^2$\n\nA closing line.",
+ "sections": [
+  {
+   "id": "s000000000",
+   "title": "",
+   "blocks": [
+    {
+     "id": "b000000001",
+     "kind": "typed",
+     "text": "Lead-in before any section, at 12:30.",
+     "t": 12.5
+    }
+   ]
+  },
+  {
+   "id": "s000000001",
+   "title": "Marks & maths",
+   "blocks": [
+    {
+     "id": "b000000002",
+     "kind": "typed",
+     "text": "Bold, italic and underlined words, then line\nbreaks.",
+     "t": 61.0,
+     "marks": [
+      [
+       0,
+       4,
+       "b"
+      ],
+      [
+       6,
+       6,
+       "i"
+      ],
+      [
+       17,
+       10,
+       "u"
+      ],
+      [
+       0,
+       12,
+       "u"
+      ]
+     ]
+    },
+    {
+     "id": "b000000003",
+     "kind": "typed",
+     "text": "It costs $5 and $10; inline $E = h\\nu - \\phi$ and \\(k_1\\) and $$k = A\\exp(-E_a/RT)$$ then \\[ \\int_0^1 x\\,dx \\] end."
+    },
+    {
+     "id": "b000000004",
+     "kind": "typed",
+     "text": "Symbols: α β Δ ≈ → ° × ± µ H₂O Al³⁺ cm⁻¹ ~ ^ \\ _ # & % { } and $λ = 2°$."
+    },
+    {
+     "id": "b000000005",
+     "kind": "important",
+     "text": "Remember: $\\Delta G < 0$.",
+     "t": 70.25
+    },
+    {
+     "id": "b000000006",
+     "kind": "question",
+     "text": "Why is it **so**?",
+     "t": 80.0
+    },
+    {
+     "id": "b000000007",
+     "kind": "transcript",
+     "text": "so um the next slide shows",
+     "t": 90.0
+    },
+    {
+     "id": "b000000008",
+     "kind": "heading",
+     "text": "A subsection",
+     "t": 95.0,
+     "level": 2
+    },
+    {
+     "id": "b000000009",
+     "kind": "heading",
+     "text": "A sub-subsection",
+     "level": 3
+    }
+   ],
+   "t": 60.0
+  },
+  {
+   "id": "s000000002",
+   "title": "Lists",
+   "blocks": [
+    {
+     "id": "b000000010",
+     "kind": "item",
+     "text": "first",
+     "numbered": true
+    },
+    {
+     "id": "b000000011",
+     "kind": "item",
+     "text": "nested",
+     "level": 1,
+     "numbered": true
+    },
+    {
+     "id": "b000000012",
+     "kind": "item",
+     "text": "deeper bullet",
+     "level": 2
+    },
+    {
+     "id": "b000000013",
+     "kind": "item",
+     "text": "back to two",
+     "level": 1,
+     "numbered": true,
+     "marks": [
+      [
+       0,
+       4,
+       "b"
+      ]
+     ]
+    },
+    {
+     "id": "b000000014",
+     "kind": "item",
+     "text": "second",
+     "numbered": true
+    },
+    {
+     "id": "b000000015",
+     "kind": "item",
+     "text": "a bullet list now"
+    },
+    {
+     "id": "b000000016",
+     "kind": "typed",
+     "text": "Typed list:\n- one\n  - one.a\n1. numbered\n\nNew paragraph."
+    },
+    {
+     "id": "b000000017",
+     "kind": "image",
+     "text": "A caption $x^2$",
+     "path": "assets/abc123.png"
+    },
+    {
+     "id": "b000000018",
+     "kind": "attachment",
+     "text": "Slides.pdf",
+     "path": "assets/att-0001/Slides.pdf"
+    }
+   ],
+   "t": 120.0
+  },
+  {
+   "id": "s000000003",
+   "title": "",
+   "blocks": [],
+   "t": 300.0
+  }
+ ],
+ "recordings": [
+  {
+   "path": "assets/rec-0001.ogg",
+   "t0": 5.0,
+   "duration": 42.5
+  }
+ ],
+ "transcript": [
+  {
+   "t": 5.0,
+   "text": "Good afternoon, everyone."
+  },
+  {
+   "t": 65.5,
+   "text": "The energy is $E = h\\nu$ & that's 100%."
+  },
+  {
+   "t": 3725.0,
+   "text": "One hour later."
+  }
+ ],
+ "attachments": [
+  {
+   "path": "assets/att-0001/Slides.pdf",
+   "name": "Slides.pdf"
+  }
+ ]
+}

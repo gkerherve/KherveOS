@@ -1,0 +1,40 @@
+# Features & tests: 100% of $x$
+Dr Ø. Ñandú
+7 October 2026
+Room #4 {B}
+Attached: Slides.pdf
+Lead-in before any section, at 12:30.
+
+## Marks & maths
+Bold, italic and underlined words, then line
+breaks.
+It costs $5 and $10; inline $E = h\nu - \phi$ and \(k_1\) and $$k = A\exp(-E_a/RT)$$ then \[ \int_0^1 x\,dx \] end.
+Symbols: α β Δ ≈ → ° × ± µ H₂O Al³⁺ cm⁻¹ ~ ^ \ _ # & % { } and $λ = 2°$.
+Key point: Remember: $\Delta G < 0$.
+Question: Why is it **so**?
+(said) so um the next slide shows
+
+### A subsection
+
+#### A sub-subsection
+
+## Lists
+1. first
+  1. nested
+    - deeper bullet
+  1. back to two
+1. second
+- a bullet list now
+Typed list:
+- one
+  - one.a
+1. numbered
+
+New paragraph.
+[image: A caption $x^2$]
+[attached document: Slides.pdf]
+
+## What was said (transcript)
+[14:00:05] Good afternoon, everyone.
+[14:01:05] The energy is $E = h\nu$ & that's 100%.
+[15:02:05] One hour later.

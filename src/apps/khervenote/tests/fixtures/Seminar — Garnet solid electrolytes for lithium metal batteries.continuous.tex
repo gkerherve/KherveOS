@@ -1,0 +1,113 @@
+\documentclass[11pt]{article}
+\usepackage[paperwidth=210mm,paperheight=5000mm,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Seminar — Garnet solid electrolytes for lithium metal batteries},pdfauthor={Speaker: Dr P. Varga},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\makeatletter
+\newdimen\knote@limit \knote@limit=4950mm
+\newbox\knote@page \newbox\knote@chunk
+\def\knote@ht#1{\dimexpr\ht#1+\dp#1\relax}
+\def\knote@setheight#1{\global\pdfpageheight=#1\relax
+  \special{pdf:pagesize width \the\paperwidth\space height \the\pdfpageheight}}
+\def\knote@flush{\ifvoid\knote@page\else
+  \knote@setheight{\dimexpr\knote@ht\knote@page+40mm+2mm\relax}%
+  \box\knote@page\par\clearpage\global\pdfpageheight=\paperheight\fi}
+\newenvironment{knotechunk}
+  {\par\setbox\knote@chunk=\vbox\bgroup\hsize=\textwidth\linewidth=\textwidth}
+  {\par\egroup
+   \ifdim\knote@ht\knote@chunk>\knote@limit
+     \knote@flush\unvbox\knote@chunk\par\clearpage
+   \else\ifvoid\knote@page
+     \global\setbox\knote@page=\vbox{\unvbox\knote@chunk}%
+   \else\ifdim\dimexpr\knote@ht\knote@page+\knote@ht\knote@chunk\relax>\knote@limit
+     \knote@flush\global\setbox\knote@page=\vbox{\unvbox\knote@chunk}%
+   \else
+     \global\setbox\knote@page=\vbox{\unvbox\knote@page\unvbox\knote@chunk}%
+   \fi\fi\fi}
+\AtEndDocument{\knote@flush}
+\makeatother
+\pagestyle{empty}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Seminar — Garnet solid electrolytes for lithium metal batteries}\par
+{\large Speaker: Dr P. Varga}\hfill{\color{knotemuted}14 October 2026 \textperiodcentered{} Materials building, Seminar room}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+\knotesummary{Garnet Li\textsubscript{7}La\textsubscript{3}Zr\textsubscript{2}O\textsubscript{12} (LLZO) is a promising solid electrolyte: stable against lithium metal and fast-conducting in its cubic form, which needs a dopant such as Al or Ga. Its weak point is the surface — Li\textsubscript{2}CO\textsubscript{3}/LiOH from air and chemical inhomogeneity at grain boundaries raise the interface resistance and let lithium penetrate.}
+
+\section{Why solid electrolytes}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item replace the flammable liquid electrolyte
+  \item enable a lithium metal anode: much higher energy density
+  \item requirements: ionic conductivity \ensuremath{\geq} $10^{-4}$ S cm$^{-1}$, electronic insulation, stability against Li, good interfaces
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Garnet LLZO}
+
+$\mathrm{Li_7La_3Zr_2O_{12}}$ exists in two forms:
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item tetragonal (ordered Li): about $10^{-6}$ S cm$^{-1}$
+  \item cubic (disordered Li): $10^{-4}$–$10^{-3}$ S cm$^{-1}$ at room temperature
+\end{enumerate}
+
+\knotekey{The cubic phase is stabilised by aliovalent doping — Al\textsuperscript{3+} or Ga\textsuperscript{3+} on Li sites, or Ta\textsuperscript{5+} / Nb\textsuperscript{5+} on Zr sites; Ga-doped LLZO is among the best conductors.}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item wide electrochemical window and kinetically stable against Li metal
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{The interface problem}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item in air, LLZO reacts with H\textsubscript{2}O and CO\textsubscript{2}: a LiOH / Li\textsubscript{2}CO\textsubscript{3} layer forms on the surface
+  \item this layer is a poor Li\textsuperscript{+} conductor and is not wetted by lithium \ensuremath{\rightarrow} high interfacial resistance
+  \item remedies: polishing, acid etching, heat treatment in inert gas, thin interlayers (e.g. Au, Al\textsubscript{2}O\textsubscript{3})
+  \item dendrites: lithium can still penetrate, often along grain boundaries; the critical current density (CCD) is the measure
+\end{itemize}
+
+\subsection{Chemical inhomogeneity}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item dopants and impurities segregate to grain boundaries and the surface after processing
+  \item surface-sensitive techniques see it: XPS (chemical state), ToF-SIMS (mapping, depth profiles), LEIS (low-energy ion scattering: the outermost atomic layer)
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Measuring it}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item impedance spectroscopy: separate bulk, grain-boundary and interface arcs with an equivalent circuit
+  \item galvanostatic cycling of Li | LLZO | Li cells at rising current to find the CCD
+  \item stack pressure strongly changes the interface: report it
+\end{itemize}
+
+\knotequestion{How much of the improvement after surface treatment is chemistry, and how much is better contact?}
+\end{knotechunk}
+\end{document}

@@ -1,0 +1,112 @@
+[
+ {
+  "text": "Just a paragraph\nover two lines.\n\nAnother **bold** one.",
+  "blocks": [
+   {
+    "kind": "typed",
+    "text": "Just a paragraph over two lines."
+   },
+   {
+    "kind": "typed",
+    "text": "Another bold one.",
+    "marks": [
+     [
+      8,
+      4,
+      "b"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "text": "# Title\n\nText under it.\n\n## Sub\n- a\n- b **c**\n  - nested\n    - deeper\n1. one\n2) two",
+  "blocks": [
+   {
+    "kind": "heading",
+    "text": "Title",
+    "level": 2
+   },
+   {
+    "kind": "typed",
+    "text": "Text under it."
+   },
+   {
+    "kind": "heading",
+    "text": "Sub",
+    "level": 3
+   },
+   {
+    "kind": "item",
+    "text": "a"
+   },
+   {
+    "kind": "item",
+    "text": "b c",
+    "marks": [
+     [
+      2,
+      1,
+      "b"
+     ]
+    ]
+   },
+   {
+    "kind": "item",
+    "text": "nested",
+    "level": 1
+   },
+   {
+    "kind": "item",
+    "text": "deeper",
+    "level": 2
+   },
+   {
+    "kind": "item",
+    "text": "one",
+    "numbered": true
+   },
+   {
+    "kind": "item",
+    "text": "two",
+    "numbered": true
+   }
+  ]
+ },
+ {
+  "text": "### Deep\n#### Deeper\n- x",
+  "blocks": [
+   {
+    "kind": "heading",
+    "text": "Deep",
+    "level": 2
+   },
+   {
+    "kind": "heading",
+    "text": "Deeper",
+    "level": 3
+   },
+   {
+    "kind": "item",
+    "text": "x"
+   }
+  ]
+ },
+ {
+  "text": "* star item\n• bullet item\n\n- after blank",
+  "blocks": [
+   {
+    "kind": "item",
+    "text": "star item"
+   },
+   {
+    "kind": "item",
+    "text": "bullet item"
+   },
+   {
+    "kind": "item",
+    "text": "after blank"
+   }
+  ]
+ }
+]

@@ -1,0 +1,101 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Thermodynamics 3 — The laws and entropy},pdfauthor={Lecturer: Dr S. Lindqvist},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\newenvironment{knotechunk}{}{}
+\pagestyle{plain}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Thermodynamics 3 — The laws and entropy}\par
+{\large Lecturer: Dr S. Lindqvist}\hfill{\color{knotemuted}07 October 2026 \textperiodcentered{} Chemistry building, LT2}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+
+\section{The first law}
+
+\knotetime{01:25}Energy is conserved: $\Delta U = q + w$ (heat and work done *on* the system).
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item at constant volume $\Delta U = q_V$; at constant pressure $\Delta H = q_p$, with $H = U + pV$
+  \item state functions ($U$, $H$, $S$, $G$) depend only on the state, not the path; $q$ and $w$ do not
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Entropy and the second law}
+
+\knotetime{10:25}\[dS = \frac{\delta q_{\mathrm{rev}}}{T}, \qquad \Delta S_{\mathrm{universe}} \geq 0\] Statistically, $S = k_B \ln W$ — the number of microstates.
+
+\subsection{Worked example: melting ice}
+
+\knotetime{11:15}$\Delta H_{\mathrm{fus}} = 6.01$ kJ mol$^{-1}$ at 273.15 K, so $\Delta S_{\mathrm{fus}} = 6010 / 273.15 \approx 22.0$ J K$^{-1}$ mol$^{-1}$.
+
+\knotekey[\knotetime{11:40}]{Heat engines: no engine between $T_h$ and $T_c$ beats the Carnot efficiency $\eta = 1 - T_c/T_h$.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Gibbs energy}
+
+\knotetime{24:25}At constant $T$ and $p$, the second law becomes a condition on the system alone: \[G = H - TS, \qquad \Delta G = \Delta H - T\Delta S < 0 \text{ for a spontaneous change}\]
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item $\Delta H < 0$, $\Delta S > 0$: spontaneous at all $T$
+  \item $\Delta H > 0$, $\Delta S > 0$: spontaneous above $T = \Delta H / \Delta S$
+  \item $\Delta H < 0$, $\Delta S < 0$: spontaneous below $T = \Delta H / \Delta S$
+  \item $\Delta H > 0$, $\Delta S < 0$: never
+\end{enumerate}
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item equilibrium: $\Delta G^\circ = -RT\ln K$
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{The third law}
+
+\knotetime{36:25}The entropy of a perfect crystal tends to zero as $T \to 0$ K, which gives absolute entropies.
+
+\knotequestion[\knotetime{36:50}]{How does residual entropy (e.g. in ice or CO) fit with the third law?}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{What was said}
+\begin{knotetranscript}
+\knotetime{10:00:30}Three laws today, and by the end you should be able to predict whether a reaction can go.
+
+\knotetime{10:05:40}Remember the sign convention, w is work done on the system, so compression is positive.
+
+\knotetime{10:09:00}Entropy: the classical definition is heat exchanged reversibly divided by temperature.
+
+\knotetime{10:13:30}Boltzmann's view is more intuitive, entropy counts the number of ways the system can be arranged.
+
+\knotetime{10:18:10}For melting ice, six point zero one kilojoules divided by two seven three gives about twenty-two joules per kelvin per mole.
+
+\knotetime{10:22:00}Now combine both into one quantity for the system at constant temperature and pressure, that's the Gibbs energy.
+
+\knotetime{10:27:30}When enthalpy and entropy have the same sign, temperature decides, and the crossover is delta H over delta S.
+
+\knotetime{10:34:40}Finally the third law, which sets the zero of entropy.
+\end{knotetranscript}
+\end{knotechunk}
+\end{document}

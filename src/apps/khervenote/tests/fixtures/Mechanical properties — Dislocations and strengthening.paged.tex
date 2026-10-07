@@ -1,0 +1,96 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=20mm]{geometry}
+\usepackage{amsmath,amssymb,xcolor,graphicx}
+\usepackage[hypcap=false]{caption}
+\usepackage[hidelinks,bookmarksnumbered,bookmarksopen]{hyperref}
+\hypersetup{pdftitle={Mechanical properties — Dislocations and strengthening},pdfauthor={Lecturer: Prof. J. Adeyemi},
+  pdfcreator={KherveNote}}
+\renewcommand\labelitemii{\textbullet}
+\renewcommand\labelitemiii{\textbullet}
+\renewcommand\labelitemiv{\textbullet}
+\renewcommand\labelenumii{\arabic{enumi}.\arabic{enumii}.}
+\renewcommand\labelenumiii{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}
+\renewcommand\labelenumiv{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}.}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\definecolor{knoteaccent}{HTML}{1A6DD8}
+\definecolor{knotemuted}{HTML}{6B6B6B}
+\definecolor{knotekey}{HTML}{D96B00}
+\newcommand\knotetime[1]{\leavevmode\llap{\color{knotemuted}\scriptsize #1\hspace{1em}}}
+\newcommand\knotekey[2][]{\par\noindent#1\colorbox{knotekey!12}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{knotekey}$\star$ Key point.} #2}}\par}
+\newcommand\knotequestion[2][]{\par\noindent#1{\color{knoteaccent}\textbf{?}}~\emph{#2}\par}
+\newenvironment{knotetranscript}{\par\color{knotemuted}\small}{\par}
+\newcommand\knotesummary[1]{\par\noindent\fcolorbox{knoteaccent}{knoteaccent!6}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\textbf{Summary}\par #1}}\par}
+\newenvironment{knotechunk}{}{}
+\pagestyle{plain}
+\begin{document}
+\begin{knotechunk}
+{\color{knoteaccent}\rule{\linewidth}{1.5pt}}\par
+{\LARGE\bfseries Mechanical properties — Dislocations and strengthening}\par
+{\large Lecturer: Prof. J. Adeyemi}\hfill{\color{knotemuted}16 October 2026 \textperiodcentered{} Materials building, LT3}\par
+{\color{knoteaccent}\rule{\linewidth}{0.6pt}}\par
+
+\section{Stress and strain}
+
+\knotetime{01:25}Engineering stress $\sigma = F/A_0$, strain $\varepsilon = \Delta L/L_0$; in the elastic range Hooke's law $\sigma = E\varepsilon$.
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item yield strength: the 0.2 \% offset stress
+  \item ultimate tensile strength (UTS): the maximum of the engineering curve
+  \item ductility: elongation at fracture
+\end{itemize}
+
+\knotekey[\knotetime{03:05}]{Metals yield at stresses far below the theoretical shear strength (\ensuremath{\approx} G/10) — because of dislocations.}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Dislocations and slip}
+
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item edge dislocation: Burgers vector $\mathbf{b} \perp$ line; screw: $\mathbf{b} \parallel$ line
+  \item slip happens on close-packed planes along close-packed directions
+  \item FCC: $\{111\}\langle 110\rangle$, 12 slip systems — hence ductile (Cu, Al, Au)
+  \item Schmid's law: resolved shear stress $\tau_R = \sigma\cos\phi\cos\lambda$; slip starts when $\tau_R$ reaches the critical value
+\end{itemize}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{Strengthening mechanisms}
+
+\knotetime{25:25}Every mechanism makes dislocations harder to move:
+
+\begin{enumerate}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+  \item grain refinement — Hall–Petch: $\sigma_y = \sigma_0 + k_y d^{-1/2}$
+  \item solid-solution strengthening: solute atoms strain the lattice
+  \item precipitation hardening: particles pinned or bypassed by Orowan bowing (Al alloys, Ni superalloys)
+  \item work hardening: dislocation density $\rho$ rises, $\tau \approx \alpha G b\sqrt{\rho}$ (Taylor)
+\end{enumerate}
+
+\knotekey[\knotetime{27:30}]{Most mechanisms trade strength for ductility; grain refinement improves both, down to the nanocrystalline range.}
+
+\knotequestion[\knotetime{27:55}]{Why does Hall–Petch break down for grain sizes below about 10–20 nm?}
+\end{knotechunk}
+
+\begin{knotechunk}
+\section{What was said}
+\begin{knotetranscript}
+\knotetime{10:00:40}Today, why metals are so much weaker than their bonds suggest, and how we make them stronger.
+
+\knotetime{10:07:30}The theoretical shear strength is around G over ten, but real metals yield a thousand times lower.
+
+\knotetime{10:10:50}The answer is dislocations: you move one line of atoms at a time, like a ruck in a carpet.
+
+\knotetime{10:16:20}FCC metals have twelve slip systems, which is why copper and aluminium are so ductile.
+
+\knotetime{10:21:00}Schmid's law: only the shear stress resolved on the slip plane and direction matters.
+
+\knotetime{10:23:50}So every strengthening mechanism is a way of getting in the way of dislocations.
+
+\knotetime{10:28:30}Smaller grains mean more boundaries to pile up against, that's Hall–Petch, one over root d.
+
+\knotetime{10:33:40}Work hardening comes from dislocations tangling with each other, stress goes as root of the density.
+\end{knotetranscript}
+\end{knotechunk}
+\end{document}

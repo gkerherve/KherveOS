@@ -1,0 +1,38 @@
+# Thermodynamics 3 — The laws and entropy
+Lecturer: Dr S. Lindqvist
+07 October 2026
+Chemistry building, LT2
+
+## The first law
+Energy is conserved: $\Delta U = q + w$ (heat and work done *on* the system).
+- at constant volume $\Delta U = q_V$; at constant pressure $\Delta H = q_p$, with $H = U + pV$
+- state functions ($U$, $H$, $S$, $G$) depend only on the state, not the path; $q$ and $w$ do not
+
+## Entropy and the second law
+$$dS = \frac{\delta q_{\mathrm{rev}}}{T}, \qquad \Delta S_{\mathrm{universe}} \geq 0$$ Statistically, $S = k_B \ln W$ — the number of microstates.
+
+### Worked example: melting ice
+$\Delta H_{\mathrm{fus}} = 6.01$ kJ mol$^{-1}$ at 273.15 K, so $\Delta S_{\mathrm{fus}} = 6010 / 273.15 \approx 22.0$ J K$^{-1}$ mol$^{-1}$.
+Key point: Heat engines: no engine between $T_h$ and $T_c$ beats the Carnot efficiency $\eta = 1 - T_c/T_h$.
+
+## Gibbs energy
+At constant $T$ and $p$, the second law becomes a condition on the system alone: $$G = H - TS, \qquad \Delta G = \Delta H - T\Delta S < 0 \text{ for a spontaneous change}$$
+1. $\Delta H < 0$, $\Delta S > 0$: spontaneous at all $T$
+1. $\Delta H > 0$, $\Delta S > 0$: spontaneous above $T = \Delta H / \Delta S$
+1. $\Delta H < 0$, $\Delta S < 0$: spontaneous below $T = \Delta H / \Delta S$
+1. $\Delta H > 0$, $\Delta S < 0$: never
+- equilibrium: $\Delta G^\circ = -RT\ln K$
+
+## The third law
+The entropy of a perfect crystal tends to zero as $T \to 0$ K, which gives absolute entropies.
+Question: How does residual entropy (e.g. in ice or CO) fit with the third law?
+
+## What was said (transcript)
+[10:00:30] Three laws today, and by the end you should be able to predict whether a reaction can go.
+[10:05:40] Remember the sign convention, w is work done on the system, so compression is positive.
+[10:09:00] Entropy: the classical definition is heat exchanged reversibly divided by temperature.
+[10:13:30] Boltzmann's view is more intuitive, entropy counts the number of ways the system can be arranged.
+[10:18:10] For melting ice, six point zero one kilojoules divided by two seven three gives about twenty-two joules per kelvin per mole.
+[10:22:00] Now combine both into one quantity for the system at constant temperature and pressure, that's the Gibbs energy.
+[10:27:30] When enthalpy and entropy have the same sign, temperature decides, and the crossover is delta H over delta S.
+[10:34:40] Finally the third law, which sets the zero of entropy.
