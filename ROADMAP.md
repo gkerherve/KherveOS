@@ -114,7 +114,8 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       2026-10-07 (desktop core in Pyodide). Check: typing straight into a selected cell
       (the formula bar works); not ported: lmfit peak dialog, cell buttons, =MYFUNC from
       =PY, printing, spell check.
-- [ ] KhervePaint (`../KhervePaint`) — raster + vector canvas
+- [x] KhervePaint (`../KhervePaint`) — raster + vector canvas — ported 2026-10-07, committed
+      before a browser test: open it and check (no molecule/crystal palettes, raster PDF)
 - [ ] KherveFitting (`../KherveFitting`, develop) — first extract a wx-free fitting
       core (`Peak_Functions.py`, backgrounds, file readers) to run in Pyodide, then the
       web UI (spectrum plot, peak table, fit)
@@ -149,6 +150,8 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       while a window is open (KherveDB: select element / filter / list lines; KherveSheet:
       read/write cells; KherveBook: add/run cells; Browser: open URL…), exposed to KherveAI
       and MCP, and list them in the system prompt.
+- [ ] **Drag files from KherveOS onto the computer's desktop downloads them** (user,
+      2026-10-07): Files and the KherveOS desktop, several files at once.
 - [ ] **Copy and paste of files**: Copy / Cut / Paste in Files and on the Desktop (menus,
       right-click, ⌘C/⌘X/⌘V). On this computer by default; when signed in, Copy also puts
       the files on the KherveOS server (per-user clipboard, size limit) so another computer
