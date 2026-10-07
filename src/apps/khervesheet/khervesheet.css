@@ -1,0 +1,1010 @@
+/* KherveSheet. Every rule is scoped under the app's root (.ks-app), or under
+   .ks-doc for the help shown in the OS's own dialogs. Colours come from the
+   theme variables only (--k-*); the cells themselves are drawn on a canvas. */
+
+.ks-app {
+  position: relative;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------- toolbars */
+
+.ks-app .ks-toolbars {
+  flex: none;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+}
+.ks-app .ks-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 36px;
+  padding: 3px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ks-app .ks-toolbar + .ks-toolbar {
+  border-top: 1px solid var(--k-border);
+  min-height: 34px;
+}
+.ks-app .ks-tb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 5px;
+  border: none;
+  border-radius: var(--k-radius-sm);
+  background: transparent;
+  color: var(--k-text);
+  cursor: pointer;
+  flex: none;
+}
+.ks-app .ks-tb:hover:not(:disabled) {
+  background: var(--k-button-hover);
+}
+.ks-app .ks-tb.on {
+  background: var(--k-selection);
+  color: var(--k-text);
+}
+.ks-app .ks-tb:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.ks-app .ks-split {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.ks-app .ks-split .ks-tb:first-child {
+  border-radius: var(--k-radius-sm) 0 0 var(--k-radius-sm);
+  padding-right: 3px;
+}
+.ks-app .ks-tb-arrow {
+  min-width: 14px;
+  padding: 0 2px;
+  border-radius: 0 var(--k-radius-sm) var(--k-radius-sm) 0;
+  color: var(--k-muted);
+}
+.ks-app .ks-tb-sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 5px;
+  background: var(--k-border);
+  flex: none;
+}
+.ks-app .ks-tb-space {
+  flex: 1;
+}
+.ks-app .ks-tb-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 13px;
+  border: 1px solid color-mix(in srgb, var(--k-warning) 60%, transparent);
+  background: color-mix(in srgb, var(--k-warning) 16%, transparent);
+  color: var(--k-text);
+  cursor: pointer;
+  white-space: nowrap;
+  flex: none;
+}
+.ks-app .ks-tb-run:hover {
+  background: color-mix(in srgb, var(--k-warning) 26%, transparent);
+}
+.ks-app .ks-tb-select {
+  height: 26px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+  color: var(--k-text);
+  padding: 0 4px;
+  outline: none;
+  flex: none;
+}
+.ks-app .ks-tb-select:focus {
+  border-color: var(--k-accent);
+}
+.ks-app .ks-tb-select.font {
+  width: 132px;
+}
+.ks-app .ks-tb-select.size {
+  width: 54px;
+  margin-left: 4px;
+}
+.ks-app .ks-tb-select.numfmt {
+  width: 150px;
+  margin-right: 2px;
+}
+.ks-app .ks-colorbtn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 20px;
+}
+.ks-app .ks-colorbtn i {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 0;
+  height: 4px;
+  border-radius: 1px;
+  border: 1px solid color-mix(in srgb, var(--k-text) 25%, transparent);
+}
+
+/* ---------------------------------------------------------- formula bar */
+
+.ks-app .ks-fbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 5px 8px;
+  background: var(--k-surface);
+  border-bottom: 1px solid var(--k-border);
+  flex: none;
+}
+.ks-app .ks-namebox {
+  width: 96px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+  color: var(--k-text);
+  font-family: var(--k-mono);
+  font-size: 12px;
+  outline: none;
+  flex: none;
+}
+.ks-app .ks-namebox:focus {
+  border-color: var(--k-accent);
+}
+.ks-app .ks-fx {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 26px;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-button);
+  color: var(--k-accent);
+  cursor: pointer;
+  flex: none;
+}
+.ks-app .ks-fx:hover {
+  background: var(--k-button-hover);
+}
+.ks-app .ks-fbar-input {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+.ks-app .ks-fbar-input textarea {
+  flex: 1;
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+  color: var(--k-text);
+  font-family: var(--k-mono);
+  font-size: 12.5px;
+  line-height: 16px;
+  resize: none;
+  outline: none;
+}
+.ks-app .ks-fbar-input textarea:focus {
+  border-color: var(--k-accent);
+}
+.ks-app .ks-fbar-input textarea::placeholder {
+  color: var(--k-placeholder);
+}
+.ks-app .ks-fbar-input.py textarea {
+  padding-left: 34px;
+  border-color: color-mix(in srgb, var(--k-link) 45%, var(--k-border));
+}
+.ks-app .ks-py-badge {
+  position: absolute;
+  left: 6px;
+  top: 5px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font: 700 10px/16px var(--k-font);
+  color: var(--k-accent-text);
+  background: color-mix(in srgb, var(--k-link) 70%, #2f6fb0);
+}
+.ks-app .ks-fbar-btn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: var(--k-radius-sm);
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+  flex: none;
+}
+.ks-app .ks-fbar-btn:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.ks-app .ks-fbar-btn.err {
+  color: var(--k-danger);
+}
+
+/* the Python banner */
+.ks-app .ks-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--k-warning) 12%, var(--k-surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--k-warning) 35%, var(--k-border));
+  color: var(--k-text);
+  font-size: 12.5px;
+  flex: none;
+}
+.ks-app .ks-banner > svg {
+  color: var(--k-warning);
+  flex: none;
+}
+.ks-app .ks-banner span {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ----------------------------------------------------------------- grid */
+
+.ks-app .ks-body {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.ks-app .ks-grid {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--k-bg);
+}
+.ks-app .ks-scroller {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  outline: none;
+}
+.ks-app .ks-spacer {
+  position: relative;
+}
+.ks-app .ks-stage {
+  position: sticky;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+}
+.ks-app .ks-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  touch-action: none;
+}
+.ks-app .ks-layer-clip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ks-app .ks-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+.ks-app .ks-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--k-text);
+  background: color-mix(in srgb, var(--k-bg) 72%, transparent);
+  font-size: 13px;
+}
+.ks-app .ks-note-tip {
+  position: absolute;
+  z-index: 25;
+  max-width: 300px;
+  padding: 7px 9px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--k-warning) 45%, var(--k-border));
+  background: var(--k-surface);
+  color: var(--k-text);
+  box-shadow: var(--k-shadow);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  pointer-events: none;
+}
+
+/* the in-cell editor */
+.ks-app .ks-cell-editor {
+  position: absolute;
+  z-index: 12;
+  margin: 0;
+  padding: 1px 2px 1px 3px;
+  border: 2px solid var(--k-accent);
+  border-radius: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  white-space: pre;
+  box-shadow: 0 2px 10px color-mix(in srgb, #000 45%, transparent);
+  pointer-events: auto;
+}
+
+/* function list and help */
+.ks-app .ks-assist {
+  position: absolute;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  max-width: min(560px, calc(100% - 8px));
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+  background: var(--k-surface);
+  box-shadow: var(--k-shadow);
+  font-size: 12px;
+  overflow: hidden;
+}
+.ks-app .ks-assist-list {
+  list-style: none;
+  margin: 0;
+  padding: 3px 0;
+  min-width: 150px;
+  max-height: 240px;
+  overflow-y: auto;
+  border-right: 1px solid var(--k-border);
+}
+.ks-app .ks-assist-list li {
+  padding: 3px 10px;
+  font-family: var(--k-mono);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ks-app .ks-assist-list li:hover,
+.ks-app .ks-assist-list li.on {
+  background: var(--k-selection);
+}
+.ks-app .ks-assist-help {
+  padding: 7px 10px;
+  max-width: 380px;
+  color: var(--k-text);
+}
+.ks-app .ks-assist-help code {
+  background: none;
+  padding: 0;
+  color: var(--k-link);
+  font-size: 11.5px;
+  white-space: normal;
+}
+.ks-app .ks-assist-help b {
+  color: var(--k-text);
+}
+.ks-app .ks-assist-help p {
+  margin: 4px 0 0;
+  color: var(--k-muted);
+  line-height: 1.4;
+}
+
+/* charts, pictures, equations, =PY figures */
+.ks-app .ks-float {
+  position: absolute;
+  z-index: 5;
+  pointer-events: auto;
+  user-select: none;
+  cursor: move;
+}
+.ks-app .ks-float img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.ks-app .ks-chart {
+  background: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--k-text) 18%, transparent);
+  box-shadow: 0 3px 14px color-mix(in srgb, #000 40%, transparent);
+}
+.ks-app .ks-float.on {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 1px;
+  z-index: 8;
+}
+.ks-app .ks-pyfig {
+  z-index: 6;
+  cursor: default;
+  background: #ffffff;
+  box-shadow: 0 3px 14px color-mix(in srgb, #000 40%, transparent);
+  pointer-events: none;
+}
+.ks-app .ks-chart-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  padding: 12px;
+  text-align: center;
+  color: #4b5563;
+  font-size: 12px;
+}
+.ks-app .ks-chart-msg b {
+  color: #111827;
+}
+.ks-app .ks-eq {
+  width: 100%;
+  height: 100%;
+  border-style: solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ks-app .ks-eq-body {
+  padding: 2px 8px;
+}
+.ks-app .ks-eq-bad {
+  font-family: var(--k-mono);
+  color: #b42318;
+}
+.ks-app .ks-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--k-accent);
+  border: 1px solid var(--k-bg);
+}
+.ks-app .ks-handle-nw { left: -6px; top: -6px; cursor: nwse-resize; }
+.ks-app .ks-handle-n { left: calc(50% - 5px); top: -6px; cursor: ns-resize; }
+.ks-app .ks-handle-ne { right: -6px; top: -6px; cursor: nesw-resize; }
+.ks-app .ks-handle-e { right: -6px; top: calc(50% - 5px); cursor: ew-resize; }
+.ks-app .ks-handle-se { right: -6px; bottom: -6px; cursor: nwse-resize; }
+.ks-app .ks-handle-s { left: calc(50% - 5px); bottom: -6px; cursor: ns-resize; }
+.ks-app .ks-handle-sw { left: -6px; bottom: -6px; cursor: nesw-resize; }
+.ks-app .ks-handle-w { left: -6px; top: calc(50% - 5px); cursor: ew-resize; }
+
+/* ------------------------------------------------------------ sheet tabs */
+
+.ks-app .ks-tabs {
+  display: flex;
+  align-items: stretch;
+  height: 30px;
+  background: var(--k-chrome);
+  border-top: 1px solid var(--k-border);
+  flex: none;
+  user-select: none;
+}
+.ks-app .ks-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0 4px;
+  border-right: 1px solid var(--k-border);
+  flex: none;
+}
+.ks-app .ks-tabs-nav .k-icon-btn {
+  width: 24px;
+  height: 24px;
+}
+.ks-app .ks-tabs-strip {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+}
+.ks-app .ks-tab-slot {
+  display: flex;
+  border-left: 2px solid transparent;
+}
+.ks-app .ks-tab-slot.drop {
+  border-left-color: var(--k-accent);
+}
+.ks-app .ks-tab {
+  padding: 0 16px;
+  border: none;
+  border-right: 1px solid var(--k-border);
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+.ks-app .ks-tab:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.ks-app .ks-tab.on {
+  background: var(--k-bg);
+  color: var(--k-text);
+  box-shadow: inset 0 -2px 0 var(--k-accent);
+  font-weight: 600;
+}
+.ks-app .ks-tab.moving {
+  opacity: 0.5;
+}
+.ks-app .ks-tab-input {
+  width: 120px;
+  margin: 3px 4px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid var(--k-accent);
+  background: var(--k-bg);
+  color: var(--k-text);
+  outline: none;
+}
+
+/* ------------------------------------------------------------ status bar */
+
+.ks-app .ks-statusbar {
+  gap: 14px;
+}
+.ks-app .ks-sb-file {
+  max-width: 34%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ks-app .ks-sb-msg {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--k-text);
+}
+.ks-app .ks-sb-stats {
+  white-space: pre;
+  color: var(--k-text);
+}
+.ks-app .ks-sb-sel {
+  font-family: var(--k-mono);
+  font-size: 11px;
+}
+.ks-app .ks-sb-zoom {
+  border: none;
+  background: none;
+  color: var(--k-muted);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 11.5px;
+}
+.ks-app .ks-sb-zoom:hover {
+  color: var(--k-text);
+}
+.ks-app .ks-sb-py {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.ks-app .ks-sb-py i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--k-muted);
+}
+.ks-app .ks-sb-py.idle i {
+  background: var(--k-success);
+}
+.ks-app .ks-sb-py.busy i,
+.ks-app .ks-sb-py.starting i {
+  background: var(--k-warning);
+}
+.ks-app .ks-sb-py.dead i {
+  background: var(--k-danger);
+}
+
+/* --------------------------------------------------------------- dialogs */
+
+.ks-app .ks-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 16px 16px;
+  background: color-mix(in srgb, var(--k-bg) 55%, transparent);
+  backdrop-filter: blur(2px);
+}
+.ks-app .ks-dialog {
+  width: min(440px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg);
+  color: var(--k-text);
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  box-shadow: var(--k-shadow-lg);
+  overflow: hidden;
+}
+.ks-app .ks-dialog.wide {
+  width: min(620px, 100%);
+}
+.ks-app .ks-dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 6px 16px;
+  font-weight: 650;
+  font-size: 14px;
+}
+.ks-app .ks-dialog-head span {
+  flex: 1;
+}
+.ks-app .ks-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 16px 14px;
+  overflow: auto;
+  min-height: 0;
+}
+.ks-app .ks-dialog-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--k-border);
+}
+.ks-app .ks-dialog-foot.inline {
+  padding: 6px 0 0;
+  border-top: none;
+  flex-wrap: wrap;
+}
+.ks-app .ks-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ks-app .ks-form.two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+.ks-app .ks-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.ks-app .ks-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.ks-app .ks-field.small {
+  width: 110px;
+}
+.ks-app .ks-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--k-text);
+  cursor: pointer;
+}
+.ks-app .ks-check input {
+  accent-color: var(--k-accent);
+}
+.ks-app .ks-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--k-muted);
+  line-height: 1.45;
+}
+.ks-app .ks-ok {
+  margin: 0;
+  color: var(--k-success);
+  font-size: 12.5px;
+}
+.ks-app .ks-h4 {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--k-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ks-app .ks-h4.err {
+  color: var(--k-danger);
+}
+.ks-app .ks-pre {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: var(--k-radius-sm);
+  background: var(--k-alt);
+  border: 1px solid var(--k-border);
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+  white-space: pre-wrap;
+}
+.ks-app .ks-pre.err {
+  color: var(--k-danger);
+}
+.ks-app .ks-mono {
+  font-family: var(--k-mono);
+  font-size: 12px;
+}
+.ks-app .ks-num {
+  width: 110px;
+}
+.ks-app .ks-list {
+  height: auto;
+  padding: 4px;
+}
+.ks-app .ks-preview {
+  padding: 8px 10px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+  background: var(--k-alt);
+  font-family: var(--k-mono);
+}
+.ks-app .ks-tabs-row {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--k-border);
+}
+.ks-app .ks-tabbtn {
+  padding: 6px 12px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--k-muted);
+  cursor: pointer;
+}
+.ks-app .ks-tabbtn.on {
+  color: var(--k-text);
+  border-bottom-color: var(--k-accent);
+}
+.ks-app .ks-series {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ks-app .ks-series-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 36px 28px;
+  align-items: center;
+  gap: 6px;
+}
+.ks-app .ks-color {
+  width: 32px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--k-border);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+.ks-app .ks-trend {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--k-border);
+}
+.ks-app .ks-trend-body {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.ks-app .ks-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  flex: none;
+}
+.ks-app .ks-eq-preview {
+  min-height: 70px;
+  padding: 8px;
+  border-radius: var(--k-radius-sm);
+  background: #ffffff;
+  color: #111111;
+  overflow: auto;
+}
+
+/* colours and popovers */
+.ks-app .ks-popover {
+  position: absolute;
+  z-index: 60;
+  padding: 8px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+  background: var(--k-surface);
+  box-shadow: var(--k-shadow);
+}
+.ks-app .ks-swatches {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ks-app .ks-swatch-row {
+  display: flex;
+  gap: 3px;
+}
+.ks-app .ks-swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--k-text) 22%, transparent);
+  cursor: pointer;
+}
+.ks-app .ks-swatch:hover,
+.ks-app .ks-swatch.on {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 1px;
+}
+.ks-app .ks-swatch-none {
+  margin-bottom: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--k-border);
+  background: var(--k-button);
+  color: var(--k-text);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+.ks-app .ks-swatch-none:hover {
+  background: var(--k-button-hover);
+}
+.ks-app .ks-swatch-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--k-muted);
+  cursor: pointer;
+}
+.ks-app .ks-swatch-more input {
+  width: 28px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+.ks-app .ks-filter {
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ks-app .ks-menu-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--k-text);
+  text-align: left;
+  cursor: pointer;
+}
+.ks-app .ks-menu-btn:hover {
+  background: var(--k-selection);
+}
+.ks-app .ks-sep {
+  height: 1px;
+  margin: 3px 0;
+  background: var(--k-border);
+}
+.ks-app .ks-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  height: 28px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+  color: var(--k-muted);
+}
+.ks-app .ks-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--k-text);
+}
+.ks-app .ks-filter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+.ks-app .ks-filter-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ks-app .ks-filter .ks-dialog-foot {
+  padding: 6px 0 0;
+}
+
+/* -------------------------------------------- help (inside the OS dialogs) */
+
+.ks-doc {
+  max-width: 640px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.ks-doc h3 {
+  margin: 14px 0 4px;
+  font-size: 13.5px;
+}
+.ks-doc ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+.ks-doc p {
+  margin: 4px 0;
+}
+.ks-doc .ks-keys {
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.ks-doc .ks-keys td {
+  padding: 3px 10px 3px 0;
+  vertical-align: top;
+}
+.ks-doc kbd {
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--k-border);
+  background: var(--k-alt);
+  white-space: nowrap;
+}
+.ks-doc .ks-brand-k {
+  color: var(--k-text);
+}
+.ks-doc .ks-brand-s {
+  color: var(--k-accent);
+}
+.ks-doc h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}

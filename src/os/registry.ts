@@ -3,7 +3,7 @@
 
 import {
   Atom, Blocks, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
-  Settings, Sigma, Sparkles, SquareTerminal,
+  Settings, Sheet, Sigma, Sparkles, SquareTerminal,
 } from 'lucide-react'
 import type { AppManifest } from './types'
 
@@ -38,6 +38,21 @@ export const APPS: AppManifest[] = [
     fileTypes: ['.pdf'],
     // Like the desktop app: PDFs opened from Files arrive as tabs in one window.
     singleton: true,
+  },
+  {
+    id: 'khervesheet',
+    name: 'KherveSheet',
+    icon: Sheet,
+    color: '#1f9d55',
+    image: '/icons/apps/khervesheet.png',
+    brand: { label: 'KSheet', from: '#3ccf6e', to: '#138a3c' },
+    category: 'kherve',
+    group: 'Office',
+    description: 'Spreadsheets with ~290 functions, Python (=PY) cells and charts',
+    load: () => import('@/apps/khervesheet/KherveSheet'),
+    defaultSize: { w: 1180, h: 760 },
+    minSize: { w: 560, h: 380 },
+    fileTypes: ['.ksheet', '.xlsx', '.xlsm', '.csv'],
   },
   {
     id: 'khervepy',

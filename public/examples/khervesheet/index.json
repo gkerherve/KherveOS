@@ -1,0 +1,1023 @@
+{
+ "source": "KherveSheet dev @ cef25ce",
+ "note": "The desktop KherveSheet's examples/ folder (worked examples, Python examples, exercises, templates), copied unchanged.",
+ "menus": [
+  {
+   "name": "Worked Examples",
+   "items": [
+    {
+     "title": "AFM Force-Distance",
+     "file": "AFM Force-Distance.ksheet"
+    },
+    {
+     "title": "Acid-Base Titration",
+     "file": "Acid-Base Titration.ksheet"
+    },
+    {
+     "title": "Arrhenius Plot",
+     "file": "Arrhenius Plot.ksheet"
+    },
+    {
+     "title": "Auger Electron Spectroscopy",
+     "file": "Auger Electron Spectroscopy.ksheet"
+    },
+    {
+     "title": "BET Surface Area",
+     "file": "BET Surface Area.ksheet"
+    },
+    {
+     "title": "Carrier Concentration",
+     "file": "Carrier Concentration.ksheet"
+    },
+    {
+     "title": "Compound Interest",
+     "file": "Compound Interest.ksheet"
+    },
+    {
+     "title": "Curie-Weiss Law",
+     "file": "Curie-Weiss Law.ksheet"
+    },
+    {
+     "title": "Dilatometry",
+     "file": "Dilatometry.ksheet"
+    },
+    {
+     "title": "Drude Free-Electron Model",
+     "file": "Drude Free-Electron Model.ksheet"
+    },
+    {
+     "title": "EDX Spectrum",
+     "file": "EDX Spectrum.ksheet"
+    },
+    {
+     "title": "Faraday Induction",
+     "file": "Faraday Induction.ksheet"
+    },
+    {
+     "title": "Fermi-Dirac Distribution",
+     "file": "Fermi-Dirac Distribution.ksheet"
+    },
+    {
+     "title": "Hall Effect",
+     "file": "Hall Effect.ksheet"
+    },
+    {
+     "title": "Ideal Gas Law",
+     "file": "Ideal Gas Law.ksheet"
+    },
+    {
+     "title": "Loan Amortization",
+     "file": "Loan Amortization.ksheet"
+    },
+    {
+     "title": "Normal Distribution",
+     "file": "Normal Distribution.ksheet"
+    },
+    {
+     "title": "Peak Shapes",
+     "file": "Peak Shapes.ksheet"
+    },
+    {
+     "title": "Projectile Motion",
+     "file": "Projectile Motion.ksheet"
+    },
+    {
+     "title": "RC Circuit",
+     "file": "RC Circuit.ksheet"
+    },
+    {
+     "title": "Radioactive Decay",
+     "file": "Radioactive Decay.ksheet"
+    },
+    {
+     "title": "Screw Torque",
+     "file": "Screw Torque.ksheet"
+    },
+    {
+     "title": "Simple Pendulum",
+     "file": "Simple Pendulum.ksheet"
+    },
+    {
+     "title": "Solenoid Magnetic Field",
+     "file": "Solenoid Magnetic Field.ksheet"
+    },
+    {
+     "title": "Spin-Orbit Coupling",
+     "file": "Spin-Orbit Coupling.ksheet"
+    },
+    {
+     "title": "Springs",
+     "file": "Springs.ksheet"
+    },
+    {
+     "title": "TEM Electron Wavelength",
+     "file": "TEM Electron Wavelength.ksheet"
+    },
+    {
+     "title": "Tauc Plot Band Gap",
+     "file": "Tauc Plot Band Gap.ksheet"
+    },
+    {
+     "title": "Thermogravimetric Analysis",
+     "file": "Thermogravimetric Analysis.ksheet"
+    },
+    {
+     "title": "UV-Vis Absorption",
+     "file": "UV-Vis Absorption.ksheet"
+    },
+    {
+     "title": "Unit Conversions",
+     "file": "Unit Conversions.ksheet"
+    },
+    {
+     "title": "Vacuum Pump-Down",
+     "file": "Vacuum Pump-Down.ksheet"
+    },
+    {
+     "title": "Valence Band Photoemission",
+     "file": "Valence Band Photoemission.ksheet"
+    },
+    {
+     "title": "XPS Spectrum",
+     "file": "XPS Spectrum.ksheet"
+    },
+    {
+     "title": "XRD Bragg Diffraction",
+     "file": "XRD Bragg Diffraction.ksheet"
+    },
+    {
+     "title": "XRF Moseley Law",
+     "file": "XRF Moseley Law.ksheet"
+    },
+    {
+     "title": "de Broglie Electron Wavelength",
+     "file": "de Broglie Electron Wavelength.ksheet"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "Python Examples",
+   "items": [],
+   "groups": [
+    {
+     "name": "Biology",
+     "items": [
+      {
+       "title": "Bacterial Growth",
+       "file": "python/Biology/Bacterial Growth.ksheet"
+      },
+      {
+       "title": "Hardy-Weinberg",
+       "file": "python/Biology/Hardy-Weinberg.ksheet"
+      },
+      {
+       "title": "Logistic Population Growth",
+       "file": "python/Biology/Logistic Population Growth.ksheet"
+      },
+      {
+       "title": "Michaelis-Menten Kinetics",
+       "file": "python/Biology/Michaelis-Menten Kinetics.ksheet"
+      },
+      {
+       "title": "Predator-Prey",
+       "file": "python/Biology/Predator-Prey.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Chemistry",
+     "items": [
+      {
+       "title": "Arrhenius Plot",
+       "file": "python/Chemistry/Arrhenius Plot.ksheet"
+      },
+      {
+       "title": "Beer-Lambert Law",
+       "file": "python/Chemistry/Beer-Lambert Law.ksheet"
+      },
+      {
+       "title": "First-Order Kinetics",
+       "file": "python/Chemistry/First-Order Kinetics.ksheet"
+      },
+      {
+       "title": "Ideal Gas Isotherms",
+       "file": "python/Chemistry/Ideal Gas Isotherms.ksheet"
+      },
+      {
+       "title": "pH Titration Curve",
+       "file": "python/Chemistry/pH Titration Curve.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Curve Fitting",
+     "items": [
+      {
+       "title": "XPS Peak Fitting (Sr 3d)",
+       "file": "python/Curve Fitting/XPS Peak Fitting (Sr 3d).ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Data Processing",
+     "items": [
+      {
+       "title": "Baseline Correction",
+       "file": "python/Data Processing/Baseline Correction.ksheet"
+      },
+      {
+       "title": "Bin and Aggregate",
+       "file": "python/Data Processing/Bin and Aggregate.ksheet"
+      },
+      {
+       "title": "Derivative and Integral",
+       "file": "python/Data Processing/Derivative and Integral.ksheet"
+      },
+      {
+       "title": "Fill Missing Values",
+       "file": "python/Data Processing/Fill Missing Values.ksheet"
+      },
+      {
+       "title": "Group and Summarize",
+       "file": "python/Data Processing/Group and Summarize.ksheet"
+      },
+      {
+       "title": "Normalize Column",
+       "file": "python/Data Processing/Normalize Column.ksheet"
+      },
+      {
+       "title": "Remove Outliers",
+       "file": "python/Data Processing/Remove Outliers.ksheet"
+      },
+      {
+       "title": "Resample to Grid",
+       "file": "python/Data Processing/Resample to Grid.ksheet"
+      },
+      {
+       "title": "Rolling Statistics",
+       "file": "python/Data Processing/Rolling Statistics.ksheet"
+      },
+      {
+       "title": "Smooth Signal",
+       "file": "python/Data Processing/Smooth Signal.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Engineering",
+     "items": [
+      {
+       "title": "Beam Deflection",
+       "file": "python/Engineering/Beam Deflection.ksheet"
+      },
+      {
+       "title": "Bode Plot",
+       "file": "python/Engineering/Bode Plot.ksheet"
+      },
+      {
+       "title": "Heat Conduction",
+       "file": "python/Engineering/Heat Conduction.ksheet"
+      },
+      {
+       "title": "Projectile With Drag",
+       "file": "python/Engineering/Projectile With Drag.ksheet"
+      },
+      {
+       "title": "RC Charging",
+       "file": "python/Engineering/RC Charging.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Finance Simulations",
+     "items": [
+      {
+       "title": "Asian Option Pricing",
+       "file": "python/Finance Simulations/Asian Option Pricing.ksheet"
+      },
+      {
+       "title": "Efficient Frontier",
+       "file": "python/Finance Simulations/Efficient Frontier.ksheet"
+      },
+      {
+       "title": "Portfolio Monte Carlo",
+       "file": "python/Finance Simulations/Portfolio Monte Carlo.ksheet"
+      },
+      {
+       "title": "Retirement Monte Carlo",
+       "file": "python/Finance Simulations/Retirement Monte Carlo.ksheet"
+      },
+      {
+       "title": "Stock Price Paths",
+       "file": "python/Finance Simulations/Stock Price Paths.ksheet"
+      },
+      {
+       "title": "Value at Risk",
+       "file": "python/Finance Simulations/Value at Risk.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Live Data",
+     "items": [
+      {
+       "title": "Bitcoin Price (live)",
+       "file": "python/Live Data/Bitcoin Price (live).ksheet"
+      },
+      {
+       "title": "Earth Globe (live)",
+       "file": "python/Live Data/Earth Globe (live).ksheet"
+      },
+      {
+       "title": "Earth Globe 3D (live)",
+       "file": "python/Live Data/Earth Globe 3D (live).ksheet"
+      },
+      {
+       "title": "London Weather (live)",
+       "file": "python/Live Data/London Weather (live).ksheet"
+      },
+      {
+       "title": "NVIDIA Stock (live)",
+       "file": "python/Live Data/NVIDIA Stock (live).ksheet"
+      },
+      {
+       "title": "News (live)",
+       "file": "python/Live Data/News (live).ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Materials Science",
+     "items": [
+      {
+       "title": "Avrami Crystallization",
+       "file": "python/Materials Science/Avrami Crystallization.ksheet"
+      },
+      {
+       "title": "BET Surface Area",
+       "file": "python/Materials Science/BET Surface Area.ksheet"
+      },
+      {
+       "title": "Diffusion-Limited Aggregation",
+       "file": "python/Materials Science/Diffusion-Limited Aggregation.ksheet"
+      },
+      {
+       "title": "EDX Spectrum",
+       "file": "python/Materials Science/EDX Spectrum.ksheet"
+      },
+      {
+       "title": "EPR Spectrum",
+       "file": "python/Materials Science/EPR Spectrum.ksheet"
+      },
+      {
+       "title": "Grain Growth",
+       "file": "python/Materials Science/Grain Growth.ksheet"
+      },
+      {
+       "title": "Ising Model",
+       "file": "python/Materials Science/Ising Model.ksheet"
+      },
+      {
+       "title": "Percolation",
+       "file": "python/Materials Science/Percolation.ksheet"
+      },
+      {
+       "title": "Random Sequential Adsorption",
+       "file": "python/Materials Science/Random Sequential Adsorption.ksheet"
+      },
+      {
+       "title": "Random Walk Diffusion",
+       "file": "python/Materials Science/Random Walk Diffusion.ksheet"
+      },
+      {
+       "title": "Self-Avoiding Walk",
+       "file": "python/Materials Science/Self-Avoiding Walk.ksheet"
+      },
+      {
+       "title": "Si(111) 7x7",
+       "file": "python/Materials Science/Si(111) 7x7.ksheet"
+      },
+      {
+       "title": "TEM Particle Sizes",
+       "file": "python/Materials Science/TEM Particle Sizes.ksheet"
+      },
+      {
+       "title": "TGA Analysis",
+       "file": "python/Materials Science/TGA Analysis.ksheet"
+      },
+      {
+       "title": "XPS Quantification",
+       "file": "python/Materials Science/XPS Quantification.ksheet"
+      },
+      {
+       "title": "XRD Pattern",
+       "file": "python/Materials Science/XRD Pattern.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Numerical Methods",
+     "items": [
+      {
+       "title": "Euler ODE Solver",
+       "file": "python/Numerical Methods/Euler ODE Solver.ksheet"
+      },
+      {
+       "title": "Monte Carlo Pi",
+       "file": "python/Numerical Methods/Monte Carlo Pi.ksheet"
+      },
+      {
+       "title": "Newton Root Finding",
+       "file": "python/Numerical Methods/Newton Root Finding.ksheet"
+      },
+      {
+       "title": "Numerical Integration",
+       "file": "python/Numerical Methods/Numerical Integration.ksheet"
+      },
+      {
+       "title": "Taylor Series",
+       "file": "python/Numerical Methods/Taylor Series.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Physics",
+     "items": [
+      {
+       "title": "Damped Oscillation",
+       "file": "python/Physics/Damped Oscillation.ksheet"
+      },
+      {
+       "title": "Free Fall",
+       "file": "python/Physics/Free Fall.ksheet"
+      },
+      {
+       "title": "Maxwell-Boltzmann Speeds",
+       "file": "python/Physics/Maxwell-Boltzmann Speeds.ksheet"
+      },
+      {
+       "title": "Ohms Law IV",
+       "file": "python/Physics/Ohms Law IV.ksheet"
+      },
+      {
+       "title": "Pendulum Period",
+       "file": "python/Physics/Pendulum Period.ksheet"
+      },
+      {
+       "title": "Planck Blackbody",
+       "file": "python/Physics/Planck Blackbody.ksheet"
+      },
+      {
+       "title": "Projectile Motion",
+       "file": "python/Physics/Projectile Motion.ksheet"
+      },
+      {
+       "title": "Radioactive Decay",
+       "file": "python/Physics/Radioactive Decay.ksheet"
+      },
+      {
+       "title": "Simple Harmonic Motion",
+       "file": "python/Physics/Simple Harmonic Motion.ksheet"
+      },
+      {
+       "title": "Wave Interference",
+       "file": "python/Physics/Wave Interference.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Physics Simulations",
+     "items": [
+      {
+       "title": "Double Pendulum",
+       "file": "python/Physics Simulations/Double Pendulum.ksheet"
+      },
+      {
+       "title": "Ideal Gas in a Box",
+       "file": "python/Physics Simulations/Ideal Gas in a Box.ksheet"
+      },
+      {
+       "title": "Kepler Orbit",
+       "file": "python/Physics Simulations/Kepler Orbit.ksheet"
+      },
+      {
+       "title": "N-Body Gravity",
+       "file": "python/Physics Simulations/N-Body Gravity.ksheet"
+      },
+      {
+       "title": "Projectile Drag Ensemble",
+       "file": "python/Physics Simulations/Projectile Drag Ensemble.ksheet"
+      },
+      {
+       "title": "Radioactive Decay (stochastic)",
+       "file": "python/Physics Simulations/Radioactive Decay (stochastic).ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Signal Processing",
+     "items": [
+      {
+       "title": "Butterworth Lowpass",
+       "file": "python/Signal Processing/Butterworth Lowpass.ksheet"
+      },
+      {
+       "title": "FFT Spectrum",
+       "file": "python/Signal Processing/FFT Spectrum.ksheet"
+      },
+      {
+       "title": "Moving Average",
+       "file": "python/Signal Processing/Moving Average.ksheet"
+      },
+      {
+       "title": "Peak Detection",
+       "file": "python/Signal Processing/Peak Detection.ksheet"
+      },
+      {
+       "title": "Savitzky-Golay Smoothing",
+       "file": "python/Signal Processing/Savitzky-Golay Smoothing.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Simulations",
+     "items": [
+      {
+       "title": "2D Random Walk",
+       "file": "python/Simulations/2D Random Walk.ksheet"
+      },
+      {
+       "title": "Birthday Paradox",
+       "file": "python/Simulations/Birthday Paradox.ksheet"
+      },
+      {
+       "title": "Bouncing Particles",
+       "file": "python/Simulations/Bouncing Particles.ksheet"
+      },
+      {
+       "title": "Brownian Motion",
+       "file": "python/Simulations/Brownian Motion.ksheet"
+      },
+      {
+       "title": "Buffon's Needle",
+       "file": "python/Simulations/Buffon's Needle.ksheet"
+      },
+      {
+       "title": "Dice Law of Large Numbers",
+       "file": "python/Simulations/Dice Law of Large Numbers.ksheet"
+      },
+      {
+       "title": "Estimating e",
+       "file": "python/Simulations/Estimating e.ksheet"
+      },
+      {
+       "title": "Galton Board",
+       "file": "python/Simulations/Galton Board.ksheet"
+      },
+      {
+       "title": "Gambler's Ruin",
+       "file": "python/Simulations/Gambler's Ruin.ksheet"
+      },
+      {
+       "title": "MM1 Queue",
+       "file": "python/Simulations/MM1 Queue.ksheet"
+      },
+      {
+       "title": "Monte Carlo Integration",
+       "file": "python/Simulations/Monte Carlo Integration.ksheet"
+      },
+      {
+       "title": "Monte Carlo Option Pricing",
+       "file": "python/Simulations/Monte Carlo Option Pricing.ksheet"
+      },
+      {
+       "title": "SIR Epidemic",
+       "file": "python/Simulations/SIR Epidemic.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Solver",
+     "items": [
+      {
+       "title": "Linear Programming",
+       "file": "python/Solver/Linear Programming.ksheet"
+      },
+      {
+       "title": "Optimization Solver",
+       "file": "python/Solver/Optimization Solver.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Statistics",
+     "items": [
+      {
+       "title": "Central Limit Theorem",
+       "file": "python/Statistics/Central Limit Theorem.ksheet"
+      },
+      {
+       "title": "Gaussian Curve Fit",
+       "file": "python/Statistics/Gaussian Curve Fit.ksheet"
+      },
+      {
+       "title": "Linear Regression",
+       "file": "python/Statistics/Linear Regression.ksheet"
+      },
+      {
+       "title": "Normal Distribution",
+       "file": "python/Statistics/Normal Distribution.ksheet"
+      },
+      {
+       "title": "Random Walk",
+       "file": "python/Statistics/Random Walk.ksheet"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Exercises",
+   "items": [],
+   "groups": [
+    {
+     "name": "Year 1",
+     "items": [
+      {
+       "title": "Ohms Law and Resistor Networks",
+       "file": "exercises/Year 1/Ohms Law and Resistor Networks.ksheet"
+      },
+      {
+       "title": "Projectile Kinematics",
+       "file": "exercises/Year 1/Projectile Kinematics.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Year 2",
+     "items": [
+      {
+       "title": "Damped Harmonic Oscillator",
+       "file": "exercises/Year 2/Damped Harmonic Oscillator.ksheet"
+      },
+      {
+       "title": "Diffraction Grating",
+       "file": "exercises/Year 2/Diffraction Grating.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Year 3",
+     "items": [
+      {
+       "title": "Blackbody Radiation",
+       "file": "exercises/Year 3/Blackbody Radiation.ksheet"
+      },
+      {
+       "title": "Particle in a 1D Box",
+       "file": "exercises/Year 3/Particle in a 1D Box.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Year 4",
+     "items": [
+      {
+       "title": "Arrhenius Activation Energy",
+       "file": "exercises/Year 4/Arrhenius Activation Energy.ksheet"
+      },
+      {
+       "title": "Least-Squares Linear Fit",
+       "file": "exercises/Year 4/Least-Squares Linear Fit.ksheet"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Templates",
+   "items": [],
+   "groups": [
+    {
+     "name": "Analysis",
+     "items": [
+      {
+       "title": "Chromatography HPLC-GC",
+       "file": "templates/Analysis/Chromatography HPLC-GC.ksheet"
+      },
+      {
+       "title": "Electrochemistry CV-DPV",
+       "file": "templates/Analysis/Electrochemistry CV-DPV.ksheet"
+      },
+      {
+       "title": "Environmental Air-Water Quality",
+       "file": "templates/Analysis/Environmental Air-Water Quality.ksheet"
+      },
+      {
+       "title": "Quantum Chemistry DFT",
+       "file": "templates/Analysis/Quantum Chemistry DFT.ksheet"
+      },
+      {
+       "title": "Reaction Kinetics",
+       "file": "templates/Analysis/Reaction Kinetics.ksheet"
+      },
+      {
+       "title": "Spectroscopy Analysis",
+       "file": "templates/Analysis/Spectroscopy Analysis.ksheet"
+      },
+      {
+       "title": "Statistical Process Control",
+       "file": "templates/Analysis/Statistical Process Control.ksheet"
+      },
+      {
+       "title": "Thermal Analysis DSC",
+       "file": "templates/Analysis/Thermal Analysis DSC.ksheet"
+      },
+      {
+       "title": "Titration Curve Analysis",
+       "file": "templates/Analysis/Titration Curve Analysis.ksheet"
+      },
+      {
+       "title": "XRD Pattern Analysis",
+       "file": "templates/Analysis/XRD Pattern Analysis.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Business",
+     "items": [
+      {
+       "title": "Employee Directory",
+       "file": "templates/Business/Employee Directory.ksheet"
+      },
+      {
+       "title": "Inventory Tracker",
+       "file": "templates/Business/Inventory Tracker.ksheet"
+      },
+      {
+       "title": "Project Timeline",
+       "file": "templates/Business/Project Timeline.ksheet"
+      },
+      {
+       "title": "Sales Dashboard",
+       "file": "templates/Business/Sales Dashboard.ksheet"
+      },
+      {
+       "title": "Soccer League Table",
+       "file": "templates/Business/Soccer League Table.ksheet"
+      },
+      {
+       "title": "Survey Results",
+       "file": "templates/Business/Survey Results.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Daily Life",
+     "items": [
+      {
+       "title": "Attendance Tracker",
+       "file": "templates/Daily Life/Attendance Tracker.ksheet"
+      },
+      {
+       "title": "BMI Calculator",
+       "file": "templates/Daily Life/BMI Calculator.ksheet"
+      },
+      {
+       "title": "Blood Pressure Log",
+       "file": "templates/Daily Life/Blood Pressure Log.ksheet"
+      },
+      {
+       "title": "Book Collection",
+       "file": "templates/Daily Life/Book Collection.ksheet"
+      },
+      {
+       "title": "Calorie Tracker",
+       "file": "templates/Daily Life/Calorie Tracker.ksheet"
+      },
+      {
+       "title": "Password Strength",
+       "file": "templates/Daily Life/Password Strength.ksheet"
+      },
+      {
+       "title": "Recipe Scaler",
+       "file": "templates/Daily Life/Recipe Scaler.ksheet"
+      },
+      {
+       "title": "Todo List",
+       "file": "templates/Daily Life/Todo List.ksheet"
+      },
+      {
+       "title": "Weather Data",
+       "file": "templates/Daily Life/Weather Data.ksheet"
+      },
+      {
+       "title": "Workout Log",
+       "file": "templates/Daily Life/Workout Log.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Data Processing",
+     "items": [
+      {
+       "title": "FTIR Spectrum Processing",
+       "file": "templates/Data Processing/FTIR Spectrum Processing.ksheet"
+      },
+      {
+       "title": "Raman Spectrum Processing",
+       "file": "templates/Data Processing/Raman Spectrum Processing.ksheet"
+      },
+      {
+       "title": "TGA Curve Processing",
+       "file": "templates/Data Processing/TGA Curve Processing.ksheet"
+      },
+      {
+       "title": "XPS Binding Energy Correction",
+       "file": "templates/Data Processing/XPS Binding Energy Correction.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Education",
+     "items": [
+      {
+       "title": "ASCII Table",
+       "file": "templates/Education/ASCII Table.ksheet"
+      },
+      {
+       "title": "Fibonacci Sequence",
+       "file": "templates/Education/Fibonacci Sequence.ksheet"
+      },
+      {
+       "title": "Grade Book",
+       "file": "templates/Education/Grade Book.ksheet"
+      },
+      {
+       "title": "Hex Dec Binary",
+       "file": "templates/Education/Hex Dec Binary.ksheet"
+      },
+      {
+       "title": "Multiplication Table",
+       "file": "templates/Education/Multiplication Table.ksheet"
+      },
+      {
+       "title": "Prime Numbers",
+       "file": "templates/Education/Prime Numbers.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Finance",
+     "items": [
+      {
+       "title": "Compound Interest",
+       "file": "templates/Finance/Compound Interest.ksheet"
+      },
+      {
+       "title": "Currency Converter",
+       "file": "templates/Finance/Currency Converter.ksheet"
+      },
+      {
+       "title": "Electricity Bill",
+       "file": "templates/Finance/Electricity Bill.ksheet"
+      },
+      {
+       "title": "Invoice Template",
+       "file": "templates/Finance/Invoice Template.ksheet"
+      },
+      {
+       "title": "Loan Comparison",
+       "file": "templates/Finance/Loan Comparison.ksheet"
+      },
+      {
+       "title": "Monthly Budget",
+       "file": "templates/Finance/Monthly Budget.ksheet"
+      },
+      {
+       "title": "Mortgage Amortization",
+       "file": "templates/Finance/Mortgage Amortization.ksheet"
+      },
+      {
+       "title": "Periodic Payments",
+       "file": "templates/Finance/Periodic Payments.ksheet"
+      },
+      {
+       "title": "Stock Portfolio",
+       "file": "templates/Finance/Stock Portfolio.ksheet"
+      },
+      {
+       "title": "Tip Calculator",
+       "file": "templates/Finance/Tip Calculator.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Math",
+     "items": [
+      {
+       "title": "Exponential Growth",
+       "file": "templates/Math/Exponential Growth.ksheet"
+      },
+      {
+       "title": "Matrix Operations",
+       "file": "templates/Math/Matrix Operations.ksheet"
+      },
+      {
+       "title": "Quadratic Solver",
+       "file": "templates/Math/Quadratic Solver.ksheet"
+      },
+      {
+       "title": "Regression Data",
+       "file": "templates/Math/Regression Data.ksheet"
+      },
+      {
+       "title": "Sine Cosine Table",
+       "file": "templates/Math/Sine Cosine Table.ksheet"
+      },
+      {
+       "title": "Statistics Sample",
+       "file": "templates/Math/Statistics Sample.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Planners",
+     "items": [
+      {
+       "title": "Daily Planner",
+       "file": "templates/Planners/Daily Planner.ksheet"
+      },
+      {
+       "title": "Monthly Planner",
+       "file": "templates/Planners/Monthly Planner.ksheet"
+      },
+      {
+       "title": "Weekly Planner",
+       "file": "templates/Planners/Weekly Planner.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Reference",
+     "items": [
+      {
+       "title": "Color Palette",
+       "file": "templates/Reference/Color Palette.ksheet"
+      },
+      {
+       "title": "Distance Matrix",
+       "file": "templates/Reference/Distance Matrix.ksheet"
+      },
+      {
+       "title": "Multi-Sheet Demo",
+       "file": "templates/Reference/Multi-Sheet Demo.ksheet"
+      },
+      {
+       "title": "Sine Cos Plot Data",
+       "file": "templates/Reference/Sine Cos Plot Data.ksheet"
+      },
+      {
+       "title": "Time Zones",
+       "file": "templates/Reference/Time Zones.ksheet"
+      },
+      {
+       "title": "World Population",
+       "file": "templates/Reference/World Population.ksheet"
+      }
+     ]
+    },
+    {
+     "name": "Science",
+     "items": [
+      {
+       "title": "Chemistry Solutions",
+       "file": "templates/Science/Chemistry Solutions.ksheet"
+      },
+      {
+       "title": "Periodic Table",
+       "file": "templates/Science/Periodic Table.ksheet"
+      },
+      {
+       "title": "Projectile Motion",
+       "file": "templates/Science/Projectile Motion.ksheet"
+      },
+      {
+       "title": "Resistor Color Codes",
+       "file": "templates/Science/Resistor Color Codes.ksheet"
+      },
+      {
+       "title": "Temperature Conversion",
+       "file": "templates/Science/Temperature Conversion.ksheet"
+      },
+      {
+       "title": "Unit Conversions",
+       "file": "templates/Science/Unit Conversions.ksheet"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
