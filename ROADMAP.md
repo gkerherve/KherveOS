@@ -67,11 +67,14 @@ KhervePDF, and the Git service + git CORS proxy + KhervePY. Libraries installed:
 `mupdf`, `isomorphic-git`, `buffer`. App entries and server stubs exist
 (`gitproxy.py`, `refs.py`). If their work is uncommitted, check it (typecheck,
 tests, browser), finish it and commit. KherveRef comes after the PDF service.
-- [ ] PDF service: MuPDF.js (npm `mupdf`, AGPL like the PyMuPDF the desktop apps
-      use) in a worker — render, text, search, annotations, page operations, forms.
+- [x] PDF service: MuPDF.js (npm `mupdf`, AGPL like the PyMuPDF the desktop apps
+      use) in a worker — render, text, search, annotations, page operations, forms —
+      done 2026-10-07 (`src/os/services/pdf.ts`).
 - [x] Git service: isomorphic-git over the virtual drive; GitHub through a small
       CORS proxy on the KherveOS server (`gitproxy.py`) — done 2026-10-07.
-- [ ] KhervePDF (`../KhervePDF`)
+- [x] KhervePDF (`../KhervePDF`) — done 2026-10-07. Not ported: editing existing
+      PDF text (no MuPDF.js equivalent of the PyMuPDF call), OCR, AI panel, KherveRef
+      link, Git history, digital signatures.
 - [ ] KherveRef (`../KherveRef`) — metadata from Crossref/arXiv/OpenLibrary (proxy
       through the server where CORS blocks), BibLaTeX export
 - [x] KhervePY (`../khervePY`) — CodeMirror editor, Pyodide run, Git panel — done
