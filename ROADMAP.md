@@ -99,9 +99,12 @@ tests, browser), finish it and commit. KherveRef comes after the PDF service.
 In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
 (`server/kherveos_server/latex.py` with tectonic from Homebrew, client
 `src/os/services/latex.ts`) and KherveTeX (TipTap + fflate installed).
-- [ ] LaTeX compile on the KherveOS server (`tectonic`, as the desktop apps use),
-      endpoint `/api/latex/compile`; WASM engine later for offline
-- [ ] KherveTeX (`../KherveTeX`, package `khervedoc`)
+- [x] LaTeX compile on the KherveOS server (`tectonic`, as the desktop apps use),
+      endpoint `/api/latex/compile`, sandboxed (sandbox-exec / bubblewrap) — done
+      2026-10-07; WASM engine later for offline
+- [x] KherveTeX (`../KherveTeX`, package `khervedoc`) — done 2026-10-07. Not ported:
+      drawing/flowchart/chemistry/equation-builder editors, Typst, Git history,
+      .docx/.pdf/.md import, the KherveRef picker
 - [ ] KherveNote (`../KherveNote`) — transcription later (Whisper on WebGPU)
 - [ ] KherveSlide (`../KherveSlide`)
 
@@ -114,8 +117,11 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
 
 ### 5. KherveLAB and the mini-games
 - [ ] KherveLAB (`../KherveLAB`) — instrument booking as a KherveOS server module
-- [ ] The pygame mini-games in `KherveFitting/libraries/Games` (pygame-ce runs in
-      Pyodide, needs an async main loop) or TypeScript ports
+- [ ] **Little games** (requested 2026-10-07): Tetris, Breakout, Pinball — each a
+      small window (fixed size, like a classic Mac game), TypeScript + canvas, keyboard
+      controls, high scores kept, the Ktools green look; group Games. Also the
+      KherveFitting mini-games (`libraries/Games`: TetrisGame, Asteroid, Flappybird,
+      Solitaire, MiniGame, ChemistryLab) as TypeScript ports in the same style.
 
 ### Later
 - Email bridge: block private addresses and rate-limit account tests before sharing
