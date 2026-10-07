@@ -4,8 +4,11 @@ import './shell/shell.css'
 import { Shell } from './shell/Shell'
 import { fs } from './os/vfs'
 import { installCrashReporter } from './os/crash'
+import { startUiScale } from './os/uiScale'
 
 installCrashReporter()
+// Interface size (Settings › Appearance › Desktop): scales the whole OS.
+startUiScale()
 
 const root = createRoot(document.getElementById('root')!)
 

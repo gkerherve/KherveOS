@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
-import { AppWindow, ImageIcon, Info, LayoutGrid, Maximize2, Minimize2, Settings as SettingsIcon } from 'lucide-react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { AppWindow, ArrowDownUp, ImageIcon, Info, LayoutGrid, Magnet, Maximize2, Minimize2, Settings as SettingsIcon, Sparkles } from 'lucide-react'
 import { fs, useDir } from '@/os/vfs'
 import { HOME } from '@/os/path'
 import { APPS } from '@/os/registry'
@@ -18,14 +18,26 @@ import { isFullscreen, toggleFullscreen } from '@/os/fullscreen'
 import { copyMenuItems, handleClipboardKey, pasteMenuItems, usePasteSource } from '@/apps/files/clipboard'
 import { endDragOut, prepareDragOut, startDragOut } from '@/apps/files/dragOut'
 import { ClipboardCard, PasteProgress, showClipboardCard } from './ClipboardCard'
+import { arrangeInOrder, cleanUp, layout, moveIcons, sortItems, type Area, type SortKey } from './desktopLayout'
+import { prunePositions, renamePosition, useDesktopArrange } from './desktopArrange'
+import { extname } from '@/os/path'
+import './desktopIcons.css'
 
 const DESKTOP = `${HOME}/Desktop`
 /** The desktop's menus are frosted, see-through glass, like the Dock's Applications menu. */
 const GLASS = { className: 'k-glass-menu' }
+/** Drag type of an app shortcut being moved on the desktop (it has no file to carry). */
+const ICON_MIME = 'application/x-kherveos-desktop-icon'
+
+/** The icon drag in progress, if it started on the desktop: what moves and where the pointer was. */
+let iconDrag: { keys: string[]; x: number; y: number } | null = null
 
 interface Item {
   key: string
   name: string
+  /** For Sort By: "Application", "Folder" or the file's extension; last modified. */
+  kind: string
+  date: number
   open: () => void
   app?: AppManifest
   file?: { icon: React.ComponentType<{ size?: number; color?: string }>; color: string }
@@ -43,7 +55,8 @@ export function Desktop() {
   usePasteSource() // re-render the menus when the clipboard changes
   const select = (keys: string[]) => setSelection(keys)
   const selectedFiles = selection.filter((k) => !k.startsWith('app:') && fs.exists(k))
-  const background = wallpaperCss()
+  const wallpaperFit = useSettings((s) => s.wallpaperFit)
+  const background = wallpaperCss(wallpaperFit)
   const open = useWindows((s) => s.open)
 
   const items: Item[] = useMemo(() => {
@@ -53,6 +66,8 @@ export function Desktop() {
           name: a.name,
           open: () => open(a.id),
           app: a,
+          kind: 'Application',
+          date: 0,
         }))
       : []
     const docs: Item[] = files.filter((f) => !f.name.startsWith('.')).map((f) => {
@@ -61,11 +76,48 @@ export function Desktop() {
         key: f.path,
         name: f.name,
         open: () => void os.openFile(f.path),
+        kind: f.type === 'dir' ? 'Folder' : extname(f.name).toLowerCase() || 'Document',
+        date: f.mtime,
         file: { icon: fi.icon, color: fi.color },
       }
     })
     return [...apps, ...docs]
   }, [showApps, files, open])
+
+  // ---- arranging: every icon has a place, saved; dragged icons snap to the grid.
+  const iconsRef = useRef<HTMLDivElement>(null)
+  const [area, setArea] = useState<Area>({ w: 0, h: 0 })
+  useLayoutEffect(() => {
+    const el = iconsRef.current
+    if (!el) return
+    const measure = () => setArea({ w: el.clientWidth, h: el.clientHeight })
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const saved = useDesktopArrange((s) => s.positions)
+  const snap = useDesktopArrange((s) => s.snap)
+  const keys = useMemo(() => items.map((i) => i.key), [items])
+  const positions = useMemo(() => (area.h ? layout(keys, saved, area) : {}), [keys, saved, area])
+  // New icons keep the place they were given; icons of files that are gone are forgotten.
+  useEffect(() => {
+    if (!area.h) return
+    const fresh = Object.fromEntries(keys.filter((k) => !saved[k]).map((k) => [k, positions[k]]))
+    if (Object.keys(fresh).length) useDesktopArrange.getState().setPositions(fresh)
+    prunePositions(new Set(keys))
+  }, [keys, saved, positions, area.h])
+  // A file renamed on the desktop stays where it was.
+  useEffect(
+    () =>
+      fs.watch((ev) => {
+        if (ev.type === 'rename' && ev.oldPath.startsWith(`${DESKTOP}/`) && ev.path.startsWith(`${DESKTOP}/`)) renamePosition(ev.oldPath, ev.path)
+      }),
+    [],
+  )
+  const arrange = (next: Record<string, { x: number; y: number }>) => useDesktopArrange.getState().setPositions(next)
+  const cleanUpIcons = () => arrange(cleanUp(keys, positions, area))
+  const sortIcons = (by: SortKey) => arrange(arrangeInOrder(sortItems(items, by), area))
 
   // What a drag or a right-click on this icon acts on: the selection if it is part of it.
   const dragSet = (key: string) =>
@@ -114,6 +166,19 @@ export function Desktop() {
             { label: 'Open App', icon: AppWindow, submenu: appGroups((id) => open(id)) },
             { label: 'All Apps…', icon: LayoutGrid, onClick: openLaunchpad },
             '-',
+            { label: 'Clean Up', icon: Sparkles, onClick: cleanUpIcons, disabled: !items.length },
+            {
+              label: 'Sort By',
+              icon: ArrowDownUp,
+              disabled: !items.length,
+              submenu: [
+                { label: 'Name', onClick: () => sortIcons('name') },
+                { label: 'Kind', onClick: () => sortIcons('kind') },
+                { label: 'Date Modified', onClick: () => sortIcons('date') },
+              ],
+            },
+            { label: 'Snap to Grid', icon: Magnet, checked: snap, onClick: () => useDesktopArrange.getState().setSnap(!snap) },
+            '-',
             { label: 'Change Wallpaper…', icon: ImageIcon, onClick: () => open('settings', { section: 'appearance' }) },
             {
               label: showApps ? 'Hide App Shortcuts' : 'Show App Shortcuts',
@@ -145,9 +210,14 @@ export function Desktop() {
         }
       }}
       onDragOver={(e) => {
-        if (e.dataTransfer.types.includes('Files') || e.dataTransfer.types.includes(DRAG_MIME)) {
+        const types = e.dataTransfer.types
+        if (iconDrag && types.includes(ICON_MIME)) {
+          // Moving icons around the desktop: no "drop here" highlight.
           e.preventDefault()
-          e.dataTransfer.dropEffect = e.dataTransfer.types.includes(DRAG_MIME) ? 'move' : 'copy'
+          e.dataTransfer.dropEffect = 'move'
+        } else if (types.includes('Files') || types.includes(DRAG_MIME)) {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = types.includes(DRAG_MIME) ? 'move' : 'copy'
           setDropping(true)
         }
       }}
@@ -155,6 +225,12 @@ export function Desktop() {
       onDrop={(e) => {
         e.preventDefault()
         setDropping(false)
+        if (iconDrag && e.dataTransfer.types.includes(ICON_MIME)) {
+          const { keys: moving, x, y } = iconDrag
+          iconDrag = null
+          arrange(moveIcons(moving, e.clientX - x, e.clientY - y, positions, area, snap))
+          return
+        }
         const internal = e.dataTransfer.getData(DRAG_MIME)
         if (internal) void moveItems(JSON.parse(internal) as string[], DESKTOP)
         else if (e.dataTransfer.files.length) void os.importFiles(DESKTOP, e.dataTransfer.files)
@@ -165,7 +241,8 @@ export function Desktop() {
       <ClipboardCard desktop={DESKTOP} onHeight={onCardHeight} />
       <PasteProgress />
       <div
-        className="k-desktop-icons"
+        ref={iconsRef}
+        className="k-desktop-icons k-arranged"
         style={cardHeight ? { top: 24 + 10 + cardHeight } : undefined}
         onPointerDown={(e) => e.target === e.currentTarget && select([])}
       >
@@ -176,9 +253,21 @@ export function Desktop() {
               key={item.key}
               className={`k-desktop-icon${selection.includes(item.key) ? ' selected' : ''}`}
               title={item.name}
-              draggable={!item.key.startsWith('app:')}
-              onDragStart={(e) => startDragOut(dragSet(item.key), e)}
-              onDragEnd={endDragOut}
+              style={positions[item.key] ? { right: positions[item.key].x, top: positions[item.key].y } : { visibility: 'hidden' }}
+              draggable
+              onDragStart={(e) => {
+                const files = dragSet(item.key)
+                if (files.length) startDragOut(files, e)
+                else e.dataTransfer.effectAllowed = 'move'
+                e.dataTransfer.setData(ICON_MIME, item.key)
+                // Everything selected moves together (app shortcuts too), keeping its arrangement.
+                const moving = selection.includes(item.key) ? selection.filter((k) => positions[k]) : [item.key]
+                iconDrag = { keys: moving, x: e.clientX, y: e.clientY }
+              }}
+              onDragEnd={(e) => {
+                iconDrag = null
+                endDragOut(e)
+              }}
               onPointerDown={(e) => onIconPointerDown(item, e)}
               onClick={(e) => {
                 // A plain click (not a drag) inside a multiple selection selects just this one, like macOS.

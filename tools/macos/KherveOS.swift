@@ -15,7 +15,7 @@ import WebKit
 let frontURL = URL(string: "http://localhost:5173/")!
 let serverURL = URL(string: "http://127.0.0.1:8787/api/health")!
 
-final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate, WKScriptMessageHandler {
   var window: NSWindow!
   var webView: WKWebView!
   var started: [Process] = []
@@ -31,6 +31,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     config.websiteDataStore = .default()
     config.preferences.isElementFullscreenEnabled = true
     config.preferences.setValue(true, forKey: "developerExtrasEnabled") // right-click › Inspect
+    // KherveOS's Ꝃ › Shut Down… posts {type: 'shutdown'} here once everything is saved.
+    config.userContentController.add(self, name: "kherveos")
     webView = WKWebView(frame: .zero, configuration: config)
     webView.navigationDelegate = self
     webView.uiDelegate = self
@@ -57,6 +59,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
   func applicationWillTerminate(_ notification: Notification) {
     for p in started where p.isRunning { p.terminate() }
+  }
+
+  // MARK: messages from KherveOS
+
+  func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+    guard message.name == "kherveos", let body = message.body as? [String: Any],
+          body["type"] as? String == "shutdown" else { return }
+    // The page has closed every window and flushed the drive: quit (which stops our servers).
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { NSApp.terminate(nil) }
   }
 
   // MARK: servers

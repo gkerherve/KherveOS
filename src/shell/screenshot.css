@@ -1,0 +1,57 @@
+/* Screenshots: the camera next to the zoom (green) button in every title bar,
+   and the flash over what was taken (src/os/screenshot.ts). */
+
+/* Room for the camera after the three lights; the spacer keeps the title centred. */
+.k-titlebar .k-traffic,
+.k-titlebar .k-traffic-spacer {
+  width: 78px;
+}
+.k-titlebar .k-traffic {
+  align-items: center;
+}
+
+.k-shot-btn {
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--k-muted);
+  display: grid;
+  place-items: center;
+  cursor: default;
+  flex: none;
+}
+.k-shot-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+}
+.k-shot-btn:hover {
+  color: var(--k-accent);
+  background: color-mix(in srgb, var(--k-accent) 14%, transparent);
+}
+.k-shot-btn:active {
+  background: color-mix(in srgb, var(--k-accent) 26%, transparent);
+}
+.k-shot-btn:focus-visible {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 1px;
+}
+.k-window:not(.focused) .k-traffic:not(:hover) .k-shot-btn {
+  opacity: 0.55;
+}
+
+/* The camera flash: white over the window (or screen) for a moment. */
+.k-shot-flash {
+  position: fixed;
+  z-index: 200000;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}

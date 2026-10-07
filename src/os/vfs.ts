@@ -84,8 +84,32 @@ class VirtualFS {
   private version = 0
   readonly ready: Promise<void>
 
+  /** Writes not yet committed to IndexedDB (see flush). */
+  private inflight = new Set<Promise<unknown>>()
+
   constructor() {
     this.ready = this.boot()
+    // Track every write so flush() can wait for them (shutting down).
+    for (const k of ['writeBytes', 'mkdir', 'remove', 'rename', 'reset'] as const) {
+      const op = this[k].bind(this) as (...a: unknown[]) => Promise<void>
+      ;(this as Record<typeof k, unknown>)[k] = (...a: unknown[]) => {
+        const p = op(...a)
+        this.inflight.add(p)
+        void p.then(
+          () => this.inflight.delete(p),
+          () => this.inflight.delete(p),
+        )
+        return p
+      }
+    }
+  }
+
+  /** Wait until every write started so far is on disk. */
+  async flush(): Promise<void> {
+    await this.ready
+    while (this.inflight.size) await Promise.allSettled([...this.inflight])
+    // An empty read-write transaction completes only after every earlier one.
+    await done(this.db.transaction(['meta', 'data'], 'readwrite'))
   }
 
   // ---------------------------------------------------------------- boot

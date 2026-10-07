@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { Cpu, HardDrive, Info, Palette, Server, Sparkles, type LucideIcon } from 'lucide-react'
 import { os, fs, formatSize, useFsVersion, type AppProps } from '@/os'
-import { useSettings } from '@/os/settings'
-import { WALLPAPER } from '@/shell/wallpapers'
+import { UI_SCALES, useSettings } from '@/os/settings'
+import { WALLPAPER, WALLPAPER_FITS, wallpaperCss } from '@/shell/wallpapers'
 import { APPS, GROUPS } from '@/os/registry'
 import { AppIcon } from '@/os/ui/AppIcon'
 import { useAuth, useServer } from '@/os/server'
@@ -54,14 +54,29 @@ export default function Settings({ win, args }: AppProps) {
 }
 
 function Appearance() {
-  const { wallpaperOpacity, desktopIcons, dockZoom, lightApps, set } = useSettings()
+  const { wallpaperOpacity, wallpaperFit, uiScale, desktopIcons, dockZoom, lightApps, set } = useSettings()
 
   return (
     <>
       <h2>Wallpaper</h2>
       <div className="st-wallpaper-one">
-        <span className="st-wallpaper-preview" style={{ background: WALLPAPER.css }} />
+        <span
+          className="st-wallpaper-preview"
+          // The preview is a small screen: at "Centre" the picture shrinks with it.
+          style={{ background: wallpaperCss(wallpaperFit, `${(1376 / window.innerWidth) * 100}% auto`) }}
+        />
         <span>{WALLPAPER.name}</span>
+      </div>
+
+      <div className="st-inline st-slider">
+        Picture size
+        <div className="st-seg" role="radiogroup" aria-label="Wallpaper size">
+          {WALLPAPER_FITS.map((f) => (
+            <button key={f.id} role="radio" aria-checked={wallpaperFit === f.id} className={wallpaperFit === f.id ? 'on' : ''} title={f.tip} onClick={() => set({ wallpaperFit: f.id })}>
+              {f.name}
+            </button>
+          ))}
+        </div>
       </div>
 
       <label className="st-inline st-slider">
@@ -85,6 +100,19 @@ function Appearance() {
       </label>
 
       <h2>Desktop</h2>
+      <div className="st-inline st-slider">
+        Interface size
+        <div className="st-seg" role="radiogroup" aria-label="Interface size">
+          {UI_SCALES.map((k) => (
+            <button key={k} role="radio" aria-checked={uiScale === k} className={uiScale === k ? 'on' : ''} onClick={() => set({ uiScale: k })}>
+              {Math.round(k * 100)}%
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="k-muted st-note">
+        Scales the menu bar, the Dock, windows and the desktop, like display scaling on a Mac. Smaller gives more room; larger is easier to read.
+      </p>
       <label className="st-check">
         <input type="checkbox" checked={desktopIcons} onChange={(e) => set({ desktopIcons: e.target.checked })} />
         Show app shortcuts on the desktop

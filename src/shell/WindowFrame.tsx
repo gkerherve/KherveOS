@@ -14,6 +14,8 @@ import { reportCrash } from '@/os/crash'
 import { HOME, extname } from '@/os/path'
 import type { AppArgs, AppManifest, AppProps, WindowApi } from '@/os/types'
 import { animateMinimize, animateRestore, captureWindow, forgetWindow, tileFor, tileRects } from './minimize'
+import { SCREENSHOT_DIR, installScreenshotKeys, takeScreenshot } from '@/os/screenshot'
+import './screenshot.css'
 
 const lazyApps = new Map<string, ComponentType<AppProps>>()
 function appComponent(app: AppManifest) {
@@ -316,6 +318,26 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
                 {maxed ? <path className="fill" d="M5.6 1.8v2.6h2.6zM4.4 8.2V5.6H1.8z" /> : <path className="fill" d="M2.2 2.2h4.2L2.2 6.4zM7.8 7.8H3.6l4.2-4.2z" />}
               </svg>
             </button>
+            <button
+              className="k-shot-btn"
+              aria-label="Take a screenshot of this window"
+              title="Screenshot of this window (saved in Pictures › Screenshots)"
+              onClick={() => void takeScreenshot({ window: win.id })}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                os.contextMenu(e, [
+                  { label: 'Screenshot of This Window', shortcut: '⇧⌘4', onClick: () => void takeScreenshot({ window: win.id }) },
+                  { label: 'Screenshot of Entire Screen', shortcut: '⇧⌘3', onClick: () => void takeScreenshot('screen') },
+                  '-',
+                  { label: 'Show Screenshots Folder', onClick: () => void os.fs.mkdir(SCREENSHOT_DIR, { recursive: true }).then(() => os.open('files', { path: SCREENSHOT_DIR })) },
+                ])
+              }}
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M2.5 5.2c0-.7.5-1.2 1.2-1.2h1.6l1-1.5h3.4l1 1.5h1.6c.7 0 1.2.5 1.2 1.2v6.1c0 .7-.5 1.2-1.2 1.2H3.7c-.7 0-1.2-.5-1.2-1.2z" />
+                <circle cx="8" cy="8.1" r="2.3" />
+              </svg>
+            </button>
           </div>
           <span className="k-title-text">{win.title}</span>
           <span className="k-traffic-spacer" />
@@ -332,6 +354,9 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
 export function WindowLayer() {
   const windows = useWindows((s) => s.windows)
   const focusedId = useWindows((s) => s.focusedId)
+
+  // ⇧⌘3 the whole screen, ⇧⌘4 the front window (see src/os/screenshot.ts).
+  useEffect(() => installScreenshotKeys(), [])
 
   // Clicks inside an <iframe> never reach us, so watch for focus moving into one.
   useEffect(() => {

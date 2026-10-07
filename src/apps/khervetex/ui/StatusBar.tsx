@@ -3,7 +3,7 @@
 // tab, the separate "| PDF:" zoom with its fit-page-width button while a PDF
 // is shown, and the compiler indicator "LaTeX (tectonic): OK".
 
-import { iconUrl } from './actions'
+import { TexIcon } from './TexIcon'
 
 function Zoom({ value, min, max, onChange, onStep, outTip, inTip }: {
   value: number
@@ -18,7 +18,7 @@ function Zoom({ value, min, max, onChange, onStep, outTip, inTip }: {
   return (
     <>
       <button className="ktx-sb-btn" title={outTip} onClick={() => onStep(-10)}>
-        <img src={iconUrl('zoom-out')} alt="" draggable={false} />
+        <TexIcon name="zoom-out" />
       </button>
       <span className="ktx-slider" style={{ ['--ticks' as string]: String((max - min) / 25) }}>
         <input
@@ -32,7 +32,7 @@ function Zoom({ value, min, max, onChange, onStep, outTip, inTip }: {
         />
       </span>
       <button className="ktx-sb-btn" title={inTip} onClick={() => onStep(10)}>
-        <img src={iconUrl('zoom-in')} alt="" draggable={false} />
+        <TexIcon name="zoom-in" />
       </button>
       <span className="ktx-sb-pct">{Math.round(value)}%</span>
     </>
@@ -100,7 +100,7 @@ export function StatusBar({
             inTip="PDF zoom in"
           />
           <button className={`ktx-sb-btn${fit ? ' on' : ''}`} title="Fit page width (Ctrl+0)" aria-pressed={fit} onClick={onFit}>
-            <img src={iconUrl('fit-width')} alt="" draggable={false} />
+            <TexIcon name="fit-width" />
           </button>
         </>
       )}

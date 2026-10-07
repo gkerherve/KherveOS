@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { os } from '@/os'
 import { escapeText } from '../serializer'
-import { iconUrl } from './actions'
+import { TexIcon } from './TexIcon'
 import { compileStandalone } from './standalone'
 import type { Done } from './dialogs'
 
@@ -496,13 +496,13 @@ export function DrawingDialog({ initialSvg, done }: { initialSvg: string | null;
             <div className="ktx-draw-tools">
               {TOOLS.map(([t, icon, tip]) => (
                 <button key={t} className={`ktx-tb-btn${tool === t ? ' on' : ''}`} title={tip} onClick={() => setTool(t)}>
-                  <img src={iconUrl(`paint-${icon}`)} alt="" />
+                  <TexIcon name={`paint-${icon}`} />
                 </button>
               ))}
               <span className="ktx-tb-sep" />
-              <button className={`ktx-tb-btn${grid ? ' on' : ''}`} title="Show the grid" onClick={() => setGrid((v) => !v)}><img src={iconUrl('paint-grid')} alt="" /></button>
-              <button className={`ktx-tb-btn${snap ? ' on' : ''}`} title="Snap to the grid (1 mm)" onClick={() => setSnap((v) => !v)}><img src={iconUrl('paint-snap')} alt="" /></button>
-              <button className="ktx-tb-btn" title="Zoom to drawing" onClick={() => setZoom(1)}><img src={iconUrl('paint-fit')} alt="" /></button>
+              <button className={`ktx-tb-btn${grid ? ' on' : ''}`} title="Show the grid" onClick={() => setGrid((v) => !v)}><TexIcon name="paint-grid" /></button>
+              <button className={`ktx-tb-btn${snap ? ' on' : ''}`} title="Snap to the grid (1 mm)" onClick={() => setSnap((v) => !v)}><TexIcon name="paint-snap" /></button>
+              <button className="ktx-tb-btn" title="Zoom to drawing" onClick={() => setZoom(1)}><TexIcon name="paint-fit" /></button>
             </div>
             <div className="ktx-draw-canvas">
               <svg
@@ -554,17 +554,17 @@ export function DrawingDialog({ initialSvg, done }: { initialSvg: string | null;
                   )}
                   <span />
                   <span className="ktx-row">
-                    <button className="ktx-tb-btn" title="Bring to front" onClick={() => order(true)}><img src={iconUrl('paint-front')} alt="" /></button>
-                    <button className="ktx-tb-btn" title="Send to back" onClick={() => order(false)}><img src={iconUrl('paint-back')} alt="" /></button>
+                    <button className="ktx-tb-btn" title="Bring to front" onClick={() => order(true)}><TexIcon name="paint-front" /></button>
+                    <button className="ktx-tb-btn" title="Send to back" onClick={() => order(false)}><TexIcon name="paint-back" /></button>
                     <button className="ktx-tb-btn" title="Duplicate" onClick={() => {
                       const copy = { ...selected, id: nextId.current++, x: selected.x + 4, y: selected.y + 4, pts: selected.pts?.map(([x, y]) => [x + 4, y + 4] as [number, number]) }
                       commit([...shapes, copy])
                       setSel(copy.id)
-                    }}><img src={iconUrl('paint-duplicate')} alt="" /></button>
+                    }}><TexIcon name="paint-duplicate" /></button>
                     <button className="ktx-tb-btn" title="Delete" onClick={() => {
                       commit(shapes.filter((s) => s.id !== selected.id))
                       setSel(null)
-                    }}><img src={iconUrl('paint-delete')} alt="" /></button>
+                    }}><TexIcon name="paint-delete" /></button>
                   </span>
                 </div>
               ) : (

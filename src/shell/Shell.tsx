@@ -9,6 +9,8 @@ import { TopBar } from './TopBar'
 import { Dock } from './Dock'
 import { Launchpad } from './Launchpad'
 import { useShellUi } from './ui'
+import { useShutdown } from '@/os/shutdown'
+import { ShutdownScreen } from './ShutdownScreen'
 
 export function Shell() {
   useThemeEffect()
@@ -24,6 +26,9 @@ export function Shell() {
     void import('@/os/ai/mcpBridge').then((m) => m.startMcpBridge())
   }, [])
   const launchpad = useShellUi((s) => s.launchpad)
+  const off = useShutdown((s) => s.off)
+  // Shut down: the whole desktop goes away (apps, frames, workers stop with it).
+  if (off) return <ShutdownScreen />
   return (
     <div className="k-shell">
       <Desktop />

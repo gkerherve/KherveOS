@@ -1,0 +1,10 @@
+/* KherveTeX icons: the dark set on dark chrome, the light set in a Light window. */
+.ktx-ico-l {
+  display: none;
+}
+[data-dark='0'] .ktx-ico-l {
+  display: inline;
+}
+[data-dark='0'] .ktx-ico-d {
+  display: none;
+}

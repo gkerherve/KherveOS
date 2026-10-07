@@ -1,0 +1,18 @@
+/* Desktop icons placed freely (src/shell/desktopLayout.ts): each icon is
+   positioned from the icon area's top-right corner; the grid is in the code. */
+.k-desktop-icons.k-arranged {
+  display: block;
+  padding: 0;
+}
+.k-desktop-icons.k-arranged .k-desktop-icon {
+  position: absolute;
+  /* Clean Up and Sort By glide the icons to their new places. */
+  transition:
+    right 0.22s ease,
+    top 0.22s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-desktop-icons.k-arranged .k-desktop-icon {
+    transition: none;
+  }
+}

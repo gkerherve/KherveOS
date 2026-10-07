@@ -10,6 +10,10 @@ export interface SettingsState {
   wallpaper: string
   /** How strongly the wallpaper shows over the theme's desktop colour (0.1–1). */
   wallpaperOpacity: number
+  /** How the wallpaper fits the screen: cover it (cropping), show it whole, or at its own size in the middle. */
+  wallpaperFit: WallpaperFit
+  /** Interface size, like macOS display scaling: 1 = 100% (0.75–2). Scales the menu bar, Dock, windows and desktop. */
+  uiScale: number
   /** App shortcuts on the desktop (the Dock already has them). */
   desktopIcons: boolean
   /** App icon look: classic Ktools tiles, or the same in deeper colours. */
@@ -27,6 +31,13 @@ export interface SettingsState {
   browserHome: string
   set(patch: Partial<Omit<SettingsState, 'set'>>): void
 }
+
+export type WallpaperFit = 'fill' | 'fit' | 'centre'
+
+/** The interface sizes offered in Settings › Appearance › Desktop. */
+export const UI_SCALES = [0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2]
+export const clampUiScale = (v: unknown): number =>
+  typeof v === 'number' && Number.isFinite(v) ? Math.min(2, Math.max(0.75, v)) : 1
 
 export const DEFAULT_DOCK = ['files', 'browser', 'terminal', 'khervebook', 'kherveai', 'notepad', 'messages', 'email', 'settings']
 
@@ -52,6 +63,8 @@ export const useSettings = create<SettingsState>()(
       theme: 'Kherve Green',
       wallpaper: 'ktools-lab',
       wallpaperOpacity: 1,
+      wallpaperFit: 'fill',
+      uiScale: 1,
       desktopIcons: false,
       iconStyle: 'classic',
       lightApps: [],
@@ -65,7 +78,7 @@ export const useSettings = create<SettingsState>()(
     {
       name: 'kherveos.settings',
       storage: safeStorage,
-      version: 10,
+      version: 11,
       migrate: (old, version) => {
         let s = { ...((old ?? {}) as Partial<SettingsState>) }
         // Version 1 had a blue/Auto look: move early installs to the dark look.
@@ -101,6 +114,11 @@ export const useSettings = create<SettingsState>()(
         if (version < 9) s.wallpaperOpacity = 1
         // Version 10: apps can be chosen Light again (Settings › Appearance), in light green.
         if (version < 10) s.lightTheme = 'Kherve Light'
+        // Version 11: interface size (display scaling) and how the wallpaper fits.
+        if (version < 11) {
+          s.uiScale = 1
+          s.wallpaperFit = 'fill'
+        }
         return s as SettingsState
       },
     },

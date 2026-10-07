@@ -2,6 +2,7 @@
 // the Dock, which shows a picture of it; restoring plays the move backwards.
 
 import { create } from 'zustand'
+import { renderToWebp } from '@/os/screenshot'
 
 /** Pictures of the minimised windows, by window id (data URLs). */
 export const useWindowPictures = create<Record<string, string>>(() => ({}))
@@ -19,18 +20,8 @@ export async function captureWindow(id: string, frame: HTMLElement): Promise<voi
   const h = frame.offsetHeight
   if (!w || !h) return
   try {
-    const { domToWebp } = await import('modern-screenshot')
-    const url = await domToWebp(frame, {
-      width: w,
-      height: h,
-      scale: Math.min(1, PICTURE / Math.max(w, h)),
-      quality: 0.85,
-      // The frame is being animated meanwhile: take it as it stands on screen.
-      style: { transform: 'none', opacity: '1', left: '0', top: '0', margin: '0' },
-      filter: (el) => !(el instanceof HTMLElement && el.classList.contains('k-resize')),
-      font: false,
-      timeout: 4000,
-    })
+    // The frame is being animated meanwhile: the renderer takes it as it stands on screen.
+    const url = await renderToWebp(frame, { scale: Math.min(1, PICTURE / Math.max(w, h)), quality: 0.85, timeout: 4000 })
     useWindowPictures.setState({ [id]: url })
   } catch {
     // cross-origin content or a failed render

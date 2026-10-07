@@ -15,7 +15,8 @@ import type { DocMeta } from '../model'
 import { classSupportsChapter } from '../model'
 import { PAGE_SIZES } from '../pageSizes'
 import { TEMPLATE_CHOICES } from './dialogs'
-import { ACTIONS, iconUrl, tipOf, type ActionId } from './actions'
+import { ACTIONS, tipOf, type ActionId } from './actions'
+import { TexIcon } from './TexIcon'
 
 export type StyleCode =
   | 'body' | 'title' | 'author' | 'affiliation' | 'correspondence' | 'abstract' | 'keywords' | 'frame' | 'chapter'
@@ -93,7 +94,7 @@ function ToolButton({ id, on, disabled, run, icon, tip }: {
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => run(id)}
     >
-      <img src={iconUrl(icon ?? a.icon ?? 'file-new')} alt="" draggable={false} />
+      <TexIcon name={icon ?? a.icon ?? 'file-new'} />
     </button>
   )
 }

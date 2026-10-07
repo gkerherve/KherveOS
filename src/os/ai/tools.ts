@@ -23,6 +23,7 @@ import { APPS, appForExtension, getApp } from '@/os/registry'
 import { useWindows } from '@/os/windows'
 import { mimeType } from '@/os/fileIcons'
 import { PythonKernel } from '@/os/python/kernel'
+import { captureCanvas, flash, saveScreenshot, targetName, type ShotTarget } from '@/os/screenshot'
 import { appKTools, appToolNames } from './appTools'
 
 export interface KTool {
@@ -496,6 +497,27 @@ export const KTOOLS: KTool[] = [
     },
   },
   {
+    name: 'take_screenshot',
+    description:
+      'Take a screenshot of one KherveOS window (its id from list_windows) or, without a window, of the whole screen, ' +
+      'and save it as a PNG in ~/Pictures/Screenshots ("Screenshot YYYY-MM-DD at HH.MM.SS.png"), like the camera button in each title bar. ' +
+      'Returns the file\'s path; the picture itself is not returned (open_file shows it to the user).',
+    inputSchema: object({ window: str('The window id, e.g. "w3". Leave out for the whole screen.') }),
+    async run(a) {
+      const id = optText(a, 'window')?.trim()
+      let target: ShotTarget = 'screen'
+      if (id) {
+        const w = useWindows.getState().windows.find((x) => x.id === id)
+        if (!w) throw new Error(`There is no window "${id}". list_windows shows the open ones.`)
+        target = { window: id }
+      }
+      const canvas = await captureCanvas(target)
+      flash(target)
+      const p = await saveScreenshot(canvas)
+      return { path: pretty(p), of: targetName(target).replace(/^Screenshot of /, ''), width: canvas.width, height: canvas.height }
+    },
+  },
+  {
     name: 'run_python',
     description:
       'Run Python 3 (Pyodide, in the browser) in a session kept for AI use: variables stay between calls. The working folder ' +
@@ -742,6 +764,8 @@ function tell(caller: string, name: string, a: Args, result: unknown) {
       return toast(`${caller} moved ${basename(path('from'))}`, `to ${path('to')}`, open(dirname(path('to'))))
     case 'delete':
       return toast(`${caller} deleted ${basename(path('deleted'))}`, dirname(path('deleted')))
+    case 'take_screenshot':
+      return toast(`${caller} took a screenshot`, `${basename(path('path'))} — click to open`, open(path('path')))
     case 'run_python': {
       const first = typeof a.code === 'string' ? a.code.trim().split('\n')[0].slice(0, 80) : ''
       const figures = Array.isArray(r.figures) ? (r.figures as string[]) : []

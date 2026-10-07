@@ -93,6 +93,7 @@ export default function KherveRef({ win, args }: AppProps) {
   const writing = useRef(0)
   const lastWrite = useRef(0)
   const searchBox = useRef<HTMLInputElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   // ------------------------------------------------------------ the library
 
@@ -157,6 +158,17 @@ export default function KherveRef({ win, args }: AppProps) {
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [args])
+
+  // On close, keep a field still being edited (details commit on blur) and let writes finish.
+  useEffect(() => {
+    win.setCloseGuard(async () => {
+      const el = document.activeElement
+      if (el instanceof HTMLElement && rootRef.current?.contains(el)) el.blur()
+      while (writing.current > 0) await new Promise((r) => setTimeout(r, 50))
+      return true
+    })
+    return () => win.setCloseGuard(null)
+  }, [win])
 
   // Changes made elsewhere (another window, a sync) show up here.
   useEffect(() => {
@@ -807,6 +819,7 @@ export default function KherveRef({ win, args }: AppProps) {
 
   return (
     <div
+      ref={rootRef}
       className={`k-app kr-app${dropping ? ' kr-dropping' : ''}`}
       onKeyDown={(ev) => {
         if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 'f') {

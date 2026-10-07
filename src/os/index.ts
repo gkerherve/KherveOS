@@ -7,6 +7,7 @@
 //   os.notify({ title, body })        a notification toast
 //   os.contextMenu(event, items)      a right-click menu
 //   os.download(path) / os.upload(dir)  move files between the drive and the computer
+//   os.shutdown()                     Shut Down…: close every window (asking about unsaved work), flush the drive
 //   os.openUrl(url)                   a web address in the KherveOS Browser (mailto: in Email);
 //                                     never window.open / target="_blank" (see web.ts)
 
@@ -18,6 +19,7 @@ import { basename, extname, join } from './path'
 import { mimeType } from './fileIcons'
 import type { AppArgs } from './types'
 import { openInRealBrowser, openUrl } from './web'
+import { shutdown } from './shutdown'
 
 export { fs, FsError, useDir, useFsVersion, formatSize } from './vfs'
 export type { Stat, FsEvent } from './vfs'
@@ -118,4 +120,5 @@ export const os = {
   importFiles,
   openUrl,
   openInRealBrowser,
+  shutdown,
 }

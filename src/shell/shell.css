@@ -744,3 +744,32 @@
 .k-window.translucent .k-titlebar {
   background: color-mix(in srgb, var(--k-chrome) 70%, transparent);
 }
+
+/* ------------------------------------------------------ Shut Down… screen */
+.k-shutdown {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px;
+  text-align: center;
+  background: var(--k-bg);
+  color: var(--k-text);
+}
+.k-shutdown-logo {
+  color: var(--k-accent);
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--k-accent) 45%, transparent));
+}
+.k-shutdown h1 {
+  margin: 8px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+.k-shutdown p {
+  margin: 0 0 8px;
+  color: var(--k-muted);
+}

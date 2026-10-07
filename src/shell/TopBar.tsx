@@ -16,6 +16,8 @@ import { openLaunchpad } from './ui'
 import { appGroups } from './appsMenu'
 import { toggleFullscreen, useFullscreen } from '@/os/fullscreen'
 import { openUrl } from '@/os/web'
+import { os } from '@/os'
+import { frontWindow, takeScreenshot } from '@/os/screenshot'
 
 interface TopMenu {
   key: string
@@ -69,7 +71,19 @@ export function TopBar() {
         { label: 'Launchpad', onClick: openLaunchpad },
         { label: fullscreen ? 'Exit Full Screen' : 'Enter Full Screen', onClick: () => void toggleFullscreen() },
         '-',
+        { label: 'Take Screenshot', shortcut: '⇧⌘3', onClick: () => void takeScreenshot('screen') },
+        {
+          label: 'Screenshot of Front Window',
+          shortcut: '⇧⌘4',
+          disabled: !focused,
+          onClick: () => {
+            const id = frontWindow()
+            if (id) void takeScreenshot({ window: id })
+          },
+        },
+        '-',
         { label: 'Restart KherveOS', onClick: () => location.reload() },
+        { label: 'Shut Down…', onClick: () => void os.shutdown() },
         ...(user ? (['-', { label: `Sign out ${user.display_name}…`, onClick: () => void logout() }] as MenuItem[]) : []),
       ],
     }
