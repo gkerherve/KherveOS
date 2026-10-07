@@ -107,6 +107,7 @@ export class PythonKernel {
       this.unwatch = fs.watch((ev) => this.onFsEvent(ev))
       const changes: FsChanges = { files: [], dirs: [], deletes: [] }
       for (const s of fs.walk(HOME)) {
+        if (isGitInternal(s.path)) continue
         if (s.type === 'dir') changes.dirs.push(s.path)
         else changes.files.push({ path: s.path, data: await fs.readBytes(s.path) })
       }
@@ -251,7 +252,7 @@ export class PythonKernel {
   private onFsEvent(ev: FsEvent) {
     if (this.applying.has(ev.path)) return
     const touch = (path: string, kind: Dirty) => {
-      if (!isInside(path, HOME)) return
+      if (!isInside(path, HOME) || isGitInternal(path)) return
       if (kind === 'delete') for (const k of [...this.dirty.keys()]) if (isInside(k, path)) this.dirty.delete(k)
       this.dirty.set(path, kind)
     }
@@ -296,6 +297,9 @@ export class PythonKernel {
     }
   }
 }
+
+/** Git's own .git folders stay out of Python: copying them would copy a cloned repo's whole history. */
+const isGitInternal = (path: string) => path.split('/').includes('.git')
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
 
