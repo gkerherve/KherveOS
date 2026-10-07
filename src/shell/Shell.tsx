@@ -16,6 +16,10 @@ export function Shell() {
   useEffect(() => {
     void import('@/apps/messages/notifier').then((m) => m.startMessagesNotifier())
   }, [])
+  // AI apps connected over MCP (Claude, ChatGPT…) reach KherveOS through this tab.
+  useEffect(() => {
+    void import('@/os/ai/mcpBridge').then((m) => m.startMcpBridge())
+  }, [])
   const launchpad = useShellUi((s) => s.launchpad)
   return (
     <div className="k-shell">

@@ -1,21 +1,23 @@
-// Settings: appearance, storage, server & account, Python, about.
+// Settings: appearance, storage, server & account, AI & MCP, Python, about.
 
 import { useEffect, useState } from 'react'
-import { Cpu, HardDrive, ImagePlus, Info, Palette, Server, type LucideIcon } from 'lucide-react'
+import { Cpu, HardDrive, ImagePlus, Info, Palette, Server, Sparkles, type LucideIcon } from 'lucide-react'
 import { os, fs, formatSize, useFsVersion, HOME, type AppProps } from '@/os'
 import { useSettings } from '@/os/settings'
 import { WALLPAPERS } from '@/shell/wallpapers'
 import { IMAGE_EXTS } from '@/os/fileIcons'
 import { useAuth, useServer } from '@/os/server'
 import { KHERVEOS_VERSION, PYODIDE_VERSION } from '@/os/version'
+import { McpSection } from './McpSection'
 import './settings.css'
 
-type Section = 'appearance' | 'storage' | 'server' | 'python' | 'about'
+type Section = 'appearance' | 'storage' | 'server' | 'ai' | 'python' | 'about'
 
 const SECTIONS: { id: Section; name: string; icon: LucideIcon }[] = [
   { id: 'appearance', name: 'Appearance', icon: Palette },
   { id: 'storage', name: 'Storage', icon: HardDrive },
   { id: 'server', name: 'Server & account', icon: Server },
+  { id: 'ai', name: 'AI & MCP', icon: Sparkles },
   { id: 'python', name: 'Python', icon: Cpu },
   { id: 'about', name: 'About', icon: Info },
 ]
@@ -42,6 +44,7 @@ export default function Settings({ win, args }: AppProps) {
         {section === 'appearance' && <Appearance />}
         {section === 'storage' && <Storage />}
         {section === 'server' && <ServerSection />}
+        {section === 'ai' && <McpSection />}
         {section === 'python' && <PythonSection />}
         {section === 'about' && <About />}
       </main>

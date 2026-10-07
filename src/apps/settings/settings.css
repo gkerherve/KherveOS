@@ -286,3 +286,93 @@
   display: flex;
   gap: 8px;
 }
+
+/* ------------------------------------------------------------- AI & MCP */
+
+.st-mcp-gate .k-center {
+  height: auto;
+  padding: 12px 0;
+  background: transparent;
+}
+.st-mcp-field {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.st-mcp-value {
+  font-family: var(--k-mono);
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: var(--k-radius-sm);
+  background: var(--k-alt);
+  border: 1px solid var(--k-border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.st-mcp-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.st-mcp-snippet {
+  position: relative;
+  max-width: 640px;
+  margin-bottom: 10px;
+}
+.st-mcp-snippet pre {
+  padding-right: 92px;
+}
+.st-mcp-snippet > .k-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+.st-mcp-tunnel {
+  max-width: 640px;
+  font-family: var(--k-mono);
+  font-size: 12px;
+}
+.st-mcp-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 640px;
+  padding: 10px 12px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--k-warning) 50%, var(--k-border));
+  background: color-mix(in srgb, var(--k-warning) 10%, transparent);
+  line-height: 1.5;
+}
+.st-mcp-warning > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--k-warning);
+}
+.st-mcp-activity {
+  gap: 4px;
+  padding: 10px 14px;
+}
+.st-mcp-act {
+  display: grid;
+  grid-template-columns: 44px 96px auto minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.st-mcp-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.st-mcp-state {
+  display: inline-grid;
+  place-items: center;
+}
+.st-mcp-state.done {
+  color: var(--k-success);
+}
+.st-mcp-state.failed {
+  color: var(--k-danger);
+}
