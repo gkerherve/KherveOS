@@ -375,7 +375,7 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
           )
         ) : (
           <>
-            <div ref={bodyRef} className={`nb-body${capBody ? ' capped' : ''}`} style={capBody}>
+            <div ref={bodyRef} className={`nb-cellbody${capBody ? ' capped' : ''}`} style={capBody}>
               {body}
             </div>
             <div

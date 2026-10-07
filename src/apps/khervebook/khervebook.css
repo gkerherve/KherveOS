@@ -719,13 +719,13 @@
   color: var(--k-muted);
   cursor: pointer;
 }
-.nb-body {
+.nb-cellbody {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.nb-body.capped {
+.nb-cellbody.capped {
   overflow: auto;
 }
 .nb-cell.collapsed .nb-content {
