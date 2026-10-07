@@ -51,14 +51,17 @@ Still open in stage 1:
       `/api/ai/status`, `/api/ai/chat`), or Ollama; client `src/os/ai/index.ts`.
       To do: fold it into KherveAI as its "KherveOS server" provider, so there is
       one AI app.
-- [ ] KherveOS tool registry (`src/os/ai/tools.ts`): files, apps, windows, Python,
-      notebooks — shared by KherveAI and MCP; destructive actions need the user's OK
+- [x] KherveOS tool registry (`src/os/ai/tools.ts`): files, apps, windows, Python,
+      notebooks — shared by KherveAI and MCP; delete/overwrite and AI-run Python need
+      the user's OK — done 2026-10-07
 - [ ] KherveAI app: chat with Ollama (local; installed here with qwen3.5:4b,
       granite4:micro-h, phi4-mini), Claude, ChatGPT; tool calling so models act in KherveOS
-- [ ] MCP server (`server/kherveos_server/mcp_server.py`, `mcp` SDK) at
+- [x] MCP server (`server/kherveos_server/mcp_server.py`, `mcp` SDK) at
       http://localhost:8787/mcp with per-user tokens; tool calls relayed to the user's
       KherveOS tab over the websocket; Settings › AI & MCP shows how to connect Claude
-      Code, Claude Desktop (mcp-remote) and ChatGPT (public tunnel + /mcp/t/<token>)
+      Code, Claude Desktop (mcp-remote) and ChatGPT (public tunnel + /mcp/t/<token>) —
+      done 2026-10-07, tested with the official MCP client end to end. The local test
+      server has a test account `kostest` (password only in that browser's localStorage).
 
 ### 2. PDF and Git services → KhervePDF, KherveRef, KhervePY
 
