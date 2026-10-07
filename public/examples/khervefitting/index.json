@@ -1,0 +1,519 @@
+{
+ "source": "KherveFitting (develop) Data-Examples",
+ "menus": [
+  {
+   "name": "Al2O3",
+   "items": [
+    {
+     "title": "Al2O3",
+     "file": "Al2O3/Al2O3.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "BN",
+   "items": [
+    {
+     "title": "Boron Nitride",
+     "file": "BN/Boron Nitride.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "C",
+   "items": [
+    {
+     "title": "Carbon SP2",
+     "file": "C/Carbon SP2.xlsx"
+    },
+    {
+     "title": "Carbon SP3",
+     "file": "C/Carbon SP3.xlsx"
+    }
+   ],
+   "groups": [
+    {
+     "name": "HDPE",
+     "items": [
+      {
+       "title": "HDPE Kfitting",
+       "file": "C/HDPE/HDPE_Kfitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "PEEK",
+     "items": [
+      {
+       "title": "PEEK Kfitting",
+       "file": "C/PEEK/PEEK_Kfitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "PET",
+     "items": [
+      {
+       "title": "PET25 07 Kfitting",
+       "file": "C/PET/PET25_07_Kfitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "PolyStyrene",
+     "items": [
+      {
+       "title": "PolyStyrene",
+       "file": "C/PolyStyrene/PolyStyrene.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Ce",
+   "items": [],
+   "groups": [
+    {
+     "name": "CeOx",
+     "items": [
+      {
+       "title": "Ce3d 4+",
+       "file": "Ce/CeOx/Ce3d_4+.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "CePO4",
+     "items": [
+      {
+       "title": "CePO4",
+       "file": "Ce/CePO4/CePO4.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "CoOx",
+   "items": [
+    {
+     "title": "CoOx",
+     "file": "CoOx/CoOx.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "Cr2O3",
+   "items": [
+    {
+     "title": "Cr2O3 for O 1s fitting (VAMAS)",
+     "file": "Cr2O3/Cr2O3 for O 1s fitting.vms"
+    },
+    {
+     "title": "Cr2O3 for O 1s fitting",
+     "file": "Cr2O3/Cr2O3 for O 1s fitting.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "Fe",
+   "items": [],
+   "groups": [
+    {
+     "name": "Fe2O3",
+     "items": [
+      {
+       "title": "Fe2O3",
+       "file": "Fe/Fe2O3/Fe2O3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Fe3O4",
+     "items": [
+      {
+       "title": "Fe3O4",
+       "file": "Fe/Fe3O4/Fe3O4.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "La",
+   "items": [],
+   "groups": [
+    {
+     "name": "La2O3",
+     "items": [
+      {
+       "title": "La2O3",
+       "file": "La/La2O3/La2O3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "LaSTO",
+     "items": [
+      {
+       "title": "LaSrTiO3",
+       "file": "La/LaSTO/LaSrTiO3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "LaSrMnCoO3",
+     "items": [
+      {
+       "title": "LaSrCoMnO3 Kfitting",
+       "file": "La/LaSrMnCoO3/LaSrCoMnO3_Kfitting.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "MnOx",
+   "items": [
+    {
+     "title": "Mn2O3",
+     "file": "MnOx/Mn2O3.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "Mo",
+   "items": [],
+   "groups": [
+    {
+     "name": "MoO3",
+     "items": [
+      {
+       "title": "MoO3",
+       "file": "Mo/MoO3/MoO3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "MoS2",
+     "items": [
+      {
+       "title": "MoS2",
+       "file": "Mo/MoS2/MoS2.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "RuO2",
+   "items": [
+    {
+     "title": "RuO2 Kfitting",
+     "file": "RuO2/RuO2_Kfitting.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "Si",
+   "items": [],
+   "groups": [
+    {
+     "name": "Si3N4",
+     "items": [
+      {
+       "title": "Si3N4",
+       "file": "Si/Si3N4/Si3N4.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "SiC",
+     "items": [
+      {
+       "title": "SiC",
+       "file": "Si/SiC/SiC.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "SiO2",
+     "items": [
+      {
+       "title": "SiO2",
+       "file": "Si/SiO2/SiO2.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SnO2",
+   "items": [
+    {
+     "title": "SnO2",
+     "file": "SnO2/SnO2.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "Ti",
+   "items": [],
+   "groups": [
+    {
+     "name": "TiO2",
+     "items": [
+      {
+       "title": "TiO2 Kfitting",
+       "file": "Ti/TiO2/TiO2_Kfitting.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Y2O3",
+   "items": [
+    {
+     "title": "Y2O3 Kfitting",
+     "file": "Y2O3/Y2O3_Kfitting.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "ZrO2",
+   "items": [
+    {
+     "title": "ZrO2 Kfitting",
+     "file": "ZrO2/ZrO2_Kfitting.xlsx"
+    }
+   ],
+   "groups": []
+  },
+  {
+   "name": "Metals",
+   "items": [],
+   "groups": [
+    {
+     "name": "Metal Bi",
+     "items": [
+      {
+       "title": "Metal Bi",
+       "file": "zz Metals/Metal Bi/Metal_Bi.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Ge",
+     "items": [
+      {
+       "title": "Metal Ge",
+       "file": "zz Metals/Metal Ge/Metal_Ge.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Hf",
+     "items": [
+      {
+       "title": "Metal Hf",
+       "file": "zz Metals/Metal Hf/Metal_Hf.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Ir",
+     "items": [
+      {
+       "title": "Metal Ir",
+       "file": "zz Metals/Metal Ir/Metal_Ir.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Pb",
+     "items": [
+      {
+       "title": "Metal Pb",
+       "file": "zz Metals/Metal Pb/Metal_Pb.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Pd",
+     "items": [
+      {
+       "title": "Metal Pd",
+       "file": "zz Metals/Metal Pd/Metal_Pd.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Pt",
+     "items": [
+      {
+       "title": "Pt4f (VAMAS)",
+       "file": "zz Metals/Metal Pt/Pt4f.vms"
+      },
+      {
+       "title": "Pt4f",
+       "file": "zz Metals/Metal Pt/Pt4f.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Re",
+     "items": [
+      {
+       "title": "Metal Re",
+       "file": "zz Metals/Metal Re/Metal_Re.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Rh",
+     "items": [
+      {
+       "title": "Metal Rh",
+       "file": "zz Metals/Metal Rh/Metal Rh.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Ta",
+     "items": [
+      {
+       "title": "Metal Ta",
+       "file": "zz Metals/Metal Ta/Metal_Ta.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Tl",
+     "items": [
+      {
+       "title": "Metal Tl",
+       "file": "zz Metals/Metal Tl/Metal_Tl.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal W",
+     "items": [
+      {
+       "title": "Metal W",
+       "file": "zz Metals/Metal W/Metal_W.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Metal Zn",
+     "items": [
+      {
+       "title": "Metal Zn",
+       "file": "zz Metals/Metal Zn/Metal_Zn.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Mixed Materials",
+   "items": [],
+   "groups": [
+    {
+     "name": "LaSTO",
+     "items": [
+      {
+       "title": "LaSrTiO3",
+       "file": "zz Mixed Materials/LaSTO/LaSrTiO3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "STO",
+     "items": [
+      {
+       "title": "STO",
+       "file": "zz Mixed Materials/STO/STO.xlsx"
+      },
+      {
+       "title": "STO 2doublets",
+       "file": "zz Mixed Materials/STO/STO_2doublets.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Other Techniques",
+   "items": [],
+   "groups": [
+    {
+     "name": "EDX",
+     "items": [
+      {
+       "title": "EDX SI 0 1 EDX",
+       "file": "zz Other Techniques/EDX/EDX_SI_0 1_EDX.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Raman",
+     "items": [
+      {
+       "title": "Raman Data",
+       "file": "zz Other Techniques/Raman/Raman_Data.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Valence Band",
+     "items": [
+      {
+       "title": "Au Valence",
+       "file": "zz Other Techniques/Valence Band/Au_Valence.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "Voigt Models",
+     "items": [
+      {
+       "title": "Voigt Model",
+       "file": "zz Other Techniques/Voigt Models/Voigt_Model.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "XAS",
+     "items": [
+      {
+       "title": "XAS~CeM34",
+       "file": "zz Other Techniques/XAS/XAS~CeM34.xlsx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "RawData_ToBeImported",
+   "items": [
+    {
+     "title": "PET25 07 Avantage Kfitting",
+     "file": "zz RawData_ToBeImported/PET25_07_Avantage_Kfitting.xlsx"
+    }
+   ],
+   "groups": []
+  }
+ ]
+}
