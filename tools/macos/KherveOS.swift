@@ -78,7 +78,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
   func launch(_ command: String, log: String) {
     let p = Process()
     p.executableURL = URL(fileURLWithPath: "/bin/zsh")
-    p.arguments = ["-lc", "exec \(command)"]
+    p.arguments = ["-lc", command]
     p.currentDirectoryURL = URL(fileURLWithPath: repo)
     let logURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(log)
     FileManager.default.createFile(atPath: logURL.path, contents: nil)
@@ -99,8 +99,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
       DispatchQueue.main.async { self.showMessage("KherveOS was not found in \(self.repo).\nRebuild the app with tools/macos/build_app.sh.") }
       return
     }
-    if !reachable(serverURL) { launch("server/.venv/bin/python -m kherveos_server", log: "kherveos-server.log") }
-    if !reachable(frontURL) { launch("./node_modules/.bin/vite --strictPort", log: "kherveos-vite.log") }
+    if !reachable(serverURL) { launch("cd server && exec .venv/bin/python -m kherveos_server", log: "kherveos-server.log") }
+    if !reachable(frontURL) { launch("exec ./node_modules/.bin/vite --strictPort", log: "kherveos-vite.log") }
     for _ in 0..<120 {
       if reachable(frontURL) {
         DispatchQueue.main.async { self.webView.load(URLRequest(url: frontURL)) }
