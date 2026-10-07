@@ -85,6 +85,15 @@ tests, browser), finish it and commit. KherveRef comes after the PDF service.
       2026-10-07. Not ported: debugger, AI chat, the compact "cockpit" view, merge
       conflict resolution, cancelling a clone.
 
+- [ ] **KherveDB** (requested 2026-10-07, do first after the 07:10 usage reset) — the
+      NIST XPS binding-energy database with a periodic table. Port the React version
+      `github.com/gkerherve/KherveDB-React` (Vite + React + TS; data
+      `public/data/elements.json` + `nist.bin`; `platform.ts` picks Tauri or web: use the
+      web path, links open in the KherveOS Browser or a new tab). Scope its CSS under the
+      app's root class (global selectors clash, as `.nb-body` did in KherveBook). Icon
+      `public/icons/apps/khervedb.png` is already there; group Science. The Python
+      original is `github.com/gkerherve/KherveDB` (`Main.py`, wx).
+
 ### 3. LaTeX service → KherveTeX, KherveNote, KherveSlide
 
 In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
