@@ -80,7 +80,7 @@ tests, browser), finish it and commit. KherveRef comes after the PDF service.
 - [x] KhervePDF (`../KhervePDF`) — done 2026-10-07. Not ported: editing existing
       PDF text (no MuPDF.js equivalent of the PyMuPDF call), OCR, AI panel, KherveRef
       link, Git history, digital signatures.
-- [ ] KherveRef (`../KherveRef`) — metadata from Crossref/arXiv/OpenLibrary (proxy
+- [x] KherveRef (`../KherveRef`) — done 2026-10-07 (not ported: Git sync, RIS/EndNote/Zotero import, full CSL engine) — metadata from Crossref/arXiv/OpenLibrary (proxy
       through the server where CORS blocks), BibLaTeX export
 - [x] KhervePY (`../khervePY`) — CodeMirror editor, Pyodide run, Git panel — done
       2026-10-07. Not ported: debugger, AI chat, the compact "cockpit" view, merge
