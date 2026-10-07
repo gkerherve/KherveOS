@@ -106,6 +106,15 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
   a server. Messages: unread badge on the Dock icon. Deployment.
 
 ## Log
+- 2026-10-07 05:45 — Git service + KhervePY committed. Usage near the 5-hour limit
+  (resets 07:10). Still running, UNCOMMITTED if interrupted: PDF service + KhervePDF
+  (`src/os/services/pdf*.ts`, `src/apps/khervepdf/`), LaTeX + KherveTeX
+  (`src/os/services/latex.ts`, `server/kherveos_server/latex.py`, `tests/test_latex.py`,
+  `src/apps/khervetex/`), MCP + tool registry (`src/os/ai/tools.ts`, `mcpBridge.ts`,
+  `server/kherveos_server/mcp_server.py`, `tests/test_mcp.py`; then app.py must mount it
+  and Shell.tsx call `startMcpBridge()`), KherveAI (`src/apps/kherveai/`). Next: Stage 4
+  (KherveSheet — reuse its Qt-free `khervesheet/core` in Pyodide, .ksheet is HDF5 via
+  h5py; KhervePaint — .kpaint JSON + SVG; KherveFitting — wx-free core first).
 - 2026-10-07 05:35 — KherveBook committed and checked in the browser (welcome notebook,
   plots, Examples menu, an XPS example); fixed its panel layout. Assistant committed.
   Agents still running: PDF+KhervePDF, Git+KhervePY, LaTeX+KherveTeX, MCP+tool
