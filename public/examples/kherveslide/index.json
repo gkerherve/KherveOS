@@ -1,0 +1,61 @@
+{
+ "source": "KherveSlide dev @ 62e08d3",
+ "note": "The desktop KherveSlide's example presentations (kherveslide/examples.py), built by src/apps/kherveslide/tests/export_examples.py; charts drawn with matplotlib, pictures in media/.",
+ "items": [
+  {
+   "title": "Research talk",
+   "description": "University-style theme with a logo bar, equations, chemistry, a chart, a table, a diagram and KPI cards",
+   "file": "Research talk.kslide"
+  },
+  {
+   "title": "Lecture",
+   "description": "Madrid theme: objectives, definition / theorem blocks, a worked example, a table of formulas and a quiz",
+   "file": "Lecture.kslide"
+  },
+  {
+   "title": "Project update",
+   "description": "Timeline, KPI cards, progress chart, risk table and a process flow",
+   "file": "Project update.kslide"
+  },
+  {
+   "title": "Maths seminar",
+   "description": "Definition, theorem and proof blocks, a derivation step by step, and a geometric picture",
+   "file": "Maths seminar.kslide"
+  },
+  {
+   "title": "Diagrams & workflows",
+   "description": "Flowchart, Venn diagram, process arrows and a comparison table — all built from shapes",
+   "file": "Diagrams workflows.kslide"
+  },
+  {
+   "title": "Lightning talk (dark)",
+   "description": "Dark theme, big statements, a chart with headline numbers",
+   "file": "Lightning talk dark.kslide"
+  },
+  {
+   "title": "Project kick-off",
+   "description": "Gantt chart, RACI table, budget donut, governance tree and decisions",
+   "file": "Project kick off.kslide"
+  },
+  {
+   "title": "Materials science talk",
+   "description": "TiO2 films: workflow, XRD, XPS fit, Tauc plot, Scherrer equation and conclusions",
+   "file": "Materials science talk.kslide"
+  },
+  {
+   "title": "The Kherve tools",
+   "description": "KherveTeX, KherveFitting, KherveCAD, KherveMol and KherveSlide — screenshots, features and a workflow",
+   "file": "The Kherve tools.kslide"
+  },
+  {
+   "title": "XPS fitting tutorial",
+   "description": "KherveFitting training with screenshots: calibration, backgrounds, doublets, results, maps and PCA",
+   "file": "XPS fitting tutorial.kslide"
+  },
+  {
+   "title": "Molecule to model",
+   "description": "KherveMol and KherveCAD: molecules, crystals, vibe-designed parts, assemblies and drawings",
+   "file": "Molecule to model.kslide"
+  }
+ ]
+}

@@ -256,6 +256,57 @@ export const APP_TOOL_SETS: AppToolSet[] = [
     ],
   },
   {
+    app: 'kherveslide',
+    name: 'KherveSlide',
+    summary: 'presentations (slides typeset with LaTeX beamer, .kslide).',
+    keywords: ['kherveslide', 'slide', 'slides', 'presentation', 'presentations', 'slideshow', 'deck', 'beamer', 'kslide', 'powerpoint'],
+    tools: [
+      {
+        action: 'list_slides',
+        description: 'List the slides of the open presentation: number (1 = first), title, bullet points, other text and objects.',
+        inputSchema: object({}),
+        readOnly: true,
+      },
+      {
+        action: 'add_slide',
+        description: 'Add a slide with a title and bullet points (a bullet starting with "- " is a sub-point).',
+        inputSchema: object(
+          {
+            title: str('The slide title.'),
+            bullets: { type: 'array', items: { type: 'string' }, description: 'The bullet points, in order.' },
+            after: int('Put it after this slide number (0 = first; default: at the end).'),
+          },
+          ['title'],
+        ),
+      },
+      {
+        action: 'edit_slide',
+        description: 'Change a slide: its title, its bullet points (replaced as a whole), text (find / replace) or whether it is hidden.',
+        inputSchema: object(
+          {
+            slide: int('The slide number (1 = first).'),
+            title: str('The new title.'),
+            bullets: { type: 'array', items: { type: 'string' }, description: 'The new bullet points ("- " for a sub-point).' },
+            find: str('Text to find on the slide…'),
+            replace: str('…and what to put instead.'),
+            hidden: bool('Hide the slide from the PDF and the slideshow (or show it again).'),
+          },
+          ['slide'],
+        ),
+      },
+      {
+        action: 'export_pdf',
+        description: 'Typeset the presentation with LaTeX and save it as a PDF.',
+        inputSchema: object({ path: str('Where, e.g. "~/Documents/talk.pdf" (default: next to the presentation, or in ~/Documents).') }),
+      },
+      {
+        action: 'open_example',
+        description: 'Open one of KherveSlide\'s example presentations by title (part of it is enough). Without a title, lists them.',
+        inputSchema: object({ title: str('The example\'s title, e.g. "Research talk".') }),
+      },
+    ],
+  },
+  {
     app: 'files',
     name: 'Files',
     summary: 'the file manager window.',

@@ -2,7 +2,7 @@
 // downloaded the first time a window of theirs opens.
 
 import {
-  Atom, Blocks, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
+  Atom, Blocks, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sheet, Sigma, Sparkles, SquareTerminal,
 } from 'lucide-react'
 import type { AppManifest } from './types'
@@ -84,6 +84,21 @@ export const APPS: AppManifest[] = [
     minSize: { w: 760, h: 520 },
     // .xlsx stays with KherveSheet; KherveFitting opens its workbooks from its own File menu.
     fileTypes: ['.vms'],
+  },
+  {
+    id: 'kherveslide',
+    name: 'KherveSlide',
+    icon: Presentation,
+    color: '#e8812b',
+    image: '/icons/apps/kherveslide.png',
+    brand: { label: 'KSlide', from: '#ffa04a', to: '#d9631a' },
+    category: 'kherve',
+    group: 'Office',
+    description: 'Slides designed freely, typeset with LaTeX beamer',
+    load: () => import('@/apps/kherveslide/KherveSlide'),
+    defaultSize: { w: 1200, h: 760 },
+    minSize: { w: 640, h: 420 },
+    fileTypes: ['.kslide'],
   },
   {
     id: 'khervepy',
