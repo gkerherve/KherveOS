@@ -5,7 +5,7 @@
 
 import {
   citedKeys, classSupportsChapter, HIGHLIGHT_COLORS, pyFloat,
-  type Block, type DocMeta, type Document, type Figure, type Inline, type Keywords,
+  type Block, type ChapterEntry, type DocMeta, type Document, type Figure, type Inline, type Keywords, type Project,
 } from './model'
 import { pageSizeByCode } from './pageSizes'
 
@@ -705,3 +705,173 @@ export function latexToDisplay(s: string): string {
 export function cellDisplayText(raw: string): string {
   return pyStrip(raw.replace(/\\(?:textbf|textit|emph|texttt)\{([^}]*)\}/g, '$1'))
 }
+
+// ----------------------------------------------------------------- projects
+
+/** serialize_chapter_body: a project document as body-only LaTeX, for \include. */
+export function serializeChapterBody(doc: Document): string {
+  const m = doc.meta
+  const hasChapters = classSupportsChapter(m.documentclass || '')
+  const isJournal = isJournalClass(m.documentclass)
+  const parts: string[] = []
+  const children = doc.children
+  const n = children.length
+  let i = 0
+  while (i < n) {
+    const block = children[i]
+    if (block.type === 'Title' || block.type === 'Author' || block.type === 'Affiliation' || block.type === 'Correspondence') {
+      i += 1
+      continue
+    }
+    if (block.type === 'Abstract') {
+      const paras: string[] = []
+      while (i < n && children[i].type === 'Abstract') {
+        paras.push(serializeInlines((children[i] as { children: Inline[] }).children))
+        i += 1
+      }
+      parts.push(`\\begin{abstract}\n${paras.filter((p) => p).join('\n\n')}\n\\end{abstract}\n`)
+      if (i < n) parts.push('\n')
+      continue
+    }
+    if (block.type === 'Keywords') {
+      const group: Keywords[] = []
+      while (i < n && children[i].type === 'Keywords') {
+        group.push(children[i] as Keywords)
+        i += 1
+      }
+      parts.push(`\\begin{keyword}\n${splitKeywordInlines(group).join(' \\sep ')}\n\\end{keyword}\n`)
+      if (i < n) parts.push('\n')
+      continue
+    }
+    parts.push(serializeBlock(block, { hasChapters, floatH: !isJournal }))
+    i += 1
+    if (i < n) parts.push('\n')
+  }
+  return parts.join('')
+}
+
+/** _chapter_stem: the \include name of a project document. */
+export function chapterStem(ch: Pick<ChapterEntry, 'path'>): string {
+  const p = ch.path.replace(/\\/g, '/')
+  const segs = p.split('/')
+  let name = segs.pop() ?? ''
+  for (const ext of ['.json', '.kdoc', '.ktex', '.kdocz']) if (name.endsWith(ext)) name = name.slice(0, -ext.length)
+  const parts = segs.filter((q) => q && q !== '.' && q !== '..')
+  const stem = [...parts, name].join('-')
+  return stripChars(stem.replace(/[^A-Za-z0-9_-]+/g, '_'), '_') || 'chapter'
+}
+
+/** serialize_project_master: the master .tex that \includes each enabled document. */
+export function serializeProjectMaster(proj: Project, chapterDocs: Document[] = []): string {
+  const m = proj.meta
+  const page = pageSizeByCode(m.page_size)
+  const isJournal = isJournalClass(m.documentclass)
+  const geometry = isJournal
+    ? ''
+    : `\\usepackage[${page.geometryOption},` +
+      `top=${pyFloat(m.margin_top_cm)}cm,bottom=${pyFloat(m.margin_bottom_cm)}cm,` +
+      `left=${pyFloat(m.margin_left_cm)}cm,right=${pyFloat(m.margin_right_cm)}cm]{geometry}`
+  const fontPkg = isJournal ? '' : FONT_FAMILY_PACKAGES[m.body_font_family] ?? ''
+  let spacingPkg = ''
+  let spacingCmd = ''
+  if (!isJournal) {
+    spacingPkg = '\\usepackage{setspace}'
+    if (Math.abs(m.line_spacing - 1.0) > 0.01) {
+      if (Math.abs(m.line_spacing - 1.5) < 0.01) spacingCmd = '\\onehalfspacing'
+      else if (Math.abs(m.line_spacing - 2.0) < 0.01) spacingCmd = '\\doublespacing'
+      else spacingCmd = `\\setstretch{${pyFloat(m.line_spacing)}}`
+    }
+  }
+  const parindent = m.paragraph_indent || isJournal ? '' : '\\setlength{\\parindent}{0pt}\n\\setlength{\\parskip}{0.8em}'
+  const preambleExtras = [fontPkg, spacingPkg, spacingCmd, parindent].filter((p) => p).join('\n')
+  const pkgList = [...m.packages]
+  if (!pkgList.includes('float') && !isJournal) pkgList.push('float')
+  if (!pkgList.includes('booktabs') && !isJournal) pkgList.push('booktabs')
+  const pkgLines = pkgList.map((p) => `\\usepackage{${p}}`).join('\n')
+  let packages = geometry ? pyStrip(geometry + '\n' + pkgLines) : pkgLines
+  if (preambleExtras) packages += '\n' + preambleExtras
+  if (m.preamble_extras && pyStrip(m.preamble_extras)) packages += '\n' + pyStrip(m.preamble_extras)
+  for (const cdoc of chapterDocs) {
+    for (const pkg of cdoc.meta.packages) {
+      if (!pkgList.includes(pkg)) {
+        pkgList.push(pkg)
+        packages += `\n\\usepackage{${pkg}}`
+      }
+    }
+    const extra = pyStrip(cdoc.meta.preamble_extras || '')
+    for (const line of extra ? extra.split(/\r\n|\r|\n/) : []) {
+      if (pyStrip(line) && !packages.includes(pyStrip(line)) && !line.includes('{geometry}')) packages += '\n' + line
+    }
+  }
+  packages += '\n' + KSTROKE_PROVIDE
+
+  const hasChapter = classSupportsChapter(m.documentclass || '')
+  let preambleMeta = ''
+  let found = false
+  for (const cdoc of chapterDocs) {
+    const [title, authors] = titleBlockParts(cdoc.children)
+    if (title !== null) {
+      preambleMeta += `\\title{${title || '~'}}\n`
+      if (authors.length) preambleMeta += '\\author{' + authors.join(' \\\\\n') + '}\n'
+      found = true
+      break
+    }
+  }
+  if (!found && hasChapter && m.title && m.title !== 'Untitled') {
+    preambleMeta += `\\title{${escapeText(m.title)}}\n`
+    if (m.author) preambleMeta += `\\author{${escapeAuthor(m.author)}}\n`
+  }
+
+  let bibLines = ''
+  if (proj.bibliography) {
+    let bibPath = proj.bibliography.replace(/\\/g, '/')
+    if (bibPath.endsWith('.bib')) bibPath = bibPath.slice(0, -4)
+    bibLines = `\n\\bibliographystyle{${proj.bib_style || 'plain'}}\n\\bibliography{${bibPath}}\n`
+  }
+
+  const bodyParts: string[] = []
+  if (preambleMeta) bodyParts.push('\\maketitle\n')
+  let prevNumbering: string | null = null
+  let prevType: string | null = null
+  let runningChapter = 0
+  let runningPageOffset = 0
+  const klass = (m.documentclass || '').toLowerCase()
+  const hasMatter = ['book', 'memoir', 'scrbook', 'amsbook'].includes(klass)
+  for (const ch of proj.chapters) {
+    const cmds: string[] = []
+    const ctype = ch.chapter_type || 'chapter'
+    if (ctype !== prevType) {
+      if (ctype === 'frontmatter' && hasMatter) cmds.push('\\frontmatter')
+      else if (ctype === 'chapter' && (prevType === 'frontmatter' || prevType === null)) {
+        if (hasMatter) cmds.push('\\mainmatter')
+        runningChapter = 0
+      } else if (ctype === 'appendix') {
+        cmds.push('\\appendix')
+        runningChapter = 0
+      } else if (ctype === 'backmatter' && hasMatter) cmds.push('\\backmatter')
+      prevType = ctype
+    }
+    if (ctype === 'chapter') runningChapter = ch.chapter_number !== null ? ch.chapter_number : runningChapter + 1
+    if (ch.numbering !== prevNumbering) {
+      cmds.push(`\\pagenumbering{${ch.numbering}}`)
+      prevNumbering = ch.numbering
+    }
+    if (!ch.enabled) {
+      runningPageOffset += ch.last_known_pages || 0
+      continue
+    }
+    if (ch.start_page !== null && !proj.auto_page_numbers) cmds.push(`\\setcounter{page}{${ch.start_page}}`)
+    else if (runningPageOffset > 0) {
+      cmds.push(`\\addtocounter{page}{${runningPageOffset}}`)
+      runningPageOffset = 0
+    }
+    if (ctype === 'chapter' && hasChapter) cmds.push(`\\setcounter{chapter}{${runningChapter - 1}}`)
+    if (cmds.length) bodyParts.push(cmds.join('\n') + '\n')
+    bodyParts.push(`\\${hasChapter ? 'include' : 'input'}{${chapterStem(ch)}}\n`)
+  }
+  const body = bodyParts.join('\n')
+  return `${documentclassLine(m)}\n${packages}\n${preambleMeta}\\begin{document}\n${body}${bibLines}\\end{document}\n`
+}
+
+/** _PAGE_MARK: each project document's .tex logs where it began, for its page count. */
+export const pageMark = (i: number) => `\\typeout{KDOC:${i}:\\thepage:\\the\\ReadonlyShipoutCounter}\n`

@@ -386,7 +386,7 @@ function blockToJson(b: Block): Dict {
   }
 }
 
-function metaToJson(m: DocMeta): Dict {
+export function metaToJson(m: DocMeta): Dict {
   return {
     title: m.title,
     author: m.author,
@@ -470,4 +470,78 @@ export function classSupportsChapter(className: string): boolean {
   if (!className) return false
   const head = className.toLowerCase().split(',')[0].trim()
   return CHAPTER_CLASSES.some((c) => head.startsWith(c))
+}
+
+// ------------------------------------------------------------- projects
+// A multi-document project (model.Project): its main .ktex holds project.json,
+// which lists the documents (.ktex files in the same folder).
+
+export interface ChapterEntry {
+  path: string
+  label: string
+  enabled: boolean
+  start_page: number | null
+  last_known_pages: number
+  numbering: 'arabic' | 'roman'
+  chapter_type: string
+  chapter_number: number | null
+}
+
+export interface Project {
+  meta: DocMeta
+  chapters: ChapterEntry[]
+  bibliography: string
+  bib_style: string
+  auto_page_numbers: boolean
+}
+
+export function chapterEntry(over: Partial<ChapterEntry> = {}): ChapterEntry {
+  return {
+    path: '', label: '', enabled: true, start_page: null, last_known_pages: 0, numbering: 'arabic', chapter_type: 'chapter',
+    chapter_number: null, ...over,
+  }
+}
+
+/** model.project_to_json. */
+export function projectToJson(p: Project): string {
+  return pyJson({
+    type: 'Project',
+    meta: metaToJson(p.meta),
+    chapters: p.chapters.map((c) => ({
+      path: c.path, label: c.label, enabled: c.enabled, start_page: c.start_page, last_known_pages: Math.trunc(c.last_known_pages),
+      numbering: c.numbering, chapter_type: c.chapter_type, chapter_number: c.chapter_number,
+    })),
+    bibliography: p.bibliography,
+    bib_style: p.bib_style,
+    auto_page_numbers: p.auto_page_numbers,
+  })
+}
+
+/** model.project_from_json. */
+export function projectFromJson(s: string): Project {
+  const d = JSON.parse(s) as Dict
+  if (!d || d.type !== 'Project') throw new Error('Not a project manifest')
+  const md = d.meta && typeof d.meta === 'object' ? (d.meta as Dict) : {}
+  const meta = metaFromJson({ documentclass: 'book', ...md })
+  const chapters = (Array.isArray(d.chapters) ? d.chapters : []).map((x) => {
+    const c = x as Dict
+    const sp = c.start_page
+    const cn = c.chapter_number
+    return chapterEntry({
+      path: pyStr(get(c, 'path', '')),
+      label: pyStr(get(c, 'label', '')),
+      enabled: pyBool(get(c, 'enabled', true)),
+      start_page: typeof sp === 'number' ? sp : null,
+      last_known_pages: int(get(c, 'last_known_pages', 0), 0),
+      numbering: c.numbering === 'roman' ? 'roman' : 'arabic',
+      chapter_type: pyStr(get(c, 'chapter_type', 'chapter')),
+      chapter_number: typeof cn === 'number' ? cn : null,
+    })
+  })
+  return {
+    meta, chapters,
+    bibliography: pyStr(get(d, 'bibliography', '')),
+    bib_style: pyStr(get(d, 'bib_style', '')),
+    auto_page_numbers: pyBool(get(d, 'auto_page_numbers', true)),
+  }
 }

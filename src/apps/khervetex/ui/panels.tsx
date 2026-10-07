@@ -1,11 +1,9 @@
-// The Code tab, the Console tab, the PDF panel and the find bar.
+// The Code tab, the Console tab and the find bar.
 
 import { useEffect, useRef, useState } from 'react'
 import { StateEffect } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import {
-  AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, Download, ExternalLink, FileText, LoaderCircle, Play, Replace, X,
-} from 'lucide-react'
+import { AlertTriangle, CheckCircle2, LoaderCircle } from 'lucide-react'
 import type { Editor } from '@tiptap/core'
 import { CodeEditor } from '@/os/ui/CodeEditor'
 import type { LatexError } from '@/os/services/latex'
@@ -15,18 +13,28 @@ import { findCount, findNext, replaceAll, replaceCurrent, setFindQuery } from '.
 // ----------------------------------------------------------------- Code tab
 
 export function CodeTab({
-  value, error, onEdit, onReady,
+  value, error, onEdit, onReady, onContextMenu,
 }: {
   value: string
   error: string | null
   onEdit: (text: string) => void
   onReady: (view: EditorView) => void
+  /** Right-click: the text of the line under the caret ("Show in Visual / PDF"). */
+  onContextMenu?: (e: React.MouseEvent, lineText: string) => void
 }) {
+  const view = useRef<EditorView | null>(null)
   return (
-    <div className="ktx-code">
-      <div className={`ktx-code-note${error ? ' bad' : ''}`}>
-        {error ?? 'The LaTeX of this document. Edits here are read back into the document, like an imported .tex.'}
-      </div>
+    <div
+      className="ktx-code"
+      onContextMenu={(e) => {
+        const v = view.current
+        if (!v || !onContextMenu) return
+        e.preventDefault()
+        const at = v.posAtCoords({ x: e.clientX, y: e.clientY }) ?? v.state.selection.main.head
+        onContextMenu(e, v.state.doc.lineAt(at).text)
+      }}
+    >
+      {error && <div className="ktx-code-note bad">{error}</div>}
       <CodeEditor
         value={value}
         language="latex"
@@ -34,9 +42,10 @@ export function CodeTab({
         lineNumbers
         fontSize={13}
         onChange={onEdit}
-        onReady={(view) => {
-          view.dispatch({ effects: StateEffect.appendConfig.of([latexLanguage]) })
-          onReady(view)
+        onReady={(v) => {
+          v.dispatch({ effects: StateEffect.appendConfig.of([latexLanguage]) })
+          view.current = v
+          onReady(v)
         }}
       />
     </div>
@@ -89,56 +98,10 @@ export function ConsoleTab({ view, onGoto }: { view: CompileView; onGoto: (err: 
   )
 }
 
-// ----------------------------------------------------------------- PDF panel
-
-export function PdfPanel({
-  url, view, onCompile, onDownload, onOpen, onClose, notice,
-}: {
-  url: string | null
-  view: CompileView
-  onCompile: () => void
-  onDownload: () => void
-  /** Open the PDF in KhervePDF (inside KherveOS, not a browser tab). */
-  onOpen: () => void
-  onClose: () => void
-  notice: string | null
-}) {
-  return (
-    <div className="ktx-pdf">
-      <div className="ktx-pdf-bar">
-        <FileText size={14} />
-        <span className="ktx-pdf-title">PDF</span>
-        {view.running && <LoaderCircle size={14} className="k-spin" />}
-        {!view.running && view.ok === false && <span className="ktx-pdf-bad">Not compiled — see the Console</span>}
-        <span style={{ flex: 1 }} />
-        <button className="k-icon-btn" title="Compile now (⌘↩)" onClick={onCompile}>
-          <Play size={14} />
-        </button>
-        <button className="k-icon-btn" title="Open in KhervePDF" disabled={!url} onClick={onOpen}>
-          <ExternalLink size={14} />
-        </button>
-        <button className="k-icon-btn" title="Download the PDF" disabled={!url} onClick={onDownload}>
-          <Download size={14} />
-        </button>
-        <button className="k-icon-btn" title="Hide the PDF (⌘4)" onClick={onClose}>
-          <X size={14} />
-        </button>
-      </div>
-      {url ? (
-        <iframe key={url} className="ktx-pdf-frame" src={`${url}#view=FitH&zoom=page-width`} title="PDF preview" />
-      ) : (
-        <div className="ktx-pdf-empty k-muted">
-          {notice ?? (view.running ? 'Typesetting…' : 'The PDF appears here once the document compiles.')}
-        </div>
-      )}
-      {url && notice && <div className="ktx-pdf-notice">{notice}</div>}
-    </div>
-  )
-}
-
 // ------------------------------------------------------------------ find bar
 
-export function FindBar({ editor, onClose }: { editor: Editor; onClose: () => void }) {
+/** The desktop's find & replace bar along the bottom (⌘F; ⌃H adds the Replace row). */
+export function FindBar({ editor, replace, onClose }: { editor: Editor; replace: boolean; onClose: () => void }) {
   const [query, setQuery] = useState('')
   const [replacement, setReplacement] = useState('')
   const [caseSensitive, setCaseSensitive] = useState(false)
@@ -148,10 +111,14 @@ export function FindBar({ editor, onClose }: { editor: Editor; onClose: () => vo
   useEffect(() => {
     input.current?.focus()
     input.current?.select()
-    return () => {
+  }, [replace])
+
+  useEffect(
+    () => () => {
       if (!editor.isDestroyed) setFindQuery(editor.view, '', false)
-    }
-  }, [editor])
+    },
+    [editor],
+  )
 
   useEffect(() => {
     const n = setFindQuery(editor.view, query, caseSensitive)
@@ -165,44 +132,46 @@ export function FindBar({ editor, onClose }: { editor: Editor; onClose: () => vo
   }
 
   return (
-    <div className="ktx-find" onKeyDown={(e) => {
-      e.stopPropagation()
-      if (e.key === 'Escape') onClose()
-    }}>
+    <div
+      className="ktx-find"
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') onClose()
+      }}
+    >
+      <span className="ktx-find-label">Find:</span>
       <input
         ref={input}
         className="k-input"
-        placeholder="Find"
+        placeholder="Search text..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && go(!e.shiftKey)}
       />
-      <button className="k-icon-btn" title="Previous (⇧↩)" onClick={() => go(false)}>
-        <ArrowUp size={14} />
-      </button>
-      <button className="k-icon-btn" title="Next (↩)" onClick={() => go(true)}>
-        <ArrowDown size={14} />
-      </button>
-      <label className="ktx-check small">
+      <button className="ktx-pbtn" onClick={() => go(false)}>Previous</button>
+      <button className="ktx-pbtn default" onClick={() => go(true)}>Next</button>
+      <label className="ktx-tb-check">
         <input type="checkbox" checked={caseSensitive} onChange={(e) => setCaseSensitive(e.target.checked)} /> Match case
       </label>
-      <input
-        className="k-input"
-        placeholder="Replace with"
-        value={replacement}
-        onChange={(e) => setReplacement(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && setStatus(`${replaceCurrent(editor.view, replacement) ? 'Replaced' : 'Not found'}`)}
-      />
-      <button className="k-btn small" onClick={() => replaceCurrent(editor.view, replacement)}>
-        <Replace size={13} /> Replace
-      </button>
-      <button className="k-btn small" onClick={() => setStatus(`${replaceAll(editor.view, replacement)} replaced`)}>
-        Replace all
-      </button>
+      <button className="ktx-pbtn flat" title="Close (Esc)" onClick={onClose}>x</button>
       <span className="ktx-find-status">{status}</span>
-      <button className="k-icon-btn" title="Close (Esc)" onClick={onClose}>
-        <X size={14} />
-      </button>
+      {replace && (
+        <>
+          <span className="ktx-find-label">Replace:</span>
+          <input
+            className="k-input"
+            placeholder="Replacement text..."
+            value={replacement}
+            onChange={(e) => setReplacement(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && setStatus(replaceCurrent(editor.view, replacement) ? 'Replaced' : 'Not found')}
+          />
+          <button className="ktx-pbtn" onClick={() => setStatus(replaceCurrent(editor.view, replacement) ? 'Replaced' : 'Not found')}>Replace</button>
+          <button className="ktx-pbtn" onClick={() => setStatus(`${replaceAll(editor.view, replacement)} replaced`)}>Replace all</button>
+          <span />
+          <span />
+          <span />
+        </>
+      )}
     </div>
   )
 }
