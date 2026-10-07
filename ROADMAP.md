@@ -116,7 +116,7 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       =PY, printing, spell check.
 - [x] KhervePaint (`../KhervePaint`) — raster + vector canvas — done 2026-10-07, tested in the
       browser (draw, properties). Not ported: molecule/crystal/3D palettes; PDF is raster
-- [ ] KherveFitting (`../KherveFitting`, develop) — first extract a wx-free fitting
+- [x] KherveFitting (`../KherveFitting`, develop) — done 2026-10-07 (main fitting workflow; PCA, Thickogram, AutoID, EELS… not ported) — first extract a wx-free fitting
       core (`Peak_Functions.py`, backgrounds, file readers) to run in Pyodide, then the
       web UI (spectrum plot, peak table, fit)
 
