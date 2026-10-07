@@ -113,3 +113,10 @@ cd server && .venv/bin/python -m pytest -q
 ## Licence
 
 GNU General Public License v3 — see `LICENSE`. Free to use, study, share and improve.
+
+## KherveOS as a Mac app
+
+`tools/macos/build_app.sh` builds **KherveOS.app** (KherveOS in its own window, with
+its icon) and installs it in `~/Applications`. Opening it starts the KherveOS server
+and front end from this folder when they are not running, and quitting stops them.
+Its drive (the files in KherveOS) is its own, separate from a browser's.

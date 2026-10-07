@@ -10,3 +10,4 @@ __pycache__/
 .idea/
 .claude/settings.local.json
 .claude/practice-run
+tools/macos/build/
