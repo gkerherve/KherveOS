@@ -144,7 +144,7 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       that refuse framing need the server page-fetcher from the KherveDB item: public hosts
       only (no private/loopback addresses: SSRF), sandboxed iframes without
       allow-same-origin; a "Open in your real browser" button stays for what still fails.
-- [ ] **AI that can drive the apps** (user: "KherveAI does not appear to do much"): the 15
+- [x] **AI that can drive the apps** (done 2026-10-07: KherveSheet, KherveBook, Notepad, Files, KherveDB, Browser) (user: "KherveAI does not appear to do much"): the 15
       tools only reach files, windows and Python, so "select oxygen in KherveDB" failed
       (fixed for that case: open_app takes `element`). Let apps register their own AI tools
       while a window is open (KherveDB: select element / filter / list lines; KherveSheet:
