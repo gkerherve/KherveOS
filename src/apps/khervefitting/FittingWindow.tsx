@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { BACKGROUND_HELP, MODEL_HELP } from './helpText'
 import { BACKGROUND_METHODS, MODEL_GROUPS, OPTIMIZATION_METHODS, WEIGHT_METHODS, type View } from './model'
 import { FloatWin, Notebook } from './FloatWin'
+import { stepDigit } from './interaction'
 import { ICONS } from './Toolbars'
 
 export interface FitPass {
@@ -19,12 +20,20 @@ export interface FitPass {
 
 export interface FittingActions {
   /** Create Region (record 'append') at the red lines, with these offsets. */
-  createRegion: (method: string, offsetLeft: number, offsetRight: number) => void
+  createRegion: (method: string, offsetLeft: number, offsetRight: number, smooth?: boolean) => void
   /** Apply new offsets / range to the active region (record 'replace'). */
   updateRegion: (index: number, method: string, offsetLeft: number, offsetRight: number) => void
   removeRegion: (index: number) => void
   clearAll: () => void
   clearRegions: () => void
+  /** Region (Left) / Region (Right) entered (on_min/max_range_change): low and high binding energy. */
+  rangeFields: (low: number, high: number) => void
+  /** Offset (Left) = offset_h / Offset (Right) = offset_l entered (on_offset_h/l_change). */
+  offsets: (offsetH: number, offsetL: number) => void
+  /** A region box, Switch Region (TAB key). */
+  selectRegion: (index: number) => void
+  confirm: (message: string, title: string) => Promise<boolean>
+  alert: (message: string, title: string) => void
   settings: (patch: Record<string, unknown>) => void
   addPeak: () => void
   addDoublet: (name?: string) => void
@@ -52,6 +61,8 @@ export interface FittingWindowProps {
   batchProgress: string
   act: FittingActions
   mini?: boolean
+  /** Where the window opens (the desktop centres it on the main window). */
+  at?: { x: number; y: number }
 }
 
 const num = (s: string, d = 0) => (Number.isFinite(Number(s)) && s.trim() !== '' ? Number(s) : d)
@@ -66,7 +77,12 @@ function Btn({ label, onClick, disabled, title }: { label: string; onClick: () =
   )
 }
 
-function Field({ value, onCommit, disabled }: { value: string; onCommit: (v: string) => void; disabled?: boolean }) {
+/**
+ * A wx.TextCtrl(TE_PROCESS_ENTER): Enter applies it. `numeric` fields take only
+ * digits, one dot and a leading minus (validate_numeric_input), and Up / Down
+ * step the digit right of the cursor and apply at once (FittingWindow.on_key_down).
+ */
+function Field({ value, onCommit, disabled, numeric, live }: { value: string; onCommit: (v: string) => void; disabled?: boolean; numeric?: boolean; live?: boolean }) {
   const [t, setT] = useState(value)
   useEffect(() => setT(value), [value])
   return (
@@ -74,10 +90,24 @@ function Field({ value, onCommit, disabled }: { value: string; onCommit: (v: str
       className="kf-wxtext"
       value={t}
       disabled={disabled}
-      onChange={(e) => setT(e.target.value)}
+      onChange={(e) => {
+        const v = e.target.value
+        if (numeric && !/^-?\d*\.?\d*$/.test(v)) return
+        setT(v)
+        if (live) onCommit(v)
+      }}
       onKeyDown={(e) => {
-        e.stopPropagation()
         if (e.key === 'Enter') onCommit(t)
+        if (numeric && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && !e.altKey && !e.metaKey && !e.ctrlKey) {
+          const el = e.currentTarget
+          const at = el.selectionStart ?? 0
+          const next = stepDigit(t, at, e.key === 'ArrowUp')
+          if (next === null) return
+          e.preventDefault()
+          setT(next)
+          onCommit(next)
+          requestAnimationFrame(() => el.setSelectionRange(at, at))
+        }
       }}
     />
   )
@@ -95,7 +125,6 @@ function Spin({ value, min, max, onChange }: { value: number; min: number; max: 
         const v = Math.round(Number(e.target.value))
         if (Number.isFinite(v)) onChange(Math.max(min, Math.min(max, v)))
       }}
-      onKeyDown={(e) => e.stopPropagation()}
     />
   )
 }
@@ -156,21 +185,31 @@ export function FittingWindow(p: FittingWindowProps) {
   const tough = (bg?.tougaard ?? [2866, 1643, 1, 0]).join(',')
   const hasLines = !!p.vlines
 
+  // FittingWindow.update_tougaard_controls_visibility
+  const tougaardOn = method.startsWith('U4-Tougaard') || method === 'U2-Tougaard' || method === 'Spline Tougaard' || method === 'Power-EELS'
+  const modelBtnOn = method.startsWith('U4-Tougaard') || method === 'ALS-Raman' || method === 'Arctan-XAS'
+  const two = (v: unknown) => {
+    const n = Number(v)
+    return (Math.abs(n) < 5e-3 || !Number.isFinite(n) ? 0 : n).toFixed(2)
+  }
+  const lines = p.vlines
+  const methods = p.mini ? ['Smart', 'U2-Tougaard', 'Active Shirley', 'Active Tougaard'] : BACKGROUND_METHODS
   const bkgTab = (
     <div className="kf-form">
       <label>Method:</label>
       <span className="kf-row">
         <select
           className="kf-wxcombo"
-          value={method}
+          value={methods.includes(method) ? method : 'Smart'}
           onChange={(e) => {
-            if (e.target.value.endsWith('-')) return
-            setMethod(e.target.value)
-            act.settings({ method: e.target.value })
+            // on_bkg_method_change: a section header means Smart
+            const m = e.target.value.endsWith('-') ? 'Smart' : e.target.value
+            setMethod(m)
+            act.settings({ method: m })
           }}
         >
-          {BACKGROUND_METHODS.map((m) => (
-            <option key={m} value={m} disabled={m.endsWith('-')} className={m.endsWith('-') ? 'kf-green-item' : ''}>
+          {methods.map((m) => (
+            <option key={m} value={m} className={m.endsWith('-') ? 'kf-green-item' : ''}>
               {m}
             </option>
           ))}
@@ -180,40 +219,69 @@ export function FittingWindow(p: FittingWindowProps) {
       <button type="button" className="kf-info" title={BACKGROUND_HELP[method] ?? 'No description available'}>
         ?
       </button>
-      <label>Offset (Left):</label>
-      <Field value={Number(offL).toFixed(2)} onCommit={(v) => (region ? act.updateRegion(p.activeRegion, method, num(v), num(offR)) : act.notReady('Create a region first'))} />
-      <label>Offset (Right):</label>
-      <Field value={Number(offR).toFixed(2)} onCommit={(v) => (region ? act.updateRegion(p.activeRegion, method, num(offL), num(v)) : act.notReady('Create a region first'))} />
-      <label>Region (Left):</label>
-      <Field value={p.vlines ? p.vlines[1].toFixed(2) : '0.00'} onCommit={(v) => p.vlines && p.onVlines(Math.min(p.vlines[0], num(v)), Math.max(p.vlines[0], num(v)))} />
-      <label>Region (Right):</label>
-      <Field value={p.vlines ? p.vlines[0].toFixed(2) : '0.00'} onCommit={(v) => p.vlines && p.onVlines(Math.min(p.vlines[1], num(v)), Math.max(p.vlines[1], num(v)))} />
-      <label>Averaging Points:</label>
-      <Field value={String(s.averagingPoints)} onCommit={(v) => act.settings({ averagingPoints: Math.max(1, Math.round(num(v, 5))) })} />
-      <label>Smooth noisy data:</label>
-      <span>
-        <input type="checkbox" checked={smooth} title="Apply Gaussian smoothing (width=2) to data before calculating shirley background" onChange={(e) => setSmooth(e.target.checked)} />
-      </span>
-      <label>Tougaard1: B,C,D,T0</label>
-      <Field value={tough} onCommit={(v) => {
-        const parts = v.split(',').map((x) => Number(x))
-        if (parts.length === 4 && parts.every(Number.isFinite)) act.settings({ tougaard: parts })
-      }} />
+      {!p.mini && (
+        <>
+          <label>Offset (Left):</label>
+          <Field numeric value={two(offL)} onCommit={(v) => act.offsets(-Math.abs(num(v)), num(offR))} />
+          <label>Offset (Right):</label>
+          <Field numeric value={two(offR)} onCommit={(v) => act.offsets(num(offL), -Math.abs(num(v)))} />
+          <label>Region (Left):</label>
+          <Field
+            numeric
+            value={lines ? lines[1].toFixed(2) : '0.00'}
+            onCommit={(v) => lines && act.rangeFields(Math.min(lines[0], num(v)), Math.max(lines[0], num(v)))}
+          />
+          <label>Region (Right):</label>
+          <Field
+            numeric
+            value={lines ? lines[0].toFixed(2) : '0.00'}
+            onCommit={(v) => lines && act.rangeFields(Math.min(lines[1], num(v)), Math.max(lines[1], num(v)))}
+          />
+          <label>Averaging Points:</label>
+          <Field live value={String(s.averagingPoints)} onCommit={(v) => act.settings({ averagingPoints: Math.max(1, Math.round(num(v, 1)) || 1) })} />
+          <label>Smooth noisy data:</label>
+          <span>
+            <input type="checkbox" checked={smooth} title="Apply Gaussian smoothing (width=2) to data before calculating shirley background" onChange={(e) => setSmooth(e.target.checked)} />
+          </span>
+          <label className={tougaardOn ? '' : 'kf-dim'}>Tougaard1: B,C,D,T0</label>
+          <Field
+            live
+            disabled={!tougaardOn}
+            value={tough}
+            onCommit={(v) => {
+              const parts = v.split(',').map((x) => Number(x))
+              if (parts.length === 4 && parts.every(Number.isFinite)) act.settings({ tougaard: parts })
+            }}
+          />
+        </>
+      )}
       <label>Regions:</label>
       <span className="kf-regions">
         {regions.map((_, i) => (
-          <button key={i} type="button" className={i === p.activeRegion ? 'kf-region-on' : ''} onClick={() => p.onActiveRegion(i)}>
+          <button key={i} type="button" className={i === p.activeRegion ? 'kf-region-on' : ''} onClick={() => act.selectRegion(i)}>
             {i + 1}
           </button>
         ))}
       </span>
       <div className="kf-btns">
-        <Btn label={'Switch Region\nTAB key'} disabled={!regions.length} onClick={() => p.onActiveRegion(regions.length ? (p.activeRegion + 1) % regions.length : -1)} />
-        <Btn label={'Remove\nRegions and Peaks'} onClick={act.clearAll} />
-        <Btn label={'Tougaard / Raman\n / XAS Model'} onClick={() => act.notReady('The Tougaard / Raman / XAS model fit window')} />
-        <Btn label={'Remove\nAll Regions'} onClick={act.clearRegions} />
-        <Btn label={'Create\nRegion'} disabled={!hasLines || p.busy} onClick={() => act.createRegion(method, num(offL), num(offR))} />
-        <Btn label={'Remove\nCurrent Region'} disabled={!region} onClick={() => act.removeRegion(p.activeRegion)} />
+        <Btn label={'Switch Region\nTAB key'} onClick={() => regions.length && act.selectRegion(p.activeRegion < 0 ? 0 : (p.activeRegion + 1) % regions.length)} />
+        <Btn
+          label={'Remove\nRegions and Peaks'}
+          onClick={() => void act.confirm('Are you sure you want to clear all background data?', 'Confirm Clear All').then((ok) => ok && act.clearAll())}
+        />
+        <Btn label={'Tougaard / Raman\n / XAS Model'} disabled={!modelBtnOn} onClick={() => act.notReady('The Tougaard / Raman / XAS model fit window')} />
+        <Btn
+          label={'Remove\nAll Regions'}
+          onClick={() => void act.confirm('Are you sure you want to remove all regions?', 'Confirm Remove All Regions').then((ok) => ok && act.clearRegions())}
+        />
+        <Btn label={'Create\nRegion'} disabled={!hasLines || p.busy} onClick={() => act.createRegion(method, num(offL), num(offR), smooth)} />
+        <Btn
+          label={'Remove\nCurrent Region'}
+          onClick={() => {
+            if (!region) return act.alert('No active region selected to remove.', 'No Active Region')
+            void act.confirm(`Are you sure you want to remove region ${p.activeRegion + 1}?`, 'Confirm Remove Region').then((ok) => ok && act.removeRegion(p.activeRegion))
+          }}
+        />
       </div>
     </div>
   )
@@ -256,12 +324,12 @@ export function FittingWindow(p: FittingWindowProps) {
           onClick={act.report}
           title={'FIT REPORT ± UNCERTAINTIES\n\nEvery peak\'s Position, FWHM, Area, Height and L/G with its\nuncertainty (± 1σ) from the last fit, and notes when a value\nis linked to another peak, fixed, or stuck at a constraint limit.\n\nThe full lmfit report is underneath.'}
         />
-        <Btn label={'Add 1 Peak\nSinglet'} disabled={!bg?.type || p.busy} onClick={act.addPeak} />
-        <Btn label={'Add 2 Peaks\nDoublet'} disabled={!bg?.type || p.busy} onClick={() => act.addDoublet()} />
+        <Btn label={'Add 1 Peak\nSinglet'} disabled={p.busy} onClick={act.addPeak} />
+        <Btn label={'Add 2 Peaks\nDoublet'} disabled={p.busy} onClick={() => act.addDoublet()} />
         <Btn label={'Remove\nLast Peak'} disabled={!view.grid.length || p.busy} onClick={act.removeLast} />
         <Btn
           label={'Add Doublet\nwith Name...'}
-          disabled={!bg?.type || p.busy}
+          disabled={p.busy}
           onClick={() => void act.askName().then((n) => n && act.addDoublet(n))}
         />
         <Btn label={'Fit \nOne Time'} disabled={!view.grid.length || p.busy} onClick={() => act.fit('once', stable)} />
@@ -358,7 +426,7 @@ export function FittingWindow(p: FittingWindowProps) {
   const tabs = p.mini ? ['BKG', 'Fitting'] : ['BKG', 'Fitting', 'Adv. Fitting', 'Batch']
   const pages = [bkgTab, fitTab, advTab, batchTab]
   return (
-    <FloatWin title={p.mini ? 'Mini Peak Fitting' : 'Peak Fitting'} icon={`${ICONS}Icon.png`} initial={{ x: 380, y: 60 }} width={276} onClose={act.close} className="kf-fitwin">
+    <FloatWin title={p.mini ? 'Mini Peak Fitting' : 'Peak Fitting'} icon={`${ICONS}Icon.png`} initial={p.at ?? { x: 380, y: 60 }} width={276} onClose={act.close} className="kf-fitwin">
       <Notebook tabs={tabs} active={Math.min(p.tab, tabs.length - 1)} onChange={p.onTab}>
         {pages[Math.min(p.tab, tabs.length - 1)]}
       </Notebook>

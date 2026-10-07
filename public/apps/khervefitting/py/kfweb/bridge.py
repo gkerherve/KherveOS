@@ -330,7 +330,7 @@ def op_background(a):
     w = _session()
     apply_background(w, a.get('method') or 'Smart', float(a['low']), float(a['high']),
                      float(a.get('offsetHigh', 0) or 0), float(a.get('offsetLow', 0) or 0),
-                     record=a.get('record', 'replace'))
+                     record=a.get('record', 'replace'), smooth=bool(a.get('smooth')))
     return {'view': view()}
 
 
@@ -461,9 +461,181 @@ def op_save(a):
     return {'xlsx': base64.b64encode(xlsx).decode('ascii'), 'json': js, 'view': view()}
 
 
+# ── Mouse and keyboard (kfcore.interact: the desktop's handlers) ────
+def _active(a):
+    v = a.get('active')
+    return None if v is None or int(v) < 0 else int(v)
+
+
+def op_lines(a):
+    """The red lines were dragged (or Ctrl+dragged) and let go (On_Mouse_Defs.on_release)."""
+    from kfcore.interact import lines_released
+    w = _session()
+    lines_released(w, float(a['low']), float(a['high']), _active(a),
+                   float(a.get('offsetH', 0) or 0), float(a.get('offsetL', 0) or 0))
+    return {'view': view()}
+
+
+def op_range_fields(a):
+    """Region (Left) / Region (Right) typed or stepped with Up / Down."""
+    from kfcore.interact import range_fields
+    w = _session()
+    range_fields(w, float(a['low']), float(a['high']), _active(a),
+                 float(a.get('offsetH', 0) or 0), float(a.get('offsetL', 0) or 0))
+    return {'view': view()}
+
+
+def op_offsets(a):
+    """Offset (Left) / (Right) typed, stepped, or set with Shift+click on the plot."""
+    from kfcore.interact import set_offsets
+    from kfcore.background import apply_background
+    w = _session()
+    oh, ol = float(a.get('offsetH', 0) or 0), float(a.get('offsetL', 0) or 0)
+    if not w.fitting_window.get_recorded_ranges_from_data() and a.get('low') is not None:
+        # No region yet: PlotManager.plot_background between the lines, nothing recorded.
+        apply_background(w, w.background_method or 'Smart', float(a['low']), float(a['high']),
+                         min(oh, 0.0), min(ol, 0.0), record='')
+    set_offsets(w, oh, ol, _active(a))
+    return {'view': view()}
+
+
+def op_offsets_live(a):
+    """Shift+drag on the plot: as 'offsets', without an undo step per mouse move."""
+    return op_offsets(a)
+
+
+def op_cross_levels(a):
+    """The core levels with peaks, for "Constraint to Other Core Levels"."""
+    w = _session()
+    out = []
+    for name, cl in w.Data['Core levels'].items():
+        fitting = cl.get('Fitting') if isinstance(cl, dict) else None
+        peaks = fitting.get('Peaks') if isinstance(fitting, dict) else None
+        if peaks:
+            out.append({'name': name, 'peaks': len(peaks)})
+    return {'levels': out, 'hasPeaks': _Clip.peaks is not None}
+
+
+def op_region_select(a):
+    """A region box clicked, Switch Region, or Tab on the BKG tab."""
+    from kfcore.interact import select_region
+    w = _session()
+    i = select_region(w, int(a.get('index', 0) or 0))
+    return {'view': view(include_arrays=False), 'index': -1 if i is None else i}
+
+
+def op_peak_key(a):
+    """Alt+arrows (move / height) and Alt+Shift+arrows (width) on the selected peak."""
+    from kfcore import interact as I
+    w = _session()
+    i = int(a['index'])
+    k = a['key']
+    if k in ('left', 'right'):
+        I.nudge_position(w, i, k == 'left')
+    elif k in ('up', 'down'):
+        I.nudge_height(w, i, k == 'up')
+    elif k in ('wider', 'narrower'):
+        I.nudge_width(w, i, k == 'wider')
+    return {'view': view()}
+
+
+def op_peak_wheel(a):
+    """The mouse wheel over the plot with a peak selected (Fitting tab)."""
+    from kfcore.interact import wheel_width
+    w = _session()
+    wheel_width(w, int(a['index']), bool(a.get('up')))
+    return {'view': view()}
+
+
+_WIDTH_DRAG = {}
+
+
+def op_peak_width(a):
+    """Shift+drag of the selected peak (MyFrame.update_peak_fwhm): phase 'start'
+    remembers the row, each 'move' starts again from it so the width follows
+    the mouse from where the drag began."""
+    from kfcore.interact import drag_width
+    w = _session()
+    i = int(a['index'])
+    grid = w.peak_params_grid
+    row = i * 2
+    if a.get('phase') == 'start' or i not in _WIDTH_DRAG:
+        _WIDTH_DRAG.clear()
+        _WIDTH_DRAG[i] = ([grid.GetCellValue(row, c) for c in range(grid.GetNumberCols())],
+                          float(grid.GetCellValue(row, 4)), float(a['x']))
+        if a.get('phase') == 'start':
+            return {'view': view(include_arrays=False)}
+    cells, initial_fwhm, initial_x = _WIDTH_DRAG[i]
+    for c, t in enumerate(cells):
+        grid.SetCellValue(row, c, t)
+    drag_width(w, i, initial_fwhm, initial_x, float(a['x']))
+    if a.get('phase') == 'end':
+        _WIDTH_DRAG.clear()
+    return {'view': view()}
+
+
+def op_add_peak_model(a):
+    """The peak table's right-click "Add Peak" › model."""
+    from kfcore.interact import add_peak_with_model
+    w = _session()
+    index = add_peak_with_model(w, a['model'], a.get('row'))
+    return {'view': view(), 'index': index}
+
+
+def op_cross_constraint(a):
+    from kfcore.interact import insert_cross_core_constraint
+    w = _session()
+    insert_cross_core_constraint(w, a['ref'], int(a['row']), int(a['col']))
+    return {'view': view(include_arrays=False)}
+
+
+def op_propagate_constraint(a):
+    """The table's right-click "Constraint all …" (Utilities.propagate_constraint)."""
+    from kfcore.sheets import propagate_constraint
+    w = _session()
+    row, col = int(a['row']), int(a['col'])
+    propagate_constraint(w, row + 1 if row % 2 == 0 else row, col)
+    return {'view': view()}
+
+
+def op_propagate_fwhm_diff(a):
+    from kfcore.interact import propagate_fwhm_difference
+    w = _session()
+    propagate_fwhm_difference(w, int(a['row']), int(a['col']))
+    return {'view': view(include_arrays=False)}
+
+
+class _Clip:
+    peaks = None
+
+
+def op_peaks_copy(a):
+    """Copy Peak Table (Save.copy_all_peak_parameters)."""
+    from kfcore.fitops import copy_all_peak_parameters
+    _Clip.peaks = copy_all_peak_parameters(_session())
+    return {'copied': _Clip.peaks is not None}
+
+
+def op_peaks_paste(a):
+    """Paste Peak Table (Save.paste_all_peak_parameters)."""
+    from kfcore.fitops import paste_all_peak_parameters
+    if _Clip.peaks is None:
+        raise ValueError("No peak table has been copied.")
+    w = _session()
+    paste_all_peak_parameters(w, _Clip.peaks)
+    w.load_view()
+    return {'view': view()}
+
+
+def op_peak_clip(a):
+    return {'hasPeaks': _Clip.peaks is not None}
+
+
 # ── Undo (the desktop's save_state / undo / redo) ───────────────────
 MUTATING = {'settings', 'background', 'clear_background', 'add_peak', 'remove_peak', 'set_cell', 'fit',
-            'export', 'results_set', 'results_delete', 'checkpoint'}
+            'export', 'results_set', 'results_delete', 'checkpoint',
+            'lines', 'range_fields', 'offsets', 'peak_key', 'peak_wheel', 'add_peak_model', 'cross_constraint',
+            'propagate_constraint', 'propagate_fwhm_diff', 'peaks_paste'}
 
 
 def _snapshot():
@@ -510,6 +682,12 @@ OPS = {
     'add_peak': op_add_peak, 'remove_peak': op_remove_peak, 'set_cell': op_set_cell,
     'drag_peak': op_drag_peak, 'fit': op_fit, 'report': op_report, 'export': op_export,
     'results_set': op_results_set, 'results_delete': op_results_delete, 'save': op_save,
+    'lines': op_lines, 'range_fields': op_range_fields, 'offsets': op_offsets, 'region_select': op_region_select,
+    'peak_key': op_peak_key, 'peak_wheel': op_peak_wheel, 'peak_width': op_peak_width,
+    'add_peak_model': op_add_peak_model, 'cross_constraint': op_cross_constraint,
+    'propagate_constraint': op_propagate_constraint, 'propagate_fwhm_diff': op_propagate_fwhm_diff,
+    'peaks_copy': op_peaks_copy, 'peaks_paste': op_peaks_paste, 'peak_clip': op_peak_clip,
+    'offsets_live': op_offsets_live, 'cross_levels': op_cross_levels,
 }
 
 
@@ -530,7 +708,7 @@ async def run(requests_json):
             mutating = op in MUTATING or op in (getattr(feats, 'MUTATING', set()) if feats is not None else set())
             if mutating and S.session is not None and S.session.sheet_combobox.GetValue():
                 S.undo.append(_snapshot())
-                del S.undo[:-30]
+                del S.undo[:-50]   # MyFrame.max_history
                 S.redo.clear()
             ans = fn(args)
             ans['canUndo'] = bool(S.undo)

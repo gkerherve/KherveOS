@@ -175,7 +175,7 @@ def _calculate_other_background(window, x_values, y_values, method, offset_h, of
 
 
 def apply_background(window, method, low, high, offset_h=0.0, offset_l=0.0, record='append',
-                     power_eels_window=None):
+                     power_eels_window=None, smooth=False):
     """Fitting_Screen.on_background: compute the background between the two
     limits (binding energies) and store it in Data, as the desktop does.
 
@@ -215,7 +215,12 @@ def apply_background(window, method, low, high, offset_h=0.0, offset_l=0.0, reco
     y_values = np.array(cl['Raw Data'], dtype=float)
     if 'Bkg Y' not in bg or not bg['Bkg Y']:
         bg['Bkg Y'] = y_values.tolist()
-    background = _calculate_other_background(window, x_values, y_values, method,
+    # "Smooth noisy data" (plot_background(use_smoothing)): gaussian_filter1d(sigma=5) for the calculation
+    y_calc = y_values
+    if smooth:
+        from scipy.ndimage import gaussian_filter1d
+        y_calc = gaussian_filter1d(y_values, sigma=5)
+    background = _calculate_other_background(window, x_values, y_calc, method,
                                               window.offset_h, window.offset_l)
     bg.update({
         'Bkg Y': background.tolist(),

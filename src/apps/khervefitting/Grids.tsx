@@ -31,13 +31,16 @@ export interface PeakGridProps {
   colours?: string[]
   selected: number | null
   compact: boolean
-  onSelect: (peak: number | null) => void
+  /** A cell was chosen (wx EVT_GRID_SELECT_CELL): its peak and grid row. */
+  onSelect: (peak: number | null, row: number) => void
   onEdit: (row: number, col: number, text: string) => void
+  /** Right-click on a cell (EVT_GRID_CELL_RIGHT_CLICK). */
+  onContextMenu?: (e: { clientX: number; clientY: number }, row: number, col: number) => void
   /** Tooltips of fitted values ("value ± uncertainty"). */
   tips?: (row: number, col: number) => string | undefined
 }
 
-export function PeakGrid({ grid, colours, selected, compact, onSelect, onEdit, tips }: PeakGridProps) {
+export function PeakGrid({ grid, colours, selected, compact, onSelect, onEdit, onContextMenu, tips }: PeakGridProps) {
   const [cell, setCell] = useState<{ r: number; c: number } | null>(null)
   const [edit, setEdit] = useState<{ r: number; c: number; text: string } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
@@ -85,7 +88,7 @@ export function PeakGrid({ grid, colours, selected, compact, onSelect, onEdit, t
       e.preventDefault()
       const n = move(cell.r, cell.c, dr, dc)
       setCell(n)
-      onSelect(Math.floor(n.r / 2))
+      onSelect(Math.floor(n.r / 2), n.r)
     }
     if (e.key === 'ArrowDown') return go(1, 0)
     if (e.key === 'ArrowUp') return go(-1, 0)
@@ -131,7 +134,7 @@ export function PeakGrid({ grid, colours, selected, compact, onSelect, onEdit, t
             const sel = !cons && selected === peak
             return (
               <tr key={r} className={cons ? 'kf-cons' : ''}>
-                <th className="kf-rowlabel" onMouseDown={() => onSelect(peak)}>
+                <th className="kf-rowlabel" onMouseDown={() => onSelect(peak, r)}>
                   {r + 1}
                 </th>
                 {cols.map(({ i: c, width }) => {
@@ -170,9 +173,16 @@ export function PeakGrid({ grid, colours, selected, compact, onSelect, onEdit, t
                       style={style}
                       className={`${sel ? 'kf-selrow' : ''}${cur ? ' kf-cur' : ''}`}
                       title={tips?.(r, c)}
-                      onMouseDown={() => {
+                      onMouseDown={(e) => {
+                        if (e.button !== 0) return
                         setCell({ r, c })
-                        onSelect(peak)
+                        onSelect(peak, r)
+                      }}
+                      onContextMenu={(e) => {
+                        if (!onContextMenu) return
+                        e.preventDefault()
+                        setCell({ r, c })
+                        onContextMenu(e, r, c)
                       }}
                       onDoubleClick={() => start(r, c)}
                     >
@@ -196,12 +206,16 @@ export interface ResultsGridProps {
   onSelectRow: (row: number | null) => void
   onToggle: (key: string, checked: boolean) => void
   onSet: (key: string, field: 'rsf' | 'txfn' | 'name', value: string) => void
+  /** Delete key (MyFrame.on_key_down: delete the selected rows). */
+  onDeleteKey?: () => void
+  /** Right-click (MyFrame.on_results_grid_right_click). */
+  onContextMenu?: (e: { clientX: number; clientY: number }) => void
 }
 
 /** Results cells the user may change: the label, RSF and TXFN (setup_grid_editability). */
 const RESULT_EDIT: Record<number, 'name' | 'rsf' | 'txfn'> = { 0: 'name', 8: 'rsf', 9: 'txfn' }
 
-export function ResultsGrid({ rows, compact, selectedRow, onSelectRow, onToggle, onSet }: ResultsGridProps) {
+export function ResultsGrid({ rows, compact, selectedRow, onSelectRow, onToggle, onSet, onDeleteKey, onContextMenu }: ResultsGridProps) {
   const [edit, setEdit] = useState<{ r: number; c: number; text: string } | null>(null)
   const cols = RESULT_ORDER.filter((c) => !compact || !RESULT_EXTRA_COLUMNS.includes(c)).map((i) => ({ ...RESULT_COLUMNS[i], i }))
   const commit = () => {
@@ -215,7 +229,21 @@ export function ResultsGrid({ rows, compact, selectedRow, onSelectRow, onToggle,
     onSet(row.key, field, t)
   }
   return (
-    <div className="kf-grid">
+    <div
+      className="kf-grid"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && !edit) {
+          e.preventDefault()
+          onDeleteKey?.()
+        }
+      }}
+      onContextMenu={(e) => {
+        if (!onContextMenu) return
+        e.preventDefault()
+        onContextMenu(e)
+      }}
+    >
       <table>
         <Head cols={cols} widths={cols.map((c) => c.width)} />
         <tbody>

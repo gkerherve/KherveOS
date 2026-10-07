@@ -27,8 +27,9 @@ import {
 } from './files'
 import { PeakGrid, ResultsGrid } from './Grids'
 import { buildMenus, type Handlers } from './menus'
-import { peaksOf, sampleOf, type View } from './model'
-import { DEFAULT_OPTIONS, Plot, type AreaFills, type DParamCurve, type IdLine, type Limits, type PlotMode, type PlotOptions } from './Plot'
+import { reversedAxis, sampleOf, type View } from './model'
+import { SHORTCUTS_TEXT, adjustLimits, keyAction, shiftOffset, stepPeak, type EdgeAxis } from './interaction'
+import { DEFAULT_OPTIONS, Plot, type AreaFills, type DParamCurve, type IdLine, type Limits, type PlotInteraction, type PlotMode, type PlotOptions } from './Plot'
 import { defaultLimits } from './mpl'
 import { FACTORY_GRID_RGB, FACTORY_THEME, GREEN_SHADES, themeVars, type PanelTheme } from './theme'
 import { ICONS, MainToolbar, PlotToolbar, ResultsToolbar, TogglePopup, type ToolState } from './Toolbars'
@@ -111,7 +112,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   // args.tool opens a tool window with the file (e.g. { path, tool: 'fitting' }).
   const startTool = typeof args.tool === 'string' ? args.tool : ''
-  const [fitWin, setFitWin] = useState<{ mini: boolean } | null>(startTool === 'fitting' ? { mini: false } : null)
+  const [fitWin, setFitWin] = useState<{ mini: boolean; at?: { x: number; y: number } } | null>(startTool === 'fitting' ? { mini: false } : null)
   const [fitTab, setFitTab] = useState(typeof args.tab === 'number' ? args.tab : 0)
   const [vlines, setVlines] = useState<[number, number] | null>(() => defaultVlines(doc.state.view))
   const [activeRegion, setActiveRegion] = useState(-1)
@@ -133,6 +134,12 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
   const [innerSplit] = useState(0.6)
   const [gridTab, setGridTab] = useState(0)
   const drag = useRef<{ pending: { i: number; x: number; y: number } | null; flying: boolean }>({ pending: null, flying: false })
+  const live = useRef<{ op: string; args: Record<string, unknown> } | null>(null)
+  const liveFlying = useRef(false)
+  const peakClip = useRef(false)
+  // Copy Core Level / Paste Core Level (Save.copy_core_level / paste_core_level): the copied sheet, pasted as a new one
+  const [coreClip, setCoreClip] = useState<string | null>(null)
+  const lastPopup = useRef(0)
 
   const setPrefs = (p: Partial<UiPrefs>) =>
     setPrefsState((cur) => {
@@ -212,10 +219,12 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
     setCurrentFit('')
     void doc.call('select', { sheet: name })
   }
+  // _handle_sheet_navigation: Ctrl+[ / Ctrl+9 previous, Ctrl+] / Ctrl+0 next, wrapping round
   const stepSheet = (d: number) => {
-    if (!view) return
-    const i = view.sheets.indexOf(view.sheet) + d
-    if (i >= 0 && i < view.sheets.length) selectSheet(view.sheets[i])
+    if (!view?.sheets.length) return
+    const n = view.sheets.length
+    const i = (((view.sheets.indexOf(view.sheet) + d) % n) + n) % n
+    selectSheet(view.sheets[i])
   }
 
   const settings = (patch: Record<string, unknown>) => {
@@ -226,10 +235,10 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
     void doc.call('settings', patch)
   }
 
+  // PeakFittingGrid.add_peak_params: at the largest residual; the peak is not selected
   const addPeak = async (at?: { x: number; y: number }) => {
-    if (!view?.background?.type) return doc.flash('Create a background region first (Peak Fitting window, BKG tab).', true)
-    const a = await doc.call('add_peak', at ? { x: at.x, y: at.y } : {})
-    if (a.ok && typeof a.index === 'number') doc.set({ selected: a.index })
+    if (!view?.background?.type) return void os.dialog.alert('Please create a background first.', { title: 'No Background' })
+    await doc.call('add_peak', at ? { x: at.x, y: at.y } : {})
   }
 
   const removePeak = (index: number | null = null) => {
@@ -275,9 +284,74 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
     void pumpDrag()
   }
 
-  const applyRegion = (record: 'append' | 'replace', method: string, offL: number, offR: number, lohi = vlines) => {
+  // Requests sent while the mouse moves (Shift+drag width, Shift+drag offset): one at a time, the latest wins.
+  const pumpLive = async () => {
+    if (liveFlying.current || !live.current) return
+    const job = live.current
+    live.current = null
+    liveFlying.current = true
+    await doc.call(job.op, job.args)
+    liveFlying.current = false
+    void pumpLive()
+  }
+  const sendLive = (op: string, args: Record<string, unknown>) => {
+    live.current = { op, args }
+    void pumpLive()
+  }
+
+  // Shift+drag of the selected peak: MyFrame.update_peak_fwhm
+  const onPeakWidth = (i: number, x: number, phase: 'start' | 'move' | 'end') => {
+    if (phase === 'start') {
+      void doc.call('checkpoint')
+      void doc.call('peak_width', { index: i, x, phase: 'start' })
+      return
+    }
+    sendLive('peak_width', { index: i, x, phase })
+  }
+
+  // ---------------------------------------------------------- background regions
+  const bkgTab = !!fitWin && fitTab === 0
+  const peakTab = !!fitWin && fitTab === 1
+  const ranges = view?.background?.ranges ?? []
+  const regionOffsets = (i = activeRegion): [number, number] => {
+    const r = ranges[i]
+    if (r) return [Number(r[0]) || 0, Number(r[1]) || 0]
+    return [Number(view?.background?.offsetHigh) || 0, Number(view?.background?.offsetLow) || 0]
+  }
+
+  /** on_range_box_click / Tab: region i becomes active, the red lines go to it. */
+  const activateRegion = (i: number) => {
+    const r = ranges[i]
+    if (!r) return
+    setActiveRegion(i)
+    setVlines([Math.min(r[2], r[3]), Math.max(r[2], r[3])])
+    void doc.call('region_select', { index: i })
+  }
+
+  /** The red lines moved (drag, Ctrl+drag, a click): on release the active region follows them and the background is redrawn. */
+  const onLines = (lo: number, hi: number, final: boolean) => {
+    setVlines([lo, hi])
+    if (!final || !bkgTab) return
+    const [oh, ol] = regionOffsets()
+    void doc.call('lines', { low: lo, high: hi, active: activeRegion, offsetH: oh, offsetL: ol })
+  }
+
+  /** Shift+press / Shift+drag on the BKG tab: the offset of the nearer line from the mouse height. */
+  const onOffset = (x: number, y: number, final: boolean) => {
+    if (!vlines || !view?.x || !view.y) return
+    const o = shiftOffset(x, y, vlines, view.x, view.y)
+    if (!o) return
+    const [oh, ol] = regionOffsets()
+    const args = { offsetH: o.side === 'h' ? o.value : oh, offsetL: o.side === 'l' ? o.value : ol, active: activeRegion, low: vlines[0], high: vlines[1] }
+    if (final) {
+      live.current = null
+      void doc.call('offsets', args)
+    } else sendLive('offsets_live', args)
+  }
+
+  const applyRegion = (record: 'append' | 'replace', method: string, offL: number, offR: number, lohi = vlines, smooth = false) => {
     if (!lohi) return
-    void doc.call('background', { method, low: lohi[0], high: lohi[1], offsetHigh: offL, offsetLow: offR, record }).then((a) => {
+    void doc.call('background', { method, low: lohi[0], high: lohi[1], offsetHigh: offL, offsetLow: offR, record, smooth }).then((a) => {
       if (a.ok && record === 'append') setActiveRegion((a.view?.background?.ranges.length ?? 1) - 1)
     })
   }
@@ -324,24 +398,21 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
     else if (id === 'residuals') setOpts((o) => ({ ...o, residuals: ((o.residuals + 1) % 3) as 0 | 1 | 2 }))
   }
 
-  const adjust = (axis: 'high_be' | 'low_be' | 'high_int' | 'low_int', dir: 1 | -1) => {
+  // PlotConfig.adjust_plot_limits: the eight edge arrows of the vertical toolbar
+  const adjust = (axis: EdgeAxis, dir: 1 | -1) => {
     if (!hasData) return
-    const l = { ...limits }
-    const xstep = Math.max(Math.abs(l.xmax - l.xmin) * 0.02, 0.2)
-    const ymax = Math.max(...(view!.y ?? []).filter((v): v is number => v !== null))
-    const ystep = (fr: number) => (ymax > 0 ? fr * ymax : fr * Math.abs(l.ymax - l.ymin))
-    // Each arrow moves its edge the way the icon points (reversed BE axis: high = left edge).
-    if (axis === 'high_be') l.xmax += dir === 1 ? -xstep : xstep
-    if (axis === 'low_be') l.xmin += dir === 1 ? -xstep : xstep
-    if (axis === 'high_int') l.ymax = dir === 1 ? l.ymax + ystep(0.05) : Math.max(l.ymax - ystep(0.05), l.ymin)
-    if (axis === 'low_int') l.ymin = dir === 1 ? Math.min(l.ymin + ystep(0.02), l.ymax) : l.ymin - ystep(0.02)
-    setLimits(l)
+    setLimits(adjustLimits(limits, axis, dir === 1 ? 'increase' : 'decrease', view!.y ?? [], !reversedAxis(sheet)))
   }
 
   const openFitting = (mini = false) => {
     if (!hasData) return doc.flash('Open a file first: File > Open, or an example.', true)
-    setFitWin({ mini })
+    // on_open_fitting_window: an open one is only raised; a new one is centred on the main window, on the BKG tab, no peak selected
+    if (fitWin) return
+    const box = rootRef.current?.getBoundingClientRect()
+    const at = box ? { x: Math.max(0, Math.round((box.width - (mini ? 210 : 276)) / 2)), y: Math.max(0, Math.round((box.height - (mini ? 180 : 438)) / 2)) } : undefined
+    setFitWin({ mini, at })
     setFitTab(0)
+    doc.set({ selected: null })
   }
 
   const H: Handlers = {
@@ -369,8 +440,8 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
     delFirst: () => deleteResults('first'),
     delLast: () => deleteResults('last'),
     delSelected: () => deleteResults('selected'),
-    copyCore: hasData ? () => void feature('sheet_copy', { sheet }) : undefined,
-    pasteCore: hasData ? () => void feature('sheet_copy', { sheet }) : undefined,
+    copyCore: hasData ? () => setCoreClip(sheet) : undefined,
+    pasteCore: coreClip && view?.sheets.includes(coreClip) ? () => void feature('sheet_copy', { sheet: coreClip }) : undefined,
     joinCores: hasData ? () => openTool('join') : undefined,
     crop: hasData ? () => openTool('crop') : undefined,
     sampleManager: () => openTool('samples'),
@@ -474,6 +545,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
       },
       zoomIn: () => setMode((m) => (m === 'zoom' ? 'none' : 'zoom')),
       zoomOut: () => {
+        // PlotConfig.on_zoom_out: back to the original limits, both tools off
         setMode('none')
         resetLimits()
       },
@@ -543,31 +615,57 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
   useAppTools(win, fittingAiTools({ doc, open: (p) => openPath(doc, p, saveDoc, false), openExample: (f, t) => openExample(doc, f, t, saveDoc), examples: () => loadExamples() }))
 
   // ------------------------------------------------------------ keyboard
+  // On_Key_Defs.KeyEventHandlers.on_key_press_global (EVT_CHAR_HOOK of the main
+  // window, which also receives the Peak Fitting window's keys) and the menu
+  // accelerators. Ctrl is Cmd on a Mac, as wx does.
+  const popupTab = () => {
+    const now = Date.now()
+    if (now - lastPopup.current > 10000) {
+      lastPopup.current = now
+      doc.flash('Open the Peak Fitting Tab to move or select a peak')
+    }
+  }
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return
     const t = e.target as HTMLElement
-    const typing = t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA'
-    const mod = e.metaKey || e.ctrlKey
-    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key
-    const run = (fn?: () => unknown) => {
-      if (!fn) return
-      e.preventDefault()
-      void Promise.resolve(fn())
-    }
-    if (mod && !e.altKey) {
-      const map: Record<string, (() => unknown) | undefined> = {
-        n: H.new, o: H.open, s: H.quickSave, z: e.shiftKey ? H.redo : H.undo, y: H.redo, p: H.fitting, q: H.exit,
-        '[': () => stepSheet(-1), ']': () => stepSheet(1), '9': () => stepSheet(-1), '0': () => stepSheet(1),
-      }
-      return run(map[k])
-    }
-    if (typing || t.closest('.kf-grid')) return
+    // wx.TextEntry has the focus: plain keys are typing (a grid without its cell editor is not)
+    const typing = (t.tagName === 'INPUT' && (t as HTMLInputElement).type !== 'checkbox') || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.isContentEditable
     const n = (view?.grid.length ?? 0) / 2
-    if (k === 'Tab' && fitWin && fitTab === 0 && view?.background?.ranges.length) return run(() => setActiveRegion((r) => (r + 1) % view!.background!.ranges.length))
-    if (k === 'Tab' && n) return run(() => doc.set({ selected: selected === null ? 0 : (selected + 1) % n }))
-    if (k === 'q' && n) return run(() => doc.set({ selected: selected === null ? n - 1 : (selected - 1 + n) % n }))
-    if ((k === 'Delete' || k === 'Backspace') && selected !== null) return run(() => removePeak(selected))
-    if (k === 'Escape') return run(() => (mode !== 'none' ? setMode('none') : doc.set({ selected: null })))
+    const a = keyAction(
+      { key: e.key, ctrl: e.metaKey || e.ctrlKey, shift: e.shiftKey, alt: e.altKey },
+      {
+        limits: hasData ? limits : null, ys: view?.y ?? [], forward: !reversedAxis(sheet), selected: selected !== null, bkgTab, fitTab: peakTab, hasPeaks: n > 0,
+        typing,
+      },
+    )
+    if (!a) return
+    e.preventDefault()
+    e.stopPropagation()
+    switch (a.type) {
+      case 'limits':
+        return setLimits(a.limits)
+      case 'peak':
+        if (selected !== null) void doc.call('peak_key', { index: selected, key: a.key })
+        return
+      case 'sheet':
+        return stepSheet(a.step)
+      case 'nextRegion':
+        if (ranges.length) activateRegion(activeRegion < 0 ? 0 : (activeRegion + 1) % ranges.length)
+        return
+      case 'peakStep':
+        return doc.set({ selected: stepPeak(selected, n, a.step) })
+      case 'needFittingTab':
+        return popupTab()
+      case 'command': {
+        const run: Record<string, (() => unknown) | undefined> = {
+          undo: H.undo, redo: H.redo, save: H.quickSave, open: H.open, new: H.new, exit: H.exit, fitting: H.fitting, help: H.help,
+          shortcuts: () => void os.dialog.alert(SHORTCUTS_TEXT.join('\n'), { title: 'Keyboard Shortcuts' }),
+          energyScale: () => notReady('Show Kinetic Energy (Ctrl+B)'),
+          manual: H.manual,
+        }
+        void Promise.resolve(run[a.id]?.())
+      }
+    }
   }
 
   // --------------------------------------------------------- dropping files
@@ -603,41 +701,21 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
     el.addEventListener('pointerup', up)
   }
 
-  // The plot's right-click menu (On_Mouse_Defs.on_right_click, XPS sheet)
-  const peakClipboard = useRef<string | null>(null)
-  const plotMenu = (e: ReactMouseEvent, at: { x: number; y: number; peak: number }) => {
+  // The plot's right-click menu (On_Mouse_Defs.on_right_click, an XPS sheet:
+  // no Style entry, nothing to style on a single spectrum)
+  const plotMenu = (e: ReactMouseEvent) => {
     const items: MenuItem[] = [
-      { label: 'Zoom In', onClick: () => setMode('zoom') },
+      { label: 'Zoom In', onClick: () => setMode((m) => (m === 'zoom' ? 'none' : 'zoom')) },
       { label: 'Zoom Out', onClick: () => { setMode('none'); resetLimits() } },
       { label: 'Overview', disabled: true },
       '-',
-      { label: 'Copy Core Level', disabled: !hasData, onClick: () => void feature('sheet_copy', { sheet }) },
-      { label: 'Paste Core Level', disabled: !hasData, onClick: () => void feature('sheet_copy', { sheet }) },
+      { label: 'Copy Core Level', disabled: !hasData, onClick: H.copyCore },
+      { label: 'Paste Core Level', disabled: !H.pasteCore, onClick: H.pasteCore },
       { label: 'Crop Core Level', disabled: !hasData, onClick: () => openTool('crop') },
       '-',
-      {
-        label: 'Copy Peak Table',
-        disabled: !view?.grid.length,
-        onClick: () => void feature('lib_save', { kind: 'peaks' }).then((a) => {
-          if (a.ok) {
-            peakClipboard.current = String(a.json)
-            doc.flash('Peak table copied.')
-          }
-        }),
-      },
-      { label: 'Paste Peak Table', disabled: !peakClipboard.current || !hasData, onClick: () => void feature('lib_load', { json: peakClipboard.current, mode: 'overwrite' }) },
-      { label: 'Fit Uncertainties ±…', disabled: !view?.fit, onClick: () => void report() },
-      '-',
-      {
-        label: 'Style',
-        submenu: [
-          { label: 'Peak Fill', checked: opts.peakFill, onClick: () => toggle('peakFill') },
-          { label: 'Hatched Peaks', checked: opts.fillTypes[0] === 'Hatch', onClick: () => setOpts((o) => ({ ...o, fillTypes: o.fillTypes[0] === 'Hatch' ? [] : Array(30).fill('Hatch') })) },
-          { label: 'Legend', onClick: () => toggle('legend') },
-          { label: 'Residuals', onClick: () => toggle('residuals') },
-          { label: 'Y Axis', onClick: () => toggle('yAxis') },
-        ],
-      },
+      { label: 'Copy Peak Table', disabled: !view?.grid.length, onClick: () => void copyPeakTable() },
+      { label: 'Paste Peak Table', disabled: !peakClip.current || !hasData, onClick: () => void doc.call('peaks_paste') },
+      { label: 'Fit Uncertainties \u00b1\u2026', disabled: !view?.fit, onClick: () => void report() },
       '-',
       {
         label: 'Export',
@@ -649,6 +727,15 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
           { label: 'Export plot data as XLSX', disabled: true },
           { label: 'Export plot data as CSV', onClick: () => void exportData(view, 'csv') },
           { label: 'Export plot data as KherveSheet', disabled: true },
+          '-',
+          {
+            label: 'About SVG & Inkscape...',
+            onClick: () =>
+              void os.dialog.alert(
+                'SVG files can be edited with Inkscape (free & open-source).\n\nDownload: https://inkscape.org\n\nIn Inkscape you can:\n  \u2022 Change colours, fonts and line styles\n  \u2022 Move or resize any element\n  \u2022 Add annotations and arrows\n  \u2022 Export to PNG/PDF at any resolution',
+                { title: 'Editing SVG with Inkscape' },
+              ),
+          },
         ],
       },
       '-',
@@ -656,23 +743,93 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
       { label: 'Edit Data', disabled: true },
       { label: 'Info', disabled: true },
     ]
-    if (at.peak >= 0) {
-      const p = peaksOf(view?.grid ?? [])[at.peak]
-      items.unshift({ label: `Delete Peak ${p?.letter ?? ''} (${p?.label ?? ''})`, danger: true, onClick: () => removePeak(at.peak) }, '-')
-    }
     os.contextMenu(e, items)
+  }
+
+  const copyPeakTable = async () => {
+    const a = await doc.call('peaks_copy')
+    if (a.ok && a.copied) peakClip.current = true
+  }
+
+  // The peak table's right-click menu (On_Mouse_Defs.on_peak_params_right_click)
+  const PROPAGATE_NAMES: Record<number, string> = { 2: 'Positions', 3: 'Heights', 4: 'FWHMs', 5: 'L/G ratios', 6: 'Areas', 7: 'Sigmas', 8: 'Gammas', 9: 'Skews' }
+  const ADD_MODELS = [
+    'GL (Area)', 'SGL (Area)', 'LA (Area, \u03c3/\u03b3, \u03b3)', 'Voigt (Area, L/G, \u03c3)', 'LA (Area, \u03c3, \u03b3)', 'DS*G (A, \u03c3, \u03b3, S)',
+    'Voigt (Area, L/G, \u03c3, S)', 'ExpGauss.(Area, \u03c3, \u03b3)', 'Voigt (Area, \u03c3, \u03b3)', 'LA*G (Area, \u03c3/\u03b3, \u03b3)', 'Pseudo-Voigt (Area)',
+    'GL (Height)', 'SGL (Height)', 'DS (A, \u03c3, \u03b3)', 'A*GL (Area, a, b)', 'A*SGL (Area, a, b)', 'LF (Area, \u03c3, \u03b3, w)', 'DL (A, \u03c3, \u03b3, aDL)',
+    'Voigt (Area)', 'Voigt (Area, L/G, S)', 'TLA (A, \u03bc, \u03b1, Wg)', 'SB (Height)',
+  ]
+  const peakGridMenu = async (e: { clientX: number; clientY: number }, row: number, col: number) => {
+    const grid = view?.grid ?? []
+    const at = { clientX: e.clientX, clientY: e.clientY }
+    const info = await doc.call('cross_levels')
+    const levels = (info.levels as { name: string; peaks: number }[] | undefined) ?? []
+    if (typeof info.hasPeaks === 'boolean') peakClip.current = info.hasPeaks
+    const paramRow = row % 2 === 0 ? row : row - 1
+    const peakIndex = Math.floor(row / 2)
+    const letter = grid[paramRow]?.[0] ?? ''
+    const hasRows = grid.length > 0
+    let propagateText = 'Propagate to column'
+    const name = PROPAGATE_NAMES[col]
+    if (name) {
+      propagateText = col === 2 || col === 6 ? `Constraint all Current ${name} to ${letter}` : `Constraint all ${name}: ${letter}*1`
+    }
+    const items: MenuItem[] = [
+      { label: 'Copy Peak Table', disabled: !hasRows, onClick: () => void copyPeakTable() },
+      { label: 'Paste Peak Table', disabled: !peakClip.current, onClick: () => void doc.call('peaks_paste') },
+      '-',
+      { label: 'Export to Results Grid', onClick: exportCurrent },
+      '-',
+      { label: `Delete Peak ${letter}`, disabled: !hasRows, onClick: () => removePeak(peakIndex) },
+      { label: 'Add Peak', submenu: ADD_MODELS.map((m) => ({ label: m, onClick: () => void addPeakModel(m, row) })) },
+      '-',
+      { label: propagateText, disabled: !name, onClick: () => void doc.call('propagate_constraint', { row, col }) },
+    ]
+    if (col === 4 && row % 2 === 1) items.push({ label: `Constraint all Current FWHMs to ${letter}`, onClick: () => void doc.call('propagate_fwhm_diff', { row, col }) })
+    if (name && levels.length) {
+      items.push('-', {
+        label: 'Constraint to Other Core Levels',
+        submenu: levels.map((l) => ({
+          label: l.name,
+          submenu: Array.from({ length: l.peaks }, (_, i) => {
+            const ref = `${l.name}_${String.fromCharCode(65 + i)}`
+            return { label: l.name === sheet ? String.fromCharCode(65 + i) : ref, onClick: () => void doc.call('cross_constraint', { ref, row, col }) }
+          }),
+        })),
+      })
+    }
+    os.contextMenu(at, items)
+  }
+  const addPeakModel = async (model: string, row: number) => {
+    const a = await doc.call('add_peak_model', { model, row })
+    if (a.ok && typeof a.index === 'number' && peakTab) doc.set({ selected: a.index })
   }
 
   // ---------------------------------------------------------- fitting window
   const fitActs: FittingActions = {
-    createRegion: (method, l, r) => applyRegion('append', method, l, r),
+    createRegion: (method, l, r, smooth) => applyRegion('append', method, l, r, vlines, smooth),
     updateRegion: (i, method, l, r) => {
       const rg = view?.background?.ranges[i]
       applyRegion('replace', method, l, r, rg ? [rg[2], rg[3]] : vlines)
     },
-    removeRegion: (i) => void doc.call('remove_region', { index: i }).then(() => setActiveRegion(-1)),
-    clearAll: () => void doc.call('clear_background', { only: false }),
+    // on_remove_active_region: region 1 becomes active (if any is left)
+    removeRegion: (i) =>
+      void doc.call('remove_region', { index: i }).then((a) => {
+        const left = a.view?.background?.ranges ?? []
+        if (left.length) activateRegion(0)
+        else setActiveRegion(-1)
+      }),
+    clearAll: () => void doc.call('clear_background', { only: false }).then(() => setActiveRegion(-1)),
     clearRegions: () => void doc.call('clear_background', { only: true }).then(() => setActiveRegion(-1)),
+    rangeFields: (lo, hi) => {
+      setVlines([lo, hi])
+      const [oh, ol] = regionOffsets()
+      void doc.call('range_fields', { low: lo, high: hi, active: activeRegion, offsetH: oh, offsetL: ol })
+    },
+    offsets: (oh, ol) => void doc.call('offsets', { offsetH: oh, offsetL: ol, active: activeRegion, low: vlines?.[0], high: vlines?.[1] }),
+    selectRegion: (i) => activateRegion(i),
+    confirm: (message, title) => os.dialog.confirm(message, { title, okLabel: 'Yes' }),
+    alert: (message, title) => void os.dialog.alert(message, { title }),
     settings,
     addPeak: () => void addPeak(),
     addDoublet: (name) => void feature('add_doublet', name ? { name } : {}),
@@ -700,6 +857,17 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
     notReady,
     close: () => setFitWin(null),
   }
+  // FittingWindow.on_tab_change: on the BKG tab the active region (or region 1) is
+  // activated and the red lines go to it; leaving the Fitting tab deselects the peak.
+  useEffect(() => {
+    if (!bkgTab || !ranges.length) return
+    activateRegion(activeRegion >= 0 && activeRegion < ranges.length ? activeRegion : 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bkgTab, sheetKey, ranges.length > 0])
+  useEffect(() => {
+    if (!peakTab && doc.state.selected !== null) doc.set({ selected: null })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [peakTab])
   // Region boxes: the active one's range goes to the red lines.
   useEffect(() => {
     const r = view?.background?.ranges[activeRegion]
@@ -713,7 +881,8 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
   const fileText = st.path ? pretty(st.path) : view?.sheets.length ? st.untitled : ''
   const leftStatus = message ?? (fileText ? `Selected File: ${fileText}` : `Working Directory: ${pretty('/home')}  ·  ${STATUS[status]}`)
   const rightStatus = cursor ? `BE: ${cursor.x.toFixed(3)} eV, I: ${cursor.y.toFixed(3)} CPS` : 'BE: 0 eV, I: 0 CPS'
-  const showLines = hasData && ((!!fitWin && fitTab === 0) || tools.has('area') || tools.has('crop'))
+  const showLines = hasData && (bkgTab || tools.has('area') || tools.has('crop'))
+  const interaction: PlotInteraction = !hasData ? 'none' : bkgTab ? 'bkg' : tools.has('area') || tools.has('crop') ? 'lines' : peakTab ? 'peak' : 'none'
   const extra = view?.extra ?? {}
   const be = typeof extra.beCorrection === 'number' ? extra.beCorrection : 0
   const rowNumber = sampleOf(sheet)
@@ -728,6 +897,8 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
       vlines={showLines ? vlines : null}
       greenLine={greenLine}
       mode={mode}
+      interaction={interaction}
+      averagingPoints={view?.settings.averagingPoints ?? null}
       labels={extra.labels}
       idLines={idLines}
       dparam={(extra.dparam as DParamCurve | null | undefined) ?? null}
@@ -738,10 +909,14 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
       onCursor={setCursor}
       onSelect={(p) => doc.set({ selected: p })}
       onPeakDrag={onPeakDrag}
-      onVlines={(lo, hi) => setVlines([lo, hi])}
+      onPeakWidth={onPeakWidth}
+      onPeakWheel={(i, up) => void doc.call('peak_wheel', { index: i, up })}
+      onVlines={onLines}
+      onOffset={onOffset}
+      onModeDone={() => setMode('none')}
       onGreenLine={setGreenLine}
       onDoubleClick={() => setPlotLimitsOpen(true)}
-      onContextMenu={plotMenu}
+      onContextMenu={(e) => plotMenu(e)}
     />
   )
 
@@ -750,8 +925,9 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
       {prefs.layout === 'split' && <legend>Peak Fitting Parameters</legend>}
       <PeakGrid grid={view?.grid ?? []} colours={view?.gridColours} selected={selected}
         compact={compact}
-        onSelect={(p) => doc.set({ selected: p })}
+        onSelect={(p, row) => doc.set({ selected: peakTab && row % 2 === 0 ? p : null })}
         onEdit={editCell}
+        onContextMenu={peakGridMenu}
         tips={(r, c) => {
           // Fit_Uncertainty.bind_grid_tooltips: hover Position / Height / FWHM / L/G / Area → value ± 1σ
           const q = ({ 2: 'Position', 3: 'Height', 4: 'FWHM', 5: 'L/G', 6: 'Area' } as Record<number, string>)[c]
@@ -776,6 +952,16 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
         onSelectRow={setResultRow}
         onToggle={(key, checked) => void doc.call('results_set', { key, field: 'checked', value: checked })}
         onSet={(key, field, value) => void doc.call('results_set', { key, field, value })}
+        onDeleteKey={() => resultRow !== null && deleteResults('selected')}
+        onContextMenu={(e) =>
+          os.contextMenu(e, [
+            { label: 'Export Fitting Grid', disabled: !hasData, onClick: exportCurrent },
+            '-',
+            { label: 'Remove All Lines', onClick: () => deleteResults('all') },
+            { label: 'Remove First Line', onClick: () => deleteResults('first') },
+            { label: 'Remove Last Line', onClick: () => deleteResults('last') },
+          ])
+        }
       />
     </fieldset>
   )
@@ -787,7 +973,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
       tabIndex={-1}
       style={themeVars(theme, prefs.grid) as CSSProperties}
       data-theme={theme}
-      onKeyDown={onKeyDown}
+      onKeyDownCapture={onKeyDown}
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
@@ -856,6 +1042,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
           batchProgress={batchProgress}
           act={fitActs}
           mini={fitWin.mini}
+          at={fitWin.at}
         />
       )}
       {tools.has('examples') && (

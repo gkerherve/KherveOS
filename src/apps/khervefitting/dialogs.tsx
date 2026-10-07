@@ -79,19 +79,33 @@ export function SettingsView({ settings, onChange }: { settings: Settings; onCha
 const MOD = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl+'
 
 export function HelpView() {
+  // Help › List of Shortcuts (HelpMenu/Help.show_shortcuts); Ctrl is ⌘ on a Mac
   const keys: [string, string][] = [
-    ['Click a peak top', 'Select the peak (blue ×); drag the × to move it'],
-    ['Drag a red dashed line', 'Move the region limits (Peak Fitting window, BKG tab)'],
-    ['Tab', 'Switch region (BKG tab) / next peak (Fitting tab)'],
-    ['Q', 'Previous peak'],
-    ['Delete', 'Remove the selected peak'],
-    ['Double-click on the plot', 'Plot Limits'],
-    ['Wheel / Shift+wheel', 'Zoom the energy / intensity axis'],
-    ['Zoom In / Zoom Out / Drag tools', 'Box zoom / reset the view / pan'],
-    [`${MOD}[ or ${MOD}9 / ${MOD}] or ${MOD}0`, 'Previous / next sheet'],
-    [`${MOD}P`, 'Peak Fitting window'],
-    [`${MOD}Z / ${MOD}Y`, 'Undo / redo'],
-    [`${MOD}O / ${MOD}S`, 'Open / quick save'],
+    ['Tab', 'Select next peak'],
+    ['Q', 'Select previous peak'],
+    [`${MOD}Minus (-)`, 'Zoom out'],
+    [`${MOD}Equal (=)`, 'Zoom in'],
+    [`${MOD}Left bracket [`, 'Select previous core level'],
+    [`${MOD}Right bracket ]`, 'Select next core level'],
+    [`${MOD}Up`, 'Increase plot intensity'],
+    [`${MOD}Down`, 'Decrease plot intensity'],
+    [`${MOD}Left`, 'Move plot to High BE'],
+    [`${MOD}Right`, 'Move plot to Low BE'],
+    ['SHIFT+Left', 'Decrease High BE'],
+    ['SHIFT+Right', 'Increase High BE'],
+    [`${MOD}Z`, 'Undo up to 50 events'],
+    [`${MOD}Y`, 'Redo'],
+    [`${MOD}S`, 'Save. Only works on the grid and not on the figure canvas'],
+    [`${MOD}P`, 'Open peak fitting window'],
+    [`${MOD}K`, 'Show Keyboard shortcut'],
+    ['Alt+Up', 'Increase peak intensity'],
+    ['Alt+Down', 'Decrease peak intensity'],
+    ['Alt+Left', 'Move peak to High BE'],
+    ['Alt+Right', 'Move peak to Low BE'],
+    ['Alt+SHIFT+Left', 'Decrease FWHM'],
+    ['Alt+SHIFT+Right', 'Increase FWHM'],
+    ['SHIFT+Mouse Left button', 'increase/decrease FWHM in Peak Fitting Tab'],
+    ['SHIFT+Mouse Left button', 'increase/decrease Offset Low or High in the BKG Tab'],
   ]
   return (
     <div className="kf-doc">
@@ -102,16 +116,16 @@ export function HelpView() {
       <ol>
         <li>Open a workbook (File › Open, or File › Open Examples), or import a VAMAS / CSV file (File › Import › XPS).</li>
         <li>Pick the core level in the sheet selector; open the Peak Fitting window (the C1s button, {MOD}P).</li>
-        <li>BKG tab: drag the red lines around the peaks, choose the method, press <b>Create Region</b>.</li>
-        <li>Fitting tab: choose the model, <b>Add 1 Peak</b> / <b>Add 2 Peaks Doublet</b>, then <b>Fit Until Stable</b>.</li>
+        <li>BKG tab: drag the red lines around the peaks (Ctrl+drag moves both, Shift+click sets the offset), choose the method, press <b>Create Region</b>; dragging a line afterwards redraws the active region.</li>
+        <li>Fitting tab: choose the model, <b>Add 1 Peak</b> / <b>Add 2 Peaks Doublet</b>; select a peak (Tab / Q or its row) and drag its ×, scroll to change its width; then <b>Fit Until Stable</b>.</li>
         <li>Type constraints in the green rows: <code>Fixed</code>, <code>0.5:2</code>, <code>A+1.2#0.2</code>, <code>A*0.5</code>, <code>C1s_A+0.3</code>.</li>
         <li>Export the peaks to the Results grid (its first button) to get the atomic %.</li>
         <li>Save: the workbook (.xlsx) and its .json are written side by side, as the desktop does.</li>
       </ol>
       <table className="kf-keys">
         <tbody>
-          {keys.map(([k, v]) => (
-            <tr key={k}>
+          {keys.map(([k, v], i) => (
+            <tr key={`${k}${i}`}>
               <td>
                 <kbd>{k}</kbd>
               </td>

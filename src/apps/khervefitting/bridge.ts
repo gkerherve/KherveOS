@@ -43,6 +43,7 @@ export const PY_FILES = [
   'kfcore/area.py',
   'kfcore/pca.py',
   'kfcore/fitops.py',
+  'kfcore/interact.py',
   'kfweb/__init__.py',
   'kfweb/gridstyle.py',
   'kfweb/tables.py',

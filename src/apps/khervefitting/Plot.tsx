@@ -7,10 +7,16 @@
 // ×10ⁿ, a binding-energy axis running from high to low, χ beside the
 // residuals. SVG, so the same component renders in Node for tests.
 //
-// Mouse (as the desktop): click a peak top to select it (blue ×), drag the ×
-// to move it; drag the red dashed lines (Peak Fitting window, BKG tab) to set
-// the region; Zoom In tool: drag a box; Drag tool: pan; double-click: Plot
-// Limits; wheel: zoom the energy axis (Shift: intensity); right-click: menu.
+// Mouse, as the desktop (On_Mouse_Defs.MouseEventHandler, PeakManipulation):
+//  - Peak Fitting window on its BKG tab: a press near a red line drags it, a
+//    press elsewhere brings the nearer line there and drags it; Ctrl+drag
+//    moves both lines; Shift+press / Shift+drag sets the background offset of
+//    the nearer line from the mouse height; the region is redrawn on release;
+//  - Fitting tab: a press within 100 px of the selected peak's top (blue ×)
+//    drags it (Shift: its width); a press elsewhere deselects it; the wheel
+//    widens / narrows the selected peak;
+//  - the green line drags anywhere; Zoom In tool: one green box; Drag tool:
+//    one pan; double-click: Plot Limits; right-click: the plot's menu.
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode, type WheelEvent } from 'react'
 import { peaksOf, reversedAxis, xLabel, type View } from './model'
@@ -48,6 +54,9 @@ export const DEFAULT_OPTIONS: PlotOptions = {
 }
 
 export type PlotMode = 'none' | 'zoom' | 'drag'
+
+/** Which window drives the plot: the Fitting window's BKG tab, its Fitting tab, a tool that owns the red lines, or nothing. */
+export type PlotInteraction = 'none' | 'bkg' | 'peak' | 'lines'
 
 export interface PlotLabel {
   text: string
@@ -87,6 +96,10 @@ export interface PlotProps {
   vlines: [number, number] | null
   greenLine: number | null
   mode: PlotMode
+  /** What a press on the plot does (default 'none'). */
+  interaction?: PlotInteraction
+  /** Averaging Points of the BKG tab: the red/grey averaging marks at each line (add_averaging_indicator_lines). */
+  averagingPoints?: number | null
   labels?: PlotLabel[]
   chi?: number | null
   dparam?: DParamCurve | null
@@ -98,9 +111,18 @@ export interface PlotProps {
   size?: { w: number; h: number }
   onLimits?: (l: Limits) => void
   onCursor?: (at: { x: number; y: number } | null) => void
+  /** A press away from the selected peak (deselect_all_peaks). */
   onSelect?: (peak: number | null) => void
   onPeakDrag?: (peak: number, x: number, y: number, phase: 'start' | 'move' | 'end') => void
+  /** Shift+drag of the selected peak: its width follows x (update_peak_fwhm). */
+  onPeakWidth?: (peak: number, x: number, phase: 'start' | 'move' | 'end') => void
+  /** Wheel over the plot with the selected peak (Fitting tab). */
+  onPeakWheel?: (peak: number, up: boolean) => void
   onVlines?: (lo: number, hi: number, final: boolean) => void
+  /** Shift+press / Shift+drag on the BKG tab: the mouse position (binding energy, intensity). */
+  onOffset?: (x: number, y: number, final: boolean) => void
+  /** The Zoom In box or the Drag pan is done (the tool turns itself off, as on the desktop). */
+  onModeDone?: () => void
   onGreenLine?: (x: number) => void
   onDoubleClick?: () => void
   onContextMenu?: (e: ReactMouseEvent, at: { x: number; y: number; peak: number }) => void
@@ -252,6 +274,7 @@ export const PlotSizeHint = createContext<{ w: number; h: number } | null>(null)
 
 export function Plot(props: PlotProps) {
   const { view, limits, options: o, selected, vlines, greenLine, mode } = props
+  const interaction = props.interaction ?? 'none'
   const wrapRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const hint = useContext(PlotSizeHint)
@@ -259,7 +282,10 @@ export function Plot(props: PlotProps) {
   const size = props.size ?? hint ?? measured
   const [drag, setDrag] = useState<
     | { kind: 'peak'; peak: number; x: number; y: number }
-    | { kind: 'vline'; line: 0 | 1 }
+    | { kind: 'width'; peak: number }
+    | { kind: 'vline'; other: number }
+    | { kind: 'both'; ref: number; gap: number; lo: number }
+    | { kind: 'offset' }
     | { kind: 'green' }
     | { kind: 'box'; x0: number; y0: number; x1: number; y1: number }
     | { kind: 'pan'; px0: number; py0: number; l: Limits }
@@ -365,47 +391,68 @@ export function Plot(props: PlotProps) {
     const b = valueAt(xs, bkg, p.position) ?? 0
     return { x: X(p.position), y: Y(p.height + b) }
   }
-  const peakAt = (p: { x: number; y: number }) => {
-    let best = -1
-    let bd = 14 * 14
-    peaks.forEach((_, i) => {
-      if (!curves[i]) return
-      const t = topOf(i)
-      if (!t) return
-      const d = (t.x - p.x) ** 2 + (t.y - p.y) ** 2
-      if (d < bd) {
-        bd = d
-        best = i
-      }
-    })
-    return best
+  /** PeakManipulation.get_peak_index_from_position: only the selected peak, within 100 px of its top. */
+  const nearSelected = (p: { x: number; y: number }) => {
+    if (selected === null || !curves[selected]) return -1
+    const t = topOf(selected)
+    if (!t) return -1
+    return Math.hypot(t.x - p.x, t.y - p.y) < 100 ? selected : -1
   }
-  const vlineAt = (p: { x: number }) => {
-    if (!vlines) return -1
-    const d0 = Math.abs(X(vlines[0]) - p.x)
-    const d1 = Math.abs(X(vlines[1]) - p.x)
-    if (Math.min(d0, d1) > 6) return -1
-    return d0 <= d1 ? 0 : 1
-  }
+  // adaptive_threshold = max(some_threshold 0.1, 2 % of the data range), in binding energy
+  const dataRange = (() => {
+    let lo = Infinity
+    let hi = -Infinity
+    for (const x of xs) if (x !== null) {
+      lo = Math.min(lo, x)
+      hi = Math.max(hi, x)
+    }
+    return hi > lo ? hi - lo : 0
+  })()
+  const lineThreshold = Math.max(0.1, dataRange * 0.02)
 
   const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (e.button !== 0) return
     const p = local(e)
     if (!inMain(p)) return
-    e.currentTarget.setPointerCapture(e.pointerId)
+    e.currentTarget.setPointerCapture?.(e.pointerId)
     if (mode === 'zoom') return setDrag({ kind: 'box', x0: p.x, y0: p.y, x1: p.x, y1: p.y })
     if (mode === 'drag') return setDrag({ kind: 'pan', px0: p.x, py0: p.y, l: limits })
-    const line = vlineAt(p)
-    if (line >= 0) return setDrag({ kind: 'vline', line: line as 0 | 1 })
-    if (greenLine !== null && Math.abs(X(greenLine) - p.x) < 6) return setDrag({ kind: 'green' })
-    const peak = peakAt(p)
-    if (peak >= 0) {
-      props.onSelect?.(peak)
-      const t = topOf(peak)!
-      setDrag({ kind: 'peak', peak, x: frame.iX(t.x), y: frame.iY(t.y) })
-      props.onPeakDrag?.(peak, frame.iX(t.x), frame.iY(t.y), 'start')
-      return
+    const bx = frame.iX(p.x)
+    const by = frame.iY(p.y)
+    const ctrl = e.ctrlKey || e.metaKey
+    // BKG tab: Ctrl+drag moves both lines, Shift sets the offsets
+    if ((interaction === 'bkg' || interaction === 'lines') && vlines && ctrl) {
+      return setDrag({ kind: 'both', ref: bx, gap: vlines[1] - vlines[0], lo: vlines[0] })
     }
+    if (interaction === 'bkg' && vlines && e.shiftKey) {
+      props.onOffset?.(bx, by, false)
+      return setDrag({ kind: 'offset' })
+    }
+    // Fitting tab, Shift: the selected peak's width
+    if (interaction === 'peak' && e.shiftKey && selected !== null && nearSelected(p) >= 0) {
+      props.onPeakWidth?.(selected, bx, 'start')
+      return setDrag({ kind: 'width', peak: selected })
+    }
+    // the green line (works on every tab)
+    if (greenLine !== null && Math.abs(greenLine - bx) <= lineThreshold) return setDrag({ kind: 'green' })
+    if ((interaction === 'bkg' || interaction === 'lines') && vlines) {
+      props.onSelect?.(null)
+      const d0 = Math.abs(bx - vlines[0])
+      const d1 = Math.abs(bx - vlines[1])
+      const other = d0 < d1 ? vlines[1] : vlines[0]
+      // Not near a line: the nearer one comes to the click
+      if (Math.min(d0, d1) > lineThreshold) props.onVlines?.(Math.min(bx, other), Math.max(bx, other), false)
+      return setDrag({ kind: 'vline', other })
+    }
+    if (interaction === 'peak') {
+      const peak = nearSelected(p)
+      if (peak >= 0) {
+        setDrag({ kind: 'peak', peak, x: bx, y: by })
+        props.onPeakDrag?.(peak, bx, by, 'start')
+        return
+      }
+    }
+    props.onSelect?.(null)
   }
 
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
@@ -418,9 +465,13 @@ export function Plot(props: PlotProps) {
     if (drag.kind === 'peak') {
       setDrag({ ...drag, x: dx, y: dy })
       props.onPeakDrag?.(drag.peak, dx, dy, 'move')
-    } else if (drag.kind === 'vline' && vlines) {
-      const other = vlines[1 - drag.line]
-      props.onVlines?.(Math.min(dx, other), Math.max(dx, other), false)
+    } else if (drag.kind === 'width') props.onPeakWidth?.(drag.peak, dx, 'move')
+    else if (drag.kind === 'vline') props.onVlines?.(Math.min(dx, drag.other), Math.max(dx, drag.other), false)
+    else if (drag.kind === 'both') {
+      const lo = drag.lo + (dx - drag.ref)
+      props.onVlines?.(Math.min(lo, lo + drag.gap), Math.max(lo, lo + drag.gap), false)
+    } else if (drag.kind === 'offset') {
+      if (inMain(p)) props.onOffset?.(dx, dy, false)
     } else if (drag.kind === 'green') props.onGreenLine?.(dx)
     else if (drag.kind === 'box') setDrag({ ...drag, x1: p.x, y1: p.y })
     else if (drag.kind === 'pan') {
@@ -441,36 +492,36 @@ export function Plot(props: PlotProps) {
     const dx = frame.iX(p.x)
     const dy = frame.iY(p.y)
     if (cur.kind === 'peak') props.onPeakDrag?.(cur.peak, dx, dy, 'end')
-    else if (cur.kind === 'vline' && vlines) {
-      const other = vlines[1 - cur.line]
-      props.onVlines?.(Math.min(dx, other), Math.max(dx, other), true)
-    } else if (cur.kind === 'box') {
-      if (Math.abs(cur.x1 - cur.x0) < 4 || Math.abs(cur.y1 - cur.y0) < 4) return
+    else if (cur.kind === 'width') props.onPeakWidth?.(cur.peak, dx, 'end')
+    else if (cur.kind === 'vline') props.onVlines?.(Math.min(dx, cur.other), Math.max(dx, cur.other), true)
+    else if (cur.kind === 'both') {
+      const lo = cur.lo + (dx - cur.ref)
+      props.onVlines?.(Math.min(lo, lo + cur.gap), Math.max(lo, lo + cur.gap), true)
+    }
+    else if (cur.kind === 'offset') props.onOffset?.(dx, dy, true)
+    else if (cur.kind === 'box') {
+      // RectangleSelector(minspanx=5, minspany=5): smaller boxes are ignored and the tool stays on
+      if (Math.abs(cur.x1 - cur.x0) < 5 || Math.abs(cur.y1 - cur.y0) < 5) return
       const a = frame.iX(cur.x0)
       const b = frame.iX(cur.x1)
       const c = frame.iY(cur.y0)
       const d = frame.iY(cur.y1)
       props.onLimits?.({ xmin: Math.min(a, b), xmax: Math.max(a, b), ymin: Math.min(c, d), ymax: Math.max(c, d) })
-    }
+      props.onModeDone?.()
+    } else if (cur.kind === 'pan') props.onModeDone?.()
   }
 
+  // On_Mouse_Defs.on_mouse_wheel: only the selected peak's width (Fitting tab); nothing else.
   const onWheel = (e: WheelEvent<SVGSVGElement>) => {
-    const p = local(e)
-    if (!inMain(p)) return
-    const f = e.deltaY > 0 ? 1.15 : 1 / 1.15
-    if (e.shiftKey) {
-      const c = frame.iY(p.y)
-      props.onLimits?.({ ...limits, ymin: c - (c - limits.ymin) * f, ymax: c + (limits.ymax - c) * f })
-    } else {
-      const c = frame.iX(p.x)
-      props.onLimits?.({ ...limits, xmin: c - (c - limits.xmin) * f, xmax: c + (limits.xmax - c) * f })
-    }
+    if (interaction !== 'peak' || selected === null || !curves[selected]) return
+    if (!inMain(local(e))) return
+    props.onPeakWheel?.(selected, e.deltaY < 0)
   }
 
   const onContextMenu = (e: ReactMouseEvent<SVGSVGElement>) => {
     e.preventDefault()
     const p = local(e)
-    props.onContextMenu?.(e, { x: frame.iX(p.x), y: frame.iY(p.y), peak: inMain(p) ? peakAt(p) : -1 })
+    props.onContextMenu?.(e, { x: frame.iX(p.x), y: frame.iY(p.y), peak: inMain(p) ? nearSelected(p) : -1 })
   }
 
   // ------------------------------------------------------------ drawing
@@ -565,6 +616,43 @@ export function Plot(props: PlotProps) {
     if (o.yAxis !== 2) yLabel = `Intensity (CPS), residual x ${k.toFixed(2)}`
   }
 
+  // MyFrame.add_averaging_indicator_lines (BKG tab): at each red line, two red
+  // marks bracketing the Averaging Points and a grey one at their centre, on the background.
+  let averaging: ReactNode = null
+  if (interaction === 'bkg' && vlines && props.averagingPoints && xs.length) {
+    const n = Math.max(1, Math.round(props.averagingPoints))
+    const ext = 0.1 * (limits.ymax - limits.ymin)
+    const by = (i: number) => bkg[i] ?? ys[i] ?? 0
+    const nearest = (v: number) => {
+      let best = 0
+      let bd = Infinity
+      xs.forEach((x, i) => {
+        if (x !== null && Math.abs(x - v) < bd) {
+          bd = Math.abs(x - v)
+          best = i
+        }
+      })
+      return best
+    }
+    const marks: ReactNode[] = []
+    const lo = Math.min(...vlines)
+    const hi = Math.max(...vlines)
+    for (const v of vlines) {
+      const vr = Math.round(v * 100) / 100
+      const idx = nearest(vr)
+      const high = vr > lo + (hi - lo) / 2
+      const i2 = high ? Math.max(0, idx + n - 1) : Math.min(xs.length - 1, idx - n + 1)
+      const j2 = Math.max(0, Math.min(xs.length - 1, i2))
+      const c = Math.floor((idx + j2) / 2)
+      for (const [i, colour] of [[idx, 'red'], [j2, 'red'], [c, 'grey']] as const) {
+        const x = xs[i]
+        if (x === null) continue
+        marks.push(<line key={`av${marks.length}`} x1={X(x)} x2={X(x)} y1={Y(by(i) - ext)} y2={Y(by(i) + ext)} stroke={colour} strokeOpacity={0.5} strokeWidth={px(0.5)} strokeDasharray={DASH(0.5)} />)
+      }
+    }
+    averaging = <g pointerEvents="none">{marks}</g>
+  }
+
   // Selected peak: the blue × with its letter and note (add_cross_to_peak)
   let cross: ReactNode = null
   if (selected !== null && curves[selected] && peaks[selected]) {
@@ -583,7 +671,7 @@ export function Plot(props: PlotProps) {
           </text>
           {fw !== null && (
             <text x={X(p.position - fw / 2)} y={t.y - yOff} fontSize={px(8)} fill="grey" fontFamily={FONT}>
-              {[`Model: ${p.model}`, `Position: ${view.grid[selected * 2]?.[2] ?? ''} eV`, `FWHM meas.: ${fw.toFixed(3)} eV`, `Area: ${areaCell} CPS`].map((line, k) => (
+              {[`Model: ${p.model}`, `Position: ${Number(view.grid[selected * 2]?.[2] ?? 0)} eV`, `FWHM meas.: ${fw.toFixed(3)} eV`, `Area: ${areaCell} CPS`, '', '\u00BF Change width ?', 'Scroll the wheel'].map((line, k) => (
                 <tspan key={k} x={X(p.position - fw / 2)} dy={k ? px(8) * 1.2 : px(8)}>
                   {line}
                 </tspan>
@@ -795,7 +883,7 @@ export function Plot(props: PlotProps) {
     )
   }
 
-  const cursor = drag?.kind === 'peak' ? 'grabbing' : mode === 'zoom' ? 'crosshair' : mode === 'drag' ? 'move' : 'default'
+  const cursor = mode === 'zoom' ? 'crosshair' : mode === 'drag' ? 'pointer' : 'default'
   const W = size.w
   const H = size.h
 
@@ -845,7 +933,8 @@ export function Plot(props: PlotProps) {
             <path d={pathOf(xs, view.envelope, X, Y)} fill="none" stroke={PLOT_STYLE.envelopeColor} strokeOpacity={PLOT_STYLE.envelopeAlpha} strokeWidth={lw} />
           )}
           {residOnMain}
-          {vlines &&
+          {vlines && mode === 'none' && averaging}
+          {vlines && mode === 'none' &&
             vlines.map((v, k) => {
               // add_vline_text_labels: grey 10 pt in a white rounded box, high BE at 90 % of the height, low BE at 80 %
               const ty = Y(limits.ymin + (k === 1 ? 0.9 : 0.8) * (limits.ymax - limits.ymin))
@@ -909,9 +998,10 @@ export function Plot(props: PlotProps) {
               y={Math.min(drag.y0, drag.y1)}
               width={Math.abs(drag.x1 - drag.x0)}
               height={Math.abs(drag.y1 - drag.y0)}
-              fill="none"
-              stroke="black"
-              strokeDasharray="3 3"
+              fill="green"
+              fillOpacity={0.3}
+              stroke="green"
+              strokeOpacity={0.3}
             />
           )}
         </g>

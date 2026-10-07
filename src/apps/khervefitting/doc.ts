@@ -31,6 +31,8 @@ export interface DocState {
 const CHANGES = new Set([
   'settings', 'background', 'clear_background', 'add_peak', 'remove_peak', 'set_cell', 'drag_peak', 'fit', 'export',
   'results_set', 'results_delete', 'undo', 'redo',
+  'lines', 'range_fields', 'offsets', 'offsets_live', 'peak_key', 'peak_wheel', 'peak_width', 'add_peak_model', 'cross_constraint',
+  'propagate_constraint', 'propagate_fwhm_diff', 'peaks_paste',
 ])
 
 export class PyError extends Error {
