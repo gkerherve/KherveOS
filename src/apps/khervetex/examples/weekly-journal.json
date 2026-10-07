@@ -1,0 +1,569 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Weekly Journal",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "Week 21 · 19–25 May 2026",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Goals for this week",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Submit revised manuscript to Phys. Rev. B",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Finish poster abstract for ICML deadline (Friday)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Run the full benchmark suite on the new cluster nodes",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "30 min exercise at least 4 days",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Read two chapters of Tao's Analysis I",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Schedule overview",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Day",
+          "Morning",
+          "Afternoon",
+          "Evening"
+        ],
+        [
+          "Mon",
+          "Deep work: paper",
+          "Group meeting",
+          "Gym"
+        ],
+        [
+          "Tue",
+          "Deep work: paper",
+          "Seminar (Prof. N.)",
+          "Reading"
+        ],
+        [
+          "Wed",
+          "Poster abstract",
+          "Lab meeting",
+          "Free"
+        ],
+        [
+          "Thu",
+          "Benchmarks",
+          "1:1 with supervisor",
+          "Gym"
+        ],
+        [
+          "Fri",
+          "Poster abstract",
+          "ICML deadline 17:00",
+          "Dinner out"
+        ],
+        [
+          "Sat",
+          "Reading",
+          "Free",
+          "Free"
+        ],
+        [
+          "Sun",
+          "Weekly review",
+          "Meal prep",
+          "Free"
+        ]
+      ],
+      "caption": "",
+      "label": null,
+      "alignment": "llll",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Daily highlights",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Monday 19 May",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Finished the last round of revisions. Sent the manuscript to co-authors for a final read before submission. Group meeting ran long — new PhD student presented their literature review and needed feedback on scope.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Tuesday 20 May",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Co-authors signed off on the paper. Submitted to Phys. Rev. B at 15:22 — ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Goal 1 done.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Attended Prof. N.'s seminar on stochastic optimal control; good connection to our RL side-project.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Wednesday 21 May",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Drafted 80% of the poster abstract. Lab meeting feedback: need to clarify the error-bar methodology in Figure 3. Opened an issue to track that.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Thursday 22 May",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Benchmarks running on the new nodes — first results show a 1.8× speedup over the old cluster, consistent with the core-count ratio. 1:1 with supervisor: agreed to target NeurIPS for the follow-up paper.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Friday 23 May",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Polished and submitted the poster abstract at 14:30 — ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Goal 2 done.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Benchmark suite finished overnight; all 48 tests passed — ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Goal 3 done.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Celebrated with dinner at the Italian place.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Weekend",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Read chapters 4 and 5 of Tao — ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Goal 5 done.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Exercise: Mon gym, Thu gym, Sat 5 km run, Sun yoga — 4 days — ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Goal 4 done.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "End-of-week review",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Wins:",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "All five goals completed — first clean sweep in a month",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Paper submitted ahead of the internal deadline",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "New cluster benchmarks provide data for the NeurIPS intro section",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "Lessons:",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Setting a hard morning focus block works — protect it from meetings",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "The poster abstract took longer than expected; start earlier next time",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Need a reproducible figure-generation script; manual re-plotting wasted an hour",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "Carry-over to next week:",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Fix the bootstrap error-bar code (from lab meeting feedback)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Start NeurIPS paper outline",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Kitchen tap still leaking — call a plumber",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    }
+  ],
+  "meta": {
+    "title": "Weekly journal",
+    "author": "",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.0,
+    "margin_bottom_cm": 2.0,
+    "margin_left_cm": 2.0,
+    "margin_right_cm": 2.0,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

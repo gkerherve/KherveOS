@@ -1,0 +1,1216 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Welcome to KherveTeX",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A guided tour of the editor",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "What KherveTeX is",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "KherveTeX is a WYSIWYG editor that produces real LaTeX. You type the way you would in Word; the preview on the right compiles to PDF every time you stop typing. Underneath, the document is stored as a structured model — section headings, paragraphs, math, tables, figures, lists — and the serializer turns that into clean .tex you can hand to a journal, a co-author, or a git diff.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "If you have never written LaTeX directly, you will not need to. If you have, KherveTeX stays out of your way: you can import an existing .tex file, edit it visually, and export the result back to LaTeX with the structure preserved. Anything the editor does not natively understand is stored verbatim as a raw block so a round-trip never loses data.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Every save also commits to a local Git repository. Open ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "History > Show commit history…",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " to browse the whole timeline of a document and roll back to any earlier version. If the folder has a remote, KherveTeX will push to it automatically. The commits use your git config identity, so they are indistinguishable from commits you make from the command line.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Formatting basics",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Use the toolbar or the ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Format",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " menu to make text ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "bold",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "italic",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "underlined",
+          "marks": [
+            "underline"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "struck through",
+          "marks": [
+            "strikethrough"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", or ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "monospaced",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ". Subscripts (H",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "2",
+          "marks": [
+            "subscript"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": "O) and superscripts (E = mc",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "2",
+          "marks": [
+            "superscript"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ") work the same way. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Small caps",
+          "marks": [
+            "smallcaps"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " is on the format toolbar too.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Each formatting mark survives the LaTeX round-trip. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Bold",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " becomes ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\textbf{...}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", italic becomes ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\textit{...}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", code becomes ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\texttt{...}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", and so on. The serializer nests marks in a stable order so two consecutive edits do not produce different diffs for the same logical content.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Paragraph styles",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Pick a paragraph style from the dropdown to the right of the font-size combo. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Title",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Author",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Abstract",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Keywords",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " are first-class paragraph types that survive a round-trip to LaTeX and back. Headings come in five levels and each gets its own size in the editor so the document outline is obvious at a glance.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Alignment lives next to the formatting buttons. Left, center, right and full justification each emit the matching LaTeX environment (flushleft, center, flushright, or the default justified body).",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Lists",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Bulleted and numbered lists, with nested items via Tab and Shift-Tab. A few things you can do with them:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Drop a list anywhere from the toolbar or the Insert menu",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Mix marks inside list items — bold, italic, inline math, links and footnotes all work",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Nest several levels deep with Tab; bullets switch style automatically per nesting level",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Use a numbered list for a procedure and a bulleted one for an inventory",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "A short worked procedure as an ordered list:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Open the file or paste your data",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Pick the model and starting parameters",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Run the fit",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Inspect residuals and adjust",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Export the report",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Math",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Inline math like ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "E = mc^2",
+          "type": "MathInline"
+        },
+        {
+          "text": " is one keystroke away — Ctrl+M opens a small prompt and the result is rendered inline. For displayed equations press Ctrl+Shift+M, or use the equation builder palette under Insert. A famous integral, numbered and labelled so we can refer back to it:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}",
+      "numbered": true,
+      "label": "eq:gauss",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Aligned multi-line equations work too. The importer recognises ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "align",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "split",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "gather",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "multline",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " and friends; the serializer round-trips them verbatim, without re-wrapping in a useless ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "equation*",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " env. A small derivation of the quadratic formula:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\begin{align}\n  a x^2 + b x + c &= 0 \\\\\n  x^2 + \\tfrac{b}{a} x &= -\\tfrac{c}{a} \\\\\n  \\left(x + \\tfrac{b}{2a}\\right)^2 &= \\tfrac{b^2 - 4ac}{4a^2} \\\\\n  x &= \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n\\end{align}",
+      "numbered": true,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Refer back to a numbered equation with a cross-reference: see ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "eq:gauss",
+          "kind": "eqref",
+          "type": "CrossRef"
+        },
+        {
+          "text": ". The Insert > Cross-reference dialog lets you pick from any labelled section, equation, figure or table in the document.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The Symbol palette (Ctrl+Shift+G) is a clickable grid of Greek letters, operators, relations, arrows, calculus symbols and accents. Click any symbol to drop it at the cursor as inline math. Text-mode macros that would not work inside ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "$ ... $",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " get inserted as raw inline LaTeX instead.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Figures and tables",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Insert > Figure asks for a path and a caption. The image is included via ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\includegraphics",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " and renders inline in the preview. Relative paths are resolved against the document's folder, so the same figure layout works whether you compile from KherveTeX, from the command line, or from a co-author's machine.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Missing images do not break the build. They render as a labelled placeholder so you can see exactly which figure path needs fixing instead of staring at a tectonic stack trace.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "A small reference card of the most useful shortcuts:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Action",
+          "Shortcut",
+          "Menu"
+        ],
+        [
+          "Bold",
+          "Ctrl+B",
+          "Format"
+        ],
+        [
+          "Italic",
+          "Ctrl+I",
+          "Format"
+        ],
+        [
+          "Inline math",
+          "Ctrl+M",
+          "Insert"
+        ],
+        [
+          "Math block",
+          "Ctrl+Shift+M",
+          "Insert"
+        ],
+        [
+          "Symbol palette",
+          "Ctrl+Shift+G",
+          "Insert"
+        ],
+        [
+          "Equation builder",
+          "Ctrl+Shift+E",
+          "Insert"
+        ],
+        [
+          "Hyperlink",
+          "Ctrl+K",
+          "Insert"
+        ],
+        [
+          "New document",
+          "Ctrl+N",
+          "File"
+        ],
+        [
+          "New window",
+          "Ctrl+Shift+N",
+          "File"
+        ],
+        [
+          "Open in new window",
+          "Ctrl+Shift+O",
+          "File"
+        ],
+        [
+          "Save",
+          "Ctrl+S",
+          "File"
+        ]
+      ],
+      "caption": "A handful of useful shortcuts.",
+      "label": "tab:shortcuts",
+      "alignment": "lll",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Citations and links",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Drop a citation with Insert > Citation — keys go in the usual ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\cite{...}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " form: ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "knuth1984"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ". The dialog supports the three common variants — ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "cite",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "citep",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "citet",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " — so you can match whatever style your journal expects.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "External links use Insert > Hyperlink (Ctrl+K). For example, ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "url": "https://tectonic-typesetting.github.io/",
+          "children": [
+            {
+              "text": "the tectonic project",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Link"
+        },
+        {
+          "text": " (which is the LaTeX engine KherveTeX compiles with) and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "url": "https://github.com/gkerherve/KherveTeX",
+          "children": [
+            {
+              "text": "the KherveTeX repository",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Link"
+        },
+        {
+          "text": " on GitHub. Footnotes",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "children": [
+            {
+              "text": "like this one, which renders at the bottom of the page in the PDF.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Footnote"
+        },
+        {
+          "text": " sit beside the text in the editor and float to the page foot in the output.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Columns",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The three buttons next to the alignment group on the toolbar flip the whole document between 1, 2 and 3 columns. Two columns uses LaTeX's standard ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "twocolumn",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " class option; three columns wraps the body in ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\begin{multicols}{3}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " because no documentclass natively supports three columns. The choice is stored in the document and follows the file across machines.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "For a multi-column region inside an otherwise single-column document, use Insert > Multi-column region. It drops a ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "multicols",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " environment at the cursor with a small placeholder you can replace with the content that should flow across the columns.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Working with several documents",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "File > New window (Ctrl+Shift+N) opens a second, independent KherveTeX window. File > Open in new window… (Ctrl+Shift+O) opens an existing document without replacing the one you are reading. Each window has its own toolbar, its own preview and its own git state, so you can work on a paper in one window while consulting an old version of the same paper in another.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The Window menu lists every open document so you can jump between them without alt-tabbing. The check mark shows which window is currently focused. Closing the last window quits the app.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Importing and exporting",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "File > Import > .tex pulls in an existing LaTeX file (and resolves its ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\includegraphics",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " paths automatically). The importer handles most of the common subset — sections, paragraphs, lists, figures, tables, math envs, citations, references, marks — and anything it does not recognise gets preserved as a raw block so the round-trip is lossless.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "File > Import > .docx does the same for a Word document. Embedded images are extracted into a sibling folder so they end up as proper Figure blocks.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "On the way out, File > Export > .tex writes the LaTeX source and File > Export > .pdf writes the compiled PDF. Both targets are clean enough to commit straight into a paper's repository.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Where to go next",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Open the ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Examples",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " menu for a few starting templates: a math-heavy report, a two- or three-column article, a one-page letter, and a generic single-column article skeleton. Each opens in its own window so this welcome tour stays put if you want to refer back to it.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Use ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "File > New",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " (Ctrl+N) any time for a blank document, or ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "File > Open recent",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " to jump back into something you were working on. Document-wide preferences — fonts, margins, page size, line spacing — live under ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "File > Document properties",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Happy writing. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "— The KherveTeX team",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "Welcome to KherveTeX",
+    "author": "The KherveTeX team",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

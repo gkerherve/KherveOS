@@ -1,0 +1,579 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "SOLAR-CAT: Defect-engineered photocatalysts for solar hydrogen — Research Grant Proposal",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "Principal Investigator: Q. Principal · Co-Investigators: R. Coinvest, S. Partner",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Summary",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Green hydrogen from direct solar water splitting could decarbonise heavy industry, but photocatalysts remain limited to < 1 % solar-to-hydrogen (STH) efficiency. SOLAR-CAT will combine in-situ spectroscopy, machine-learned defect models and high-throughput synthesis to reach 3 % STH in a 1 m² panel within 36 months.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Objectives",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "O1 — Map the link between oxygen-vacancy density and carrier lifetime in doped SrTiO₃.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "O2 — Train a surrogate model predicting STH from synthesis parameters (target MAE < 0.2 %).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "O3 — Demonstrate a 1 m² panel with ≥ 3 % STH over 1000 h outdoor operation.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "State of the art and ambition",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The efficiency is the product of absorption, separation and surface-reaction yields:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\eta_{\\text{STH}} = \\frac{r_{\\text{H}_2}\\times\\Delta G^\\circ}{P_{\\text{sun}}\\times A} = \\eta_{\\text{abs}}\\,\\eta_{\\text{sep}}\\,\\eta_{\\text{cat}},",
+      "numbered": true,
+      "label": "eq:sth",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "with ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\Delta G^\\circ = 237\\ \\text{kJ mol}^{-1}",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Al-doped SrTiO₃ reaches near-unity quantum efficiency in the UV ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "takata2020"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": "; SOLAR-CAT extends this to visible light.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Work plan",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "WP",
+          "Title",
+          "Lead",
+          "Months",
+          "Person-months"
+        ],
+        [
+          "WP1",
+          "Synthesis \\& doping",
+          "Principal",
+          "1–24",
+          "30"
+        ],
+        [
+          "WP2",
+          "In-situ spectroscopy",
+          "Coinvest",
+          "4–30",
+          "24"
+        ],
+        [
+          "WP3",
+          "Machine-learning models",
+          "Partner",
+          "6–33",
+          "18"
+        ],
+        [
+          "WP4",
+          "Panel demonstrator",
+          "Principal",
+          "18–36",
+          "20"
+        ],
+        [
+          "WP5",
+          "Management \\& dissemination",
+          "Principal",
+          "1–36",
+          "6"
+        ]
+      ],
+      "caption": "Work packages.",
+      "label": "tab:wp",
+      "alignment": "lllcr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "rows": [
+        [
+          "WP",
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6",
+          "Q7",
+          "Q8",
+          "Q9",
+          "Q10",
+          "Q11",
+          "Q12"
+        ],
+        [
+          "WP1",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "WP2",
+          "",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "",
+          ""
+        ],
+        [
+          "WP3",
+          "",
+          "",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          ""
+        ],
+        [
+          "WP4",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■"
+        ],
+        [
+          "WP5",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■",
+          "■"
+        ]
+      ],
+      "caption": "Gantt chart (quarters).",
+      "label": "tab:gantt",
+      "alignment": "lcccccccccccc",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Milestones and deliverables",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "\\#",
+          "Milestone",
+          "Month",
+          "Verification"
+        ],
+        [
+          "M1",
+          "Library of 200 doped compositions",
+          "12",
+          "Database released"
+        ],
+        [
+          "M2",
+          "Surrogate model MAE < 0.2 \\%",
+          "24",
+          "Blind test set"
+        ],
+        [
+          "M3",
+          "1 m² panel ≥ 3 \\% STH",
+          "33",
+          "Independent certification"
+        ]
+      ],
+      "caption": "Milestones.",
+      "label": "tab:ms",
+      "alignment": "llcl",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Risk management",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Risk",
+          "Likelihood",
+          "Impact",
+          "Mitigation"
+        ],
+        [
+          "Visible absorption insufficient",
+          "Medium",
+          "High",
+          "Fallback: tandem with BiVO₄"
+        ],
+        [
+          "Model under-performs",
+          "Medium",
+          "Medium",
+          "Active learning; more DFT data"
+        ],
+        [
+          "Panel degradation",
+          "Low",
+          "High",
+          "Encapsulation study in WP4"
+        ]
+      ],
+      "caption": "Risk register.",
+      "label": "tab:risk",
+      "alignment": "lccl",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Budget",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Category",
+          "Year 1 (£k)",
+          "Year 2 (£k)",
+          "Year 3 (£k)",
+          "Total (£k)"
+        ],
+        [
+          "Staff",
+          "210",
+          "215",
+          "220",
+          "645"
+        ],
+        [
+          "Equipment",
+          "180",
+          "20",
+          "10",
+          "210"
+        ],
+        [
+          "Consumables",
+          "35",
+          "40",
+          "30",
+          "105"
+        ],
+        [
+          "Travel \\& dissemination",
+          "8",
+          "10",
+          "14",
+          "32"
+        ],
+        [
+          "Indirect (80 \\% FEC)",
+          "—",
+          "—",
+          "—",
+          "594"
+        ],
+        [
+          "Total",
+          "",
+          "",
+          "",
+          "1586"
+        ]
+      ],
+      "caption": "Budget summary.",
+      "label": "tab:budget",
+      "alignment": "lrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Impact and pathways",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Academic: open data (FAIR) and open-source models",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Industrial: partnership with a panel manufacturer for scale-up",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Societal: public engagement via a solar-fuels exhibit",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Training: 2 PDRAs and 3 PhD students",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "text": "\\begin{thebibliography}{99}\n\\bibitem{takata2020} T. Takata \\emph{et al.}, \\emph{Nature} \\textbf{581}, 411 (2020).\n\\end{thebibliography}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "Grant proposal",
+    "author": "Q. Principal",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

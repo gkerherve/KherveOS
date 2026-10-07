@@ -1,0 +1,322 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "An IEEE conference paper template",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Author, B. Coauthor",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "This template uses the IEEEtran document class, which is the standard for all IEEE publications — conferences, transactions and journals. The class enforces the familiar two-column layout with IEEE-standard fonts, spacing and heading styles. Common class options include: conference (default), journal, technote, and compsoc for Computer Society publications.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "IEEE · IEEEtran · conference · template",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "IEEE publishes over 200 journals and sponsors more than 2,000 conferences annually. The IEEEtran class is maintained by Michael Shell and available on CTAN. It handles first-page formatting, author affiliations, abstract layout, section numbering and bibliography style automatically.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Key class options you can set under Document properties:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "conference — conference proceedings (default)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "journal — IEEE transactions and journals",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "technote — IEEE technical notes",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "compsoc — IEEE Computer Society style",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "comsoc — IEEE Communications Society style",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Related work",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Position your contribution relative to the existing literature. IEEE style uses numbered citations in square brackets ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "ref1"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ". The cite package sorts and compresses them automatically, so ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\cite{a,b,c}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " renders as [1]–[3].",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "System model",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Describe the system, algorithm or architecture. IEEE papers often include block diagrams as figures and key equations inline. The standard Shannon capacity:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "C = B \\log_2\\!\\left(1 + \\frac{S}{N}\\right)",
+      "numbered": true,
+      "label": "eq:shannon",
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Experimental results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Tables in IEEE papers use the standard table environment. The class automatically sets the caption above the table in Roman numeral style.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Method",
+          "Accuracy (%)",
+          "Time (ms)"
+        ],
+        [
+          "Baseline",
+          "87.3",
+          "12"
+        ],
+        [
+          "Proposed",
+          "93.1",
+          "15"
+        ],
+        [
+          "Oracle",
+          "98.2",
+          "—"
+        ]
+      ],
+      "caption": "Comparison of methods on the benchmark dataset.",
+      "label": "tab:ieee-results",
+      "alignment": "lrr",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Summarise your contribution and outline future directions. IEEE papers typically end with an acknowledgement section (unnumbered) and a references section.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "An IEEE conference paper",
+    "author": "A. Author",
+    "documentclass": "IEEEtran",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "cite",
+      "hyperref",
+      "url"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 10,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 2,
+    "frontmatter_extras": "",
+    "preamble_extras": "% IEEE recommended packages\n\\usepackage[cmex10]{amsmath}\n\\interdisplaylinepenalty=2500",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

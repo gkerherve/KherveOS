@@ -1,0 +1,794 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "MATH 3120 — Problem Set 7",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Student — Due: 30 May 2026",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Problem 1",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Statement.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Let ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "V",
+          "type": "MathInline"
+        },
+        {
+          "text": " be a finite-dimensional inner-product space over ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\mathbb{R}",
+          "type": "MathInline"
+        },
+        {
+          "text": " and let ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "T: V \\to V",
+          "type": "MathInline"
+        },
+        {
+          "text": " be a self-adjoint linear operator. Prove that all eigenvalues of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "T",
+          "type": "MathInline"
+        },
+        {
+          "text": " are real.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Solution",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Let ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\lambda",
+          "type": "MathInline"
+        },
+        {
+          "text": " be an eigenvalue of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "T",
+          "type": "MathInline"
+        },
+        {
+          "text": " with eigenvector ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "v \\neq 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Then",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\begin{align}\n  \\lambda \\langle v, v \\rangle &= \\langle \\lambda v, v \\rangle = \\langle Tv, v \\rangle \\\\\n  &= \\langle v, Tv \\rangle = \\langle v, \\lambda v \\rangle = \\bar{\\lambda} \\langle v, v \\rangle.\n\\end{align}",
+      "numbered": true,
+      "label": "eq:selfadj",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Since ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "v \\neq 0",
+          "type": "MathInline"
+        },
+        {
+          "text": " we have ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\langle v, v \\rangle > 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ", so dividing both sides gives ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\lambda = \\bar{\\lambda}",
+          "type": "MathInline"
+        },
+        {
+          "text": ", i.e. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\lambda \\in \\mathbb{R}",
+          "type": "MathInline"
+        },
+        {
+          "text": ". ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\square",
+          "type": "MathInline"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Problem 2",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Statement.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Evaluate the integral",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "I = \\int_0^{\\infty} \\frac{\\sin x}{x} \\, dx.",
+      "numbered": true,
+      "label": "eq:sinc",
+      "type": "MathBlock"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Solution",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Consider the Laplace-transform trick. Define",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "F(s) = \\int_0^{\\infty} \\frac{e^{-sx} \\sin x}{x}\\, dx, \\qquad s > 0.",
+      "numbered": true,
+      "label": "eq:laplace",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Differentiating under the integral sign:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\begin{align}\n  F'(s) &= -\\int_0^{\\infty} e^{-sx} \\sin x \\, dx = -\\frac{1}{s^2 + 1}.\n\\end{align}",
+      "numbered": true,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Integrating: ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "F(s) = C - \\arctan s",
+          "type": "MathInline"
+        },
+        {
+          "text": ". As ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "s \\to \\infty",
+          "type": "MathInline"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "F(s) \\to 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ", so ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "C = \\pi/2",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Therefore",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "I = \\lim_{s \\to 0^+} F(s) = \\frac{\\pi}{2} - 0 = \\frac{\\pi}{2}.",
+      "numbered": true,
+      "label": "eq:sinc-result",
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Problem 3",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Statement.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Find all groups of order 6, up to isomorphism.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Solution",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Let ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "G",
+          "type": "MathInline"
+        },
+        {
+          "text": " be a group with ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "|G| = 6 = 2 \\cdot 3",
+          "type": "MathInline"
+        },
+        {
+          "text": ". By Cauchy's theorem, ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "G",
+          "type": "MathInline"
+        },
+        {
+          "text": " contains elements of order 2 and 3.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Case 1: ",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "latex": "G",
+          "type": "MathInline"
+        },
+        {
+          "text": " is abelian.",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Then by the fundamental theorem of finitely generated abelian groups, ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "G \\cong \\mathbb{Z}/6\\mathbb{Z}",
+          "type": "MathInline"
+        },
+        {
+          "text": ", which is cyclic.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Case 2: ",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "latex": "G",
+          "type": "MathInline"
+        },
+        {
+          "text": " is non-abelian.",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " By Sylow's theorem, the number of Sylow 3-subgroups divides 2 and is ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\equiv 1 \\pmod{3}",
+          "type": "MathInline"
+        },
+        {
+          "text": ", so there is exactly one Sylow 3-subgroup ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "N \\cong \\mathbb{Z}/3\\mathbb{Z}",
+          "type": "MathInline"
+        },
+        {
+          "text": ", which is therefore normal. Let ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "t",
+          "type": "MathInline"
+        },
+        {
+          "text": " have order 2. Then ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "G = N \\rtimes \\langle t \\rangle",
+          "type": "MathInline"
+        },
+        {
+          "text": " where ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "t",
+          "type": "MathInline"
+        },
+        {
+          "text": " acts on ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "N",
+          "type": "MathInline"
+        },
+        {
+          "text": " by inversion. This is precisely ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "S_3",
+          "type": "MathInline"
+        },
+        {
+          "text": ", the symmetric group on three letters.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Therefore the only groups of order 6 are ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\mathbb{Z}/6\\mathbb{Z}",
+          "type": "MathInline"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "S_3",
+          "type": "MathInline"
+        },
+        {
+          "text": ". ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\square",
+          "type": "MathInline"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Problem 4",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Statement.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Let ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f: [0,1] \\to \\mathbb{R}",
+          "type": "MathInline"
+        },
+        {
+          "text": " be continuous and suppose ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\int_0^1 f(x) x^n \\, dx = 0",
+          "type": "MathInline"
+        },
+        {
+          "text": " for all ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "n \\geq 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Show that ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f \\equiv 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Solution",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "By the Weierstrass approximation theorem, for every ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\epsilon > 0",
+          "type": "MathInline"
+        },
+        {
+          "text": " there exists a polynomial ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "p",
+          "type": "MathInline"
+        },
+        {
+          "text": " such that ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\|f - p\\|_\\infty < \\epsilon",
+          "type": "MathInline"
+        },
+        {
+          "text": ". By linearity of the integral and the hypothesis, ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\int_0^1 f(x) p(x) \\, dx = 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Therefore",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\begin{align}\n  \\int_0^1 f(x)^2 \\, dx &= \\int_0^1 f(x)(f(x) - p(x)) \\, dx \\\\\n  &\\leq \\|f\\|_\\infty \\cdot \\epsilon.\n\\end{align}",
+      "numbered": true,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Since ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\epsilon",
+          "type": "MathInline"
+        },
+        {
+          "text": " is arbitrary, ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\int_0^1 f(x)^2 \\, dx = 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Because ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f",
+          "type": "MathInline"
+        },
+        {
+          "text": " is continuous and non-negative under the square, this forces ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f \\equiv 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ". ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\square",
+          "type": "MathInline"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "Problem set",
+    "author": "A. Student",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

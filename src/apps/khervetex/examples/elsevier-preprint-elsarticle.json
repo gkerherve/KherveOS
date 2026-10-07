@@ -1,0 +1,518 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "A preprint submitted to an Elsevier journal",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Author, B. Coauthor",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "This template follows the elsarticle class used by all Elsevier journals. The preprint option gives a single-column, double-spaced layout suitable for initial submission. Line numbers are enabled via the lineno package so reviewers can reference specific lines in their feedback. Once the paper is accepted, switch the document class to elsarticle with a final option (1p, 3p, or 5p) under File > Document properties to match the journal's production layout.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "elsarticle · preprint · Elsevier · template",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Elsevier publishes over 2,500 journals spanning the sciences, engineering, medicine and social sciences. The ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "elsarticle",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " document class is the standard submission format for all of them. It supports several layout modes, selectable as options to ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\documentclass",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ":",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "preprint — single-column, double-spaced (the default here)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "review — single-column with line numbers",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "1p — single-column, final typeset",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "3p — single-column, final typeset with tighter spacing",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "5p — two-column, final typeset (typical for camera-ready)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "You set the target journal name with the ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\journal{...}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " command in the preamble (already filled in above). This name appears in the running headers of the compiled PDF.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Front matter",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The elsarticle class wraps title, authors, abstract and keywords in a ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\begin{frontmatter}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " environment. KherveTeX handles this automatically — just fill in the Title, Author, Abstract and Keywords paragraphs as you would in any document.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "For advanced author metadata (multiple affiliations, corresponding-author markers, e-mail addresses), import an existing .tex and the extra ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\author[opts]{...}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " / ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\ead{...}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " commands are preserved verbatim in the document settings.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Citations",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Elsevier journals use ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "natbib",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " for citation management. The three standard commands are ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\cite{key}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " (numeric), ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\citep{key}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " (parenthetical) and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\citet{key}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " (textual). KherveTeX's Insert > Citation dialog lets you choose the style per citation.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "A bibliography file (.bib) is specified in the preamble with ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\bibliographystyle{elsarticle-num}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\bibliography{refs}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ". Common Elsevier bibliography styles:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "elsarticle-num — numbered, e.g. [1]",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "elsarticle-num-names — numbered with full author names",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "elsarticle-harv — author–year, Harvard style",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Equations and figures",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "All standard LaTeX math works unchanged. Numbered equations get sequential labels that the journal typesetters preserve:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}",
+      "numbered": true,
+      "label": "eq:gauss-law",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Figures use the standard ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "figure",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " environment with ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\includegraphics",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ". Elsevier's production workflow expects figures as separate files (EPS, PDF, or high-resolution PNG/TIFF), placed via ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\includegraphics",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " with explicit widths.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Replace this placeholder content with your own. The document class, packages and preamble are already configured for Elsevier submission — just write, compile, and export.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "A preprint submitted to an Elsevier journal",
+    "author": "A. Author",
+    "documentclass": "elsarticle",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "natbib",
+      "hyperref",
+      "lineno"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 2.0,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\journal{Journal Name Here}\n\\linenumbers",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

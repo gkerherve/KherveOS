@@ -1,0 +1,662 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Oxygen vacancies and Ti³⁺ states in reduced anatase TiO₂ thin films probed by X-ray photoelectron spectroscopy",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Surface¹, B. Vacuum¹, C. Synchrotron² — ¹Department of Materials, ²Diamond Light Source",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "Anatase TiO₂ films grown by atomic layer deposition were annealed in ultra-high vacuum between 300 and 700 °C and analysed in situ by monochromated Al Kα XPS. Peak fitting of the Ti 2p region with spin–orbit-constrained doublets on a Shirley background resolves a Ti³⁺ component shifted by −1.7 eV from Ti⁴⁺, whose fraction rises from 2 % to 14 % with annealing temperature. The O 1s spectra show a concurrent growth of a hydroxyl / defect component at 531.3 eV. An Arrhenius analysis yields an apparent activation energy of 0.62 ± 0.05 eV for vacancy formation.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "XPS · TiO₂ · oxygen vacancies · peak fitting · Shirley background",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Titanium dioxide is the archetypal photocatalyst, and its activity is governed to a large extent by point defects at the surface ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "diebold2003"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ". Removal of lattice oxygen leaves two excess electrons that localise on neighbouring Ti sites, producing Ti³⁺ centres with a characteristic chemical shift in the Ti 2p spectrum ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "biesinger2010"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ". Quantifying that component reliably requires a physically constrained fit; in this work we describe a protocol and apply it to a temperature series.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Experimental",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Sample preparation",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Films of nominal thickness 30 nm were grown on Si(100) by thermal ALD from TiCl₄ and H₂O at 250 °C (600 cycles) and crystallised to anatase by a 1 h anneal in air at 450 °C, confirmed by Raman (144 cm⁻¹ E_g mode).",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "XPS acquisition",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Monochromated Al Kα (hν = 1486.6 eV), 400 µm spot",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Pass energy 20 eV for core levels, 150 eV for surveys",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Charge neutraliser on; energy scale referenced to adventitious C 1s at 284.8 eV",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Base pressure < 5 × 10⁻¹⁰ mbar during acquisition",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Peak fitting",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Each component was modelled with a pseudo-Voigt line shape, a Gaussian–Lorentzian product with mixing parameter ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\eta",
+          "type": "MathInline"
+        },
+        {
+          "text": ":",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "I(E) = A\\left[\\eta\\,\\frac{1}{1+4\\left(\\frac{E-E_0}{\\beta}\\right)^2} + (1-\\eta)\\,\\exp\\!\\left(-4\\ln 2\\left(\\frac{E-E_0}{\\beta}\\right)^2\\right)\\right]",
+      "numbered": true,
+      "label": "eq:pv",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "The inelastic background was removed with the iterative Shirley algorithm ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "shirley1972"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ", in which the background at energy ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "E",
+          "type": "MathInline"
+        },
+        {
+          "text": " is proportional to the integrated peak area at lower binding energy:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "B(E) = B_{\\text{low}} + (B_{\\text{high}}-B_{\\text{low}})\\,\\frac{\\int_{E}^{E_{\\text{high}}} [I(E')-B(E')]\\,dE'}{\\int_{E_{\\text{low}}}^{E_{\\text{high}}} [I(E')-B(E')]\\,dE'}.",
+      "numbered": true,
+      "label": "eq:shirley",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "For the Ti 2p doublet the 2p₁/₂ component was tied to 2p₃/₂ with a spin–orbit splitting of 5.72 eV and an area ratio fixed at the degeneracy ratio",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\frac{A(2p_{1/2})}{A(2p_{3/2})} = \\frac{2j_{1/2}+1}{2j_{3/2}+1} = \\frac{1}{2}.",
+      "numbered": true,
+      "label": "eq:ratio",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Atomic concentrations follow from the fitted areas and the Scofield relative sensitivity factors ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "S_i",
+          "type": "MathInline"
+        },
+        {
+          "text": ":",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "x_i = \\frac{A_i / S_i}{\\sum_j A_j / S_j}.",
+      "numbered": true,
+      "label": "eq:quant",
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Table ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "tab:ti2p",
+          "kind": "ref",
+          "type": "CrossRef"
+        },
+        {
+          "text": " lists the fitted Ti 2p₃/₂ parameters. The Ti⁴⁺ position is stable to within 0.05 eV across the series, confirming that charge referencing is not responsible for the apparent new component.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Anneal (°C)",
+          "Ti⁴⁺ BE (eV)",
+          "Ti³⁺ BE (eV)",
+          "FWHM Ti⁴⁺ (eV)",
+          "Ti³⁺ fraction (\\%)"
+        ],
+        [
+          "as-grown",
+          "458.72",
+          "—",
+          "0.98",
+          "< 1"
+        ],
+        [
+          "300",
+          "458.70",
+          "457.02",
+          "0.99",
+          "2.1"
+        ],
+        [
+          "400",
+          "458.69",
+          "457.00",
+          "1.01",
+          "4.8"
+        ],
+        [
+          "500",
+          "458.68",
+          "456.98",
+          "1.03",
+          "7.9"
+        ],
+        [
+          "600",
+          "458.66",
+          "456.97",
+          "1.06",
+          "11.2"
+        ],
+        [
+          "700",
+          "458.65",
+          "456.95",
+          "1.09",
+          "14.0"
+        ]
+      ],
+      "caption": "Ti 2p₃/₂ fit results (Shirley background, pseudo-Voigt, η = 0.3).",
+      "label": "tab:ti2p",
+      "alignment": "lrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "The O 1s envelope requires three components: lattice O²⁻ at 530.0 eV, OH / O-vacancy-adjacent at 531.3 eV and adsorbed H₂O at 532.6 eV (Table ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "tab:o1s",
+          "kind": "ref",
+          "type": "CrossRef"
+        },
+        {
+          "text": ").",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Component",
+          "BE (eV)",
+          "FWHM (eV)",
+          "Area 300 °C (\\%)",
+          "Area 700 °C (\\%)"
+        ],
+        [
+          "O–Ti (lattice)",
+          "530.0",
+          "1.10",
+          "88.5",
+          "79.2"
+        ],
+        [
+          "OH / defect",
+          "531.3",
+          "1.45",
+          "9.1",
+          "18.3"
+        ],
+        [
+          "H₂O (ads.)",
+          "532.6",
+          "1.60",
+          "2.4",
+          "2.5"
+        ]
+      ],
+      "caption": "O 1s component analysis.",
+      "label": "tab:o1s",
+      "alignment": "lrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Discussion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Assuming the Ti³⁺ fraction is proportional to the equilibrium vacancy concentration, an Arrhenius plot of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\ln x_{\\mathrm{Ti^{3+}}}",
+          "type": "MathInline"
+        },
+        {
+          "text": " against ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "1/T",
+          "type": "MathInline"
+        },
+        {
+          "text": " is linear (",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "R^2 = 0.991",
+          "type": "MathInline"
+        },
+        {
+          "text": ") with slope",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\frac{d\\ln x}{d(1/T)} = -\\frac{E_a}{k_B}\\quad\\Rightarrow\\quad E_a = 0.62 \\pm 0.05\\ \\text{eV}.",
+      "numbered": true,
+      "label": "eq:arrhenius",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "This value is smaller than the bulk vacancy formation energy predicted by hybrid DFT (≈ 4 eV), as expected for a surface process assisted by the reducing UHV environment and by the entropy of released O₂.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The information depth of the measurement, taken as three inelastic mean free paths, is",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "d = 3\\lambda\\cos\\theta \\approx 3 \\times 2.1\\ \\text{nm} \\times \\cos 0^\\circ \\approx 6\\ \\text{nm},",
+      "numbered": true,
+      "label": "eq:depth",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "so the Ti³⁺ signal originates from the outermost ~20 atomic layers. Angle-resolved measurements would discriminate surface from sub-surface vacancies.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusions",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "A constrained Ti 2p fit reliably separates Ti³⁺ at −1.7 eV from Ti⁴⁺.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Ti³⁺ fraction rises monotonically to 14 % at 700 °C.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Vacancy formation has an apparent activation energy of 0.62 eV.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Acknowledgements",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We thank the Diamond Light Source for beamtime (proposal SI00000) and the EPSRC for funding.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{thebibliography}{99}\n\\bibitem{diebold2003} U. Diebold, \\emph{Surf. Sci. Rep.} \\textbf{48}, 53 (2003).\n\\bibitem{biesinger2010} M. C. Biesinger \\emph{et al.}, \\emph{Appl. Surf. Sci.} \\textbf{257}, 887 (2010).\n\\bibitem{shirley1972} D. A. Shirley, \\emph{Phys. Rev. B} \\textbf{5}, 4709 (1972).\n\\end{thebibliography}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "XPS of TiO2 thin films",
+    "author": "A. Surface",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

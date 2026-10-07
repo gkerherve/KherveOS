@@ -1,0 +1,280 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "TECHNICAL MEMO",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "center",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "To:",
+          "Engineering team"
+        ],
+        [
+          "From:",
+          "J. Author, Systems lead"
+        ],
+        [
+          "Date:",
+          "20 May 2026"
+        ],
+        [
+          "Subject:",
+          "Migration from PostgreSQL 14 to 16"
+        ]
+      ],
+      "caption": "",
+      "label": null,
+      "alignment": "ll",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "text": "\\noindent\\rule{\\textwidth}{0.4pt}",
+      "type": "RawLatex"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Summary",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We propose migrating the production database from PostgreSQL 14 to PostgreSQL 16 during the next maintenance window (7–8 June 2026). The upgrade brings logical-replication improvements that unblock the event-sourcing work planned for Q3, and addresses three CVEs in the current version.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Background",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "PostgreSQL 14 reached community end-of-life in November 2025. While our managed-service provider still ships security patches, several extensions we depend on (pg_partman, pgvector) have dropped CI testing against version 14. Staying on it increases our surface area for compatibility regressions.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Proposal",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Spin up a PG 16 replica using pg_upgrade on the staging cluster this week.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Run the full regression-test suite against staging for two weeks (24 May – 6 June).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Execute the cutover on the production primary during the 7 June maintenance window using pg_basebackup.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Keep the PG 14 standby alive for 48 hours as a rollback target.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Decommission the old cluster once sign-off is received from the on-call rotation.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Risks",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Risk",
+          "Likelihood",
+          "Mitigation"
+        ],
+        [
+          "Extension incompatibility",
+          "Low",
+          "Pre-tested in staging"
+        ],
+        [
+          "Replication lag during cutover",
+          "Medium",
+          "Schedule during low-traffic window"
+        ],
+        [
+          "Rollback needed after 48 h",
+          "Very low",
+          "WAL archiving to S3"
+        ]
+      ],
+      "caption": "Risk assessment for the migration.",
+      "label": "tab:risks",
+      "alignment": "llp{6cm}",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Decision requested",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Please confirm by 28 May whether the 7 June window is acceptable, or suggest an alternative date. If there are no objections by that date we will proceed as described above.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "",
+    "author": "",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 3.0,
+    "margin_right_cm": 3.0,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

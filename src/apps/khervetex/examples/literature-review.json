@@ -1,0 +1,516 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Machine learning for materials discovery: a literature review",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Researcher — Department of Materials Science",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "This review surveys the application of machine-learning techniques to the discovery and design of novel materials, covering work published between 2018 and 2026. We organise the literature into three themes: property prediction, generative design, and active learning for experimental guidance. For each theme we identify the dominant methods, the benchmark datasets, and the principal open challenges.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "machine learning · materials science · property prediction · generative models · active learning",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The intersection of machine learning and materials science has grown rapidly over the past decade. Early work focused on supervised learning for property prediction ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "ward2016",
+            "xie2018"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ", but the field has since broadened to encompass generative models that propose new compositions ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "noh2019",
+            "dan2020"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": " and active-learning frameworks that guide expensive experiments toward the most informative measurements ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "lookman2019"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The goal of this review is to provide a structured overview of these three threads and to identify gaps where future research is most needed. We restrict ourselves to inorganic crystalline materials; organic and polymer systems are covered elsewhere ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "butler2018"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Property prediction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The most mature sub-field uses supervised learning to map material descriptors to target properties. Early models relied on hand-crafted feature vectors ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "ward2016"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ", whereas more recent approaches learn representations directly from crystal graphs ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "xie2018",
+            "chen2019"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Graph neural networks (GNNs) have emerged as the dominant architecture. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "xie2018"
+          ],
+          "style": "citet",
+          "type": "Citation"
+        },
+        {
+          "text": " introduced the Crystal Graph Convolutional Neural Network (CGCNN), achieving mean absolute errors below 0.05 eV/atom for formation energy on the Materials Project dataset. Subsequent work by ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "chen2019"
+          ],
+          "style": "citet",
+          "type": "Citation"
+        },
+        {
+          "text": " extended this with multi-edge interactions, reaching state-of-the-art accuracy on 7 of 10 benchmark tasks.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Despite these advances, two limitations persist. First, most models are trained on DFT-computed properties, which themselves carry systematic errors relative to experiment. Second, extrapolation to chemistries outside the training distribution remains unreliable ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "bartel2020"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Generative design",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Generative models aim to propose novel materials that optimise one or more target properties. Variational autoencoders (VAEs) were among the first architectures applied ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "noh2019"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ", followed by generative adversarial networks ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "dan2020"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": " and, more recently, diffusion models ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "xie2022"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "A central challenge is ensuring that generated structures are synthesisable. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "dan2020"
+          ],
+          "style": "citet",
+          "type": "Citation"
+        },
+        {
+          "text": " addressed this by conditioning the generator on stability criteria from the convex hull. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "xie2022"
+          ],
+          "style": "citet",
+          "type": "Citation"
+        },
+        {
+          "text": " took a different approach, training a denoising diffusion model on relaxed DFT structures so that the generated samples are already near local energy minima.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Active learning",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Active learning closes the loop between prediction and experiment by selecting the next measurement to maximise information gain. ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "lookman2019"
+          ],
+          "style": "citet",
+          "type": "Citation"
+        },
+        {
+          "text": " demonstrated this for shape-memory alloys, reducing the number of experiments needed to find a target composition by a factor of three compared to grid search.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Bayesian optimisation is the dominant framework, typically using a Gaussian process surrogate ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "frazier2018"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ". Recent work has explored multi-fidelity acquisition functions that mix cheap DFT evaluations with expensive experimental measurements, further reducing the total cost of exploration ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "palizhati2022"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Open challenges",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Data scarcity for experimental (as opposed to computed) properties remains a bottleneck.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Uncertainty quantification in deep-learning models is still rudimentary compared to Gaussian processes.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Multi-objective optimisation — balancing stability, cost, toxicity and performance — is under-explored.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Reproducibility: few papers release both code and data sufficient to replicate results end-to-end.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Machine learning has already accelerated several stages of the materials-discovery pipeline, from screening candidates to guiding synthesis. The most impactful next step is likely the integration of these tools into closed-loop autonomous laboratories where data generation, model updating and decision-making happen without human intervention.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "Literature review",
+    "author": "A. Researcher",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "natbib",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 12,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.5,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

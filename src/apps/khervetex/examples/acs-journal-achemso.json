@@ -1,0 +1,356 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "An ACS journal article template",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Author, B. Coauthor",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "This template uses the achemso class for submissions to American Chemical Society journals — JACS, Nano Letters, ACS Nano, Journal of Physical Chemistry and many others. The class handles ACS-specific formatting: structured abstracts (for some journals), author affiliations with superscript markers, and ACS citation style.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "achemso · ACS · chemistry · JACS · template",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The achemso class is maintained on CTAN and mirrors the ACS submission guidelines. It automatically loads natbib and sets the bibliography style to match the target journal. Common target journals can be set in the preamble with ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\journal{abbreviation}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Some frequently used ACS journal codes:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "jacsat — Journal of the American Chemical Society",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "jpcafh — Journal of Physical Chemistry A",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "nalefd — Nano Letters",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "ancham — Analytical Chemistry",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "achre4 — Accounts of Chemical Research",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "langd5 — Langmuir",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Experimental section",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "ACS papers place detailed experimental procedures in this section. Chemical formulae can be typeset inline using the chemformula package: ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\ch{H2O}",
+          "type": "MathInline"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\ch{CO2}",
+          "type": "MathInline"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\ch{NaCl}",
+          "type": "MathInline"
+        },
+        {
+          "text": ". For reaction schemes, use the ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\ch{}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " command:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\ch{2 H2 + O2 -> 2 H2O}",
+      "numbered": false,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Thermodynamic quantities follow ACS conventions:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\Delta G^\\circ = \\Delta H^\\circ - T \\Delta S^\\circ",
+      "numbered": true,
+      "label": "eq:gibbs",
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results and discussion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "ACS journals often combine results and discussion. Quantitative data are best presented in tables:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Compound",
+          "Yield (%)",
+          "m.p. (°C)",
+          "Purity (%)"
+        ],
+        [
+          "1a",
+          "87",
+          "142–144",
+          "99.2"
+        ],
+        [
+          "1b",
+          "72",
+          "156–158",
+          "98.7"
+        ],
+        [
+          "1c",
+          "91",
+          "131–133",
+          "99.5"
+        ]
+      ],
+      "caption": "Synthesis results for compounds 1a–1c.",
+      "label": "tab:synthesis",
+      "alignment": "lrrr",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Summarise the key chemical findings and their significance. Replace this template content with your manuscript.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "An ACS journal article",
+    "author": "A. Author",
+    "documentclass": "achemso",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "natbib",
+      "hyperref",
+      "chemformula"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 12,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "% Set the target journal abbreviation:\n% \\journal{jacsat}  % J. Am. Chem. Soc.\n% \\journal{jpcafh}  % J. Phys. Chem. A\n% \\journal{nalefd}  % Nano Letters\n% \\journal{ancham}  % Anal. Chem.",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

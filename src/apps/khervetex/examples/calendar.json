@@ -1,0 +1,37 @@
+{
+  "children": [
+    {
+      "text": "\\setlength{\\parskip}{0pt}\n\\setstretch{1.0}\n\\begin{center}\n{\\LARGE\\bfseries OCTOBER}\\\\[1pt]{\\large 2026}\n\\end{center}\n\\vspace{-2pt}\n\\noindent\\makebox[\\textwidth]{%\n\\begin{tabular}{|p{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth\\relax}|p{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth\\relax}|p{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth\\relax}|p{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth\\relax}|p{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth\\relax}|p{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth\\relax}|p{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth\\relax}|}\n\\hline\n\\centering\\textsc{Monday} & \\centering\\textsc{Tuesday} & \\centering\\textsc{Wednesday} & \\centering\\textsc{Thursday} & \\centering\\textsc{Friday} & \\centering\\textsc{Saturday} & \\centering\\arraybackslash\\textsc{Sunday} \\\\\n\\hline\n\\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\mbox{}} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\mbox{}} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\mbox{}} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{1}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{2}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{3}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{4}\\par} \\\\\n\\hline\n\\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{5}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{6}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{7}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{8}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{9}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{10}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{11}\\par} \\\\\n\\hline\n\\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{12}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{13}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{14}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{15}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{16}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{17}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{18}\\par} \\\\\n\\hline\n\\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{19}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{20}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{21}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{22}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{23}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{24}\\par} & \\parbox[t][4.7cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{25}\\par} \\\\\n\\hline\n\\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{26}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{27}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{28}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{29}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{30}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\raggedleft\\footnotesize\\textbf{31}\\par} & \\parbox[t][2.35cm][t]{\\dimexpr\\textwidth/7-2\\tabcolsep-\\arrayrulewidth-2\\fboxsep\\relax}{\\mbox{}} \\\\\n\\hline\n\\end{tabular}}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "",
+    "author": "",
+    "documentclass": "article",
+    "class_options": "landscape",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 0.5,
+    "margin_bottom_cm": 0.5,
+    "margin_left_cm": 0.5,
+    "margin_right_cm": 0.5,
+    "body_font_pt": 10,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.0,
+    "paragraph_indent": true,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\geometry{landscape}",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

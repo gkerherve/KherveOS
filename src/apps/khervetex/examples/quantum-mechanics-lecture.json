@@ -1,0 +1,521 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Time-independent perturbation theory and the anharmonic oscillator",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "K. Dirac — Advanced Quantum Mechanics, Lecture 7",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Setting up the problem",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We seek eigenstates of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "H = H_0 + \\lambda V",
+          "type": "MathInline"
+        },
+        {
+          "text": " where the spectrum of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "H_0",
+          "type": "MathInline"
+        },
+        {
+          "text": " is known, ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "H_0|n^{(0)}\\rangle = E_n^{(0)}|n^{(0)}\\rangle",
+          "type": "MathInline"
+        },
+        {
+          "text": ", and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\lambda",
+          "type": "MathInline"
+        },
+        {
+          "text": " is small. Expanding",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "E_n = E_n^{(0)} + \\lambda E_n^{(1)} + \\lambda^2 E_n^{(2)} + \\cdots,\\qquad |n\\rangle = |n^{(0)}\\rangle + \\lambda|n^{(1)}\\rangle + \\cdots",
+      "numbered": true,
+      "label": "eq:expand",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "and collecting powers of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\lambda",
+          "type": "MathInline"
+        },
+        {
+          "text": " gives",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "E_n^{(1)} = \\langle n^{(0)}|V|n^{(0)}\\rangle,",
+      "numbered": true,
+      "label": "eq:e1",
+      "type": "MathBlock"
+    },
+    {
+      "latex": "E_n^{(2)} = \\sum_{m\\neq n}\\frac{|\\langle m^{(0)}|V|n^{(0)}\\rangle|^2}{E_n^{(0)}-E_m^{(0)}}.",
+      "numbered": true,
+      "label": "eq:e2",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Note that ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "eq:e2",
+          "kind": "eqref",
+          "type": "CrossRef"
+        },
+        {
+          "text": " is always negative for the ground state: second-order corrections push the lowest level down.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "The quartic oscillator",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Take ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "H_0 = \\hbar\\omega(a^\\dagger a + \\tfrac12)",
+          "type": "MathInline"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "V = x^4",
+          "type": "MathInline"
+        },
+        {
+          "text": " with ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "x = \\sqrt{\\hbar/2m\\omega}\\,(a + a^\\dagger)",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Using ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a|n\\rangle = \\sqrt n|n-1\\rangle",
+          "type": "MathInline"
+        },
+        {
+          "text": " one finds",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\langle n|(a+a^\\dagger)^4|n\\rangle = 6n^2 + 6n + 3,",
+      "numbered": true,
+      "label": "eq:x4",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "so the first-order shift is",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "E_n^{(1)} = \\frac{3\\hbar^2}{4m^2\\omega^2}\\left(2n^2 + 2n + 1\\right).",
+      "numbered": true,
+      "label": "eq:shift",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "The non-zero off-diagonal elements connect ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "n",
+          "type": "MathInline"
+        },
+        {
+          "text": " to ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "n\\pm2",
+          "type": "MathInline"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "n\\pm4",
+          "type": "MathInline"
+        },
+        {
+          "text": ". For the ground state the second-order result is",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "E_0 = \\frac{\\hbar\\omega}{2} + \\frac{3\\lambda\\hbar^2}{4m^2\\omega^2} - \\frac{21\\lambda^2\\hbar^3}{8m^4\\omega^5} + \\mathcal O(\\lambda^3).",
+      "numbered": true,
+      "label": "eq:e0",
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Degenerate case",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "If ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "E^{(0)}",
+          "type": "MathInline"
+        },
+        {
+          "text": " is ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "g",
+          "type": "MathInline"
+        },
+        {
+          "text": "-fold degenerate, diagonalise ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "V",
+          "type": "MathInline"
+        },
+        {
+          "text": " within the degenerate subspace:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\det\\left[\\langle n_i^{(0)}|V|n_j^{(0)}\\rangle - E^{(1)}\\delta_{ij}\\right] = 0.",
+      "numbered": true,
+      "label": "eq:secular",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "The linear Stark effect in hydrogen ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "n = 2",
+          "type": "MathInline"
+        },
+        {
+          "text": " is the classic example: the field mixes ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "2s",
+          "type": "MathInline"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "2p_0",
+          "type": "MathInline"
+        },
+        {
+          "text": ", splitting them by ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\pm 3 e a_0 \\mathcal E",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Validity",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The series is asymptotic, not convergent — Dyson's argument ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "dyson1952"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": " shows that for ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\lambda < 0",
+          "type": "MathInline"
+        },
+        {
+          "text": " the potential is unbounded below, so ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "E(\\lambda)",
+          "type": "MathInline"
+        },
+        {
+          "text": " cannot be analytic at ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\lambda = 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Optimal truncation is at the smallest term.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Problems",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Compute the first-order shift for V = x³. Why does it vanish?",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Derive the second-order shift for V = x³ and compare with the exact result for V = κx.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Apply degenerate perturbation theory to a 2D isotropic oscillator perturbed by λxy.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "text": "\\begin{thebibliography}{99}\n\\bibitem{dyson1952} F. J. Dyson, \\emph{Phys. Rev.} \\textbf{85}, 631 (1952).\n\\end{thebibliography}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "Perturbation theory",
+    "author": "K. Dirac",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

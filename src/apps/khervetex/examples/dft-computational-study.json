@@ -1,0 +1,456 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "A density-functional study of CO adsorption on Pt(111): site preference, dispersion and the “CO/Pt puzzle”",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "F. Kohn, G. Sham",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "We revisit the long-standing discrepancy between DFT and experiment for CO on Pt(111), where generalised-gradient functionals wrongly favour the fcc hollow over the observed atop site. Using plane-wave calculations with PBE, RPBE, BEEF-vdW and the hybrid HSE06 we show that the site ordering is controlled by the position of the CO 2π* level, and that HSE06 restores the experimental preference by 0.09 eV.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "DFT · adsorption · Pt(111) · CO · hybrid functionals",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Kohn–Sham density-functional theory ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "kohn1965"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": " is the workhorse of surface chemistry, yet the simple case of CO on Pt(111) remains a known failure ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "feibelman2001"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Computational details",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The Kohn–Sham equations",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\left[-\\frac{\\hbar^2}{2m}\\nabla^2 + v_{\\text{ext}}(\\mathbf r) + v_{\\text H}[n](\\mathbf r) + v_{\\text{xc}}[n](\\mathbf r)\\right]\\psi_i(\\mathbf r) = \\varepsilon_i\\,\\psi_i(\\mathbf r)",
+      "numbered": true,
+      "label": "eq:ks",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "were solved self-consistently with the density ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "n(\\mathbf r) = \\sum_i^{\\text{occ}} |\\psi_i(\\mathbf r)|^2",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Adsorption energies are defined as",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "E_{\\text{ads}} = E_{\\text{CO/Pt}} - E_{\\text{Pt}} - E_{\\text{CO(g)}},",
+      "numbered": true,
+      "label": "eq:eads",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "so that negative values denote exothermic binding.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Code: plane-wave PAW, cutoff 450 eV",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Slab: 4-layer p(2×2) Pt(111), bottom two layers fixed, 15 Å vacuum, dipole correction",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "k-points: 8×8×1 Monkhorst–Pack, Methfessel–Paxton smearing 0.1 eV",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Forces converged to 0.02 eV/Å",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Convergence",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Cutoff (eV)",
+          "k-mesh",
+          "E(ads), atop (eV)",
+          "Δ (meV)"
+        ],
+        [
+          "350",
+          "6×6×1",
+          "−1.612",
+          "31"
+        ],
+        [
+          "400",
+          "6×6×1",
+          "−1.628",
+          "15"
+        ],
+        [
+          "450",
+          "8×8×1",
+          "−1.641",
+          "2"
+        ],
+        [
+          "500",
+          "10×10×1",
+          "−1.643",
+          "—"
+        ]
+      ],
+      "caption": "Convergence of the atop adsorption energy (PBE).",
+      "label": "tab:conv",
+      "alignment": "llrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Functional",
+          "atop",
+          "bridge",
+          "hcp",
+          "fcc",
+          "E(fcc) − E(atop)"
+        ],
+        [
+          "PBE",
+          "−1.64",
+          "−1.72",
+          "−1.78",
+          "−1.80",
+          "−0.16"
+        ],
+        [
+          "RPBE",
+          "−1.29",
+          "−1.31",
+          "−1.35",
+          "−1.36",
+          "−0.07"
+        ],
+        [
+          "BEEF-vdW",
+          "−1.43",
+          "−1.44",
+          "−1.46",
+          "−1.47",
+          "−0.04"
+        ],
+        [
+          "HSE06",
+          "−1.52",
+          "−1.47",
+          "−1.44",
+          "−1.43",
+          "+0.09"
+        ],
+        [
+          "Expt.",
+          "−1.4 to −1.5",
+          "",
+          "",
+          "",
+          "atop"
+        ]
+      ],
+      "caption": "Adsorption energies (eV) at 0.25 ML.",
+      "label": "tab:eads",
+      "alignment": "lrrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "Within the Blyholder picture the bond is described by 5σ donation and 2π* back-donation. A Newns–Anderson estimate of the chemisorption energy is",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\Delta E_{d} \\approx -2(1-f)\\frac{V^2}{|\\varepsilon_{2\\pi^*}-\\varepsilon_d|} - 2(f)\\frac{V'^2}{|\\varepsilon_d - \\varepsilon_{5\\sigma}|} + \\alpha V^2,",
+      "numbered": true,
+      "label": "eq:newns",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "where ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\varepsilon_d",
+          "type": "MathInline"
+        },
+        {
+          "text": " is the d-band centre. GGAs place 2π* too low, over-stabilising multi-fold sites where back-donation is stronger.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Vibrational analysis",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The C–O stretch frequency from the harmonic approximation is ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\tilde\\nu = \\frac{1}{2\\pi c}\\sqrt{k/\\mu}",
+          "type": "MathInline"
+        },
+        {
+          "text": ". HSE06 gives 2081 cm⁻¹ for atop CO, compared with the IRAS value of 2090 cm⁻¹.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusions",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The CO/Pt puzzle is a self-interaction artefact: hybrid functionals correct the 2π* position and restore the atop preference.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{thebibliography}{99}\n\\bibitem{kohn1965} W. Kohn and L. J. Sham, \\emph{Phys. Rev.} \\textbf{140}, A1133 (1965).\n\\bibitem{feibelman2001} P. J. Feibelman \\emph{et al.}, \\emph{J. Phys. Chem. B} \\textbf{105}, 4018 (2001).\n\\end{thebibliography}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "DFT study of CO on Pt(111)",
+    "author": "F. Kohn",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

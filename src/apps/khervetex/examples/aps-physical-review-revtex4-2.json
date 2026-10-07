@@ -1,0 +1,362 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "A Physical Review article template",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Author and B. Coauthor",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "This template uses the revtex4-2 class maintained by the American Physical Society. It is the required format for Physical Review Letters, Physical Review A–E, Physical Review X, Physical Review Research and Reviews of Modern Physics. The class extends the standard article class with physics-specific features: PACS/MSC codes, multiple affiliations and footnote-style author marks.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "revtex · APS · Physical Review · PRL · template",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The revtex4-2 class supports multiple journal targets via class options. Set the journal under Document properties by typing the full class option string, for example ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "revtex4-2",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " with options ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "aps,prl,preprint",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " for a PRL preprint. Common journal options:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "aps — American Physical Society (default)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "aip — American Institute of Physics (e.g., J. Chem. Phys.)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "prl — Physical Review Letters",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "prb — Physical Review B",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "prx — Physical Review X",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "Layout options control the column format:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "preprint — single-column, double-spaced (for submission)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "twocolumn — two-column (for camera-ready)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "reprint — single-column reprint style",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Theory",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "RevTeX is optimised for physics notation. The Dirac equation in natural units:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "(i \\gamma^\\mu \\partial_\\mu - m) \\psi = 0",
+      "numbered": true,
+      "label": "eq:dirac",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Multi-line derivations use the standard ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "align",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " environment. The class loads amsmath automatically, so all AMS environments are available without extra packages.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\begin{align}\n  \\hat{H} |\\psi\\rangle &= E |\\psi\\rangle \\\\\n  \\langle \\psi | \\hat{H} | \\psi \\rangle &= E\n\\end{align}",
+      "numbered": true,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Experimental details",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "RevTeX papers typically include detailed experimental parameters in tabular form:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Quantity",
+          "Value",
+          "Uncertainty"
+        ],
+        [
+          "Wavelength",
+          "532 nm",
+          "±0.1 nm"
+        ],
+        [
+          "Power",
+          "50 mW",
+          "±2 mW"
+        ],
+        [
+          "Pulse width",
+          "10 ns",
+          "±0.5 ns"
+        ]
+      ],
+      "caption": "Laser parameters used in the experiment.",
+      "label": "tab:laser",
+      "alignment": "lrl",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Replace this template with your own content. The document class, packages and APS-specific preamble are ready for submission.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "A Physical Review article",
+    "author": "A. Author",
+    "documentclass": "revtex4-2",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "natbib",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 10,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "% APS options: aps, prl, pra, prb, prc, prd, pre, prx\n% Add [twocolumn] to documentclass for final layout\n% Add [reprint] for single-column reprint style",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

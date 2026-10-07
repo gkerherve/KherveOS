@@ -1,0 +1,290 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Presentation title",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Speaker — Institution",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "Outline",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Frame"
+    },
+    {
+      "text": "\\tableofcontents",
+      "type": "RawLatex"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "What is beamer?",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Frame"
+    },
+    {
+      "children": [
+        {
+          "text": "Beamer is the standard LaTeX class for slide presentations. It supports overlays, animations, handout mode and speaker notes.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Each Frame block becomes one slide",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Sections create outline entries",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Math, tables, and figures work as in articles",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Themes control the visual appearance",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "Mathematics in slides",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Frame"
+    },
+    {
+      "children": [
+        {
+          "text": "Equations work the same as in any LaTeX document:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "e^{i\\pi} + 1 = 0",
+      "numbered": false,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Main Content",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Key Results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Frame"
+    },
+    {
+      "children": [
+        {
+          "text": "Present your main results here. Keep slides concise.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Metric",
+          "Before",
+          "After"
+        ],
+        [
+          "Accuracy",
+          "82%",
+          "95%"
+        ],
+        [
+          "Speed",
+          "120 ms",
+          "45 ms"
+        ]
+      ],
+      "caption": "Performance comparison.",
+      "label": "tab:beamer-results",
+      "alignment": "lrr",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "Summary",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Frame"
+    },
+    {
+      "children": [
+        {
+          "text": "Conclude with your key takeaways.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "First main contribution",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Second main contribution",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Future work direction",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    }
+  ],
+  "meta": {
+    "title": "A presentation",
+    "author": "A. Speaker",
+    "documentclass": "beamer",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\usetheme{Madrid}\n\\usecolortheme{default}\n% Other popular themes: Berlin, Boadilla, CambridgeUS,\n% Copenhagen, Darmstadt, Frankfurt, Hannover, Luebeck,\n% Malmoe, Marburg, Montpellier, PaloAlto, Pittsburgh,\n% Rochester, Singapore, Szeged, Warsaw\n% Colour themes: albatross, beaver, beetle, crane,\n% dolphin, dove, fly, lily, orchid, rose, seagull,\n% seahorse, whale, wolverine",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

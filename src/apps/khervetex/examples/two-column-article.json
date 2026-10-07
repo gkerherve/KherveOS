@@ -1,0 +1,571 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "An example article — two columns",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Author¹, B. Coauthor¹, C. Reviewer²",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "children": [
+            {
+              "text": "KherveTeX two-column template",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Footnote"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "We present a worked example of the KherveTeX editor in a journal-article layout. The document is intended as a starting point for new users: every block type the editor supports is exercised at least once so that copy-pasting from this skeleton into a real paper Just Works. We summarise the structure, describe how each section is typically used, and include enough mathematics, references and tabular data to demonstrate the preview pipeline end to end.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "KherveTeX · template · article · example",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Scientific papers tend to share a small set of conventions: a tight introduction that frames the question, a methods section detailed enough to reproduce, a results section with the numerical evidence, a discussion that interprets those numbers, and a conclusion that places the work in context. This template walks through each of those sections with placeholder text so you can see how the compiled PDF will look before you commit to writing the real version.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The KherveTeX editor was designed to remove the friction of formatting from the writing process. When you are drafting a paper you should be thinking about claims and evidence, not about whether the right package is loaded for a particular Greek letter. The editor takes care of the LaTeX boilerplate; you take care of the science.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Prior work on WYSIWYG LaTeX editors has typically fallen into one of two camps. The first attempts to render LaTeX faithfully in the editor itself, which tends to be slow and brittle. The second offers a stripped-down rich-text view that loses information when round-tripped. KherveTeX takes a third path: keep a structured model in memory, render it both as live preview and as LaTeX on demand, and use Git to make every save a recoverable checkpoint.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Background",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The remainder of this paper is organised as follows. Section 2 reviews the relevant prior art and positions our contribution. Section 3 describes the methodology, including the data sources, the measurement pipeline and the analysis software. Section 4 presents the results in tabular and graphical form. Section 5 discusses the implications and the limitations, and Section 6 concludes.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Throughout the paper we adopt the notation summarised in Table ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "tab:notation",
+          "kind": "ref",
+          "type": "CrossRef"
+        },
+        {
+          "text": ". Lower-case Roman letters denote scalars, bold lower-case Roman letters denote vectors, and bold capital Roman letters denote matrices. Greek letters are reserved for model parameters.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Symbol",
+          "Meaning",
+          "Units"
+        ],
+        [
+          "x",
+          "Independent variable",
+          "—"
+        ],
+        [
+          "y",
+          "Dependent variable",
+          "—"
+        ],
+        [
+          "σ",
+          "Measurement uncertainty",
+          "(same as y)"
+        ],
+        [
+          "N",
+          "Number of observations",
+          "—"
+        ],
+        [
+          "μ",
+          "Population mean",
+          "(same as y)"
+        ],
+        [
+          "χ²",
+          "Goodness-of-fit statistic",
+          "—"
+        ]
+      ],
+      "caption": "Notation used throughout the paper.",
+      "label": "tab:notation",
+      "alignment": "lll",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Methods",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Data acquisition",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Measurements were collected on a custom-built instrument over the period from January 2025 to March 2026. Each session produced approximately 4 GB of raw data, which was archived locally and mirrored to a remote backup at the end of each day. A total of 312 sessions contributed to the dataset analysed here.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The raw data were filtered to remove samples flagged by the instrument's on-board quality-control system, and additionally to exclude any sample whose timestamp fell within five minutes of a documented instrument maintenance event. After filtering, ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "N = 1.82 \\times 10^{6}",
+          "type": "MathInline"
+        },
+        {
+          "text": " samples remained, distributed roughly uniformly across the observation period.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Analysis pipeline",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The analysis pipeline was implemented in Python 3.12, using NumPy for numerical work, SciPy for the optimiser and Matplotlib for the figures. The full source is available at the project repository — see the link in the acknowledgements.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The core model is a weighted least-squares fit:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\chi^2(\\theta) = \\sum_{i=1}^{N} \\left(\\frac{y_i - f(x_i; \\theta)}{\\sigma_i}\\right)^2,",
+      "numbered": true,
+      "label": "eq:chi2",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "where ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\theta",
+          "type": "MathInline"
+        },
+        {
+          "text": " is the vector of model parameters and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f(x; \\theta)",
+          "type": "MathInline"
+        },
+        {
+          "text": " is the parametric model under consideration. We minimise ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "eq:chi2",
+          "kind": "eqref",
+          "type": "CrossRef"
+        },
+        {
+          "text": " by Levenberg–Marquardt and report parameter uncertainties from the diagonal of the covariance matrix at the optimum.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Two model families were considered: a simple Gaussian and a sum of two Gaussians. The simpler model is favoured when the improvement in ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\chi^2",
+          "type": "MathInline"
+        },
+        {
+          "text": " does not justify the additional parameters under an F-test at the 5% significance level.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Table ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "tab:results",
+          "kind": "ref",
+          "type": "CrossRef"
+        },
+        {
+          "text": " summarises the best-fit parameters for each of the model families. The two-Gaussian model improves the fit substantially in the high-signal subset of the data but does not pass the F-test on the full set.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Model",
+          "χ²/dof",
+          "p-value",
+          "Δχ² vs single"
+        ],
+        [
+          "Single Gaussian",
+          "1.04",
+          "0.31",
+          "—"
+        ],
+        [
+          "Double Gaussian",
+          "0.97",
+          "0.42",
+          "+38"
+        ],
+        [
+          "Skewed Gaussian",
+          "1.01",
+          "0.38",
+          "+14"
+        ],
+        [
+          "Voigt",
+          "0.98",
+          "0.41",
+          "+33"
+        ]
+      ],
+      "caption": "Goodness-of-fit for four candidate models.",
+      "label": "tab:results",
+      "alignment": "lrrr",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "Figure 1 (placeholder) would show the residuals of the best model against the independent variable. The residuals are approximately Gaussian with no obvious trend, supporting the choice of a least-squares objective.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Discussion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The results are consistent with the prior literature ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "doe2024",
+            "smith2025"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": " and extend it to a larger sample. The principal novelty here is the inclusion of the maintenance-window exclusion, which reduces the apparent variance by roughly 12% without measurably biasing the fit parameters.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Two limitations are worth flagging. First, the data were collected on a single instrument; cross-checks with a second instrument would strengthen the conclusions. Second, the maintenance-window flagging relies on operator records, which are known to be incomplete for the first six months of the dataset.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We have presented a complete worked example of a journal-article skeleton inside KherveTeX. Every block type the editor supports — sections, paragraphs, bulleted and ordered lists, inline and display math, tables, citations, cross-references, footnotes and links — appears at least once. Replace the placeholder text with your own and the layout will keep working.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Acknowledgements",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Thanks to the maintainers of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "url": "https://tectonic-typesetting.github.io/",
+          "children": [
+            {
+              "text": "tectonic",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Link"
+        },
+        {
+          "text": " for the LaTeX engine that powers the preview, and to everyone who reported bugs against early builds of KherveTeX.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "An example article",
+    "author": "A. Author",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 2,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

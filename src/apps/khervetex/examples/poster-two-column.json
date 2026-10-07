@@ -1,0 +1,343 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Efficient Monte Carlo sampling of Bayesian posteriors in high dimensions",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Researcher¹, B. Supervisor¹, C. Collaborator²",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "children": [
+            {
+              "text": "¹ Department of Statistics, University of Somewhere; ² Institute of Applied Mathematics, ETH Zürich",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Footnote"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Motivation",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Bayesian inference in high-dimensional parameter spaces is computationally challenging. Standard Markov chain Monte Carlo (MCMC) methods suffer from slow mixing when the posterior has strong correlations or multiple modes. We propose a preconditioned Hamiltonian Monte Carlo (HMC) sampler that adapts its mass matrix online, achieving effective sample sizes 5–20× larger than the No-U-Turn Sampler (NUTS) for the same wall-clock time.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Method",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We augment the target density ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\pi(\\theta)",
+          "type": "MathInline"
+        },
+        {
+          "text": " with momentum variables ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "p \\sim \\mathcal{N}(0, M)",
+          "type": "MathInline"
+        },
+        {
+          "text": " and simulate the Hamiltonian",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "H(\\theta, p) = -\\log \\pi(\\theta) + \\tfrac{1}{2} p^\\top M^{-1} p.",
+      "numbered": true,
+      "label": "eq:hamiltonian",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "The mass matrix ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "M",
+          "type": "MathInline"
+        },
+        {
+          "text": " is updated every ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "K",
+          "type": "MathInline"
+        },
+        {
+          "text": " leapfrog steps using a rank-one update from the sample covariance of the last ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "W",
+          "type": "MathInline"
+        },
+        {
+          "text": " accepted states. The update converges to the posterior covariance and the sampler becomes asymptotically optimal in the Gaussian limit.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Key results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Problem (d)",
+          "NUTS ESS/s",
+          "Ours ESS/s",
+          "Speedup"
+        ],
+        [
+          "Logistic regression (50)",
+          "420",
+          "2 100",
+          "5.0×"
+        ],
+        [
+          "Gaussian process (200)",
+          "38",
+          "540",
+          "14.2×"
+        ],
+        [
+          "Hierarchical model (500)",
+          "12",
+          "240",
+          "20.0×"
+        ]
+      ],
+      "caption": "Effective sample size per second on three benchmarks.",
+      "label": "tab:poster-results",
+      "alignment": "lrrr",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "The gains are most pronounced when the posterior has strong off-diagonal correlations, because the adapted mass matrix de-correlates the geometry for the leapfrog integrator.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Convergence guarantee",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Under mild regularity conditions on ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\pi",
+          "type": "MathInline"
+        },
+        {
+          "text": ", the adaptive chain satisfies a diminishing-adaptation criterion ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "roberts2007"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": " and therefore preserves ergodicity. Specifically, if the update schedule satisfies",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\sum_{k=1}^{\\infty} \\|M_{k+1} - M_k\\|_F < \\infty,",
+      "numbered": true,
+      "label": "eq:diminishing",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "then the chain has the correct stationary distribution. Our rank-one schedule satisfies this by construction, since the covariance estimate converges almost surely.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Online mass-matrix adaptation dramatically improves HMC efficiency in high dimensions.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "The method is a drop-in replacement for NUTS in probabilistic programming frameworks.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Code available at github.com/aresearcher/adaptive-hmc.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    }
+  ],
+  "meta": {
+    "title": "Conference poster",
+    "author": "A. Researcher",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "natbib",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.0,
+    "margin_bottom_cm": 2.0,
+    "margin_left_cm": 2.0,
+    "margin_right_cm": 2.0,
+    "body_font_pt": 12,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 2,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

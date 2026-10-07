@@ -1,0 +1,361 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Reducing build times in large-scale monorepos",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Author — Developer Productivity Team",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "Build times in our monorepo have grown from 8 minutes to 35 minutes over the past 18 months, driven by a 3× increase in module count and inadequate caching. This white paper analyses the root causes, evaluates three mitigation strategies, and recommends a phased rollout of remote caching combined with dependency-graph pruning. We project a reduction to under 12 minutes for 90% of incremental builds.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Problem statement",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The CI pipeline for the main monorepo currently averages 35 minutes per push, with P95 at 52 minutes. Developer surveys consistently rank build latency as the top friction point. The problem compounds: slow builds encourage batching changes into larger PRs, which are harder to review, more likely to cause merge conflicts, and slower to build — a vicious cycle.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Three factors contribute roughly equally to the regression:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Module count grew from 120 to 380 without revisiting the dependency graph. Many modules pull in transitive dependencies they do not actually use.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "The local cache is invalidated by environment drift (different JDK patch versions, locale settings, timezone). Cache hit rates on CI are below 40%.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Test execution is not parallelised effectively: the slowest test suite (integration tests for the payments module) takes 14 minutes and runs on a single executor.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Evaluation of strategies",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Strategy A: Remote build cache",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "A shared, content-addressed cache (e.g. Gradle remote cache or Bazel remote execution) eliminates the environment-drift problem by keying on input hashes rather than machine state. Internal pilots on two smaller repos raised cache hit rates from 38% to 87%, cutting median build time by 60%.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Strategy B: Dependency pruning",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Static analysis of the dependency graph identified 94 unused transitive edges. Removing them reduces the rebuild set for a typical one-module change from ~70 modules to ~25. The pruning is low-risk: each edge removal is verified by a clean build before merging.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Strategy C: Test sharding",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Splitting the payments integration suite across four parallel executors reduces its wall-clock time from 14 minutes to 4.5 minutes. The implementation requires tagging tests with shard indices, which is straightforward but touches 340 test files.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Recommendation",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We recommend a phased approach:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Phase",
+          "Strategy",
+          "Timeline",
+          "Expected impact"
+        ],
+        [
+          "1",
+          "Remote cache",
+          "Jun 2026",
+          "−60% median build time"
+        ],
+        [
+          "2",
+          "Dependency pruning",
+          "Jul–Aug 2026",
+          "−30% rebuild set size"
+        ],
+        [
+          "3",
+          "Test sharding",
+          "Sep 2026",
+          "−10 min on P95"
+        ]
+      ],
+      "caption": "Phased rollout plan.",
+      "label": "tab:phases",
+      "alignment": "clll",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "Phases 1 and 2 are independent and can proceed in parallel if staffing allows. Phase 3 depends on Phase 2 (the shard assignment assumes the pruned graph). Total estimated effort: 1.5 engineer-months.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Risks and mitigations",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Cache poisoning: mitigated by content-addressable keys and a nightly cache-integrity check.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "False-positive pruning: each edge removal is gated on a green CI run; any breakage is caught before merge.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Shard imbalance: monitored via a dashboard; re-balance quarterly.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Build latency is a solvable problem. The three strategies described here are complementary and, taken together, should bring the median incremental build time back below 12 minutes. We request approval to begin Phase 1 in the June maintenance window.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "White paper",
+    "author": "A. Author",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

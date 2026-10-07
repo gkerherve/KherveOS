@@ -1,0 +1,502 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Effect of a 12-week supervised exercise programme on HbA1c in adults with type 2 diabetes: a randomised controlled trial",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "H. Medic, I. Statistician, J. Nurse — on behalf of the MOVE-T2D investigators",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "Background: Structured exercise improves glycaemic control, but effect sizes in routine care are uncertain. Methods: 240 adults with T2D (HbA1c 7.0–10.0 %) were randomised 1:1 to supervised exercise or usual care. The primary outcome was change in HbA1c at 12 weeks. Results: HbA1c fell by 0.62 % with exercise versus 0.11 % with usual care (difference −0.51 %; 95 % CI −0.70 to −0.32; p < 0.001). Conclusions: Supervised exercise produces a clinically meaningful reduction in HbA1c. Trial registration: ISRCTN00000000.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "type 2 diabetes · exercise · RCT · HbA1c",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Type 2 diabetes affects over 500 million adults worldwide ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "idf2021"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ". Guidelines recommend 150 minutes of moderate activity per week, but adherence outside trials is poor.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Methods",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Design and participants",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Parallel-group, assessor-blinded RCT at four centres, reported according to CONSORT 2010 ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "consort2010"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Inclusion: age 40–75 y, T2D ≥ 1 y, HbA1c 7.0–10.0 %, stable medication for 3 months",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Exclusion: insulin therapy, unstable angina, eGFR < 30 mL/min/1.73 m²",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Sample size",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "To detect a difference ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\Delta = 0.4\\,\\%",
+          "type": "MathInline"
+        },
+        {
+          "text": " with SD ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\sigma = 0.9\\,\\%",
+          "type": "MathInline"
+        },
+        {
+          "text": ", two-sided ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\alpha = 0.05",
+          "type": "MathInline"
+        },
+        {
+          "text": " and power 90 %:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "n = \\frac{2\\,(z_{1-\\alpha/2}+z_{1-\\beta})^2\\,\\sigma^2}{\\Delta^2} = \\frac{2(1.96+1.28)^2(0.9)^2}{0.4^2} \\approx 107",
+      "numbered": true,
+      "label": "eq:n",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "per arm; 120 per arm allows for 10 % attrition.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Statistical analysis",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The primary analysis used ANCOVA on the intention-to-treat population, adjusting for baseline and centre:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "Y_{i,12} = \\beta_0 + \\beta_1\\,\\text{Tx}_i + \\beta_2\\,Y_{i,0} + \\sum_c \\gamma_c\\,\\text{Centre}_{ic} + \\epsilon_i.",
+      "numbered": true,
+      "label": "eq:ancova",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Missing data were handled by multiple imputation (",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "m = 50",
+          "type": "MathInline"
+        },
+        {
+          "text": ") under missing-at-random.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Characteristic",
+          "Exercise (n = 120)",
+          "Usual care (n = 120)"
+        ],
+        [
+          "Age, y, mean (SD)",
+          "58.4 (8.1)",
+          "59.1 (7.9)"
+        ],
+        [
+          "Female, n (\\%)",
+          "53 (44)",
+          "49 (41)"
+        ],
+        [
+          "BMI, kg/m², mean (SD)",
+          "31.2 (4.6)",
+          "30.8 (4.9)"
+        ],
+        [
+          "Diabetes duration, y",
+          "7.2 (4.8)",
+          "6.9 (5.1)"
+        ],
+        [
+          "HbA1c, \\%, mean (SD)",
+          "8.12 (0.81)",
+          "8.09 (0.78)"
+        ],
+        [
+          "Metformin, n (\\%)",
+          "104 (87)",
+          "107 (89)"
+        ]
+      ],
+      "caption": "Baseline characteristics.",
+      "label": "tab:base",
+      "alignment": "lcc",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "rows": [
+        [
+          "Outcome",
+          "Exercise",
+          "Usual care",
+          "Adj. difference (95 \\% CI)",
+          "p"
+        ],
+        [
+          "HbA1c (\\%)",
+          "−0.62",
+          "−0.11",
+          "−0.51 (−0.70, −0.32)",
+          "< 0.001"
+        ],
+        [
+          "Fasting glucose (mmol/L)",
+          "−0.9",
+          "−0.2",
+          "−0.7 (−1.1, −0.3)",
+          "0.001"
+        ],
+        [
+          "Weight (kg)",
+          "−2.1",
+          "−0.4",
+          "−1.7 (−2.6, −0.8)",
+          "< 0.001"
+        ],
+        [
+          "VO₂max (mL/kg/min)",
+          "+3.4",
+          "+0.3",
+          "+3.1 (2.2, 4.0)",
+          "< 0.001"
+        ]
+      ],
+      "caption": "Primary and secondary outcomes at 12 weeks.",
+      "label": "tab:out",
+      "alignment": "lrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "The number needed to treat for one participant to reach HbA1c < 7 % was ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\text{NNT} = 1/\\text{ARR} = 1/(0.31-0.12) \\approx 5",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Discussion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The observed effect exceeds the 0.3–0.4 % threshold usually considered clinically relevant. Limitations include the short follow-up and the impossibility of blinding participants.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Declarations",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Ethics: approved by the regional ethics committee (REC 00/XX/0000); all participants gave written consent.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Data availability: de-identified data available on reasonable request.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Competing interests: none declared.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "text": "\\begin{thebibliography}{99}\n\\bibitem{idf2021} International Diabetes Federation, \\emph{IDF Diabetes Atlas}, 10th ed. (2021).\n\\bibitem{consort2010} K. F. Schulz, D. G. Altman, D. Moher, \\emph{BMJ} \\textbf{340}, c332 (2010).\n\\end{thebibliography}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "Randomised controlled trial",
+    "author": "H. Medic",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

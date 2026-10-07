@@ -1,0 +1,387 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Wildflower margins increase pollinator diversity on arable farms: a three-year paired-field study",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "O. Darwin, P. Wallace",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "We surveyed pollinators on 24 paired fields (sown wildflower margin vs conventional grass margin) over three summers. Margins increased Shannon diversity by 0.41 (95 % CI 0.28–0.54) and bumblebee abundance by a factor of 2.3. Effects strengthened with margin age.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "pollinators · agri-environment · biodiversity · GLMM",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Insect pollinators have declined across Europe ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "potts2010"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ". Agri-environment schemes fund flower-rich margins, but evidence for their effect on diversity is mixed.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Methods",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Survey design",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Each farm contributed one treatment and one control field ≥ 500 m apart. Pollinators were recorded along fixed 100 m transects (6 visits per year, 10:00–16:00, > 15 °C, wind < Beaufort 4).",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Diversity indices",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "With ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "p_i",
+          "type": "MathInline"
+        },
+        {
+          "text": " the proportion of individuals in species ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "i",
+          "type": "MathInline"
+        },
+        {
+          "text": " of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "S",
+          "type": "MathInline"
+        },
+        {
+          "text": " species:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "H' = -\\sum_{i=1}^{S} p_i \\ln p_i,\\qquad D = 1 - \\sum_{i=1}^{S} p_i^2,\\qquad J' = \\frac{H'}{\\ln S}.",
+      "numbered": true,
+      "label": "eq:div",
+      "type": "MathBlock"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Statistical model",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Abundance counts were modelled with a negative-binomial GLMM with farm as random intercept:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\log \\mu_{ijt} = \\beta_0 + \\beta_1\\,\\text{Margin}_{ij} + \\beta_2\\,\\text{Year}_t + \\beta_3\\,(\\text{Margin}\\times\\text{Year})_{ijt} + u_i,\\quad u_i\\sim\\mathcal N(0,\\sigma_u^2).",
+      "numbered": true,
+      "label": "eq:glmm",
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Metric",
+          "Control",
+          "Margin",
+          "Ratio / diff.",
+          "p"
+        ],
+        [
+          "Total abundance",
+          "31.2",
+          "68.9",
+          "×2.21",
+          "< 0.001"
+        ],
+        [
+          "Bumblebees",
+          "8.4",
+          "19.3",
+          "×2.30",
+          "< 0.001"
+        ],
+        [
+          "Hoverflies",
+          "12.1",
+          "22.7",
+          "×1.88",
+          "< 0.001"
+        ],
+        [
+          "Species richness",
+          "9.8",
+          "15.4",
+          "+5.6",
+          "< 0.001"
+        ],
+        [
+          "Shannon H'",
+          "1.72",
+          "2.13",
+          "+0.41",
+          "< 0.001"
+        ],
+        [
+          "Pielou J'",
+          "0.75",
+          "0.78",
+          "+0.03",
+          "0.21"
+        ]
+      ],
+      "caption": "Mean per transect walk, pooled over years.",
+      "label": "tab:eco",
+      "alignment": "lrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "The Margin × Year interaction was positive (",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\beta_3 = 0.18 \\pm 0.05",
+          "type": "MathInline"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "p = 0.002",
+          "type": "MathInline"
+        },
+        {
+          "text": "), indicating accumulating benefit as sown species established.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Discussion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Evenness was unchanged, so the diversity gain comes from additional species rather than redistribution. Landscape context was not controlled",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "children": [
+            {
+              "text": "Semi-natural habitat within 1 km ranged from 3 % to 21 %.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Footnote"
+        },
+        {
+          "text": ", which may explain between-farm variance (",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\hat\\sigma_u = 0.34",
+          "type": "MathInline"
+        },
+        {
+          "text": ").",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{thebibliography}{99}\n\\bibitem{potts2010} S. G. Potts \\emph{et al.}, \\emph{Trends Ecol. Evol.} \\textbf{25}, 345 (2010).\n\\end{thebibliography}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "Pollinator diversity",
+    "author": "O. Darwin",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

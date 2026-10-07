@@ -1,0 +1,578 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Dr Jane A. Researcher",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "Curriculum Vitae",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "Department of Physics, University of Somewhere · ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "url": "mailto:jane.researcher@example.org",
+          "children": [
+            {
+              "text": "jane.researcher@example.org",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Link"
+        },
+        {
+          "text": " · ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "url": "https://orcid.org/0000-0000-0000-0001",
+          "children": [
+            {
+              "text": "ORCID 0000-0000-0000-0001",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Link"
+        }
+      ],
+      "alignment": "center",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Education",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "PhD in Condensed Matter Physics",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", University of Somewhere, 2019–2023",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Thesis: ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Topological phases in two-dimensional electron gases under periodic driving",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Supervisor: Prof. M. Topologist",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "MSci Physics (First Class)",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", Imperial College London, 2015–2019",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Final-year project: ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Raman spectroscopy of graphene heterostructures",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Research experience",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Postdoctoral Research Associate",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " — University of Somewhere, Oct 2023–present",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Developing theoretical models for Floquet topological insulators under dissipation",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Supervising two PhD students on related projects",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Maintaining group computing cluster (48 nodes, SLURM)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Graduate Research Assistant",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " — University of Somewhere, Sep 2019–Sep 2023",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Derived analytic expressions for edge-state transport in periodically driven honeycomb lattices",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Implemented tight-binding simulations in Julia, achieving 10× speedup over legacy Fortran code",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Presented at 5 international conferences (2 invited talks)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Selected publications",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "J. A. Researcher, M. Topologist, \"Floquet edge modes in dissipative honeycomb lattices,\" Phys. Rev. Lett. 132, 076401 (2024).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "J. A. Researcher, K. Collaborator, \"Raman signatures of twist-angle disorder in graphene moiré superlattices,\" Nano Lett. 21, 4532–4539 (2021).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "J. A. Researcher, \"Topological invariants of periodically driven systems: a pedagogical review,\" J. Phys. A: Math. Theor. 55, 123001 (2022).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Teaching",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Demonstrator, Quantum Mechanics II (3rd year), 2020–2023",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Tutorial leader, Mathematical Methods (2nd year), 2021–2022",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Lecturer, Summer school on topological matter, University of Elsewhere, Jul 2024",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Skills",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Category",
+          "Details"
+        ],
+        [
+          "Programming",
+          "Python, Julia, Fortran, C, Bash"
+        ],
+        [
+          "Scientific",
+          "NumPy, SciPy, QuTiP, Kwant, Matplotlib, LaTeX"
+        ],
+        [
+          "HPC",
+          "SLURM, MPI, OpenMP, GPU (CUDA)"
+        ],
+        [
+          "Languages",
+          "English (native), French (fluent), German (intermediate)"
+        ]
+      ],
+      "caption": "",
+      "label": null,
+      "alignment": "ll",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Awards and grants",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "EPSRC Postdoctoral Fellowship, 2024–2027 (£350 k)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Best Poster Prize, Condensed Matter Physics conference, 2022",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Imperial College President's PhD Scholarship, 2019",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Dean's List, Department of Physics, 2016–2019",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Professional service",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Referee: Phys. Rev. Lett., Phys. Rev. B, New J. Phys.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Organiser: weekly condensed-matter seminar series, University of Somewhere, 2024–present",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Outreach: annual public lecture on quantum materials, Science Festival 2023 and 2024",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    }
+  ],
+  "meta": {
+    "title": "Curriculum Vitae",
+    "author": "J. Researcher",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.0,
+    "margin_bottom_cm": 2.0,
+    "margin_left_cm": 2.0,
+    "margin_right_cm": 2.0,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

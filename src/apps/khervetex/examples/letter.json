@@ -1,0 +1,376 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Dr Jane Author",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "right",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Department of Examples",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "right",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "University of KherveTeX",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "right",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "123 Example Road",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "right",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "London, EC1A 1AA",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "right",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "jane.author@example.org",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "right",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Prof. Recipient Name",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Editor-in-Chief",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Journal of Worked Examples",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "456 Editorial Avenue",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Cambridge, CB2 1TN",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "17 May 2026",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "right",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Subject: ",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": "Submission of manuscript JWE-2026-0142 for consideration",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Dear Prof. Recipient,",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "I am writing to submit our manuscript, entitled \"A worked example of the KherveTeX editor for scientific writing,\" for consideration as a research article in the Journal of Worked Examples. The work has not been published elsewhere and is not under consideration at any other journal.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The manuscript presents the design and operation of KherveTeX, a WYSIWYG editor that stores documents as a structured model and serialises them to LaTeX on demand. We argue that the structured-model approach captures most of the productivity gains of a word processor without giving up the precise typographic control that LaTeX is valued for. The paper includes a worked end-to-end example of drafting, revising and submitting a short article.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Our principal contributions are threefold. First, we describe a document model that round-trips losslessly to LaTeX, including for environments and macros the editor does not itself understand. Second, we report a user study (N=37) in which participants drafted a short article more quickly in KherveTeX than in a traditional LaTeX setup, with no measurable loss of formatting quality. Third, we release the editor as open-source software under the BSD-3 licence; the source is available at the project repository.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "We believe the manuscript will be of interest to your readership for two reasons. First, the technical design — particularly the use of Git as a first-class part of the editing loop — is novel and may be useful to other tool builders. Second, the user-study results address a long-standing question in the LaTeX community about whether WYSIWYG editing is compatible with high-quality typeset output.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "We suggest the following reviewers, none of whom we have collaborated with in the past three years: Prof. X (University of Y), Dr Z (Institute of W) and Dr V (Lab of U). We have no preferred reviewers to exclude.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Thank you for considering our submission. I am happy to provide any additional information you may need, and look forward to hearing from you in due course.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Yours sincerely,",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Dr Jane Author",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "on behalf of all authors",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "",
+    "author": "",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 3.0,
+    "margin_bottom_cm": 3.0,
+    "margin_left_cm": 3.0,
+    "margin_right_cm": 3.0,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

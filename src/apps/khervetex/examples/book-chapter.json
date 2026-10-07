@@ -1,0 +1,356 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "The discovery of the neutron",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Author — in ",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": "Milestones in Nuclear Physics",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", ed. B. Editor",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "The discovery of the neutron",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "The puzzle of the nucleus",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "By 1930, the atomic nucleus was known to be much heavier than its charge alone could explain. The prevailing model posited a nucleus of protons and electrons, but this created immediate difficulties. The spin-statistics problem — nitrogen-14, with 14 protons and 7 electrons, should obey Fermi–Dirac statistics yet was observed to obey Bose–Einstein statistics — was especially troubling",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "children": [
+            {
+              "text": "Ehrenfest and Oppenheimer raised this objection as early as 1931; see their paper in Phys. Rev. 37, 333.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Footnote"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "The nuclear-electron model also struggled to explain the binding energy. Electrons confined to a region the size of a nucleus (",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\sim 10^{-15}",
+          "type": "MathInline"
+        },
+        {
+          "text": " m) would have kinetic energies of order ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\sim 100",
+          "type": "MathInline"
+        },
+        {
+          "text": " MeV by the uncertainty principle, far exceeding the observed binding energies of a few MeV per nucleon.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Bothe and Becker's radiation",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "In 1930, Walther Bothe and Herbert Becker bombarded beryllium with alpha particles from a polonium source and observed a penetrating radiation that they interpreted as high-energy gamma rays. The radiation was unusually penetrating — far more so than any gamma ray known at the time — but without a charge measurement there was no way to identify the particles directly.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "The Joliot-Curie experiment",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "In January 1932, Irène Joliot-Curie and Frédéric Joliot repeated the experiment and placed a paraffin target in the path of the radiation. They observed that the paraffin emitted protons with energies up to about 5.7 MeV. They explained the observation as Compton scattering of gamma rays off hydrogen nuclei, but the kinematics required a gamma-ray energy of roughly 55 MeV — far higher than any known nuclear transition.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Chadwick's identification",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "James Chadwick, working at the Cavendish Laboratory in Cambridge, realised within days that the Joliot-Curie explanation was untenable. He repeated the experiment with several target materials (hydrogen, helium, nitrogen) and measured the recoil energies. The data were consistent with a neutral particle of mass close to that of the proton.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Chadwick published his results on 27 February 1932 in a short letter to ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "Nature",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "children": [
+            {
+              "text": "J. Chadwick, \"Possible existence of a neutron,\" Nature 129, 312 (1932).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "Footnote"
+        },
+        {
+          "text": ". A more detailed paper followed in June in the Proceedings of the Royal Society. The neutral particle, which Chadwick named the neutron, resolved both the spin-statistics problem and the binding-energy puzzle in one stroke.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "The kinematics",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Consider the beryllium reaction:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "{}^9\\text{Be} + {}^4\\text{He} \\to {}^{12}\\text{C} + n.",
+      "numbered": true,
+      "label": "eq:reaction",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Conservation of energy and momentum, combined with the measured recoil energies, allowed Chadwick to determine the neutron mass. His original estimate was",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "m_n = 1.0067 \\pm 0.0005 \\;\\text{u},",
+      "numbered": false,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "remarkably close to the modern value of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "1.008665",
+          "type": "MathInline"
+        },
+        {
+          "text": " u.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Aftermath",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The discovery of the neutron opened the door to nuclear fission (realised within seven years), to the proton–neutron model of the nucleus proposed independently by Heisenberg and Ivanenko, and ultimately to the nuclear shell model of Mayer and Jensen. Chadwick was awarded the Nobel Prize in Physics in 1935 — just three years after his discovery, an unusually short interval that reflects the immediate impact of the work.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "It is worth noting how close others came. Bothe and Becker had the radiation; the Joliot-Curies had the proton recoils. What Chadwick brought was the willingness to abandon the gamma-ray interpretation and follow the kinematics wherever they led — a textbook example of how theoretical prejudice can delay experimental discovery.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "Book chapter",
+    "author": "A. Author",
+    "documentclass": "report",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 3.0,
+    "margin_right_cm": 3.0,
+    "body_font_pt": 12,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.5,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

@@ -1,0 +1,417 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Al-doped LiNi₀.₈Mn₀.₁Co₀.₁O₂ cathodes with improved cycling stability at 4.4 V",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "L. Volta, M. Faraday, N. Nernst",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "Ni-rich layered oxides offer high capacity but suffer from capacity fade above 4.3 V. We show that 1 mol % Al doping of NMC811 raises capacity retention after 300 cycles at 1C from 71 % to 89 %, and reduces the charge-transfer resistance growth by a factor of three. Galvanostatic intermittent titration shows that Li⁺ diffusion is unaffected by doping.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "lithium-ion battery · NMC811 · doping · impedance · GITT",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The energy density of a cell scales with the product of specific capacity and average voltage,",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "E = \\int_0^{Q} V(q)\\,dq \\approx Q\\,\\bar V,",
+      "numbered": true,
+      "label": "eq:energy",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "which motivates Ni-rich cathodes ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "manthiram2020"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Experimental",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Co-precipitation of Ni₀.₈Mn₀.₁Co₀.₁(OH)₂, Al(NO₃)₃ added to 1 mol %",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Lithiation with LiOH·H₂O (5 % excess), 750 °C, 12 h, O₂ flow",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Electrodes: 90:5:5 active:C65:PVDF, 10 mg/cm²",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "CR2032 half-cells vs Li, 1 M LiPF₆ in EC:EMC 3:7",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results and discussion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Cycling",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Sample",
+          "Q₁ at 0.1C (mAh/g)",
+          "ICE (\\%)",
+          "Q at 5C (mAh/g)",
+          "Retention 300 cyc (\\%)"
+        ],
+        [
+          "NMC811",
+          "214",
+          "88.1",
+          "142",
+          "71.2"
+        ],
+        [
+          "Al-NMC811",
+          "209",
+          "89.4",
+          "151",
+          "89.0"
+        ]
+      ],
+      "caption": "Electrochemical performance, 2.8–4.4 V.",
+      "label": "tab:cycle",
+      "alignment": "lrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Impedance",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Nyquist spectra were fitted to a Randles circuit with Warburg element:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "Z(\\omega) = R_s + \\frac{R_{ct} + Z_W}{1 + j\\omega C_{dl}(R_{ct}+Z_W)},\\qquad Z_W = \\frac{\\sigma_W}{\\sqrt\\omega}(1-j).",
+      "numbered": true,
+      "label": "eq:randles",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "After 300 cycles ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "R_{ct}",
+          "type": "MathInline"
+        },
+        {
+          "text": " grew from 18 to 142 Ω for undoped and from 16 to 54 Ω for doped material.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Diffusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "From GITT, the chemical diffusion coefficient is ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "weppner1977"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\tilde D = \\frac{4}{\\pi\\tau}\\left(\\frac{m_B V_M}{M_B S}\\right)^2\\left(\\frac{\\Delta E_s}{\\Delta E_\\tau}\\right)^2,",
+      "numbered": true,
+      "label": "eq:gitt",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "yielding ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\tilde D \\sim 10^{-10}",
+          "type": "MathInline"
+        },
+        {
+          "text": " cm²/s for both materials at 50 % state of charge.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Thermodynamics",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The open-circuit voltage relates to the Gibbs energy via ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\Delta G = -nFE",
+          "type": "MathInline"
+        },
+        {
+          "text": ", and its temperature coefficient gives the entropic heat:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\Delta S = nF\\left(\\frac{\\partial E}{\\partial T}\\right)_p.",
+      "numbered": true,
+      "label": "eq:entropy",
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusions",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Al doping suppresses the H2→H3 phase transition and surface reconstruction, giving 89 % retention at 4.4 V without compromising rate capability.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{thebibliography}{99}\n\\bibitem{manthiram2020} A. Manthiram, \\emph{Nat. Commun.} \\textbf{11}, 1550 (2020).\n\\bibitem{weppner1977} W. Weppner and R. A. Huggins, \\emph{J. Electrochem. Soc.} \\textbf{124}, 1569 (1977).\n\\end{thebibliography}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "Li-ion cathode study",
+    "author": "L. Volta",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

@@ -1,0 +1,470 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Setting up a reproducible Python project from scratch",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A practical step-by-step guide",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Prerequisites",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Python 3.12 or newer installed and on your PATH",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Git installed and configured (git config user.name / user.email)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "A terminal (bash, zsh, PowerShell, or Windows Terminal)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "A text editor or IDE of your choice",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Steps",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "1. Create the project directory",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Open a terminal and run:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{verbatim}\nmkdir my-project && cd my-project\ngit init\n\\end{verbatim}",
+      "type": "RawLatex"
+    },
+    {
+      "children": [
+        {
+          "text": "Tip:",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Choose a short, lowercase, hyphen-separated name. Avoid spaces and special characters.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "2. Set up a virtual environment",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Create and activate a virtual environment:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{verbatim}\npython -m venv .venv\nsource .venv/bin/activate   # Linux / macOS\n.venv\\Scripts\\activate      # Windows\n\\end{verbatim}",
+      "type": "RawLatex"
+    },
+    {
+      "children": [
+        {
+          "text": "Tip:",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " Add ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "/.venv/",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " to your ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": ".gitignore",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " so the environment is never committed.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "3. Pin your dependencies",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Create a ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "pyproject.toml",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " with your project metadata and dependencies. Then generate a lock file:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{verbatim}\npip install pip-tools\npip-compile -o requirements.lock pyproject.toml\npip install -r requirements.lock\n\\end{verbatim}",
+      "type": "RawLatex"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "4. Add a test framework",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Install pytest and create a minimal test:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{verbatim}\npip install pytest\nmkdir tests\necho 'def test_smoke(): assert True' > tests/test_smoke.py\npytest -q\n\\end{verbatim}",
+      "type": "RawLatex"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "5. Configure linting and formatting",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Install ruff for both linting and formatting:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{verbatim}\npip install ruff\nruff check .\nruff format .\n\\end{verbatim}",
+      "type": "RawLatex"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "6. Make your first commit",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "text": "\\begin{verbatim}\ngit add pyproject.toml requirements.lock .gitignore\ngit add src/ tests/\ngit commit -m \"Initial project skeleton\"\n\\end{verbatim}",
+      "type": "RawLatex"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Summary",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Step",
+          "Tool",
+          "Purpose"
+        ],
+        [
+          "1",
+          "git init",
+          "Version control"
+        ],
+        [
+          "2",
+          "python -m venv",
+          "Isolation"
+        ],
+        [
+          "3",
+          "pip-tools",
+          "Reproducible deps"
+        ],
+        [
+          "4",
+          "pytest",
+          "Testing"
+        ],
+        [
+          "5",
+          "ruff",
+          "Linting + formatting"
+        ],
+        [
+          "6",
+          "git commit",
+          "Checkpoint"
+        ]
+      ],
+      "caption": "Quick reference for each step.",
+      "label": "tab:steps",
+      "alignment": "cll",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Next steps",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Add a CI pipeline (GitHub Actions, GitLab CI) that runs pytest and ruff on every push.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Set up pre-commit hooks to catch issues before they reach CI.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Add a README.md with setup instructions for collaborators.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Consider adding type checking with mypy or pyright.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    }
+  ],
+  "meta": {
+    "title": "How-to guide",
+    "author": "",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

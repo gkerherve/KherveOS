@@ -1,0 +1,1054 @@
+/* KherveTeX. The window chrome follows the KherveOS theme (--k-*); the page
+   itself is white paper with black type, like the PDF. */
+
+.ktx-app {
+  position: relative;
+  min-width: 0;
+}
+.ktx-dragging iframe,
+.ktx-dragging .ktx-splitter {
+  pointer-events: none;
+}
+.ktx-dragging {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* ---------------------------------------------------------------- toolbars */
+
+.ktx-toolbar {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+.ktx-toolbar .k-icon-btn {
+  width: 26px;
+  height: 26px;
+}
+.ktx-select {
+  height: 26px;
+  width: auto;
+  padding: 0 6px;
+  font-size: 12px;
+}
+.ktx-style-select {
+  width: 128px;
+}
+.ktx-class {
+  width: 104px;
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+}
+.ktx-size {
+  width: 52px;
+}
+.ktx-paper {
+  width: 70px;
+}
+.ktx-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.ktx-check.small {
+  font-size: 12px;
+  color: var(--k-muted);
+  margin: 0 2px;
+}
+.ktx-compile {
+  gap: 5px;
+}
+.ktx-compile.busy svg {
+  animation: k-spin 0.9s linear infinite;
+}
+
+.ktx-main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.ktx-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  background: var(--k-chrome);
+  border-right: 1px solid var(--k-border);
+  flex: none;
+  overflow-y: auto;
+}
+.ktx-side .k-icon-btn {
+  width: 30px;
+  height: 30px;
+}
+.ktx-side-sep {
+  width: 20px;
+  height: 1px;
+  background: var(--k-border);
+  margin: 4px 0;
+}
+
+/* ----------------------------------------------------------- tabs and work */
+
+.ktx-work {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.ktx-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px 8px 0;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  flex: none;
+}
+.ktx-tabs.small {
+  padding: 0 0 0;
+  background: transparent;
+}
+.ktx-tab {
+  height: 26px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.ktx-tab:hover {
+  color: var(--k-text);
+}
+.ktx-tab.active {
+  background: var(--k-bg);
+  color: var(--k-text);
+  border-color: var(--k-border);
+  margin-bottom: -1px;
+}
+.ktx-tab.bad {
+  color: var(--k-danger);
+}
+.ktx-pane {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.ktx-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--k-bg) 80%, transparent);
+  z-index: 5;
+}
+
+/* ------------------------------------------------------------- the paper */
+
+.ktx-visual {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: color-mix(in srgb, var(--k-bg) 70%, #000);
+  padding: 20px 0 40px;
+}
+.ktx-visual[hidden] {
+  display: none;
+}
+.ktx-page {
+  margin: 0 auto;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.28);
+  cursor: text;
+  --ktx-ink: #111;
+  --ktx-soft: #555;
+}
+.ktx-page ::selection {
+  background: #b5d3f7;
+}
+.ktx-page .ProseMirror,
+.ktx-prose {
+  outline: none;
+  min-height: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-kerning: normal;
+  hyphens: auto;
+}
+.ktx-prose > * {
+  margin: 0;
+}
+.ktx-prose p {
+  margin: 0 0 0.8em;
+  text-align: justify;
+}
+.ktx-page.indent .ktx-prose > p:not(.ktx-line) {
+  margin-bottom: 0;
+  text-indent: 1.5em;
+}
+/* LaTeX does not indent the first paragraph after a heading (or anything but a paragraph). */
+.ktx-page.indent .ktx-prose > :is(:not(p), .ktx-line) + p:not(.ktx-line),
+.ktx-page.indent .ktx-prose > p:first-child {
+  text-indent: 0;
+}
+.ktx-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #a0a0a0;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Headings: chapter … subparagraph, sized as in LaTeX's standard classes. */
+.ktx-prose .ktx-h {
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+  margin: 1.4em 0 0.65em;
+}
+.ktx-prose h1.ktx-h {
+  font-size: 2.07em;
+  margin: 1.6em 0 1em;
+}
+.ktx-prose h2.ktx-h {
+  font-size: 1.44em;
+  margin: 1.5em 0 0.8em;
+}
+.ktx-prose h3.ktx-h {
+  font-size: 1.2em;
+}
+.ktx-prose h4.ktx-h,
+.ktx-prose h5.ktx-h,
+.ktx-prose h6.ktx-h {
+  font-size: 1em;
+}
+.ktx-prose h5.ktx-h,
+.ktx-prose h6.ktx-h {
+  margin-bottom: 0.3em;
+}
+.ktx-prose .ktx-h[data-num]::before {
+  content: attr(data-num) '\2003';
+}
+.ktx-prose h1.ktx-h[data-num]::before {
+  content: 'Chapter ' attr(data-num);
+  display: block;
+  font-size: 0.8em;
+  margin-bottom: 0.6em;
+}
+.ktx-prose > .ktx-h:first-child {
+  margin-top: 0;
+}
+
+/* The title block, after \maketitle. */
+.ktx-prose .ktx-title {
+  font-size: 1.73em;
+  text-align: center;
+  margin: 0.6em 0 0.6em;
+  line-height: 1.25;
+}
+.ktx-prose .ktx-author {
+  font-size: 1.2em;
+  text-align: center;
+  margin: 0.2em 0;
+}
+.ktx-prose .ktx-affiliation {
+  font-size: 0.9em;
+  font-style: italic;
+  text-align: center;
+  color: var(--ktx-soft);
+}
+.ktx-prose .ktx-correspondence {
+  font-size: 0.8em;
+  text-align: center;
+  color: var(--ktx-soft);
+}
+.ktx-prose .ktx-author + :not(.ktx-author, .ktx-affiliation, .ktx-correspondence),
+.ktx-prose .ktx-affiliation + :not(.ktx-author, .ktx-affiliation, .ktx-correspondence),
+.ktx-prose .ktx-correspondence + :not(.ktx-author, .ktx-affiliation, .ktx-correspondence) {
+  margin-top: 1.4em;
+}
+.ktx-prose .ktx-abstract {
+  font-size: 0.9em;
+  margin: 0 3em 0.6em;
+  text-align: justify;
+}
+.ktx-prose .ktx-abstract:not(.ktx-abstract + .ktx-abstract)::before {
+  content: 'Abstract';
+  display: block;
+  text-align: center;
+  font-weight: 700;
+  margin: 0.8em 0 0.4em;
+}
+.ktx-prose .ktx-keywords {
+  font-size: 0.9em;
+  font-style: italic;
+  margin: 0 3em 1.2em;
+}
+.ktx-prose .ktx-keywords:not(.ktx-keywords + .ktx-keywords)::before {
+  content: 'Keywords: ';
+  font-style: normal;
+  font-weight: 700;
+}
+.ktx-prose .ktx-frame {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #1565c0;
+  border-top: 2px solid #1565c0;
+  padding-top: 0.4em;
+  margin: 1.4em 0 0.6em;
+}
+.ktx-prose .ktx-line.is-empty::after,
+.ktx-prose .ktx-h:empty::after {
+  color: #aaa;
+}
+
+/* Lists */
+.ktx-prose ul,
+.ktx-prose ol {
+  padding-left: 1.7em;
+  margin: 0.4em 0 0.8em;
+}
+.ktx-prose li > p {
+  margin: 0 0 0.2em;
+  text-indent: 0 !important;
+  text-align: left;
+}
+
+/* Maths */
+.ktx-math {
+  padding: 0 1px;
+  border-radius: 3px;
+}
+.ktx-math .katex {
+  font-size: 1.05em;
+}
+.ktx-mathblock {
+  position: relative;
+  margin: 0.6em 0;
+  padding: 0.3em 2.6em;
+  text-align: center;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ktx-mathblock:hover,
+.ktx-math:hover {
+  background: #eef3ff;
+}
+.ktx-mathblock .katex-display {
+  margin: 0;
+}
+.ktx-mathblock[data-num]::after {
+  content: '(' attr(data-num) ')';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.ktx-math-error {
+  font-family: var(--k-mono);
+  font-size: 0.85em;
+  color: #b3261e;
+  background: #fdecea;
+  white-space: pre-wrap;
+}
+.ktx-mathblock.ktx-math-error,
+.ktx-mathblock .ktx-math-error {
+  display: block;
+  text-align: left;
+  padding: 0.4em 0.6em;
+}
+
+/* Figures */
+.ktx-figure {
+  margin: 0.8em 0;
+  text-align: center;
+}
+.ktx-figure-pic img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: top;
+}
+.ktx-figure-missing {
+  display: inline-block;
+  padding: 1.6em 2em;
+  border: 1px dashed #999;
+  color: #777;
+  font-family: var(--k-mono);
+  font-size: 0.8em;
+}
+.ktx-figcap {
+  font-size: 0.92em;
+  margin-top: 0.5em;
+  padding: 0 1.5em;
+}
+.ktx-figlabel,
+.ktx-tabcap-label {
+  font-family: var(--k-mono);
+  font-size: 0.7em;
+  color: #8a8a8a;
+}
+
+/* Tables: LaTeX's rules, not a grid. */
+.ktx-prose table.ktx-table {
+  border-collapse: collapse;
+  margin: 0.8em auto 0.2em;
+  table-layout: auto;
+  width: auto !important;
+  min-width: 0 !important;
+}
+.ktx-prose table.ktx-table td,
+.ktx-prose table.ktx-table th {
+  padding: 0.15em 0.6em;
+  vertical-align: top;
+  border: none;
+  min-width: 2em;
+  position: relative;
+  font-weight: normal;
+}
+.ktx-prose table.ktx-table tr:first-child > * {
+  border-top: 1px solid #000;
+}
+.ktx-prose table.ktx-table tr:first-child:not(:last-child) > * {
+  border-bottom: 0.6px solid #000;
+}
+.ktx-prose table.ktx-table tr:last-child > * {
+  border-bottom: 1px solid #000;
+}
+.ktx-prose table.ktx-table[data-rules='booktabs'] tr:first-child > *,
+.ktx-prose table.ktx-table[data-rules='booktabs'] tr:last-child > * {
+  border-width: 1.5px;
+}
+.ktx-prose table.ktx-table td > p,
+.ktx-prose table.ktx-table th > p {
+  margin: 0;
+  text-indent: 0 !important;
+  text-align: inherit;
+}
+.ktx-prose table .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(60, 130, 240, 0.18);
+  pointer-events: none;
+}
+.ktx-tabcap {
+  text-align: center;
+  font-size: 0.92em;
+  margin: 0.2em 0 0.9em;
+  cursor: default;
+  user-select: none;
+}
+.ktx-tabcap.empty {
+  color: #9a9a9a;
+}
+
+/* Raw LaTeX blocks: verbatim, coloured by kind as on the desktop. */
+.ktx-prose pre.ktx-raw {
+  position: relative;
+  margin: 0.6em 0;
+  padding: 0.5em 0.8em;
+  border-left: 3px solid #b71c1c;
+  background: #fdf3f3;
+  color: #8a1414;
+  font-family: var(--k-mono);
+  font-size: 0.78em;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  border-radius: 0 4px 4px 0;
+}
+.ktx-prose pre.ktx-raw code {
+  font: inherit;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.ktx-raw-tag {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  font-family: var(--k-font);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+  user-select: none;
+}
+.ktx-prose pre.ktx-raw[data-kind='code'] {
+  border-color: #1a3a8c;
+  background: #f1f4fc;
+  color: #1a3a8c;
+}
+.ktx-prose pre.ktx-raw[data-kind='bib'] {
+  border-color: #6a1b9a;
+  background: #f7f0fb;
+  color: #5b1785;
+}
+.ktx-prose pre.ktx-raw[data-kind='pagebreak'],
+.ktx-prose pre.ktx-raw[data-kind='rule'],
+.ktx-prose pre.ktx-raw[data-kind='marker'] {
+  border-left: none;
+  border-top: 2px dashed #b9b9b9;
+  background: none;
+  color: #9a9a9a;
+  text-align: center;
+  padding: 0.2em;
+  border-radius: 0;
+}
+.ktx-prose pre.ktx-raw[data-kind='rule'] {
+  border-top-style: solid;
+  border-top-color: #444;
+}
+.ktx-prose pre.ktx-raw[data-kind='marker'] {
+  border-top-color: #e0a100;
+  color: #a37500;
+}
+
+/* Inline objects */
+.ktx-fn {
+  font-size: 0.75em;
+  color: #7a4c00;
+  background: #fff0d0;
+  border-radius: 3px;
+  padding: 0 3px;
+  vertical-align: super;
+  line-height: 1;
+}
+.ktx-cite,
+.ktx-ref {
+  border-radius: 3px;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+.ktx-cite {
+  color: #5b2d83;
+  background: #f1e5ff;
+}
+.ktx-ref {
+  color: #087a46;
+  background: #e3f5ea;
+}
+.ktx-cite::after,
+.ktx-ref::after {
+  content: attr(data-display);
+}
+.ktx-iraw {
+  font-family: var(--k-mono);
+  font-size: 0.82em;
+  color: #0a3d62;
+  background: #e8f0fb;
+  border-radius: 3px;
+  padding: 0 3px;
+}
+.ktx-iraw.ktx-break {
+  font-size: 0.7em;
+  padding: 0 2px;
+  color: #6b8fb5;
+  background: none;
+}
+.ktx-link {
+  color: #1a6dd8;
+  text-decoration: underline;
+}
+.ktx-hl {
+  color: inherit;
+  padding: 0;
+}
+.ktx-comment {
+  background: #ffe4b5;
+  text-decoration: underline dashed #d96b00;
+  text-underline-offset: 2px;
+}
+.ktx-sc {
+  font-variant: small-caps;
+}
+.ktx-prose code {
+  font-family: var(--k-mono);
+  font-size: 0.88em;
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+.ktx-prose sub,
+.ktx-prose sup {
+  line-height: 0;
+}
+
+.ktx-prose .ProseMirror-selectednode {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+.ktx-find-hit {
+  background: rgba(255, 196, 0, 0.55);
+  border-radius: 2px;
+}
+.ktx-prose .ProseMirror-gapcursor::after {
+  border-top-color: #111;
+}
+
+/* Formatting marks (¶ at the end of each paragraph). */
+.ktx-page.marks .ktx-prose p::after,
+.ktx-page.marks .ktx-prose .ktx-h::after,
+.ktx-page.marks .ktx-prose .ktx-line::after {
+  content: '¶';
+  color: #8aa4c8;
+  font-weight: normal;
+  font-style: normal;
+  margin-left: 2px;
+}
+
+/* ---------------------------------------------------------------- Code tab */
+
+.ktx-code {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ktx-code .k-code-editor {
+  flex: 1;
+}
+.ktx-code-note {
+  padding: 4px 12px;
+  font-size: 11.5px;
+  color: var(--k-muted);
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  flex: none;
+}
+.ktx-code-note.bad {
+  color: var(--k-danger);
+}
+
+/* ------------------------------------------------------------- Console tab */
+
+.ktx-console {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--k-bg);
+  padding: 10px 12px;
+}
+.ktx-console-empty {
+  display: grid;
+  place-items: center;
+}
+.ktx-console-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.ktx-console-head.ok {
+  color: var(--k-success);
+}
+.ktx-console-head.bad {
+  color: var(--k-danger);
+}
+.ktx-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.ktx-error {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--k-danger) 35%, transparent);
+  background: color-mix(in srgb, var(--k-danger) 9%, transparent);
+  color: var(--k-text);
+  border-radius: 5px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.ktx-error:hover {
+  background: color-mix(in srgb, var(--k-danger) 16%, transparent);
+}
+.ktx-error-where {
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+  color: var(--k-danger);
+  white-space: nowrap;
+  min-width: 56px;
+}
+.ktx-log {
+  margin: 0;
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--k-muted);
+}
+
+/* --------------------------------------------------------------- PDF panel */
+
+.ktx-splitter {
+  width: 5px;
+  flex: none;
+  cursor: col-resize;
+  background: var(--k-border);
+  border-left: 1px solid var(--k-chrome);
+  border-right: 1px solid var(--k-chrome);
+}
+.ktx-splitter:hover {
+  background: var(--k-accent);
+}
+.ktx-pdf-wrap {
+  flex: 0 1 45%;
+  min-width: 0;
+  display: flex;
+}
+.ktx-pdf {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--k-bg) 70%, #000);
+}
+.ktx-pdf-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 31px;
+  padding: 0 6px 0 10px;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  color: var(--k-muted);
+  flex: none;
+}
+.ktx-pdf-title {
+  font-size: 12.5px;
+  color: var(--k-text);
+}
+.ktx-pdf-bad {
+  font-size: 11.5px;
+  color: var(--k-danger);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ktx-pdf-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #525659;
+}
+.ktx-pdf-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  line-height: 1.5;
+}
+.ktx-pdf-notice {
+  flex: none;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  color: var(--k-danger);
+  background: var(--k-chrome);
+  border-top: 1px solid var(--k-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ktx-print-frame {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- find bar */
+
+.ktx-find {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: var(--k-chrome);
+  border-top: 1px solid var(--k-border);
+  flex: none;
+  flex-wrap: wrap;
+}
+.ktx-find .k-input {
+  height: 26px;
+  width: 190px;
+}
+.ktx-find-status {
+  font-size: 11.5px;
+  color: var(--k-muted);
+  min-width: 60px;
+}
+
+/* --------------------------------------------------------------- status bar */
+
+.ktx-status-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
+.ktx-zoom {
+  display: inline-flex;
+  gap: 2px;
+}
+.ktx-zoom-btn {
+  height: 18px;
+  min-width: 20px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 18px;
+  padding: 0 4px;
+}
+.ktx-zoom-btn:hover {
+  background: var(--k-button-hover);
+  color: var(--k-text);
+}
+.ktx-zoom-btn.wide {
+  min-width: 44px;
+}
+.ktx-zoom-btn.on {
+  color: var(--k-accent);
+}
+.ktx-status-compile.bad {
+  color: var(--k-danger);
+}
+
+/* ----------------------------------------------------------- symbol palette */
+
+.ktx-symbols {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 330px;
+  max-height: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg);
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  box-shadow: var(--k-shadow-lg);
+  z-index: 6;
+}
+.ktx-symbols-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 6px 6px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--k-border);
+}
+.ktx-symbols-body {
+  overflow: auto;
+  padding: 4px 10px 10px;
+}
+.ktx-symbols-group {
+  font-size: 11px;
+  color: var(--k-muted);
+  margin: 8px 0 4px;
+}
+.ktx-symbols-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 3px;
+}
+.ktx-symbol {
+  height: 30px;
+  border: 1px solid var(--k-border);
+  border-radius: 5px;
+  background: var(--k-button);
+  color: var(--k-text);
+  cursor: pointer;
+  font-size: 15px;
+  font-family: 'Times New Roman', serif;
+  padding: 0;
+}
+.ktx-symbol:hover {
+  background: var(--k-button-hover);
+  border-color: var(--k-accent);
+}
+
+/* ------------------------------------------------------------------ dialogs */
+
+.ktx-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  animation: k-fade 0.12s;
+}
+.ktx-dialog {
+  max-height: calc(100% - 16px);
+  overflow: auto;
+}
+.ktx-dialog .k-dialog-buttons {
+  align-items: center;
+}
+.ktx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.ktx-field-label {
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.ktx-field-hint {
+  font-size: 11.5px;
+  color: var(--k-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+.ktx-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.ktx-row > .ktx-field {
+  min-width: 120px;
+}
+.k-input.mono,
+.ktx-textarea.mono {
+  font-family: var(--k-mono);
+  font-size: 12.5px;
+}
+.ktx-textarea {
+  min-height: 70px;
+}
+.ktx-math-templates {
+  display: flex;
+  gap: 8px;
+}
+.ktx-math-templates .k-input {
+  height: 28px;
+}
+.ktx-math-preview {
+  min-height: 52px;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  background: #fff;
+  color: #111;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  overflow-x: auto;
+  font-size: 17px;
+}
+.ktx-math-preview .k-muted {
+  color: #888;
+  font-size: 12.5px;
+}
+.ktx-figure-pick {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+.ktx-figure-preview {
+  width: 170px;
+  height: 120px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  overflow: hidden;
+  font-size: 11.5px;
+  text-align: center;
+}
+.ktx-figure-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.ktx-figure-pick-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+}
+.ktx-picklist {
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ktx-pick {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  text-align: left;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--k-text);
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.ktx-pick:hover {
+  background: var(--k-button-hover);
+}
+.ktx-pick.on {
+  background: var(--k-selection);
+}
+.ktx-pick span {
+  color: var(--k-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ktx-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 300px;
+  padding-top: 6px;
+}
+.ktx-shortcuts {
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.ktx-shortcuts td {
+  padding: 3px 12px 3px 0;
+}
+.ktx-shortcuts kbd {
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+  padding: 1px 5px;
+  border: 1px solid var(--k-border);
+  border-radius: 4px;
+  background: var(--k-alt);
+  white-space: nowrap;
+}

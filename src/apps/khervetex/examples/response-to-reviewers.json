@@ -1,0 +1,357 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Response to Reviewers",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "Manuscript APSUSC-D-26-01234 — “Oxygen vacancies and Ti³⁺ states in reduced anatase TiO₂ thin films”",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "Dear Editor,",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "We thank you and the reviewers for the careful reading of our manuscript. We have addressed every comment below. Reviewer comments are in ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "bold",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ", our responses in plain text, and changes to the manuscript are ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "highlighted in italics",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": ". Page and line numbers refer to the revised version.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Reviewer 1",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Comment 1.1 — The Ti³⁺ component could be an artefact of differential charging. Please justify.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "We agree this must be excluded. We repeated the measurements with the flood gun at three emission currents; the Ti⁴⁺–Ti³⁺ separation varied by < 0.03 eV (new Table S2). In addition, the Ti³⁺ fraction is reversible upon re-oxidation in 10⁻⁶ mbar O₂, which charging artefacts would not be.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Added (p. 6, l. 142): “The chemical shift was invariant to neutraliser settings within 0.03 eV (Table S2).”",
+          "marks": [
+            "italic"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Comment 1.2 — Why is the Lorentzian fraction fixed at 0.3?",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Leaving ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\eta",
+          "type": "MathInline"
+        },
+        {
+          "text": " free led to strong correlation with the FWHM (",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "|\\rho| = 0.94",
+          "type": "MathInline"
+        },
+        {
+          "text": "). We now report a sensitivity analysis over ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\eta \\in [0.2, 0.4]",
+          "type": "MathInline"
+        },
+        {
+          "text": "; the Ti³⁺ fraction changes by at most 0.6 %.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Reviewer 2",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Comment 2.1 — The activation energy seems low. Compare with the literature.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "We have added a comparison with three previous studies (new Table 3) and discussed the role of the UHV chemical potential of oxygen, ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\Delta\\mu_O(T,p)",
+          "type": "MathInline"
+        },
+        {
+          "text": ", which lowers the effective formation energy.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Comment 2.2 — Minor: typo in Eq. (3).",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Corrected, thank you.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Summary of changes",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Section",
+          "Change",
+          "Prompted by"
+        ],
+        [
+          "Methods",
+          "Charging control experiments",
+          "R1.1"
+        ],
+        [
+          "Methods",
+          "Sensitivity analysis on η",
+          "R1.2"
+        ],
+        [
+          "Discussion",
+          "Literature comparison, Table 3",
+          "R2.1"
+        ],
+        [
+          "Eq. (3)",
+          "Typo corrected",
+          "R2.2"
+        ],
+        [
+          "SI",
+          "New Tables S2–S3",
+          "R1.1, R1.2"
+        ]
+      ],
+      "caption": "",
+      "label": null,
+      "alignment": "lll",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "We believe the manuscript is substantially improved and hope it is now suitable for publication.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Yours sincerely,",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Surface, on behalf of all authors",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "Response to reviewers",
+    "author": "A. Surface",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

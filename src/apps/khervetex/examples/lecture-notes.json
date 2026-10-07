@@ -1,0 +1,364 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "MATH 4200 — Metric Spaces",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "Prof. A. Lecturer — Lecture 12: Compactness",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Compactness",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Compactness is one of the central concepts in analysis and topology. Informally, a compact set behaves like a finite set in many important respects: continuous functions attain their extrema on compact sets, sequences have convergent subsequences, and open covers can always be reduced to finite sub-covers.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Definitions",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "text": "\\begin{definition}[Open cover]\nLet $(X, d)$ be a metric space and $K \\subseteq X$. An \\emph{open cover} of $K$ is a collection $\\{U_\\alpha\\}_{\\alpha \\in A}$ of open sets such that $K \\subseteq \\bigcup_{\\alpha \\in A} U_\\alpha$.\n\\end{definition}",
+      "type": "RawLatex"
+    },
+    {
+      "text": "\\begin{definition}[Compact set]\nA subset $K$ of a metric space $(X, d)$ is \\emph{compact} if every open cover of $K$ has a finite sub-cover.\n\\end{definition}",
+      "type": "RawLatex"
+    },
+    {
+      "children": [
+        {
+          "text": "Note that compactness is an intrinsic property: it does not depend on the ambient space ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "X",
+          "type": "MathInline"
+        },
+        {
+          "text": ", only on the induced metric on ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "K",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "First properties",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "text": "\\begin{theorem}\nEvery compact subset of a metric space is closed and bounded.\n\\end{theorem}",
+      "type": "RawLatex"
+    },
+    {
+      "text": "\\begin{proof}\nLet $K$ be compact in $(X, d)$. Fix $p \\in X$ and consider the open cover $\\{B(p, n)\\}_{n=1}^\\infty$ of $K$. By compactness there is a finite sub-cover, so $K \\subseteq B(p, N)$ for some $N$; hence $K$ is bounded.\n\nTo show $K$ is closed, let $q \\notin K$. For each $x \\in K$, let $r_x = d(x, q)/2$ and consider the open cover $\\{B(x, r_x)\\}_{x \\in K}$. Extract a finite sub-cover $B(x_1, r_1), \\ldots, B(x_n, r_n)$. Then $B(q, \\min_i r_i) \\cap K = \\emptyset$, so $q$ is an interior point of $X \\setminus K$. Since $q$ was arbitrary, $X \\setminus K$ is open, so $K$ is closed.\n\\end{proof}",
+      "type": "RawLatex"
+    },
+    {
+      "children": [
+        {
+          "text": "Remark.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " The converse is false in general metric spaces. The closed unit ball in an infinite-dimensional Banach space is closed and bounded but not compact.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "The Heine–Borel theorem",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "text": "\\begin{theorem}[Heine--Borel]\n\\label{thm:heine-borel}\nA subset of $\\mathbb{R}^n$ is compact if and only if it is closed and bounded.\n\\end{theorem}",
+      "type": "RawLatex"
+    },
+    {
+      "children": [
+        {
+          "text": "We will not prove the full theorem here (see the textbook, Chapter 4, §3). Instead we prove the key lemma from which the result follows.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{lemma}[Bolzano--Weierstrass]\nEvery bounded sequence in $\\mathbb{R}^n$ has a convergent subsequence.\n\\end{lemma}",
+      "type": "RawLatex"
+    },
+    {
+      "text": "\\begin{proof}\nWe argue by repeated bisection. Given a bounded sequence $(x_k)$ in $\\mathbb{R}$, it lies in some interval $[a, b]$. At least one of $[a, (a+b)/2]$ or $[(a+b)/2, b]$ contains infinitely many terms; pick that half-interval and a term from it. Repeat. This produces a nested sequence of closed intervals whose lengths tend to zero, and by the nested-intervals theorem their intersection is a single point $\\ell$. The subsequence of terms chosen at each step converges to $\\ell$.\n\nFor $\\mathbb{R}^n$, apply the one-dimensional argument to each coordinate in turn (a diagonal argument).\n\\end{proof}",
+      "type": "RawLatex"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Compactness and continuity",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "text": "\\begin{theorem}[Extreme value theorem]\n\\label{thm:evt}\nLet $K$ be a non-empty compact subset of a metric space and let $f: K \\to \\mathbb{R}$ be continuous. Then $f$ attains its maximum and minimum on $K$.\n\\end{theorem}",
+      "type": "RawLatex"
+    },
+    {
+      "text": "\\begin{proof}\nSince $f$ is continuous and $K$ is compact, $f(K)$ is a compact subset of $\\mathbb{R}$ (continuous images of compact sets are compact). By Heine--Borel (Theorem~\\ref{thm:heine-borel}), $f(K)$ is closed and bounded. In particular $\\sup f(K)$ exists and belongs to $f(K)$ (because $f(K)$ is closed), so the supremum is attained. The argument for the infimum is identical.\n\\end{proof}",
+      "type": "RawLatex"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Worked example",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "text": "\\begin{example}\nShow that the set $K = \\{(x, y) \\in \\mathbb{R}^2 : x^2 + y^2 \\leq 1\\}$ is compact.\n\\end{example}",
+      "type": "RawLatex"
+    },
+    {
+      "children": [
+        {
+          "text": "Solution.",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " The set ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "K",
+          "type": "MathInline"
+        },
+        {
+          "text": " is bounded (it lies inside the ball of radius 1) and closed (it is the pre-image of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "(-\\infty, 1]",
+          "type": "MathInline"
+        },
+        {
+          "text": " under the continuous function ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f(x,y) = x^2 + y^2",
+          "type": "MathInline"
+        },
+        {
+          "text": "). By the Heine–Borel theorem (Theorem ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "thm:heine-borel",
+          "kind": "ref",
+          "type": "CrossRef"
+        },
+        {
+          "text": "), ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "K",
+          "type": "MathInline"
+        },
+        {
+          "text": " is compact.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Exercises",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Prove that a finite union of compact sets is compact.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Give an example of a closed and bounded subset of a metric space that is not compact.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Let f: K → ℝ be continuous on a compact set K. Prove that f is uniformly continuous on K.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Show that the intersection of a compact set and a closed set is compact.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    }
+  ],
+  "meta": {
+    "title": "Lecture notes",
+    "author": "Prof. A. Lecturer",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newtheorem{theorem}{Theorem}[section]\n\\newtheorem{definition}[theorem]{Definition}\n\\newtheorem{lemma}[theorem]{Lemma}\n\\newtheorem{corollary}[theorem]{Corollary}\n\\newtheorem{example}[theorem]{Example}\n\\newtheorem{remark}[theorem]{Remark}",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

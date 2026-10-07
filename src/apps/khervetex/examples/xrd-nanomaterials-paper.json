@@ -1,0 +1,603 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Crystallite size and lattice strain in sol–gel ZnO nanoparticles from X-ray diffraction line-profile analysis",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "D. Crystal, E. Rietveld",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "ZnO nanoparticles were synthesised by a sol–gel route and calcined at 400–800 °C. Powder X-ray diffraction confirms single-phase wurtzite (P6₃mc). Crystallite sizes obtained from the Scherrer equation (14–46 nm) are compared with a Williamson–Hall analysis that separates size and microstrain contributions to the line broadening.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "XRD · Scherrer · Williamson–Hall · ZnO · nanoparticles",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Line broadening in powder diffraction carries information on both the size of coherently scattering domains and on inhomogeneous strain ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "klug1974"
+          ],
+          "style": "cite",
+          "type": "Citation"
+        },
+        {
+          "text": ". Separating the two requires analysing the angular dependence of the broadening.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Theory",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Bragg's law relates the interplanar spacing ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "d_{hkl}",
+          "type": "MathInline"
+        },
+        {
+          "text": " to the diffraction angle:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "n\\lambda = 2 d_{hkl} \\sin\\theta.",
+      "numbered": true,
+      "label": "eq:bragg",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "For a hexagonal lattice with parameters ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a",
+          "type": "MathInline"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "c",
+          "type": "MathInline"
+        },
+        {
+          "text": ",",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\frac{1}{d_{hkl}^2} = \\frac{4}{3}\\,\\frac{h^2+hk+k^2}{a^2} + \\frac{l^2}{c^2}.",
+      "numbered": true,
+      "label": "eq:hex",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "The Scherrer equation estimates the mean crystallite size ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "D",
+          "type": "MathInline"
+        },
+        {
+          "text": " from the instrument-corrected integral breadth ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\beta",
+          "type": "MathInline"
+        },
+        {
+          "text": ":",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "D = \\frac{K\\lambda}{\\beta\\cos\\theta},\\qquad \\beta = \\sqrt{\\beta_{\\text{obs}}^2 - \\beta_{\\text{inst}}^2},",
+      "numbered": true,
+      "label": "eq:scherrer",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "with shape factor ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "K = 0.9",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Including a microstrain ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\varepsilon",
+          "type": "MathInline"
+        },
+        {
+          "text": " gives the Williamson–Hall relation",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\beta\\cos\\theta = \\frac{K\\lambda}{D} + 4\\varepsilon\\sin\\theta,",
+      "numbered": true,
+      "label": "eq:wh",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "so that a plot of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\beta\\cos\\theta",
+          "type": "MathInline"
+        },
+        {
+          "text": " vs ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "4\\sin\\theta",
+          "type": "MathInline"
+        },
+        {
+          "text": " has intercept ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "K\\lambda/D",
+          "type": "MathInline"
+        },
+        {
+          "text": " and slope ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\varepsilon",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Methods",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Zinc acetate dihydrate (0.5 M) dissolved in ethanol at 60 °C; diethanolamine added 1:1 as stabiliser.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Gel dried at 120 °C for 12 h and ground in an agate mortar.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Calcined 2 h in air at 400, 600 or 800 °C (5 °C/min).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "XRD: Cu Kα₁ (λ = 1.5406 Å), 2θ = 20–80°, step 0.01°, LaB₆ (NIST SRM 660c) for instrumental broadening.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "(hkl)",
+          "2θ (°)",
+          "d (Å)",
+          "FWHM 400 °C (°)",
+          "FWHM 800 °C (°)"
+        ],
+        [
+          "(100)",
+          "31.77",
+          "2.814",
+          "0.612",
+          "0.198"
+        ],
+        [
+          "(002)",
+          "34.42",
+          "2.603",
+          "0.590",
+          "0.191"
+        ],
+        [
+          "(101)",
+          "36.25",
+          "2.476",
+          "0.628",
+          "0.205"
+        ],
+        [
+          "(102)",
+          "47.54",
+          "1.911",
+          "0.701",
+          "0.228"
+        ],
+        [
+          "(110)",
+          "56.60",
+          "1.625",
+          "0.742",
+          "0.244"
+        ],
+        [
+          "(103)",
+          "62.86",
+          "1.477",
+          "0.801",
+          "0.262"
+        ]
+      ],
+      "caption": "Indexed reflections of wurtzite ZnO.",
+      "label": "tab:peaks",
+      "alignment": "lrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "Refined lattice parameters at 800 °C are ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a = 3.2498(3)\\ \\text{Å}",
+          "type": "MathInline"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "c = 5.2066(5)\\ \\text{Å}",
+          "type": "MathInline"
+        },
+        {
+          "text": ", giving ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "c/a = 1.602",
+          "type": "MathInline"
+        },
+        {
+          "text": ", close to the ideal ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\sqrt{8/3} = 1.633",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Calcination (°C)",
+          "D Scherrer (nm)",
+          "D W–H (nm)",
+          "ε (×10⁻³)",
+          "R²"
+        ],
+        [
+          "400",
+          "14.2",
+          "17.8",
+          "2.41",
+          "0.962"
+        ],
+        [
+          "600",
+          "26.5",
+          "29.3",
+          "1.12",
+          "0.978"
+        ],
+        [
+          "800",
+          "45.8",
+          "48.1",
+          "0.37",
+          "0.954"
+        ]
+      ],
+      "caption": "Size and strain from Eqs. (4) and (5).",
+      "label": "tab:size",
+      "alignment": "lrrrr",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Discussion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Scherrer sizes are systematically smaller than W–H values because the Scherrer approach attributes all broadening to size. The strain relaxes by a factor of six on calcination, consistent with annealing of grain-boundary defects. Grain growth follows",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "D^n - D_0^n = k_0\\, t\\, \\exp\\!\\left(-\\frac{Q}{RT}\\right),",
+      "numbered": true,
+      "label": "eq:growth",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "and with ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "n = 2",
+          "type": "MathInline"
+        },
+        {
+          "text": " we obtain ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "Q \\approx 48\\ \\text{kJ mol}^{-1}",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Line-profile analysis of sol–gel ZnO shows crystallite growth from 18 to 48 nm and strain relief between 400 and 800 °C. Values from Scherrer and W–H converge once strain becomes negligible.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "text": "\\begin{thebibliography}{99}\n\\bibitem{klug1974} H. P. Klug and L. E. Alexander, \\emph{X-Ray Diffraction Procedures}, 2nd ed. (Wiley, 1974).\n\\end{thebibliography}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "XRD of ZnO nanoparticles",
+    "author": "D. Crystal",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

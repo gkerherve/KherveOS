@@ -1,0 +1,431 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "SOP-CHEM-014: Preparation of Piranha solution and cleaning of silicon substrates",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "Version 3.1 · Approved by: T. Safety · Review due: September 2027",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Purpose and scope",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "This SOP describes the preparation and use of Piranha solution (3:1 H₂SO₄ : H₂O₂) to remove organic residues from Si wafers. It applies to all users of fume hood FH-3 in the Materials Chemistry laboratory.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Hazards",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Hazard",
+          "Severity",
+          "Likelihood",
+          "Risk",
+          "Control"
+        ],
+        [
+          "Violent exotherm / explosion with organics",
+          "5",
+          "2",
+          "10",
+          "Never mix with solvents; small volumes"
+        ],
+        [
+          "Severe chemical burns",
+          "4",
+          "2",
+          "8",
+          "Face shield, acid apron, neoprene gloves"
+        ],
+        [
+          "Pressure build-up in closed vessel",
+          "5",
+          "1",
+          "5",
+          "Never cap; label and leave to cool open"
+        ],
+        [
+          "Spill",
+          "3",
+          "2",
+          "6",
+          "Spill kit at FH-3; bund tray"
+        ]
+      ],
+      "caption": "Risk assessment (risk = severity × likelihood, 1–25).",
+      "label": "tab:risk",
+      "alignment": "lcccl",
+      "style": "booktabs",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Personal protective equipment",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Full face shield over safety goggles",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Acid-resistant apron and lab coat",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Heavy neoprene or butyl gloves over nitrile",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Closed shoes; work only with a second person present",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Procedure",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Clear the fume hood of all organic solvents and combustibles.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Place a clean Pyrex beaker in the bund tray.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Add 30 mL concentrated H₂SO₄ (96 %).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Slowly add 10 mL H₂O₂ (30 %) — ALWAYS peroxide to acid. The mixture will reach ~120 °C.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Immerse wafers with PTFE tweezers for 15 min.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Rinse in three successive DI-water baths, then blow dry with N₂.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Allow the solution to cool completely (≥ 2 h) in the open beaker before disposal.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "The heat released on mixing can be estimated from the enthalpy of dilution; for 30 mL of acid the temperature rise is roughly",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\Delta T \\approx \\frac{n\\,|\\Delta H_{\\text{dil}}|}{m\\,c_p} \\approx \\frac{0.54 \\times 45\\,000}{56 \\times 2.0} \\approx 2\\times 10^2\\ \\text{K (upper bound)},",
+      "numbered": true,
+      "label": "eq:heat",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "which is why peroxide must be added slowly.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Waste disposal",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Cooled Piranha is collected in the labelled vented container “Piranha waste — do not cap tightly”. Never pour into the general acid-waste drum.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Emergency procedures",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Skin contact: drench in safety shower ≥ 15 min, remove contaminated clothing, call first aider.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Eye contact: eyewash ≥ 15 min, seek medical attention.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Spill > 50 mL: evacuate, call emergency number 2222.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Record of training",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Name",
+          "Trained by",
+          "Date",
+          "Signature"
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "caption": "",
+      "label": null,
+      "alignment": "llll",
+      "style": "",
+      "type": "Table"
+    }
+  ],
+  "meta": {
+    "title": "Standard operating procedure",
+    "author": "Lab manager",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "booktabs",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "libertine",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\newenvironment{keyword}{\\par\\medskip\\noindent\\textbf{Keywords:} }{\\par\\medskip}\n\\providecommand{\\sep}{\\unskip, }",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

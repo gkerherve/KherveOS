@@ -1,0 +1,475 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Proposal: Quantum error correction in superconducting circuits",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "Dr A. Researcher — Department of Quantum Engineering",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Project summary",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "This proposal requests funding for a three-year programme to develop and experimentally validate a new family of quantum error-correcting codes tailored to the noise characteristics of transmon-based superconducting circuits. The expected outcomes are (i) a code family with provably lower overhead than the surface code for biased noise, (ii) a prototype implementation on a 20-qubit device, and (iii) open-source software for simulating and benchmarking the codes.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Background and motivation",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Quantum error correction (QEC) is widely regarded as essential for practical quantum computing ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "terhal2015",
+            "campbell2017"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ". The surface code ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "fowler2012"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": " is the current front-runner because of its high threshold and local stabiliser checks. However, its overhead — roughly ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "O(d^2)",
+          "type": "MathInline"
+        },
+        {
+          "text": " physical qubits per logical qubit for code distance ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "d",
+          "type": "MathInline"
+        },
+        {
+          "text": " — remains prohibitive for near-term hardware.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "children": [
+        {
+          "text": "Recent theoretical work has shown that when the physical noise is biased (i.e. phase-flip errors dominate bit-flip errors, as is typical for transmons at long coherence times), tailored codes can achieve the same logical error rate with significantly fewer qubits ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "tuckett2020",
+            "dua2024"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": ". This project aims to move those theoretical gains into the laboratory.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Objectives",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Design a family of bias-tailored stabiliser codes optimised for the noise profile of state-of-the-art transmon qubits.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Develop an open-source decoder that runs within the real-time feedback latency budget of current cryogenic electronics (< 1 μs per syndrome round).",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Implement the best candidate code on a 20-qubit superconducting device and measure the logical error rate at distances 3, 5 and 7.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Benchmark the code against the surface code under identical hardware conditions.",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Methodology",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Code construction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We will use a computer search over the space of CSS codes with biased distance, parameterised by the physical noise bias ratio ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\eta = p_Z / p_X",
+          "type": "MathInline"
+        },
+        {
+          "text": ". The search objective is to minimise the number of physical qubits ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "n",
+          "type": "MathInline"
+        },
+        {
+          "text": " subject to a target logical error rate:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "p_L \\leq p_{\\text{phys}}^{\\lfloor d/2 \\rfloor}\\binom{d}{\\lfloor d/2 \\rfloor}",
+      "numbered": true,
+      "label": "eq:threshold",
+      "type": "MathBlock"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Decoder design",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We will adapt the Union-Find decoder ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "keys": [
+            "delfosse2021"
+          ],
+          "style": "citep",
+          "type": "Citation"
+        },
+        {
+          "text": " to exploit the noise bias. The key modification is a weighted growth rule that expands clusters anisotropically in the Tanner graph, reducing the average number of growth steps and thus the wall-clock decoding time.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 2,
+      "children": [
+        {
+          "text": "Experimental validation",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The experimental work will be carried out on the 20-qubit device in our laboratory. Each code instance will be run for ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "10^6",
+          "type": "MathInline"
+        },
+        {
+          "text": " syndrome rounds, and the logical error rate will be extracted by majority-vote decoding of repeated stabiliser measurements.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Timeline",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Period",
+          "Milestone"
+        ],
+        [
+          "Months 1–6",
+          "Code family enumeration and simulation"
+        ],
+        [
+          "Months 7–12",
+          "Decoder implementation and benchmarking (simulation)"
+        ],
+        [
+          "Months 13–18",
+          "Device calibration and preliminary experiments at distance 3"
+        ],
+        [
+          "Months 19–30",
+          "Full experimental campaign at distances 3, 5 and 7"
+        ],
+        [
+          "Months 31–36",
+          "Analysis, publication and software release"
+        ]
+      ],
+      "caption": "Proposed timeline.",
+      "label": "tab:timeline",
+      "alignment": "lp{10cm}",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Budget overview",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Item",
+          "Cost (£k)"
+        ],
+        [
+          "Postdoc (36 months)",
+          "180"
+        ],
+        [
+          "PhD student (36 months)",
+          "90"
+        ],
+        [
+          "Cryostat maintenance",
+          "40"
+        ],
+        [
+          "Consumables and travel",
+          "25"
+        ],
+        [
+          "Total",
+          "335"
+        ]
+      ],
+      "caption": "Budget summary.",
+      "label": "tab:budget",
+      "alignment": "lr",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Expected impact",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "If successful, this project will demonstrate that bias-tailored codes offer a practical route to lower-overhead quantum error correction on real hardware. The open-source decoder and simulation tools will be of immediate use to other experimental groups, and the experimental data will provide a benchmark for future code designs.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "Research proposal",
+    "author": "A. Researcher",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "natbib",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 12,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

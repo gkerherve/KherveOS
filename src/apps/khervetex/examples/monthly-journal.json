@@ -1,0 +1,529 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Monthly Review",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "May 2026",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Month at a glance",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "A strong month overall. The Phys. Rev. B paper was submitted after three rounds of internal review, the ICML poster was accepted, and the new cluster is now fully operational. On the personal side, maintained the exercise habit (17 out of 22 working days) and finished Tao's Analysis I.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Goals: review",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Goal",
+          "Status",
+          "Notes"
+        ],
+        [
+          "Submit Phys. Rev. B paper",
+          "✓ Done",
+          "Submitted 20 May"
+        ],
+        [
+          "ICML poster abstract",
+          "✓ Done",
+          "Accepted 28 May"
+        ],
+        [
+          "Benchmark new cluster",
+          "✓ Done",
+          "1.8× speedup confirmed"
+        ],
+        [
+          "Read Tao's Analysis I (Ch. 1–8)",
+          "✓ Done",
+          "Finished 25 May"
+        ],
+        [
+          "Exercise 4×/week",
+          "✓ 4.25 avg",
+          "17/20 target days"
+        ],
+        [
+          "Draft NeurIPS outline",
+          "◻ Partial",
+          "Intro + methods only"
+        ],
+        [
+          "Fix kitchen tap",
+          "◻ Not done",
+          "Plumber booked for 3 Jun"
+        ]
+      ],
+      "caption": "May 2026 goals scorecard.",
+      "label": "tab:monthly-goals",
+      "alignment": "llp{5cm}",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "children": [
+        {
+          "text": "Five of seven goals completed. The NeurIPS outline stalled in weeks 3–4 because the poster deadline consumed the time I had planned for it. Realistic assessment: I over-committed by one goal this month.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Key events",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Date",
+          "Event"
+        ],
+        [
+          "5 May",
+          "Group retreat — brainstormed Q3 research directions"
+        ],
+        [
+          "12 May",
+          "Prof. N.'s colloquium on stochastic control"
+        ],
+        [
+          "20 May",
+          "Phys. Rev. B submission"
+        ],
+        [
+          "23 May",
+          "ICML poster abstract submitted"
+        ],
+        [
+          "28 May",
+          "ICML acceptance notification — poster accepted"
+        ],
+        [
+          "30 May",
+          "New PhD student E. joined the group"
+        ]
+      ],
+      "caption": "",
+      "label": null,
+      "alignment": "lp{12cm}",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Metrics",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "rows": [
+        [
+          "Metric",
+          "April",
+          "May",
+          "Trend"
+        ],
+        [
+          "Papers submitted",
+          "0",
+          "1",
+          "↑"
+        ],
+        [
+          "Conference submissions",
+          "0",
+          "1",
+          "↑"
+        ],
+        [
+          "Deep-work hours",
+          "62",
+          "71",
+          "↑ +15%"
+        ],
+        [
+          "Exercise days",
+          "14",
+          "17",
+          "↑"
+        ],
+        [
+          "Books / chapters read",
+          "4",
+          "8",
+          "↑"
+        ],
+        [
+          "Meetings attended",
+          "18",
+          "16",
+          "↓ (good)"
+        ]
+      ],
+      "caption": "Month-over-month tracking.",
+      "label": "tab:monthly-metrics",
+      "alignment": "lrrr",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Reflection",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "What went well:",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Protecting the morning focus block paid off — deep-work hours up 15%",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Starting the paper revision early meant the deadline felt comfortable instead of rushed",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "The exercise habit is now self-sustaining; missed days feel wrong rather than normal",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "What to improve:",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Over-committed on goals again — cap at 5 next month",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Spent too long on email in the afternoons; batch it to two 20-minute windows",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "The reading goal was met but at the expense of the NeurIPS outline — need to prioritise better",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "Surprises:",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "The cluster speedup was higher than expected — worth re-running older experiments",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "ICML poster acceptance came faster than anticipated; need to start making the poster now",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Goals for June 2026",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "ordered": true,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Complete NeurIPS paper outline and first draft of Introduction + Methods",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Design and print ICML poster (conference 15–20 July)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Onboard new PhD student E. — set up their dev environment and assign first reading list",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Start Tao's Analysis II (target: chapters 1–4)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Exercise 4×/week (maintain)",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "Key dates:",
+          "marks": [
+            "bold"
+          ],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Date",
+          "Event"
+        ],
+        [
+          "3 Jun",
+          "Plumber visit (finally)"
+        ],
+        [
+          "7 Jun",
+          "Database migration maintenance window"
+        ],
+        [
+          "10 Jun",
+          "Group meeting: NeurIPS outline review"
+        ],
+        [
+          "15 Jun",
+          "ICML poster draft to co-authors"
+        ],
+        [
+          "30 Jun",
+          "Monthly review"
+        ]
+      ],
+      "caption": "",
+      "label": null,
+      "alignment": "ll",
+      "style": "",
+      "type": "Table"
+    }
+  ],
+  "meta": {
+    "title": "Monthly journal",
+    "author": "",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.0,
+    "margin_bottom_cm": 2.0,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

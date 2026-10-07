@@ -1,0 +1,38 @@
+{
+  "children": [
+    {
+      "text": "\\setlength{\\parskip}{0pt}\n\\setstretch{1.0}\n\\noindent\\fcolorbox{black}{black}{\\textcolor{white}{\\Large\\bfseries\\,\\,7\\,\\,}}\\hspace{4pt}{\\large\\bfseries wednesday}\\hfill{\\large october 7}\n\\vspace{2pt}\n\\noindent\\rule{\\textwidth}{0.5pt}\n\\vspace{2pt}\n\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n\\renewcommand{\\arraystretch}{0}\n\\begin{tabular}{@{}r|p{4.5cm}@{}}\n\\scriptsize 08:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 08:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 09:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 09:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 10:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 10:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 11:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 11:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 12:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 12:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 13:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 13:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 14:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 14:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 15:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 15:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 16:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 16:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 17:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 17:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 18:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 18:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 19:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 19:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 20:00 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\scriptsize 20:30 & \\rule{0pt}{0.60cm} \\\\\\cline{2-2}\n\\end{tabular}\n\\end{minipage}\n\\hfill\n\\begin{minipage}[t]{0.48\\textwidth}\n{\\scriptsize\\textbf{Notes} \\textbar\\ Memo}\\par\\vspace{1pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\noindent\\rule{\\textwidth}{0.2pt}\\par\\vspace{3.8pt}\n\\end{minipage}\n\\vspace{3pt}\n\\noindent\\begin{minipage}[t]{0.48\\textwidth}\n\\fbox{\\begin{minipage}{\\dimexpr\\textwidth-2\\fboxsep-2\\fboxrule}\n{\\scriptsize\\textbf{Top priorities}}\\par\\vspace{1pt}\n\\noindent$\\square$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\noindent$\\square$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\noindent$\\square$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\noindent$\\square$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\noindent$\\square$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\end{minipage}}\n\\end{minipage}\n\\hfill\n\\begin{minipage}[t]{0.48\\textwidth}\n\\fbox{\\begin{minipage}{\\dimexpr\\textwidth-2\\fboxsep-2\\fboxrule}\n{\\scriptsize\\textbf{Low priorities}}\\par\\vspace{2pt}\n\\noindent$\\square$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\noindent$\\square$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\noindent$\\square$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\end{minipage}}\n\\vspace{3pt}\n\\fbox{\\begin{minipage}{\\dimexpr\\textwidth-2\\fboxsep-2\\fboxrule}\n{\\scriptsize\\textbf{Follow up}}\\par\\vspace{2pt}\n\\noindent$\\bullet$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\noindent$\\bullet$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\noindent$\\bullet$\\hspace{4pt}\\rule{0.86\\textwidth}{0.2pt}\\par\\vspace{2pt}\n\\end{minipage}}\n\\end{minipage}",
+      "type": "RawLatex"
+    }
+  ],
+  "meta": {
+    "title": "",
+    "author": "",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "xcolor"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 0.5,
+    "margin_bottom_cm": 0.5,
+    "margin_left_cm": 0.5,
+    "margin_right_cm": 0.5,
+    "body_font_pt": 10,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.0,
+    "paragraph_indent": true,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

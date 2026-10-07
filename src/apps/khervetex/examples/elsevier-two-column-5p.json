@@ -1,0 +1,230 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Elsevier two-column (5p) layout",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "A. Author, B. Coauthor, C. Third",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "This template shows the two-column final layout used by many Elsevier physics and engineering journals. The 5p class option produces a compact, two-column format. Figures can span both columns using a figure* environment (Insert > Figure, then set width to full page). Tables similarly use table* for full-width placement.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "children": [
+        {
+          "text": "Elsevier · two-column · 5p · camera-ready",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Keywords"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Introduction",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The two-column layout is the standard camera-ready format for most Elsevier journals in physics, chemistry, engineering and computer science. Text flows in narrow columns for faster reading; equations, figures and tables can span both columns when they need the space.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Method",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Describe your experimental or computational methodology here. In a two-column layout, long equations may need ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "\\begin{equation*}",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " with manual line-breaking, or the ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "text": "breqn",
+          "marks": [
+            "code"
+          ],
+          "type": "Text"
+        },
+        {
+          "text": " package for automatic breaking.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "F = G \\frac{m_1 m_2}{r^2}",
+      "numbered": true,
+      "label": "eq:newton",
+      "type": "MathBlock"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Results",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Present your key findings. Tables render well in two columns as long as you keep them to 3–4 columns of data. Wider tables should span both columns.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "rows": [
+        [
+          "Parameter",
+          "Value",
+          "Unit"
+        ],
+        [
+          "Temperature",
+          "293.15",
+          "K"
+        ],
+        [
+          "Pressure",
+          "101.325",
+          "kPa"
+        ],
+        [
+          "Flow rate",
+          "12.5",
+          "mL/min"
+        ]
+      ],
+      "caption": "Experimental conditions.",
+      "label": "tab:conditions",
+      "alignment": "lrl",
+      "style": "",
+      "type": "Table"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Conclusion",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Summarise the key contributions and suggest directions for future work.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "Elsevier two-column (5p) layout",
+    "author": "A. Author",
+    "documentclass": "elsarticle",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float",
+      "natbib",
+      "hyperref"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 10,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 2,
+    "frontmatter_extras": "",
+    "preamble_extras": "\\journal{Journal of Examples}",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}

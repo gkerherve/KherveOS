@@ -1,0 +1,717 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": "Quadratic forms — a worked example",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Title"
+    },
+    {
+      "children": [
+        {
+          "text": "KherveTeX math example",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Author"
+    },
+    {
+      "children": [
+        {
+          "text": "We work through the algebra of the real quadratic function in some detail, deriving the vertex form, the quadratic formula and the discriminant test. The purpose is to exercise the math-typesetting paths of the KherveTeX editor: inline math, numbered display equations, aligned multi-line derivations, and cross-references between them. The mathematics itself is elementary and standard.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "type": "Abstract"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Definition",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "A real quadratic function ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f",
+          "type": "MathInline"
+        },
+        {
+          "text": " is a polynomial of degree exactly two:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "f(x) = a x^2 + b x + c, \\qquad a \\neq 0,",
+      "numbered": true,
+      "label": "eq:quad",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "with real coefficients ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a",
+          "type": "MathInline"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "b",
+          "type": "MathInline"
+        },
+        {
+          "text": " and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "c",
+          "type": "MathInline"
+        },
+        {
+          "text": ". The condition ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a \\neq 0",
+          "type": "MathInline"
+        },
+        {
+          "text": " distinguishes the quadratic case from the linear and constant cases. We will write ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\Delta = b^2 - 4ac",
+          "type": "MathInline"
+        },
+        {
+          "text": " for the discriminant, which encodes the number and nature of the real roots.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Completing the square",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Starting from ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "eq:quad",
+          "kind": "eqref",
+          "type": "CrossRef"
+        },
+        {
+          "text": ", factor the leading coefficient out of the quadratic and linear terms:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\begin{align}\n  f(x) &= a\\left(x^2 + \\tfrac{b}{a} x\\right) + c.\n\\end{align}",
+      "numbered": true,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Inside the bracket we have a quadratic with leading coefficient 1, so we can complete the square by adding and subtracting ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "(b/2a)^2",
+          "type": "MathInline"
+        },
+        {
+          "text": ":",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\begin{align}\n  f(x) &= a\\left[\\left(x + \\tfrac{b}{2a}\\right)^2 - \\tfrac{b^2}{4a^2}\\right] + c \\\\\n       &= a\\left(x + \\tfrac{b}{2a}\\right)^2 + \\frac{4ac - b^2}{4a}.\n\\end{align}",
+      "numbered": true,
+      "label": "eq:vertex",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Equation ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "eq:vertex",
+          "kind": "eqref",
+          "type": "CrossRef"
+        },
+        {
+          "text": " is the vertex form. It exhibits the minimum (or maximum, depending on the sign of ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a",
+          "type": "MathInline"
+        },
+        {
+          "text": ") of the quadratic immediately: the vertex sits at ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "x = -b / 2a",
+          "type": "MathInline"
+        },
+        {
+          "text": " with value ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "(4ac - b^2)/4a",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "The quadratic formula",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "To find the roots, set ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f(x) = 0",
+          "type": "MathInline"
+        },
+        {
+          "text": " in ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "eq:vertex",
+          "kind": "eqref",
+          "type": "CrossRef"
+        },
+        {
+          "text": ":",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\begin{align}\n  a\\left(x + \\tfrac{b}{2a}\\right)^2 &= \\frac{b^2 - 4ac}{4a} \\\\\n  \\left(x + \\tfrac{b}{2a}\\right)^2 &= \\frac{b^2 - 4ac}{4a^2} \\\\\n  x + \\tfrac{b}{2a} &= \\pm \\frac{\\sqrt{b^2 - 4ac}}{2a} \\\\\n  x &= \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}.\n\\end{align}",
+      "numbered": true,
+      "label": "eq:formula",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "Equation ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "eq:formula",
+          "kind": "eqref",
+          "type": "CrossRef"
+        },
+        {
+          "text": " is the familiar quadratic formula. Note that the derivation never assumed anything about the sign of the discriminant; the formula is valid for all real coefficients with ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a \\neq 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ", with the understanding that the square root is interpreted in the complex numbers when ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\Delta < 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "The discriminant",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The discriminant ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\Delta = b^2 - 4ac",
+          "type": "MathInline"
+        },
+        {
+          "text": " determines the nature of the roots:",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "ordered": false,
+      "items": [
+        {
+          "children": [
+            {
+              "text": "Δ > 0: two distinct real roots",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Δ = 0: one repeated real root, x = −b / 2a",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        },
+        {
+          "children": [
+            {
+              "text": "Δ < 0: two complex conjugate roots, real part −b / 2a, imaginary parts ±√|Δ| / 2a",
+              "marks": [],
+              "type": "Text"
+            }
+          ],
+          "type": "ListItem"
+        }
+      ],
+      "type": "List"
+    },
+    {
+      "children": [
+        {
+          "text": "The geometric content is clean: ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\Delta",
+          "type": "MathInline"
+        },
+        {
+          "text": " is (up to a sign and a scale) the squared distance from the vertex of the parabola to the x-axis. When the vertex is below the axis (and ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a > 0",
+          "type": "MathInline"
+        },
+        {
+          "text": ") the parabola crosses the axis twice. When it sits exactly on the axis the parabola is tangent there. When it sits above, the parabola never touches the axis.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "A worked example",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "Take ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "f(x) = 2 x^2 - 5 x + 1",
+          "type": "MathInline"
+        },
+        {
+          "text": ". Then ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "a = 2",
+          "type": "MathInline"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "b = -5",
+          "type": "MathInline"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "c = 1",
+          "type": "MathInline"
+        },
+        {
+          "text": ", and the discriminant is",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "\\Delta = (-5)^2 - 4 \\cdot 2 \\cdot 1 = 17 > 0,",
+      "numbered": false,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "so there are two distinct real roots, namely",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "x = \\frac{5 \\pm \\sqrt{17}}{4} \\approx 0.219, \\, 2.281.",
+      "numbered": false,
+      "label": null,
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "The vertex sits at ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "x = 5/4",
+          "type": "MathInline"
+        },
+        {
+          "text": " with value ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "(4 \\cdot 2 \\cdot 1 - 25)/(4 \\cdot 2) = -17/8",
+          "type": "MathInline"
+        },
+        {
+          "text": ", which is indeed below the axis as expected from the sign of the discriminant.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Beyond the quadratic",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "The same technique — completing the square — extends to quadratic forms in several variables. For a real symmetric matrix ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "A",
+          "type": "MathInline"
+        },
+        {
+          "text": ", a vector ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\mathbf{b}",
+          "type": "MathInline"
+        },
+        {
+          "text": " and a scalar ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "c",
+          "type": "MathInline"
+        },
+        {
+          "text": ", the function",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "latex": "q(\\mathbf{x}) = \\mathbf{x}^\\top A \\mathbf{x} + 2 \\mathbf{b}^\\top \\mathbf{x} + c",
+      "numbered": true,
+      "label": "eq:qform",
+      "type": "MathBlock"
+    },
+    {
+      "children": [
+        {
+          "text": "has a unique stationary point at ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\mathbf{x}^\\ast = -A^{-1} \\mathbf{b}",
+          "type": "MathInline"
+        },
+        {
+          "text": " whenever ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "A",
+          "type": "MathInline"
+        },
+        {
+          "text": " is invertible. Substituting back into ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "label": "eq:qform",
+          "kind": "eqref",
+          "type": "CrossRef"
+        },
+        {
+          "text": " gives the minimum value ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "c - \\mathbf{b}^\\top A^{-1} \\mathbf{b}",
+          "type": "MathInline"
+        },
+        {
+          "text": ". The one-variable case we worked through above is the special case ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "A = [a]",
+          "type": "MathInline"
+        },
+        {
+          "text": ", ",
+          "marks": [],
+          "type": "Text"
+        },
+        {
+          "latex": "\\mathbf{b} = [b/2]",
+          "type": "MathInline"
+        },
+        {
+          "text": ".",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    },
+    {
+      "level": 1,
+      "children": [
+        {
+          "text": "Summary",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "numbered": true,
+      "label": null,
+      "type": "Section"
+    },
+    {
+      "children": [
+        {
+          "text": "We started with the bare definition of a real quadratic, derived the vertex form by completing the square, used the vertex form to obtain the quadratic formula, and connected the sign of the discriminant to the geometric picture of the parabola. The whole argument fits on a single page once the algebra is lined up properly — which is, after all, the point of having an editor that handles the alignment for you.",
+          "marks": [],
+          "type": "Text"
+        }
+      ],
+      "alignment": "justify",
+      "type": "Paragraph"
+    }
+  ],
+  "meta": {
+    "title": "Quadratic forms",
+    "author": "",
+    "documentclass": "article",
+    "class_options": "",
+    "packages": [
+      "amsmath",
+      "amssymb",
+      "graphicx",
+      "multicol",
+      "float"
+    ],
+    "page_size": "A4",
+    "margin_top_cm": 2.5,
+    "margin_bottom_cm": 2.5,
+    "margin_left_cm": 2.5,
+    "margin_right_cm": 2.5,
+    "body_font_pt": 11,
+    "body_font_family": "default",
+    "visual_font_family": "Georgia",
+    "line_spacing": 1.15,
+    "paragraph_indent": false,
+    "column_count": 1,
+    "frontmatter_extras": "",
+    "preamble_extras": "",
+    "ref_library": "",
+    "bib_style": "plainnat"
+  },
+  "type": "Document"
+}
