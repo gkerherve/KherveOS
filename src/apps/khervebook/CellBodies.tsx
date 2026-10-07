@@ -32,7 +32,7 @@ function followLink(e: MouseEvent, baseDir: string) {
   if (!a) return
   const href = a.getAttribute('href') ?? ''
   e.preventDefault()
-  if (/^https?:\/\//i.test(href)) os.open('browser', { url: href })
+  if (/^(https?:\/\/|mailto:)/i.test(href)) os.openUrl(href, { background: e.metaKey || e.ctrlKey })
   else if (href && !href.startsWith('#') && !/^[a-z][a-z0-9+.-]*:/i.test(href)) {
     const p = drivePath(baseDir, href)
     if (os.fs.exists(p)) void os.openFile(p)

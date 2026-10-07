@@ -2,7 +2,7 @@
 // AI that works here: KherveAI (Ollama, Claude or ChatGPT tool calling) and the
 // MCP bridge (mcpBridge.ts: Claude Code, Claude Desktop, ChatGPT connectors…).
 //
-//   import { KTOOLS, runTool } from '@/os/ai/tools'
+//   import { KTOOLS, runTool } from '@/os/ai/tools'   (KTOOLS: the core tools; allTools() adds the apps')
 //   const r = await runTool('list_files', { path: '~/Documents' }, { caller: 'KherveAI' })
 //   r.ok ? r.result : r.error
 //
@@ -11,6 +11,9 @@
 // small JSON values (long files and outputs are cut, with "truncated": true).
 // runTool checks the arguments, asks the user before anything is deleted or
 // overwritten and before Python runs, and shows a small notification for every change.
+//
+// Apps add their own tools ("khervesheet_set_cells"…) while a window is open:
+// see appTools.ts and appManifest.ts.
 
 import { createElement } from 'react'
 import { Sparkles } from 'lucide-react'
@@ -20,6 +23,7 @@ import { APPS, appForExtension, getApp } from '@/os/registry'
 import { useWindows } from '@/os/windows'
 import { mimeType } from '@/os/fileIcons'
 import { PythonKernel } from '@/os/python/kernel'
+import { appKTools, appToolNames } from './appTools'
 
 export interface KTool {
   /** snake_case, unique. */
@@ -30,8 +34,22 @@ export interface KTool {
   inputSchema: Record<string, unknown>
   /** Deletes or overwrites: the user must confirm (runTool asks). */
   destructive?: boolean
+  /** Only reads (MCP clients may skip asking). */
+  readOnly?: boolean
+  /** For an app's tool: the app id. */
+  app?: string
   /** Do it. Returns a JSON-serialisable result; throws an Error with a helpful message. */
-  run(args: Record<string, unknown>): Promise<unknown>
+  run(args: Record<string, unknown>, ctx: ToolContext): Promise<unknown>
+}
+
+/** What a tool's code can ask of the user while it runs (with runTool's dialogs). */
+export interface ToolContext {
+  caller: string
+  signal?: AbortSignal
+  /** "caller wants to <what>." Allow / Deny; false when denied or the caller stopped waiting. */
+  confirm(what: string, detail?: string): Promise<boolean>
+  /** Python written by an AI is shown to the user first (like run_python). */
+  allowPython(code: string): Promise<boolean>
 }
 
 export interface ToolResult {
@@ -362,13 +380,14 @@ export const KTOOLS: KTool[] = [
   },
   {
     name: 'list_apps',
-    description: 'List the apps of KherveOS: their id (for open_app), name, what they do and the file types they open.',
+    description: 'List the apps of KherveOS: their id (for open_app), name, what they do, the file types they open and their own tools.',
     inputSchema: object({}),
     async run() {
       return {
         apps: APPS.map((app) => {
           const opens = (app.fileTypes ?? []).filter(Boolean)
-          return { id: app.id, name: app.name, description: app.description, ...(opens.length && { opens }) }
+          const tools = appToolNames(app.id)
+          return { id: app.id, name: app.name, description: app.description, ...(opens.length && { opens }), ...(tools.length && { tools }) }
         }),
       }
     },
@@ -409,7 +428,13 @@ export const KTOOLS: KTool[] = [
       if (element) args.element = element
       const id = os.open(app.id, args)
       if (!id) throw new Error(`${app.name} could not be opened.`)
-      return { window: id, app: app.id, ...(args.path && { path: pretty(args.path) }) }
+      const tools = appToolNames(app.id)
+      return {
+        window: id,
+        app: app.id,
+        ...(args.path && { path: pretty(args.path) }),
+        ...(tools.length && { tools, note: `To act inside ${app.name}, use these tools.` }),
+      }
     },
   },
   {
@@ -504,7 +529,8 @@ export const KTOOLS: KTool[] = [
     name: 'create_notebook',
     description:
       'Create a KherveBook notebook (.kbook) from a list of cells (Python code, Markdown or LaTeX) and save it on the ' +
-      'KherveOS drive; ".kbook" is added to the name if missing. The user can open it with open_file and run it. ' +
+      'KherveOS drive; ".kbook" is added to the name if missing. It only writes the file: open_file shows it. To work in the ' +
+      'notebook on screen (add, run cells and see outputs), use the khervebook_ tools instead. ' +
       'Does not replace an existing notebook unless "overwrite" is true (the user is asked first).',
     inputSchema: object(
       {
@@ -560,8 +586,14 @@ export const KTOOLS: KTool[] = [
   },
 ]
 
+/** The core tools and every app's tools (those of apps with no window open too: they open it). */
+export function allTools(): KTool[] {
+  return [...KTOOLS, ...appKTools()]
+}
+
 export function getTool(name: string): KTool | undefined {
-  return KTOOLS.find((t) => t.name === name) ?? KTOOLS.find((t) => t.name === name.trim().toLowerCase())
+  const all = allTools()
+  return all.find((t) => t.name === name) ?? all.find((t) => t.name === name.trim().toLowerCase())
 }
 
 // ------------------------------------------------------------- running them
@@ -593,7 +625,8 @@ function checkArgs(tool: KTool, raw: unknown): Args {
   const schema = tool.inputSchema as { properties?: Record<string, { type?: string }>; required?: string[] }
   for (const [key, spec] of Object.entries(schema.properties ?? {})) {
     let v = args[key]
-    if (v === undefined || v === null) {
+    // Small models write "None" or "" for an argument they mean to leave out.
+    if (v === undefined || v === null || (spec.type !== 'string' && typeof v === 'string' && /^\s*(none|null|undefined)?\s*$/i.test(v))) {
       delete args[key]
       continue
     }
@@ -724,8 +757,27 @@ function tell(caller: string, name: string, a: Args, result: unknown) {
  */
 export async function runTool(name: string, args: Record<string, unknown>, opts: RunToolOptions = {}): Promise<ToolResult> {
   const tool = getTool(name)
-  if (!tool) return { ok: false, error: `There is no tool "${name}". The tools are: ${KTOOLS.map((t) => t.name).join(', ')}.` }
+  if (!tool) return { ok: false, error: `There is no tool "${name}". The tools are: ${allTools().map((t) => t.name).join(', ')}.` }
   const caller = opts.caller?.trim() || 'An AI assistant'
+  const signal = opts.signal
+  const ctx: ToolContext = {
+    caller,
+    signal,
+    async confirm(what, detail) {
+      if (signal?.aborted) return false
+      const yes = await allowed(caller, { what, detail })
+      if (signal?.aborted) {
+        if (yes) toast('Not done', `${caller} stopped waiting for your answer.`)
+        return false
+      }
+      return yes
+    },
+    async allowPython(code) {
+      if (signal?.aborted) return false
+      const yes = await allowPython(caller, code)
+      return yes && !signal?.aborted
+    },
+  }
   try {
     const input = checkArgs(tool, args)
     const question = askFirst(tool, input)
@@ -744,7 +796,7 @@ export async function runTool(name: string, args: Record<string, unknown>, opts:
       if (opts.signal?.aborted) return { ok: false, error: CANCELLED }
       if (!yes) return { ok: false, error: 'The user did not allow this Python code to run.' }
     }
-    const result = await tool.run(input)
+    const result = await tool.run(input, ctx)
     tell(caller, tool.name, input, result)
     return { ok: true, result }
   } catch (e) {

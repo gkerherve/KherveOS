@@ -11,6 +11,8 @@ import { DRAG_MIME, deleteItems, downloadItems, folderMenu, itemMenu, moveItems,
 import { useSettings } from '@/os/settings'
 import { clearClipboard, copyMenuItems, handleClipboardKey, pasteMenuItems, useClipboard, usePasteSource } from './clipboard'
 import { endDragOut, prepareDragOut, startDragOut } from './dragOut'
+import { useAppTools } from '@/os/ai/appTools'
+import { filesAiTools } from './aiTools'
 import './files.css'
 
 type SortKey = 'name' | 'mtime' | 'size'
@@ -82,6 +84,22 @@ export default function Files({ win, args }: AppProps) {
   usePasteSource() // re-render (and so refresh the Edit menu) when the clipboard changes
   const dirRef = useRef(dir)
   dirRef.current = dir
+  const hiddenRef = useRef(showHidden)
+  hiddenRef.current = showHidden
+  // AI tools (files_open_folder, files_select: src/os/ai/appManifest.ts).
+  useAppTools(
+    win,
+    useMemo(
+      () =>
+        filesAiTools({
+          dir: () => dirRef.current,
+          go: (d) => go(d),
+          select: (paths) => setSelected(new Set(paths)),
+          showHidden: () => hiddenRef.current,
+        }),
+      [],
+    ),
+  )
 
   // Opened again with a new path (e.g. "Open" on a folder elsewhere).
   useEffect(() => {

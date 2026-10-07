@@ -1,6 +1,6 @@
 // Notepad: plain-text editing with syntax colouring for code files.
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { EditorView } from '@codemirror/view'
 import { redo, selectAll, undo } from '@codemirror/commands'
 import { openSearchPanel } from '@codemirror/search'
@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import { os, fs, path, HOME, type AppProps } from '@/os'
 import { CodeEditor, languageForExtension, type EditorLanguage } from '@/os/ui/CodeEditor'
+import { useAppTools } from '@/os/ai/appTools'
+import { notepadAiTools } from './aiTools'
 import './notepad.css'
 
 const LANG_NAMES: Record<EditorLanguage, string> = {
@@ -32,6 +34,29 @@ export default function Notepad({ win, args }: AppProps) {
   // Keep the latest values for callbacks registered once.
   const live = useRef({ text, dirty, filePath })
   live.current = { text, dirty, filePath }
+
+  // AI tools (notepad_read, notepad_set_text…: src/os/ai/appManifest.ts).
+  const doc = useRef({ text, saved, filePath, loading })
+  doc.current = { text, saved, filePath, loading }
+  useAppTools(
+    win,
+    useMemo(
+      () =>
+        notepadAiTools({
+          get: () => doc.current,
+          setText: (t) => {
+            doc.current = { ...doc.current, text: t }
+            setText(t)
+          },
+          markSaved: (p, t) => {
+            doc.current = { ...doc.current, filePath: p, saved: t }
+            setFilePath(p)
+            setSaved(t)
+          },
+        }),
+      [],
+    ),
+  )
 
   const load = useCallback(async (p: string) => {
     setLoading(true)

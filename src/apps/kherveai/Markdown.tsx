@@ -157,8 +157,7 @@ function onLinkClick(e: React.MouseEvent) {
   const href = a.getAttribute('href') ?? ''
   e.preventDefault() // never let a link navigate KherveOS itself away
   if (/^https?:\/\//i.test(href)) {
-    if (e.metaKey || e.ctrlKey || e.shiftKey) window.open(href, '_blank', 'noopener,noreferrer')
-    else os.open('browser', { url: href })
+    os.openUrl(href, { background: e.metaKey || e.ctrlKey })
   } else if (href.startsWith('/') || href.startsWith('~/')) {
     let p: string
     try {
@@ -168,7 +167,7 @@ function onLinkClick(e: React.MouseEvent) {
     }
     if (fs.exists(p)) void os.openFile(p)
   } else if (/^mailto:/i.test(href)) {
-    window.open(href, '_blank', 'noopener')
+    os.openUrl(href)
   }
 }
 

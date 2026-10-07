@@ -325,6 +325,11 @@ export async function saveAs(book: Book): Promise<boolean> {
   const dir = path ? dirname(path) : `${HOME}/Documents`
   const target = await os.dialog.saveFile({ title: 'Save As', defaultName: `${dir}/${base}.ksheet`, extensions: ['.ksheet', '.csv'] })
   if (!target) return false
+  return saveTo(book, target)
+}
+
+/** Save to this path without asking where (Save As after its dialog, the AI tools). */
+export async function saveTo(book: Book, target: string): Promise<boolean> {
   const ok = await writeAs(book, target)
   if (!ok) return false
   book.docKind = extname(target) === '.csv' ? 'csv' : 'ksheet'

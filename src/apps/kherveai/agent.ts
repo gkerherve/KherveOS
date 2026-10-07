@@ -121,7 +121,11 @@ export async function runAgent(chatId: string, opts: { resume?: boolean } = {}):
   }
   void saveChat(chatId)
 
-  let tools: WireTool[] | null = toolsFor(provider, model)
+  // The tools are worked out again at each step: an app opened by a step adds its tools.
+  const lastUser = [...start.messages].reverse().find((m) => m.role === 'user')
+  const request = lastUser?.role === 'user' ? lastUser.text : ''
+  let noTools = false
+  let tools: WireTool[] | null = null
   // Tool call ids must be unique in a chat (Claude refuses repeats, and some local models reuse them).
   const seenIds = new Set<string>()
   for (const m of start.messages) if (m.role === 'assistant') for (const t of m.turns) for (const c of t.calls) seenIds.add(c.id)
@@ -140,6 +144,7 @@ export async function runAgent(chatId: string, opts: { resume?: boolean } = {}):
       if (at < 0 || msg.role !== 'assistant') return
       const history = chat.messages.slice(0, at + 1)
       const index = msg.turns.length
+      tools = noTools ? null : toolsFor(provider, model, request)
       patchMsg(chatId, msgId, (m) => ({ ...m, turns: [...m.turns, { text: '', calls: [] }] }))
 
       // Text arrives in many small pieces: hand them to the screen ~25 times a second.
@@ -188,6 +193,7 @@ export async function runAgent(chatId: string, opts: { resume?: boolean } = {}):
         if (e instanceof ProviderError && e.noTools && tools) {
           // This model can't take tools after all: ask again without them.
           markNoTools(provider, model)
+          noTools = true
           tools = null
           patchMsg(chatId, msgId, (m) => ({ ...m, turns: m.turns.slice(0, index) }))
           step--

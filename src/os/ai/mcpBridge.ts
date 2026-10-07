@@ -14,11 +14,15 @@
 //                  mcp.cancel {id, tab}              the AI app stopped waiting
 //
 // A call is meant for one tab (the one used last); the others ignore it.
-// The shell starts the bridge once with startMcpBridge().
+// The shell starts the bridge once with startMcpBridge(). The list holds the
+// core tools and every app's tools (appTools.ts: a call opens the app if
+// needed); it is sent again whenever it changes (an app window registering
+// a tool the manifest does not list).
 
 import { create } from 'zustand'
 import { realtime, useRealtime, type ServerEvent } from '@/os/server'
-import { KTOOLS, runTool, type ToolResult } from './tools'
+import { allTools, runTool, type ToolResult } from './tools'
+import { appToolRegistry } from './appTools'
 
 export interface McpActivity {
   id: string
@@ -55,11 +59,11 @@ const titleOf = (name: string) => {
 
 /** The tools as MCP clients see them. */
 export function mcpToolList() {
-  return KTOOLS.map((t) => ({
+  return allTools().map((t) => ({
     name: t.name,
-    description: t.description,
+    description: t.app ? `${t.description} (Opens the app if it is not open.)` : t.description,
     inputSchema: t.inputSchema,
-    annotations: READ_ONLY.has(t.name)
+    annotations: READ_ONLY.has(t.name) || t.readOnly
       ? { title: titleOf(t.name), readOnlyHint: true }
       : { title: titleOf(t.name), readOnlyHint: false, destructiveHint: !!t.destructive || MAY_DESTROY.has(t.name) },
   }))
@@ -120,9 +124,21 @@ let stopBridge: (() => void) | null = null
  */
 export function startMcpBridge(): () => void {
   if (stopBridge) return stopBridge
+  let sent = ''
   const register = () => {
+    const tools = mcpToolList()
+    sent = JSON.stringify(tools)
     useMcpBridge.setState({ registered: null })
-    realtime.send({ type: 'mcp.tools', tab: TAB, tools: mcpToolList() })
+    realtime.send({ type: 'mcp.tools', tab: TAB, tools })
+  }
+  // App windows come and go: send the list again when it is different.
+  let timer: number | null = null
+  const toolsChanged = () => {
+    if (timer !== null) window.clearTimeout(timer)
+    timer = window.setTimeout(() => {
+      timer = null
+      if (useRealtime.getState().connected && JSON.stringify(mcpToolList()) !== sent) register()
+    }, 300)
   }
   const active = () => {
     if (document.visibilityState === 'visible') realtime.send({ type: 'mcp.active', tab: TAB })
@@ -140,6 +156,10 @@ export function startMcpBridge(): () => void {
     realtime.on('mcp.cancel', (ev) => {
       if (ev.tab === TAB && typeof ev.id === 'string') running.get(ev.id)?.abort()
     }),
+    appToolRegistry.subscribe(toolsChanged),
+    () => {
+      if (timer !== null) window.clearTimeout(timer)
+    },
   ]
   window.addEventListener('focus', active)
   document.addEventListener('visibilitychange', active)

@@ -35,6 +35,8 @@ import {
 import { SheetTabs } from './SheetTabs'
 import { autoSum, Toolbar } from './Toolbar'
 import { clearRecent, recentFiles } from './prefs'
+import { useAppTools } from '@/os/ai/appTools'
+import { sheetAiTools } from './aiTools'
 
 /** The desktop KherveSheet this edition follows (its dev branch). */
 export const CORE_SOURCE = 'KherveSheet dev @ cef25ce'
@@ -177,6 +179,7 @@ function About({ core, python }: { core: string; python: string | null }) {
 
 export default function KherveSheet({ win, args }: AppProps) {
   const [book] = useState(() => new Book(`sheet-${win.id}`))
+  useAppTools(win, useMemo(() => sheetAiTools(book), [book]))
   const rootRef = useRef<HTMLDivElement>(null)
   const [dialog, setDialog] = useState<DialogState>(null)
   const [examples, setExamples] = useState<ExampleMenu[] | 'loading' | 'error'>('loading')
@@ -527,7 +530,7 @@ export default function KherveSheet({ win, args }: AppProps) {
           { label: 'User Guide', shortcut: 'F1', onClick: () => void os.dialog.alert(<UserGuide />, { title: 'KherveSheet — User Guide' }).finally(() => book.refocus()) },
           { label: 'Keyboard Shortcuts', onClick: () => void os.dialog.alert(<div className="ks-doc"><Shortcuts /></div>, { title: 'KherveSheet shortcuts' }).finally(() => book.refocus()) },
           '-',
-          { label: 'Report an Issue / Feedback…', onClick: () => os.open('browser', { url: ISSUES_URL }) },
+          { label: 'Report an Issue / Feedback…', onClick: () => os.openUrl(ISSUES_URL) },
           { label: 'About KherveSheet', onClick: () => void os.dialog.alert(<About core={CORE_SOURCE} python={null} />, { title: 'About KherveSheet' }).finally(() => book.refocus()) },
         ],
       },

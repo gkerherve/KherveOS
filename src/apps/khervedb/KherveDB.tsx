@@ -29,6 +29,7 @@ import { closeReferences, followElement, openInBrowser, openReferences, useRefs 
 import { SplashScreen, VERSION, Welcome } from './Startup'
 import { loadPrefs, savePrefs, type Prefs } from './prefs'
 import { tableLayout } from './layout'
+import { useAppTools } from '@/os/ai/appTools'
 import './khervedb.css'
 
 const DATA = `${import.meta.env.BASE_URL}apps/khervedb/`
@@ -161,6 +162,39 @@ function KherveDBMain({ win, args }: AppProps) {
     [select],
   )
   const toggleReferences = () => (refsOpen ? closeReferences() : openReferences(element))
+
+  // What KherveAI and MCP clients can do here (declared in src/os/ai/appManifest.ts).
+  useAppTools(
+    win,
+    useMemo(
+      () => ({
+        select_element: async (a: Record<string, unknown>) => {
+          const d = data ?? loadedData()
+          if (!d) throw new Error('KherveDB is still loading its data: try again in a moment.')
+          const wanted = String(a.element ?? '').trim().toLowerCase()
+          const sym = Object.keys(d.meta.elements).find(
+            (s) => s.toLowerCase() === wanted || elementName(s, d.meta.elements[s]).toLowerCase() === wanted,
+          )
+          if (!sym) throw new Error(`"${String(a.element)}" is not an element: use a symbol like "O" or a name like "oxygen".`)
+          if (!d.db.elementsWithData().has(sym)) throw new Error(`The NIST database has no XPS entries for ${sym}.`)
+          select(sym)
+          const wantedLine = typeof a.line === 'string' ? a.line.trim() : ''
+          if (wantedLine) setLine(wantedLine)
+          const lines = lineStats(d.db)
+            .filter((s) => s.el === sym)
+            .sort((x, y) => y.count - x.count)
+            .slice(0, 12)
+            .map((s) => ({ line: s.line, median_eV: +s.median.toFixed(2), range_eV: [+s.lo.toFixed(1), +s.hi.toFixed(1)], entries: s.count }))
+          return { shown: sym, name: elementName(sym, d.meta.elements[sym]), lines }
+        },
+        open_databases: async () => {
+          openReferences(element)
+          return { opened: 'Other Databases & Properties', element }
+        },
+      }),
+      [data, select, element],
+    ),
+  )
   const showInfo = useCallback((el: string, x?: number, y?: number) => setPopup({ kind: 'info', el, x, y }), [])
   const sortBy = useCallback(
     (key: SortKey) => setSort((s) => (s.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: 1 })),

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check, Eye, EyeOff, ExternalLink, KeyRound, LoaderCircle, RotateCcw, ScrollText, Server, ShieldCheck, X } from 'lucide-react'
+import { os } from '@/os'
 import { defaultSystemPrompt } from './prompt'
 import { fetchOllamaModels } from './providers'
 import { DEFAULT_OLLAMA_URL, PROVIDERS } from './settings'
@@ -101,7 +102,7 @@ function KeyField({
       </div>
       <div className="kai-set-help">
         Get a key at{' '}
-        <a href={meta.keyUrl} onClick={(e) => (e.preventDefault(), window.open(meta.keyUrl, '_blank', 'noopener,noreferrer'))}>
+        <a href={meta.keyUrl} onClick={(e) => (e.preventDefault(), meta.keyUrl && os.openUrl(meta.keyUrl))}>
           {meta.keyUrl?.replace(/^https:\/\//, '').replace(/\/.*$/, '')} <ExternalLink size={11} />
         </a>
         . Usage is billed to your {meta.name === 'Claude' ? 'Anthropic' : 'OpenAI'} account.

@@ -12,8 +12,9 @@
 //   real    sign-ins and sites that turn programs away: a page offering the
 //           real browser, the only way out of KherveOS.
 
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, MouseEvent } from 'react'
+import { useAppTools } from '@/os/ai/appTools'
 import {
   ArrowLeft, ArrowRight, Copy, ExternalLink, FileText, Globe, House, Info, LoaderCircle, Lock, Plus, RotateCw, Search,
   ShieldCheck, ShieldOff, X,
@@ -140,6 +141,24 @@ export default function Browser({ win, args }: AppProps) {
       return { tabs: [...s.tabs, t], active: activate ? t.id : s.active }
     })
   }, [])
+  // What KherveAI and MCP clients can do here (declared in src/os/ai/appManifest.ts).
+  useAppTools(
+    win,
+    useMemo(
+      () => ({
+        open_url: async (a: Record<string, unknown>) => {
+          const typed = String(a.url ?? '').trim()
+          if (!typed) throw new Error('Give a web address or words to search for.')
+          const to = /^[a-z]+:\/\//i.test(typed) || !/\s/.test(typed) && /\.[a-z]{2,}(\/|$)/i.test(typed)
+            ? (/^[a-z]+:\/\//i.test(typed) ? typed : `https://${typed}`)
+            : `https://www.bing.com/search?q=${encodeURIComponent(typed)}`
+          openTab(to)
+          return { opened: to }
+        },
+      }),
+      [openTab],
+    ),
+  )
   const closeTab = (id: number) => {
     if (state.tabs.length <= 1) {
       win.close()

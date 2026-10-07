@@ -142,10 +142,11 @@ export function modelSupportsTools(provider: ProviderId, model: string, s: AiSta
 }
 
 /** The tools this chat's model gets right now (null: none). */
-export function toolsFor(provider: ProviderId, model: string): WireTool[] | null {
+/** `request`: the person's latest message (the apps it names get their tools offered). */
+export function toolsFor(provider: ProviderId, model: string, request = ''): WireTool[] | null {
   const s = get()
   if (!s.settings.act || !modelSupportsTools(provider, model, s)) return null
-  const tools = availableTools()
+  const tools = availableTools(request)
   return tools.length ? tools : null
 }
 

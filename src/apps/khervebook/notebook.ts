@@ -1372,6 +1372,26 @@ export class Notebook {
 
   // ------------------------------------------------------------------- AI
 
+  /** Add a cell at `index` without moving the keyboard focus (KherveOS AI tools). Undoable. */
+  addCell(type: CellType, source: string, index: number): string {
+    this.record()
+    const cell = makeCell(type, source, false)
+    const cells = this.state.cells.slice()
+    cells.splice(Math.max(0, Math.min(index, cells.length)), 0, cell)
+    this.set({ cells, selectedId: cell.id })
+    if (type === 'sheet') this.sheetsStale = true
+    this.changed()
+    return cell.id
+  }
+
+  /** Run cells without moving the keyboard focus (KherveOS AI tools). */
+  runCells(ids: string[]) {
+    for (const id of ids) {
+      const c = this.cell(id)
+      if (c) this.execute(c, true)
+    }
+  }
+
   /** Apply an assistant's cells as one undo step, then run them (desktop _insert_cells). */
   applyCells(items: { type: CellType; source: string; target: number | null }[]): { added: number; replaced: number } {
     if (!items.length) return { added: 0, replaced: 0 }

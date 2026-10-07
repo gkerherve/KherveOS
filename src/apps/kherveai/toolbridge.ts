@@ -4,6 +4,7 @@
 // write out as text instead of using the tool-calling format.
 
 import { KTOOLS, runTool } from '@/os/ai/tools'
+import { offeredAppKTools } from '@/os/ai/appTools'
 import type { ToolOutcome } from './types'
 import { errorText } from './util'
 
@@ -28,11 +29,17 @@ function normalizeSchema(s: unknown): Record<string, unknown> {
   return schema
 }
 
-/** Every KherveOS tool, ready to offer to a model. */
-export function availableTools(): WireTool[] {
+/**
+ * The KherveOS tools to offer a model, ready for the APIs: the core tools,
+ * plus the tools of the apps that have a window open or that `request` (the
+ * person's message) names. Fewer tools keep small local models on track;
+ * any app tool still works when called (it opens its app).
+ */
+export function availableTools(request = ''): WireTool[] {
   let list: readonly { name: string; description: string; inputSchema: Record<string, unknown>; destructive?: boolean }[] = []
   try {
-    list = Array.isArray(KTOOLS) ? KTOOLS : []
+    const apps = offeredAppKTools(request)
+    list = [...(Array.isArray(KTOOLS) ? KTOOLS : []).filter((t) => !apps.hide.has(t.name)), ...apps.tools]
   } catch {
     list = []
   }

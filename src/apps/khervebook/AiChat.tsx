@@ -39,7 +39,7 @@ function Bubble({ role, text, images }: { role: 'user' | 'assistant'; text: stri
     if (!a) return
     e.preventDefault()
     const href = a.getAttribute('href') ?? ''
-    if (/^https?:\/\//i.test(href)) os.open('browser', { url: href })
+    if (/^(https?:\/\/|mailto:)/i.test(href)) os.openUrl(href, { background: e.metaKey || e.ctrlKey })
   }
   return (
     <div className={`nb-ai-bubble ${role}`}>

@@ -470,7 +470,7 @@ export function Grid({ book, actions }: { book: Book; actions: GridActions }) {
     }
     const url = linkOf(sh, at.r, at.c)
     if (url && (e.metaKey || e.ctrlKey)) {
-      os.open('browser', { url })
+      os.openUrl(url)
       return
     }
     if (shift) book.selectCell(at.r, at.c, true)

@@ -21,6 +21,8 @@ import { AiChat, createChatSession } from './AiChat'
 import { ToolRow, cellRow, mainRow } from './Toolbar'
 import { loadExampleIndex, type ExampleIndex } from './examples'
 import { clearRecent, loadUiPrefs, recentFiles, saveUiPrefs, type UiPrefs } from './prefs'
+import { useAppTools } from '@/os/ai/appTools'
+import { bookAiTools } from './aiTools'
 
 /** The desktop KherveBook release this web edition follows. */
 export const KHERVEBOOK_VERSION = '0.1.137'
@@ -329,6 +331,7 @@ function drag(e: PointerEvent<HTMLDivElement>, axis: 'x' | 'y', apply: (delta: n
 export default function KherveBook({ win, args }: AppProps) {
   const example = typeof args.example === 'string' ? args.example : null
   const [nb] = useState(() => new Notebook(`nb-${win.id}`, !!args.path || !!example || !args.blank))
+  useAppTools(win, useMemo(() => bookAiTools(nb), [nb]))
   const [chat] = useState(createChatSession)
   const [ui, setUi] = useState<UiPrefs>(loadUiPrefs)
   const updateUi = (p: Partial<UiPrefs>) =>
@@ -562,7 +565,7 @@ export default function KherveBook({ win, args }: AppProps) {
           { label: 'User Guide', shortcut: KEYS.guide, onClick: showGuide },
           { label: 'Keyboard Shortcuts', onClick: after(() => os.dialog.alert(<Shortcuts />, { title: 'KherveBook shortcuts' })) },
           '-',
-          { label: 'Report an Issue / Feedback…', onClick: () => os.open('browser', { url: ISSUES_URL }) },
+          { label: 'Report an Issue / Feedback…', onClick: () => os.openUrl(ISSUES_URL) },
           { label: 'About KherveBook', onClick: after(() => os.dialog.alert(<About />, { title: 'About KherveBook' })) },
         ],
       },

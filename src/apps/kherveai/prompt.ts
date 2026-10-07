@@ -2,7 +2,11 @@
 // it may act) which KherveOS tools it has. Each chat can replace it.
 
 import { HOME } from '@/os'
+import { APP_TOOL_SETS } from '@/os/ai/appManifest'
+import { describeApps, splitToolName } from '@/os/ai/appToolsCore'
 import type { WireTool } from './toolbridge'
+
+const APP_IDS = APP_TOOL_SETS.map((s) => s.app)
 
 function firstSentence(s: string): string {
   const one = s.replace(/\s+/g, ' ').trim()
@@ -22,7 +26,15 @@ export function defaultSystemPrompt(tools: WireTool[] | null): string {
   if (tools?.length) {
     lines.push(
       'You can act inside KherveOS with these tools:',
-      ...tools.map((t) => `- ${t.wire}: ${firstSentence(t.description)}${t.destructive ? ' (asks the person first)' : ''}`),
+      // App tools are listed with their app below.
+      ...tools
+        .filter((t) => !splitToolName(t.name, APP_IDS))
+        .map((t) => `- ${t.wire}: ${firstSentence(t.description)}${t.destructive ? ' (asks the person first)' : ''}`),
+      '',
+      '',
+      'Apps with their own tools. To do something inside one of these apps, call that app\'s tools directly (they work on the open window and open the app if needed); do not search for files or write Python for it:',
+      ...describeApps(APP_TOOL_SETS),
+      'Example: "put 1 to 3 in A1:A3 of the sheet and sum them in A4" → khervesheet_set_cells with {"cells": {"A1": 1, "A2": 2, "A3": 3, "A4": "=SUM(A1:A3)"}}.',
       '',
       'Use a tool whenever the person asks you to do something in KherveOS or you need facts from it (files, apps, windows); never guess what a file contains. Work step by step: call a tool, read its result, then decide the next step. If a tool fails, explain why and try another way. Actions that change or delete things ask the person for confirmation; if they decline, accept it. When you are done, say briefly what you did.',
     )
