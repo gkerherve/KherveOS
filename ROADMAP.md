@@ -137,6 +137,12 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       shown in sandboxed iframes without allow-same-origin (third-party scripts must not
       reach KherveOS cookies/storage); decline cookie banners like the desktop does; Google
       Scholar may still need a real tab.
+- [ ] **Every web link opens in the KherveOS Browser** (user, 2026-10-07): one
+      `os.openUrl()` used by all apps instead of window.open/target=_blank (KherveDB,
+      Email, KherveAI, KherveBook, Help menus…), plus a shell-wide catch for links. Sites
+      that refuse framing need the server page-fetcher from the KherveDB item: public hosts
+      only (no private/loopback addresses: SSRF), sandboxed iframes without
+      allow-same-origin; a "Open in your real browser" button stays for what still fails.
 - [ ] **AI that can drive the apps** (user: "KherveAI does not appear to do much"): the 15
       tools only reach files, windows and Python, so "select oxygen in KherveDB" failed
       (fixed for that case: open_app takes `element`). Let apps register their own AI tools
