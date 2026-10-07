@@ -1444,9 +1444,13 @@ export default function KherveTeX({ win, args }: AppProps) {
     return () => win.setCloseGuard(null)
   })
 
-  // Spell checking is the browser's own.
+  // Spell checking is the browser's own. Set through the editor's options, which
+  // also reach a page that is not mounted yet (its view would throw).
   useEffect(() => {
-    editor?.view.dom.setAttribute('spellcheck', spell ? 'true' : 'false')
+    if (!editor || editor.isDestroyed) return
+    const props = editor.options.editorProps
+    const attributes = { ...(props.attributes as Record<string, string>), spellcheck: spell ? 'true' : 'false' }
+    editor.setOptions({ editorProps: { ...props, attributes } })
   }, [editor, spell])
 
   // Fit the page to the width of the visual pane.
