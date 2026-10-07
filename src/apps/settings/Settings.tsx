@@ -5,6 +5,8 @@ import { Cpu, HardDrive, Info, Palette, Server, Sparkles, type LucideIcon } from
 import { os, fs, formatSize, useFsVersion, type AppProps } from '@/os'
 import { useSettings } from '@/os/settings'
 import { WALLPAPER } from '@/shell/wallpapers'
+import { APPS, GROUPS } from '@/os/registry'
+import { AppIcon } from '@/os/ui/AppIcon'
 import { useAuth, useServer } from '@/os/server'
 import { KHERVEOS_VERSION, PYODIDE_VERSION } from '@/os/version'
 import { McpSection } from './McpSection'
@@ -52,7 +54,7 @@ export default function Settings({ win, args }: AppProps) {
 }
 
 function Appearance() {
-  const { wallpaperOpacity, desktopIcons, dockZoom, set } = useSettings()
+  const { wallpaperOpacity, desktopIcons, dockZoom, lightApps, set } = useSettings()
 
   return (
     <>
@@ -87,6 +89,32 @@ function Appearance() {
         <input type="checkbox" checked={desktopIcons} onChange={(e) => set({ desktopIcons: e.target.checked })} />
         Show app shortcuts on the desktop
       </label>
+
+      <h2>Light or dark, app by app</h2>
+      <p className="k-muted st-note">
+        KherveOS is dark. Choose Light for the apps you prefer bright, like paper; they open in white and green.
+      </p>
+      <div className="st-lightapps">
+        {GROUPS.flatMap((g) => APPS.filter((a) => a.group === g)).map((a) => {
+          const light = lightApps.includes(a.id)
+          const choose = (wantLight: boolean) =>
+            set({ lightApps: wantLight ? [...lightApps.filter((x) => x !== a.id), a.id] : lightApps.filter((x) => x !== a.id) })
+          return (
+            <div key={a.id} className="st-lightapp">
+              <AppIcon app={a} size={22} />
+              <span className="st-lightapp-name">{a.name}</span>
+              <div className="st-seg" role="radiogroup" aria-label={`${a.name}: light or dark`}>
+                <button role="radio" aria-checked={!light} className={!light ? 'on' : ''} onClick={() => choose(false)}>
+                  Dark
+                </button>
+                <button role="radio" aria-checked={light} className={light ? 'on' : ''} onClick={() => choose(true)}>
+                  Light
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </>
   )
 }

@@ -54,6 +54,33 @@ export const KHERVEOS_THEMES: Record<string, Record<string, string>> = {
     page_border: '#252b28',
     status_text: '#8b998f',
   },
+  // The light companion of Kherve Green, for apps set to Light in Settings: white
+  // pages, soft green-grey chrome, the same green.
+  'Kherve Light': {
+    dark: '0',
+    base: '#ffffff',
+    surface: '#f3f7f4',
+    chrome: '#e9f0eb',
+    text: '#14201a',
+    text_muted: '#5d6f63',
+    accent: '#1f9d4d',
+    accent2: '#2fbf63',
+    link: '#17803f',
+    highlight: '#1f9d4d',
+    highlight_text: '#ffffff',
+    bright_text: '#d33a3a',
+    disabled: '#a3b2a8',
+    placeholder: '#8a9a8f',
+    alt_base: '#f5f9f6',
+    border: '#d5e0d8',
+    button: '#edf3ef',
+    button_hover: '#e1ebe4',
+    menu_sel: '#cdeed8',
+    desk_bg: '#d9e3dc',
+    page_bg: '#ffffff',
+    page_border: '#d5e0d8',
+    status_text: '#5d6f63',
+  },
   // The light companion of Kherve Red: white paper, warm grey chrome, the same red.
   'Kherve Paper': {
     dark: '0',

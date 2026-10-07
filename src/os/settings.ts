@@ -55,7 +55,7 @@ export const useSettings = create<SettingsState>()(
       desktopIcons: false,
       iconStyle: 'classic',
       lightApps: [],
-      lightTheme: 'Kherve Paper',
+      lightTheme: 'Kherve Light',
       dock: DEFAULT_DOCK,
       dockZoom: 128,
       showHidden: false,
@@ -65,7 +65,7 @@ export const useSettings = create<SettingsState>()(
     {
       name: 'kherveos.settings',
       storage: safeStorage,
-      version: 9,
+      version: 10,
       migrate: (old, version) => {
         let s = { ...((old ?? {}) as Partial<SettingsState>) }
         // Version 1 had a blue/Auto look: move early installs to the dark look.
@@ -99,6 +99,8 @@ export const useSettings = create<SettingsState>()(
         if (version < 8) s.wallpaper = 'ktools-lab'
         // Version 9: shown in full (the 50% visibility was for the brighter fist picture).
         if (version < 9) s.wallpaperOpacity = 1
+        // Version 10: apps can be chosen Light again (Settings › Appearance), in light green.
+        if (version < 10) s.lightTheme = 'Kherve Light'
         return s as SettingsState
       },
     },

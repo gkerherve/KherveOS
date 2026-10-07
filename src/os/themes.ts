@@ -12,7 +12,8 @@
 // The variables are set on <html>; a window can override them for itself
 // (apps that stay light in dark mode — see useWindowTheme).
 
-import { useEffect, type CSSProperties } from 'react'
+import { useEffect, useMemo, type CSSProperties } from 'react'
+import { useSettings } from './settings'
 import { KHERVE_THEMES } from './themes.data'
 import { KHERVEOS_THEMES } from './themes.extra'
 
@@ -23,7 +24,7 @@ export const KHERVEOS_THEME_NAMES = Object.keys(KHERVEOS_THEMES)
 /** KherveOS has one look: black and green. */
 export const THEME = 'Kherve Green'
 export const DEFAULT_DARK = THEME
-export const DEFAULT_LIGHT = 'Kherve Paper'
+export const DEFAULT_LIGHT = 'Kherve Light'
 /** "Auto" follows the system: these two. */
 export const AUTO_DARK = DEFAULT_DARK
 export const AUTO_LIGHT = DEFAULT_LIGHT
@@ -80,11 +81,12 @@ export function useThemeEffect(): string {
 }
 
 /**
- * Per-window theme override. KherveOS has a single look now, so there is none;
- * kept so windows and apps can ask without caring.
+ * Per-window theme: apps chosen as Light in Settings › Appearance get the light
+ * green theme's variables on their window; every other app stays dark.
  */
-export function useWindowTheme(_appId: string): { style: CSSProperties; dark: '0' } | null {
-  return null
+export function useWindowTheme(appId: string): { style: CSSProperties; dark: '0' } | null {
+  const light = useSettings((s) => s.lightApps.includes(appId))
+  return useMemo(() => (light ? { style: themeVars(DEFAULT_LIGHT) as CSSProperties, dark: '0' } : null), [light])
 }
 
 /** A few colours of a theme, for previews in Settings. */
