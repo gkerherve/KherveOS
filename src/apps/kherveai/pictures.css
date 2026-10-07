@@ -1,0 +1,44 @@
+/* KherveAI: pictures in messages (attached from the drive, or screenshots). */
+
+/* The paperclip and the camera sit together; a little less gap between them. */
+.kai-composer-box .kai-shot {
+  margin-left: -4px;
+}
+.kai-composer-box .kai-attach:disabled {
+  opacity: 0.45;
+}
+
+/* In the composer: a small thumbnail in the chip. */
+.kai-chip.picture {
+  padding-left: 3px;
+}
+.kai-chip-thumb {
+  flex: none;
+  width: 34px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+}
+
+/* In your sent message: the picture itself, small; a click opens it. */
+.kai-picture {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--k-surface);
+  cursor: pointer;
+}
+.kai-picture:hover {
+  border-color: var(--k-accent);
+}
+.kai-picture img {
+  display: block;
+  max-width: min(260px, 100%);
+  max-height: 180px;
+  object-fit: contain;
+}

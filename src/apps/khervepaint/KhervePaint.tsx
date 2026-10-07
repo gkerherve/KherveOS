@@ -33,6 +33,8 @@ import { base64ToBytes } from './png'
 import { pdfFromCanvas } from './pdf'
 import { LIBRARY_DIR, listObjects, loadObject, saveObject } from './library'
 import { HelpDialog } from './Help'
+import { useAppTools } from '@/os/ai/appTools'
+import { khervepaintAiTools } from './aiTools'
 import './khervepaint.css'
 
 // Text is measured with the browser's own fonts.
@@ -219,6 +221,9 @@ export default function KhervePaint({ win, args }: AppProps) {
       setBusy(null)
     }
   }
+
+  // AI tools (khervepaint_get_drawing, _add_shape…: src/os/ai/appManifest.ts).
+  useAppTools(win, khervepaintAiTools({ store, writeTo }))
 
   const saveAs = async (): Promise<boolean> => {
     const stem = store.path ? path.basename(store.path).replace(/\.[^.]+$/, '') : 'Untitled'

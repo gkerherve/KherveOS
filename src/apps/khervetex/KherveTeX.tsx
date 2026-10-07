@@ -66,6 +66,8 @@ import {
   type WelcomeResult,
 } from './ui/AppDialogs'
 import type { ProjectView } from './ui/DocumentsPanel'
+import { useAppTools, waitUntil } from '@/os/ai/appTools'
+import { khervetexAiTools, type TexCompileResult, type TexTemplate } from './aiTools'
 import './khervetex.css'
 
 type Tab = 'visual' | 'code' | 'console'
@@ -235,6 +237,8 @@ function MainWindow({ win, args }: AppProps) {
   const [pdfFit, setPdfFit] = useState(true)
   const [symbolsOpen, setSymbolsOpen] = useState(false)
   const [compileView, setCompileView] = useState<CompileView>({ running: false, ok: null, errors: [], log: '', at: null })
+  /** The last compile's result at once (the state above reaches the screen later), for the AI tools. */
+  const lastCompile = useRef<(TexCompileResult & { pdf: Uint8Array | null }) | null>(null)
   const [pdf, setPdf] = useState<{ bytes: Uint8Array; version: number } | null>(null)
   const [pdfNotice, setPdfNotice] = useState<string | null>(null)
   const [dialog, setDialog] = useState<ReactNode>(null)
@@ -454,6 +458,7 @@ function MainWindow({ win, args }: AppProps) {
       c.running = false
     }
     setCompileView({ running: false, ok: result.ok, errors: result.errors, log: result.log, at: new Date().toLocaleTimeString() })
+    lastCompile.current = { ok: result.ok, errors: result.errors, log: result.log, pdf: result.ok ? (result.pdf ?? null) : null }
     if (result.ok && result.pdf) {
       c.lastOk = tex
       c.lastFailed = ''
@@ -479,6 +484,7 @@ function MainWindow({ win, args }: AppProps) {
     setCompileView((v) => ({ ...v, running: true }))
     const r = await compileLatex('document.tex', await compileFiles(m, tex, true))
     setCompileView({ running: false, ok: r.ok, errors: r.errors, log: r.log, at: new Date().toLocaleTimeString() })
+    lastCompile.current = { ok: r.ok, errors: r.errors, log: r.log, pdf: r.ok ? (r.pdf ?? null) : null }
     if (r.ok && r.pdf) return r.pdf
     await os.dialog.alert(r.errors[0]?.message ?? 'The document did not compile. See the Console.', { title: 'Compile failed' })
     return null
@@ -1743,11 +1749,20 @@ function MainWindow({ win, args }: AppProps) {
   }
 
   async function connectClaude() {
-    const go = await os.dialog.confirm(
-      'Claude reaches the KherveOS apps through the KherveOS assistant and its MCP server. Open KherveAI to work with Claude beside this document?',
-      { title: 'Connect to Claude', okLabel: 'Open KherveAI' },
+    // As on the desktop (mcp_dialog.py): Claude Code / Claude Desktop reach this document over MCP,
+    // with the same khervetex_ tools KherveAI uses. Settings › AI & MCP shows how to connect them.
+    const go = await os.dialog.choose(
+      'Claude can edit this document with KherveTeX\'s tools (read it, rewrite sections, replace the whole LaTeX, compile, save): ' +
+        'in KherveAI, or from Claude Code / Claude Desktop through the KherveOS MCP server.',
+      [
+        { label: 'Cancel', value: 'cancel' },
+        { label: 'MCP settings…', value: 'mcp' },
+        { label: 'Open KherveAI', value: 'ai', primary: true },
+      ],
+      { title: 'Connect to Claude' },
     )
-    if (go) os.open('kherveai')
+    if (go === 'ai') os.open('kherveai')
+    else if (go === 'mcp') os.open('settings', { section: 'ai' })
   }
 
   // ---------------------------------------------------- my templates
@@ -2395,6 +2410,7 @@ function MainWindow({ win, args }: AppProps) {
       c.running = false
     }
     setCompileView({ running: false, ok: result.ok, errors: result.errors, log: result.log, at: new Date().toLocaleTimeString() })
+    lastCompile.current = { ok: result.ok, errors: result.errors, log: result.log, pdf: result.ok ? (result.pdf ?? null) : null }
     if (result.ok && result.pdf) {
       c.lastOk = tex
       showPdfBytes(result.pdf)
@@ -2687,6 +2703,110 @@ function MainWindow({ win, args }: AppProps) {
     fitZoom: (p) => setPdfFitZoom(p),
     showIn: (where, text) => showFromPdf(where, text),
   }
+
+  // ------------------------------------------- AI tools (khervetex_*, aiTools.ts)
+
+  const loadingRef = useRef(loading)
+  loadingRef.current = loading
+
+  /** An AI edit: the new document goes into the editor as one undo step; the Code tab and the PDF follow. */
+  function applyFromAi(doc: Document) {
+    const ed = edRef.current
+    if (!ed || ed.isDestroyed) throw new Error('The KherveTeX editor is not ready.')
+    dropCodeDraft()
+    setCodeError(null)
+    relinkFigures(doc)
+    live.current.meta = doc.meta
+    setMeta(doc.meta)
+    ed.chain().setContent(docToEditor(doc), { emitUpdate: false }).run()
+    model.current = editorToModel(ed.state.doc, doc.meta)
+    window.clearTimeout(timers.current.refresh)
+    refresh()
+    // Let the user see it: back to the visual editor unless they are reading the code.
+    if (live.current.tab === 'console') setTab('visual')
+  }
+
+  async function compileForAi(showPdfWindow: boolean): Promise<TexCompileResult> {
+    if (showPdfWindow && !live.current.showPdf && !pdfWinId.current) openPdfWindow()
+    await waitUntil(() => !compiler.current.running, 180_000)
+    window.clearTimeout(timers.current.compile)
+    compiler.current.pending = false
+    lastCompile.current = null
+    await compile(true)
+    await waitUntil(() => !compiler.current.running && !compiler.current.pending, 180_000)
+    const r = lastCompile.current as (TexCompileResult & { pdf: Uint8Array | null }) | null
+    if (!r) throw new Error('the compiler gave no answer')
+    let pages: number | null = null
+    if (r.ok && r.pdf) {
+      try {
+        const d = await openPdfDoc(r.pdf)
+        pages = d.pageCount
+        d.close()
+      } catch {
+        // the page count is a nicety
+      }
+    }
+    return { ok: r.ok, errors: r.errors, log: r.log, pages }
+  }
+
+  function aiTemplates(): TexTemplate[] {
+    const list: TexTemplate[] = EXAMPLES.filter((x) => x.file !== 'welcome-tour.json').map((x) => ({
+      name: x.label,
+      load: async () => fromJson(await loadExample(x.file)),
+    }))
+    if (fs.isDir(TEMPLATES_DIR)) {
+      for (const s of fs.list(TEMPLATES_DIR)) {
+        if (s.type === 'file' && s.name.endsWith('.json')) list.push({ name: s.name.slice(0, -5), load: async () => fromJson(await fs.readText(s.path)) })
+      }
+    }
+    return list
+  }
+
+  useAppTools(
+    win,
+    khervetexAiTools({
+      loading: () => loadingRef.current,
+      current: () => currentModel(),
+      apply: (doc) => applyFromAi(doc),
+      status: () => ({
+        path: live.current.filePath,
+        dirty: toJson(currentModel()) !== savedJson.current,
+        project: !!projRef.current,
+        autoCompile: live.current.autoCompile,
+        pdfShown: live.current.showPdf || !!pdfWinId.current,
+      }),
+      compile: (show) => compileForAi(show),
+      lastCompile: () => lastCompile.current,
+      templates: aiTemplates,
+      replaceWithNew: async (doc) => {
+        await leaveProject()
+        applyBundle({ doc, files: new Map(), bib: '', project: null }, null, 'Untitled')
+        win.setDocumentPath(null)
+      },
+      save: async (p) => {
+        if (!p) return (await save()) ? live.current.filePath : null
+        if (projRef.current) throw new Error('This is a multi-chapter project: save it in place (no path).')
+        if (!(await writeTo(p))) return null
+        setFilePath(p)
+        live.current.filePath = p
+        setDocName(path.basename(p))
+        win.setDocumentPath(p)
+        rememberRecent(p)
+        return p
+      },
+    }),
+  )
+
+  /** AI ▸ Ask KherveAI to edit this document…: KherveAI acts on this window with the khervetex_ tools. */
+  async function askKherveAi() {
+    const text = await os.dialog.prompt(
+      'What should KherveAI do with this document? It edits it here, in the editor, and recompiles the PDF (Ctrl+Z undoes each change).',
+      { title: 'Ask KherveAI', okLabel: 'Ask', defaultValue: '' },
+    )
+    if (!text?.trim()) return
+    os.open('kherveai', { ask: `${text.trim()}\n\n(In my KherveTeX document "${docName}", window ${win.id}.)`, _ask: Date.now() })
+  }
+
   const stableLink = useMemo(
     () => ({
       onUserClose: () => linkHandlers.current.userClose(),
@@ -2908,7 +3028,12 @@ function MainWindow({ win, args }: AppProps) {
     },
     {
       label: 'AI',
-      items: [{ label: 'Connect to Claude…', onClick: () => void connectClaude() }],
+      items: [
+        { label: 'Ask KherveAI to edit this document…', onClick: () => void askKherveAi() },
+        { label: 'Open KherveAI', onClick: () => os.open('kherveai') },
+        '-',
+        { label: 'Connect to Claude…', onClick: () => void connectClaude() },
+      ],
     },
     {
       label: 'Window',

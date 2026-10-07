@@ -1,14 +1,20 @@
 // Where messages are written: grows with its text, Enter sends, Shift+Enter
 // starts a new line, Esc stops a reply. Files from the drive can be attached
-// (paperclip, or dragged in from Files); their text goes with the message.
+// (paperclip, or dragged in from Files): their text, or the picture, goes with
+// the message. The camera next to the paperclip attaches a screenshot of a
+// window or of the whole screen (saved in ~/Pictures/Screenshots too).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ArrowUp, FileText, LoaderCircle, Paperclip, Square, X } from 'lucide-react'
-import { HOME, formatSize, os } from '@/os'
+import { ArrowUp, Camera, FileText, LoaderCircle, Monitor, Paperclip, Square, X } from 'lucide-react'
+import { HOME, formatSize, os, type MenuItem } from '@/os'
 import { DRAG_MIME } from '@/os/fileActions'
+import { AppIcon } from '@/os/ui/AppIcon'
+import { screenshotTargets, type ShotTarget } from '@/os/screenshot'
+import { MAX_PICTURES, pictureUrl, screenshotForMessage } from './pictures'
+import './pictures.css'
 import { sendMessage } from './agent'
 import { MAX_ATTACH_CHARS, readAttachment } from './history'
-import { stopRun, useAi } from './store'
+import { ollamaModel, stopRun, useAi } from './store'
 import type { Attachment, Chat } from './types'
 import { errorText } from './util'
 
@@ -64,6 +70,12 @@ export function Composer({ chat, placeholder }: { chat: Chat; placeholder: strin
     let current = filesRef.current
     for (const p of paths) {
       if (current.some((f) => f.path === p)) continue
+      if (current.filter((f) => f.image).length >= MAX_PICTURES && /\.(png|jpe?g|gif|webp|bmp)$/i.test(p)) {
+        await os.dialog.alert(`One message can carry ${MAX_PICTURES} pictures. Send this message first, then attach more in the next one.`, {
+          title: 'Too many pictures',
+        })
+        return
+      }
       const used = current.reduce((n, f) => n + f.text.length, 0)
       const budget = MAX_ATTACH_CHARS - used
       if (budget < 1000) {
@@ -92,6 +104,39 @@ export function Composer({ chat, placeholder }: { chat: Chat; placeholder: strin
     else focusEnd()
   }
 
+  // The camera: pick a window (or the whole screen) from a menu above the button.
+  const takeShot = async (target: ShotTarget) => {
+    setReading((n) => n + 1)
+    let path: string | null = null
+    try {
+      path = await screenshotForMessage(target)
+    } catch (e) {
+      await os.dialog.alert(errorText(e), { title: 'Could not take the screenshot' })
+    } finally {
+      setReading((n) => n - 1)
+    }
+    if (path) await addPaths([path])
+    else focusEnd()
+  }
+  const pickShot = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    // The whole screen, a line, then the windows on screen, front first.
+    const items: MenuItem[] = screenshotTargets().map((t) => {
+      const app = t.app ? os.getApp(t.app) : undefined
+      return {
+        label: t.label,
+        ...(t.target === 'screen' ? { icon: Monitor } : app ? { image: <AppIcon app={app} size={16} /> } : {}),
+        onClick: () => void takeShot(t.target),
+      }
+    })
+    if (items.length > 1) items.splice(1, 0, '-')
+    os.contextMenu(
+      { clientX: r.left, clientY: r.top - 4 },
+      items,
+      { above: true, owner: `kai-shot-${chat.id}` },
+    )
+  }
+
   // Commands from the menus and messages.
   const pickRef = useRef(pickFile)
   pickRef.current = pickFile
@@ -111,6 +156,13 @@ export function Composer({ chat, placeholder }: { chat: Chat; placeholder: strin
   }, [chat.id])
 
   const canSend = !running && !reading && (!!text.trim() || files.length > 0)
+  // Ollama models without "vision" can't see pictures: say so before sending.
+  const blind = useAi((s) => {
+    if (chat.provider !== 'ollama') return false
+    const caps = ollamaModel(chat.model, s)?.caps
+    return !!caps && !caps.includes('vision')
+  })
+  const hasPictures = files.some((f) => f.image)
 
   const send = () => {
     if (!canSend) return
@@ -160,8 +212,8 @@ export function Composer({ chat, placeholder }: { chat: Chat; placeholder: strin
       {(files.length > 0 || reading > 0) && (
         <div className="kai-chips">
           {files.map((f) => (
-            <span key={f.path} className="kai-chip" title={`${f.path}${f.truncated ? ` — long file: the model gets its start and end (${f.text.length.toLocaleString()} of ${f.chars.toLocaleString()} characters)` : ''}`}>
-              <FileText size={13} />
+            <span key={f.path} className={`kai-chip${f.image ? ' picture' : ''}`} title={`${f.path}${f.truncated ? ` — long file: the model gets its start and end (${f.text.length.toLocaleString()} of ${f.chars.toLocaleString()} characters)` : ''}`}>
+              {f.image ? <img className="kai-chip-thumb" src={pictureUrl(f.image)} alt="" draggable={false} /> : <FileText size={13} />}
               <span className="kai-chip-name">{f.name}</span>
               <span className="kai-chip-meta">
                 {formatSize(f.size)}
@@ -182,6 +234,16 @@ export function Composer({ chat, placeholder }: { chat: Chat; placeholder: strin
       <div className="kai-composer-box">
         <button className="k-icon-btn kai-attach" title="Attach a file from the drive" aria-label="Attach a file" onClick={() => void pickFile()}>
           <Paperclip size={17} />
+        </button>
+        <button
+          className="k-icon-btn kai-attach kai-shot"
+          title="Attach a screenshot of a window or of the whole screen"
+          aria-label="Attach a screenshot"
+          data-menu-owner={`kai-shot-${chat.id}`}
+          disabled={reading > 0}
+          onClick={pickShot}
+        >
+          <Camera size={17} />
         </button>
         <textarea
           ref={ref}
@@ -205,7 +267,13 @@ export function Composer({ chat, placeholder }: { chat: Chat; placeholder: strin
         )}
       </div>
       <div className="kai-hint">
-        {dragging ? 'Drop to attach' : running ? 'Writing… Esc or ■ stops it' : 'Enter to send · Shift+Enter for a new line · drag files here from Files'}
+        {dragging
+          ? 'Drop to attach'
+          : running
+            ? 'Writing… Esc or ■ stops it'
+            : hasPictures && blind
+              ? `${chat.model} can't see pictures: choose a vision model to ask about them`
+              : 'Enter to send · Shift+Enter for a new line · drag files here from Files'}
       </div>
     </div>
   )

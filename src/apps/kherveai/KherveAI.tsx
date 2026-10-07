@@ -9,7 +9,7 @@ import {
 import { os, type AppProps, type MenuBarMenu, type MenuItem } from '@/os'
 import { useWindows } from '@/os/windows'
 import { exportChat, openChatsFolder } from './actions'
-import { regenerate } from './agent'
+import { regenerate, sendMessage } from './agent'
 import { ChatView } from './ChatView'
 import { composerCommand } from './Composer'
 import { SettingsDialog, SystemPromptDialog } from './Dialogs'
@@ -96,6 +96,16 @@ export default function KherveAI({ win, args }: AppProps) {
   useEffect(() => {
     if (typeof args.path === 'string' && /\.json$/i.test(args.path)) void openChatFile(args.path)
   }, [args.path])
+
+  // os.open('kherveai', { ask, _ask }) from another app (KherveTeX's AI ▸ Ask KherveAI…):
+  // a new chat that sends the request at once; the app's tools act on its window.
+  const lastAsk = useRef<unknown>(null)
+  useEffect(() => {
+    if (typeof args.ask !== 'string' || !args.ask.trim() || args._ask === lastAsk.current) return
+    lastAsk.current = args._ask
+    const id = newChat()
+    sendMessage(id, args.ask)
+  }, [args.ask, args._ask])
 
   // While Ollama is down and in use, look again now and then (it may have been started).
   const usesOllama = chat?.provider === 'ollama'

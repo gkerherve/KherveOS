@@ -467,6 +467,200 @@ export const APP_TOOL_SETS: AppToolSet[] = [
     ],
   },
   {
+    app: 'khervetex',
+    name: 'KherveTeX',
+    summary: 'LaTeX documents (visual editor + Code tab, PDF beside it): articles, reports, letters, theses.',
+    keywords: ['khervetex', 'latex', 'tex', 'ktex', 'pdflatex', 'manuscript', 'thesis', 'article', 'document', 'typeset', 'section', 'sections'],
+    openArgs: { blank: true },
+    tools: [
+      {
+        action: 'get_document',
+        description:
+          'Read the open KherveTeX document: title, author, class, settings, the outline (every block with its index) and its LaTeX source. Call this first, before changing it.',
+        inputSchema: object({ max_chars: int('Cut the LaTeX to this many characters (default 30000).'), latex: bool('Include the LaTeX source (default true).') }),
+        readOnly: true,
+      },
+      {
+        action: 'read_blocks',
+        description: 'The LaTeX of blocks start..end (inclusive; indices from khervetex_get_document). Read before you rewrite part of the document.',
+        inputSchema: object({ start: int('First block index (0 = first).'), end: int('Last block index (default: start).') }, ['start']),
+        readOnly: true,
+      },
+      {
+        action: 'set_latex',
+        description:
+          'Replace the WHOLE document with new LaTeX: a complete .tex file (\\documentclass…\\begin{document}…) also sets class and packages; body text alone keeps them. It is parsed into editable content, shown in the editor and recompiled. One undo step.',
+        inputSchema: object({ latex: str('The new LaTeX source.') }, ['latex']),
+      },
+      {
+        action: 'insert_latex',
+        description:
+          'Insert LaTeX body source (no preamble) as new blocks: sections, paragraphs, equations, lists, tables, \\cite, \\ref. After block "after" (-1 = at the start), or at the end.',
+        inputSchema: object({ latex: str('LaTeX body source.'), after: int('Insert after this block index (-1 = at the start; default: at the end).') }, ['latex']),
+      },
+      {
+        action: 'replace_blocks',
+        description: 'Replace blocks start..end (inclusive) with new LaTeX body source, e.g. rewrite one section. Keep what you were not asked to change.',
+        inputSchema: object({ start: int('First block index.'), end: int('Last block index.'), latex: str('The new LaTeX body source.') }, ['start', 'end', 'latex']),
+      },
+      {
+        action: 'delete_blocks',
+        description: 'Delete blocks start..end (inclusive) from the document.',
+        inputSchema: object({ start: int('First block index.'), end: int('Last block index (default: start).') }, ['start']),
+      },
+      {
+        action: 'replace_text',
+        description: 'Find and replace plain text in the document, keeping its formatting. Replaces every match unless all=false.',
+        inputSchema: object(
+          { find: str('The text to find.'), replace: str('What to put instead.'), all: bool('Every match (default true).'), case_sensitive: bool('Match case (default false).') },
+          ['find', 'replace'],
+        ),
+      },
+      {
+        action: 'set_metadata',
+        description: 'Change the title, author (lines separated by "\\\\"), document class, font size, page size or add packages. Only what you pass changes.',
+        inputSchema: object({
+          title: str('The title.'),
+          author: str('The author(s), e.g. "A. Smith \\\\ University of X".'),
+          documentclass: str('e.g. "article", "report", "book", "letter", "beamer".'),
+          body_font_pt: int('10, 11 or 12.'),
+          page_size: str('e.g. "A4", "Letter".'),
+          add_packages: { type: 'array', items: { type: 'string' }, description: 'LaTeX packages to add, e.g. ["siunitx"].' },
+        }),
+      },
+      {
+        action: 'new_document',
+        description:
+          'Start a new document in the KherveTeX window: blank, or from a template ("Lab report", "Letter", "CV / résumé", "Two-column article", a journal or one of My templates). An unknown template name lists them.',
+        inputSchema: object({ template: str('Template name (part of it is enough; default: blank).'), title: str('Its title.') }),
+      },
+      {
+        action: 'compile',
+        description: 'Typeset the document with LaTeX now and wait: ok, page count and the errors (line, message) with the end of the log. The PDF window shows the result.',
+        inputSchema: object({ show_pdf: bool('Open the PDF window if it is hidden (default true).') }),
+      },
+      {
+        action: 'save',
+        description: 'Save the document (.ktex). A document never saved needs "path".',
+        inputSchema: object({ path: str('Where to save, e.g. "~/Documents/report.ktex" (default: its own file).') }),
+      },
+    ],
+  },
+  {
+    app: 'khervepy',
+    name: 'KhervePY',
+    summary: 'the Python IDE (project folder, editor tabs, Run in the browser).',
+    keywords: ['khervepy', 'python', 'script', 'scripts', '.py', 'code', 'ide', 'program'],
+    tools: [
+      {
+        action: 'read',
+        description: 'Read the file shown in KhervePY (or an open tab by path): path, text, unsaved changes, plus the open tabs and the project folder.',
+        inputSchema: object({ path: str('An open file (default: the one shown).') }),
+        readOnly: true,
+      },
+      {
+        action: 'set_code',
+        description: 'Replace the whole text of the file shown in KhervePY (or of "path", opened or created first). Saved with khervepy_save or before a run.',
+        inputSchema: object({ code: str('The new file text.'), path: str('A file, e.g. "~/Documents/demo.py" (default: the one shown).') }, ['code']),
+      },
+      {
+        action: 'replace',
+        description: 'Find text in the file shown in KhervePY and replace it (exact match).',
+        inputSchema: object({ find: str('The exact text to find.'), replace: str('What to put instead.'), all: bool('Every match (default: the first).') }, ['find', 'replace']),
+      },
+      {
+        action: 'open_file',
+        description: 'Open a file in a KhervePY tab (create=true makes it, empty, when missing).',
+        inputSchema: object({ path: str('The file, e.g. "~/Documents/main.py".'), create: bool('Create it if missing.') }, ['path']),
+      },
+      {
+        action: 'run',
+        description: 'Save and run the Python file shown in KhervePY (asks the user first). Returns the exit code and what it printed.',
+        inputSchema: object({ max_chars: int('Cut the output to this many characters (default 8000).') }),
+      },
+      {
+        action: 'save',
+        description: 'Save the file shown in KhervePY (or every open file).',
+        inputSchema: object({ all: bool('Save every open file.') }),
+      },
+    ],
+  },
+  {
+    app: 'khervepaint',
+    name: 'KhervePaint',
+    summary: 'the vector drawing app (shapes, lines, arrows, text; .svg / .kpaint).',
+    keywords: ['khervepaint', 'paint', 'drawing', 'draw', 'diagram', 'sketch', 'shape', 'shapes', 'svg', 'kpaint'],
+    tools: [
+      {
+        action: 'get_drawing',
+        description: 'The open drawing: its size in pixels and every item (id, kind, position, text).',
+        inputSchema: object({}),
+        readOnly: true,
+      },
+      {
+        action: 'add_shape',
+        description:
+          'Draw a shape (pixels, origin top-left, y down): rect, roundrect, ellipse with box [x, y, w, h]; line or arrow with box [x1, y1, x2, y2]; text at [x, y]. Rect/ellipse can carry a text label. One undo step.',
+        inputSchema: object(
+          {
+            shape: { type: 'string', enum: ['rect', 'roundrect', 'ellipse', 'line', 'arrow', 'text'], description: 'What to draw.' },
+            box: { type: 'array', items: { type: 'number' }, description: '[x, y, w, h], or [x1, y1, x2, y2] for line/arrow, or [x, y] for text.' },
+            text: str('The text (text items), or a label inside a rect/ellipse.'),
+            color: str('Stroke / text colour, "#rrggbb" (default: dark grey).'),
+            fill: str('Fill colour "#rrggbb" for shapes (default: none).'),
+            width: { type: 'number', description: 'Line width in pixels (default 2); font size in points for text (default 14).' },
+          },
+          ['shape', 'box'],
+        ),
+      },
+      {
+        action: 'delete_items',
+        description: 'Delete items of the drawing by id (from khervepaint_get_drawing). One undo step.',
+        inputSchema: object({ ids: { type: 'array', items: { type: 'integer' }, description: 'Item ids.' } }, ['ids']),
+      },
+      {
+        action: 'save',
+        description: 'Save the drawing (.svg or .kpaint). A drawing never saved needs "path".',
+        inputSchema: object({ path: str('Where, e.g. "~/Documents/figure.svg" (default: its own file).') }),
+      },
+    ],
+  },
+  {
+    app: 'khervepdf',
+    name: 'KhervePDF',
+    summary: 'the PDF reader and editor (tabs, annotations, pages).',
+    keywords: ['khervepdf', 'pdf', 'pdfs', 'page', 'pages'],
+    tools: [
+      {
+        action: 'get_info',
+        description: 'The PDFs open in KhervePDF (tabs) and the shown one\'s path, page count, current page, title and outline.',
+        inputSchema: object({}),
+        readOnly: true,
+      },
+      {
+        action: 'read_text',
+        description: 'The text of pages of the shown PDF (1 = first page). Default: from the current page, as much as fits.',
+        inputSchema: object({ from_page: int('First page (1-based).'), to_page: int('Last page (default: the end).'), max_chars: int('At most this many characters (default 20000).') }),
+        readOnly: true,
+      },
+      {
+        action: 'go_to_page',
+        description: 'Show a page of the PDF in KhervePDF.',
+        inputSchema: object({ page: int('Page number (1 = first).') }, ['page']),
+      },
+      {
+        action: 'search',
+        description: 'Find words in the shown PDF: the pages they are on and how often, then shows the first one.',
+        inputSchema: object({ text: str('What to find.') }, ['text']),
+      },
+      {
+        action: 'open',
+        description: 'Open a PDF file in a new KhervePDF tab.',
+        inputSchema: object({ path: str('The PDF, e.g. "~/Documents/paper.pdf".') }, ['path']),
+      },
+    ],
+  },
+  {
     app: 'files',
     name: 'Files',
     summary: 'the file manager window.',

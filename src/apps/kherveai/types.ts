@@ -4,7 +4,15 @@
 
 export type ProviderId = 'ollama' | 'anthropic' | 'openai'
 
-/** A text file from the drive, added to a user message. */
+/** A picture as the model gets it (base64, at most ~1568 px on its longer side). */
+export interface AttachedPicture {
+  mime: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp'
+  data: string
+  width: number
+  height: number
+}
+
+/** A file from the drive added to a user message: a text file, or a picture (`image`). */
 export interface Attachment {
   path: string
   name: string
@@ -15,6 +23,8 @@ export interface Attachment {
   /** What the model gets (head and tail when the file is long). */
   text: string
   truncated: boolean
+  /** A picture (attached from the drive, or a screenshot): the model sees it; `text` is empty. */
+  image?: AttachedPicture
 }
 
 export interface ToolOutcome {

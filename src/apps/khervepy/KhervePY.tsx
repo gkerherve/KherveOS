@@ -32,6 +32,8 @@ import { LogPanel } from './LogPanel'
 import { OutputPanel } from './OutputPanel'
 import { DiffView, type DiffContent } from './DiffView'
 import { CloneDialog, CommitPushDialog, IdentityDialog, ReposDialog, TokenDialog } from './dialogs'
+import { useAppTools } from '@/os/ai/appTools'
+import { khervepyAiTools } from './aiTools'
 import './khervepy.css'
 
 const VERSION = '0.40.1-os'
@@ -253,6 +255,25 @@ export default function KhervePY({ win, args }: AppProps) {
   // Ask before closing with unsaved edits (auto-saved files are just written).
   const live = useRef({ editors })
   live.current = { editors }
+
+  // AI tools (khervepy_read, _set_code, _run…: src/os/ai/appManifest.ts).
+  const runnerRef = useRef(runner)
+  runnerRef.current = runner
+  useAppTools(
+    win,
+    useMemo(
+      () =>
+        khervepyAiTools({
+          editors: () => live.current.editors,
+          project: () => projectRef.current,
+          showOutput: () => showDock('bottom', 'output'),
+          clearOutput: () => runnerRef.current.clear(),
+          running: () => !!runnerRef.current.running,
+          run: (file, cwd, label) => runnerRef.current.run(file, cwd, label),
+        }),
+      [showDock],
+    ),
+  )
   useEffect(() => {
     win.setCloseGuard(async () => {
       const left = await live.current.editors.flush()

@@ -2349,7 +2349,19 @@ function MainWindow({ win, args }: AppProps) {
     },
     {
       label: 'AI',
-      items: [{ label: 'Connect to Claude…', onClick: () => os.open('kherveai') }],
+      items: [
+        {
+          // KherveAI edits the open presentation with the kherveslide_ tools (list, add and edit slides, export).
+          label: 'Ask KherveAI to edit this presentation…',
+          onClick: async () => {
+            const text = await os.dialog.prompt('What should KherveAI do with this presentation? It changes the slides here, in this window.', { title: 'Ask KherveAI', okLabel: 'Ask' })
+            if (text?.trim()) os.open('kherveai', { ask: `${text.trim()}\n\n(In my KherveSlide presentation "${docName}", window ${win.id}.)`, _ask: Date.now() })
+          },
+        },
+        { label: 'Open KherveAI', onClick: () => os.open('kherveai') },
+        '-',
+        { label: 'Connect to Claude (MCP)…', onClick: () => os.open('settings', { section: 'ai' }) },
+      ],
     },
     {
       label: 'Help',

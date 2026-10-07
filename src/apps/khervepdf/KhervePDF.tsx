@@ -22,6 +22,8 @@ import { Sidebar } from './Sidebar'
 import { INTERVAL_MAX, INTERVAL_MIN, Slideshow, type SlideSettings } from './Slideshow'
 import { ToolOptions } from './ToolOptions'
 import { loadToolSettings, saveToolSettings, TOOL_BY_ID, TOOLS, type ToolId, type ToolSetting, type ToolSettings } from './tools'
+import { useAppTools } from '@/os/ai/appTools'
+import { khervepdfAiTools } from './aiTools'
 import './khervepdf.css'
 
 /** 100 % = real size: 96 CSS pixels per inch, 72 points per inch. */
@@ -306,6 +308,9 @@ export default function KhervePDF({ win, args }: AppProps) {
       fail('Could not create a document', e)
     }
   }
+
+  // AI tools (khervepdf_get_info, _read_text…: src/os/ai/appManifest.ts).
+  useAppTools(win, khervepdfAiTools({ tabs: () => live.current.tabs, tab: () => live.current.tab, open: (p) => openPath(p) }))
 
   // Open the file the window was started with (and later ones handed to it).
   useEffect(() => {

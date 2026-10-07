@@ -9,6 +9,7 @@ import {
 import { formatSize, os, path as vpath } from '@/os'
 import { continueRun, regenerate, MAX_STEPS } from './agent'
 import { composerCommand } from './Composer'
+import { pictureUrl } from './pictures'
 import { Markdown } from './Markdown'
 import { openDialog, takeLastUserMessage } from './store'
 import type { AssistantMessage, ToolCall, Turn, UserMessage } from './types'
@@ -32,16 +33,22 @@ export const UserBubble = memo(function UserBubble({ m, chatId, canEdit }: { m: 
     <div className="kai-msg kai-user">
       {m.attachments?.length ? (
         <div className="kai-attached">
-          {m.attachments.map((a) => (
-            <button key={a.path} className="kai-file" title={`Open ${a.path}`} onClick={() => void os.openFile(a.path)}>
-              <FileText size={14} />
-              <span className="kai-file-name">{a.name}</span>
-              <span className="kai-file-meta">
-                {formatSize(a.size)}
-                {a.truncated ? ' · shortened' : ''}
-              </span>
-            </button>
-          ))}
+          {m.attachments.map((a) =>
+            a.image ? (
+              <button key={a.path} className="kai-picture" title={`Open ${vpath.pretty(a.path)}`} onClick={() => void os.openFile(a.path)}>
+                <img src={pictureUrl(a.image)} alt={a.name} draggable={false} />
+              </button>
+            ) : (
+              <button key={a.path} className="kai-file" title={`Open ${a.path}`} onClick={() => void os.openFile(a.path)}>
+                <FileText size={14} />
+                <span className="kai-file-name">{a.name}</span>
+                <span className="kai-file-meta">
+                  {formatSize(a.size)}
+                  {a.truncated ? ' · shortened' : ''}
+                </span>
+              </button>
+            ),
+          )}
         </div>
       ) : null}
       {m.text && <div className="kai-bubble">{m.text}</div>}

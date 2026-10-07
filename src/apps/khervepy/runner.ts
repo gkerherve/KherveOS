@@ -17,6 +17,10 @@ export interface RunResult {
   stopped: boolean
   /** Everything written to stderr during the run. */
   stderr: string
+  /** Everything written to stdout during the run (for the AI tools). */
+  stdout?: string
+  /** Figures drawn (matplotlib). */
+  figures?: number
 }
 
 const MAX_CHARS = 400_000
@@ -114,13 +118,17 @@ export function useRunner(name: string): Runner {
     async (file: string, cwd: string, label: string): Promise<RunResult> => {
       const k = getKernel()
       let stderr = ''
+      let stdout = ''
       stopping.current = false
       setRunning(file)
       append('cmd', `$ python ${label}\n`)
       if (k.status === 'off' || k.status === 'starting') append('info', 'Starting Python…\n')
       try {
         const r = await k.runScript(file, [], cwd, {
-          onStdout: (t) => append('out', t),
+          onStdout: (t) => {
+            if (stdout.length < 200_000) stdout += t
+            append('out', t)
+          },
           onStderr: (t) => {
             stderr += t
             append('err', t)
@@ -129,7 +137,7 @@ export function useRunner(name: string): Runner {
         })
         for (const fig of r.figures) append('img', fig)
         append(r.exit_code === 0 ? 'ok' : 'fail', `\n[Process finished with exit code ${r.exit_code}]\n`)
-        return { exitCode: r.exit_code, stopped: false, stderr }
+        return { exitCode: r.exit_code, stopped: false, stderr, stdout, figures: r.figures.length }
       } catch (e) {
         if (stopping.current) {
           append('info', '\n[Process stopped]\n')

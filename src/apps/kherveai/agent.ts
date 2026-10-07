@@ -2,7 +2,7 @@
 // results back, and repeat — up to MAX_STEPS model calls per message. Every
 // step is streamed into the chat as it happens and saved when it ends.
 
-import { defaultSystemPrompt } from './prompt'
+import { ACT_RULE, defaultSystemPrompt, openWindowLines } from './prompt'
 import { ProviderError, streamChat } from './providers'
 import {
   controllers,
@@ -20,7 +20,7 @@ import { execTool, recoverToolCalls, toolFromWire, type WireTool } from './toolb
 import type { AssistantMessage, Attachment, StreamEvent, ToolCall, Turn, Usage, UserMessage } from './types'
 import { callId, errorText, isAbort, uid } from './util'
 
-export const MAX_STEPS = 8
+export const MAX_STEPS = 12
 
 const get = useAi.getState
 
@@ -96,6 +96,17 @@ export function continueRun(chatId: string) {
 }
 
 const STOPPED = 'Not run: the person stopped the reply.'
+
+/**
+ * The chat's own system prompt, or the default one. A custom prompt still
+ * gets the rule to act in the apps and the open windows when the model has
+ * tools — otherwise it rewrites documents in the chat instead of in the app.
+ */
+function systemFor(custom: string | null | undefined, tools: WireTool[] | null): string {
+  if (!custom) return defaultSystemPrompt(tools)
+  if (!tools?.length) return custom
+  return [custom, '', 'You can act in KherveOS with the tools you are given.', ACT_RULE, ...openWindowLines()].join('\n')
+}
 
 export async function runAgent(chatId: string, opts: { resume?: boolean } = {}): Promise<void> {
   const start = get().chats[chatId]
@@ -177,7 +188,7 @@ export async function runAgent(chatId: string, opts: { resume?: boolean } = {}):
         const res = await streamChat({
           provider,
           model,
-          system: chat.system ?? defaultSystemPrompt(tools),
+          system: systemFor(chat.system, tools),
           history,
           tools,
           signal,
