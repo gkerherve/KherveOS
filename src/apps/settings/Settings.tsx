@@ -9,7 +9,9 @@ import { APPS, GROUPS } from '@/os/registry'
 import { AppIcon } from '@/os/ui/AppIcon'
 import { useAuth, useServer } from '@/os/server'
 import { KHERVEOS_VERSION, PYODIDE_VERSION } from '@/os/version'
+import { useAppTools } from '@/os/ai/appTools'
 import { McpSection } from './McpSection'
+import { settingsAiTools } from './aiTools'
 import './settings.css'
 
 type Section = 'appearance' | 'storage' | 'server' | 'ai' | 'python' | 'about'
@@ -31,6 +33,16 @@ export default function Settings({ win, args }: AppProps) {
   useEffect(() => {
     win.setTitle(`Settings — ${SECTIONS.find((s) => s.id === section)?.name}`)
   }, [win, section])
+  useAppTools(
+    win,
+    settingsAiTools({
+      sections: SECTIONS,
+      show: (id) => {
+        setSection(id as Section)
+        win.focus()
+      },
+    }),
+  )
 
   return (
     <div className="k-app st-app">

@@ -111,7 +111,7 @@ test('small models are offered the tools of open and named apps only', () => {
   assert.deepEqual(mentionedApps('Open KherveSheet', APP_TOOL_SETS), ['khervesheet'])
   // "notebook" is not "note"; "spreadsheets" is not "sheet" by accident but listed
   assert.equal(mentionedApps('my notebook', APP_TOOL_SETS).includes('notepad'), false)
-  assert.deepEqual(appsToOffer(APP_TOOL_SETS, ['files', 'terminal'], 'hello'), ['files'])
+  assert.deepEqual(appsToOffer(APP_TOOL_SETS, ['files', 'nosuchapp'], 'hello'), ['files'])
   assert.deepEqual(appsToOffer(APP_TOOL_SETS, ['notepad'], 'fill the spreadsheet'), ['khervesheet', 'notepad'])
 })
 

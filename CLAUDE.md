@@ -39,6 +39,17 @@ free, open source, helping people. Avoid communist imagery (stars, hammer & sick
 - tsconfig has `erasableSyntaxOnly` (no enums / parameter properties / namespaces) and `verbatimModuleSyntax` (`import type`).
 - `.kbook` files must stay compatible with the desktop KherveBook (`{"format": "kbook", "version": 1, "cells": [{type, source}]}`).
 
+## AI tools and MCP
+
+- One tool list for every AI: core tools in `src/os/ai/tools.ts` (files, Python, `open_app`, `list_windows`,
+  `arrange_window`, `close_window`…) + app tools `<app>_<action>` (specs in `src/os/ai/appManifest.ts` and
+  `src/os/ai/manifests/*.ts`, code in the app via `useAppTools(win, …)`; a call opens the app if needed).
+- MCP: `mcpBridge.ts` sends `toMcpTools(allTools())` (`mcpCore.ts`) over `/api/ws`; `server/kherveos_server/mcp_server.py`
+  serves `/mcp` (per-user bearer token) and keeps the last list for when no tab is open. Limits there: `MAX_TOOLS`, `MAX_TOOLS_JSON`.
+- Every registry app must have a tool set (`tools/tests/mcp-tools.test.ts`); ≤ 6 args per tool. Sending mail/messages,
+  Terminal commands and anything destructive call `ctx.confirm(…)` first.
+- Tests: `node --test tools/tests/*.test.ts tools/tests/*.test.mjs`.
+
 ## Gotchas
 
 - Windows are rendered in creation order and stacked with z-index; never re-order them in the DOM

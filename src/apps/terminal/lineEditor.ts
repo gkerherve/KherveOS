@@ -234,6 +234,19 @@ export class LineEditor {
     if (this.req) this.drain()
   }
 
+  /**
+   * Put `line` in place of the line being edited and press Enter (an AI runs a
+   * command). Returns what had been typed (to give back to the next prompt),
+   * or null when no line is being edited.
+   */
+  enter(line: string): string | null {
+    if (!this.req) return null
+    const before = this.units.join('')
+    this.units = toUnits(line)
+    this.submit({ type: 'line', text: line })
+    return before
+  }
+
   /** Forget typed-ahead input (after Ctrl+C). */
   clearQueue(): void {
     this.queue = ''

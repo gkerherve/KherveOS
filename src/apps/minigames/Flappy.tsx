@@ -5,7 +5,8 @@
 
 import { useCallback, useRef, useState } from 'react'
 import type { AppProps } from '@/os'
-import { GameShell, Stat, useScores, type GameInfo, type Phase } from './GameShell'
+import type { AppTools } from '@/os/ai/appTools'
+import { GameShell, Stat, useScores, type GameControl, type GameInfo, type Phase } from './GameShell'
 import { fmt } from './fx'
 import { DIFFICULTIES, POINTS, STAGES, STEP, type Difficulty, type Flappy as Rules } from './flappyRules'
 import { FlappyEngine, H, W } from './flappyEngine'
@@ -79,6 +80,23 @@ export default function Flappy({ win }: AppProps) {
 
   const best = Math.max(scores[0]?.score ?? 0, stats.score)
 
+  const aiState = () => ({ stage: engine.game.stage, difficulty: engine.game.difficulty })
+  const aiTools = (game: GameControl): AppTools => ({
+    set_difficulty: async (a) => {
+      const d = String(a.difficulty ?? '').toLowerCase() as Difficulty
+      if (!LEVELS.includes(d)) throw new Error(`"difficulty" must be one of ${LEVELS.join(', ')}.`)
+      const p = game.phase()
+      if (p !== 'ready' && p !== 'over' && d !== engine.game.difficulty)
+        throw new Error('The difficulty can only change between games. Call flappy_new_game first (or wait for game over).')
+      if (d !== engine.game.difficulty) {
+        engine.setDifficulty(d)
+        onFrame()
+      }
+      const v = DIFFICULTIES[d]
+      return { difficulty: d, pipe_speed: v.pipeSpeed, pipe_gap: v.pipeGap }
+    },
+  })
+
   const panel = (
     <>
       <Stat label="Score" value={fmt(stats.score)} big />
@@ -112,5 +130,5 @@ export default function Flappy({ win }: AppProps) {
     </>
   )
 
-  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} className="mg-flappy" />
+  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} aiState={aiState} aiTools={aiTools} className="mg-flappy" />
 }

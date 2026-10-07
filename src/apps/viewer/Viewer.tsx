@@ -1,10 +1,12 @@
 // Viewer: pictures and PDFs from the drive. PDFs use the browser's own PDF
 // viewer until KhervePDF arrives.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Download, FolderOpen, ImageIcon, RotateCw, ZoomIn, ZoomOut } from 'lucide-react'
 import { os, fs, path, HOME, useFsVersion, type AppProps } from '@/os'
 import { IMAGE_EXTS, mimeType } from '@/os/fileIcons'
+import { useAppTools } from '@/os/ai/appTools'
+import { viewerAiTools, type ViewerState, type Zoom } from './aiTools'
 import './viewer.css'
 
 export const VIEWER_TYPES = [...IMAGE_EXTS, '.pdf']
@@ -12,9 +14,12 @@ export const VIEWER_TYPES = [...IMAGE_EXTS, '.pdf']
 export default function Viewer({ win, args }: AppProps) {
   const [file, setFile] = useState<string | null>(args.path ?? null)
   const [url, setUrl] = useState<string | null>(null)
-  const [zoom, setZoom] = useState<number | 'fit'>('fit')
+  const [zoom, setZoom] = useState<Zoom>('fit')
   const [rotation, setRotation] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  // The file `url` holds (or failed to load), and the picture's size once shown: for the AI tools.
+  const [loaded, setLoaded] = useState<string | null>(null)
+  const [size, setSize] = useState<ViewerState['size']>(null)
   const version = useFsVersion()
 
   useEffect(() => {
@@ -34,8 +39,13 @@ export default function Viewer({ win, args }: AppProps) {
         if (!alive) return
         u = URL.createObjectURL(new Blob([b as BlobPart], { type: mimeType(file) }))
         setUrl(u)
+        setLoaded(file)
       })
-      .catch((e) => alive && setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => {
+        if (!alive) return
+        setError(e instanceof Error ? e.message : String(e))
+        setLoaded(file)
+      })
     setZoom('fit')
     setRotation(0)
     return () => {
@@ -58,6 +68,35 @@ export default function Viewer({ win, args }: AppProps) {
     if (siblings.length < 2 || index < 0) return
     setFile(siblings[(index + d + siblings.length) % siblings.length])
   }
+
+  // AI tools: the latest state, updated at once by the setters (calls come between renders).
+  const live = useRef<ViewerState>(null!)
+  live.current = { file, loaded, error, zoom, rotation, size, siblings }
+  useAppTools(
+    win,
+    useMemo(
+      () =>
+        viewerAiTools(
+          {
+            get: () => live.current,
+            setFile: (p) => {
+              live.current = { ...live.current, file: p }
+              setFile(p)
+            },
+            setZoom: (z) => {
+              live.current = { ...live.current, zoom: z }
+              setZoom(z)
+            },
+            setRotation: (r) => {
+              live.current = { ...live.current, rotation: r }
+              setRotation(r)
+            },
+          },
+          VIEWER_TYPES,
+        ),
+      [],
+    ),
+  )
 
   const open = async () => {
     const p = await os.dialog.openFile({ startDir: file ? path.dirname(file) : `${HOME}/Pictures`, extensions: VIEWER_TYPES })
@@ -117,6 +156,7 @@ export default function Viewer({ win, args }: AppProps) {
             src={url}
             alt={path.basename(file)}
             draggable={false}
+            onLoad={(e) => loaded && setSize({ file: loaded, width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight })}
             style={{
               transform: `rotate(${rotation}deg)${zoom === 'fit' ? '' : ` scale(${zoom})`}`,
             }}

@@ -116,6 +116,10 @@ export default function Tetris({ win }: AppProps) {
   }, [engine])
 
   const best = Math.max(scores[0]?.score ?? 0, stats.score)
+  const aiState = () => {
+    const s = readStats(engine.game)
+    return { level: s.level, lines: s.lines, hold: s.hold, next: s.next.split('') }
+  }
 
   const panel = (
     <>
@@ -141,5 +145,5 @@ export default function Tetris({ win }: AppProps) {
     </>
   )
 
-  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} className="mg-tetris" />
+  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} aiState={aiState} className="mg-tetris" />
 }

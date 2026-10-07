@@ -24,8 +24,9 @@ import { useWindows } from '@/os/windows'
 import type { WindowApi } from '@/os/types'
 import type { KTool, ToolContext } from './tools'
 import { APP_TOOL_SETS } from './appManifest'
+import { appToolDef } from './mcpCore'
 import {
-  AppToolRegistry, appsToOffer, hiddenCoreTools, pickWindow, runOf, toolName, withWindowArg, type AppToolContext, type AppToolImpl, type AppTools, type AppToolSet,
+  AppToolRegistry, appsToOffer, hiddenCoreTools, pickWindow, runOf, toolName, type AppToolContext, type AppToolImpl, type AppTools, type AppToolSet,
   type AppToolSpec,
 } from './appToolsCore'
 
@@ -115,14 +116,8 @@ function withNote(result: unknown, note: string): unknown {
 }
 
 function asKTool({ set, spec }: Entry): KTool {
-  const name = toolName(set.app, spec.action)
   return {
-    name,
-    app: set.app,
-    description: spec.description,
-    inputSchema: withWindowArg(spec.inputSchema, set.name),
-    destructive: spec.destructive,
-    readOnly: spec.readOnly,
+    ...appToolDef(set, spec),
     async run(args: Record<string, unknown>, ctx: ToolContext) {
       const { window: wanted, ...rest } = args
       const wm = useWindows.getState()

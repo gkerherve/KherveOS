@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type Po
 import { CircleHelp, Pause, Play, RotateCcw, Trophy, VolumeX } from 'lucide-react'
 import { os, type WindowApi } from '@/os'
 import { useWindows } from '@/os/windows'
+import { useAppTools, type AppTools } from '@/os/ai/appTools'
 import { runLoop } from './loop'
 import { useFitCanvas } from './canvas'
 import { fmt } from './fx'
@@ -98,6 +99,13 @@ export function Stat({ label, value, big, title }: { label: string; value: React
   )
 }
 
+/** What a game's own AI tools get from the shell. */
+export interface GameControl {
+  phase(): Phase
+  /** Start or resume the game (its window comes to the front); throws once it is over. */
+  ensurePlaying(): void
+}
+
 interface ShellProps {
   win: WindowApi
   info: GameInfo
@@ -107,9 +115,13 @@ interface ShellProps {
   /** Called after every drawn frame: a chance to copy numbers into React state. */
   onFrame?: () => void
   className?: string
+  /** Extra numbers for the AI's get_state (level, lines…). */
+  aiState?: () => Record<string, unknown>
+  /** The game's own AI tools (specs in src/os/ai/manifests/games.ts). */
+  aiTools?: (game: GameControl) => AppTools
 }
 
-export function GameShell({ win, info, engine, panel, onFrame, className }: ShellProps) {
+export function GameShell({ win, info, engine, panel, onFrame, className, aiState, aiTools }: ShellProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const screenRef = useRef<HTMLDivElement>(null)
@@ -367,6 +379,58 @@ export function GameShell({ win, info, engine, panel, onFrame, className }: Shel
     const p = toLogical(e)
     engine.pointerDown(p.x, p.y)
   }
+
+  // ---- AI tools (get_state, new_game, play; specs in src/os/ai/manifests/games.ts)
+
+  /** Start or resume for the AI: the window comes to the front first, so the focus check doesn't pause it again. */
+  const aiPlay = useCallback(() => {
+    if (phaseRef.current === 'over') throw new Error(`The game is over (score ${engine.score}). Call ${info.id}_new_game to play again.`)
+    useWindows.getState().focus(win.id)
+    if (phaseRef.current !== 'playing') play()
+  }, [engine, info.id, win.id, play])
+
+  const control: GameControl = { phase: () => phaseRef.current, ensurePlaying: aiPlay }
+
+  useAppTools(win, {
+    get_state: async () => {
+      const list = getScores(info.id)
+      return {
+        phase: phaseRef.current,
+        score: engine.score,
+        best: Math.max(list[0]?.score ?? 0, engine.score),
+        ...(phaseRef.current === 'over' && resultRef.current && { result: resultRef.current.summary }),
+        ...aiState?.(),
+        high_scores: list.slice(0, 5).map((s) => ({ name: s.name, score: s.score, ...(s.summary && { summary: s.summary }) })),
+      }
+    },
+    new_game: async (a, ctx) => {
+      const p = phaseRef.current
+      if ((p === 'playing' || p === 'paused') && engine.score > 0) {
+        pause()
+        if (!(await ctx.confirm(`start a new game of ${info.name}`, `The game in progress (score ${engine.score}) will be lost.`)))
+          throw new Error('The user kept the game in progress.')
+      }
+      engine.reset()
+      setResult(null)
+      setCard(null)
+      setPhase('ready')
+      if (a.start === true) aiPlay()
+      return { phase: phaseRef.current, ...aiState?.() }
+    },
+    play: async (a) => {
+      const action = String(a.action ?? '')
+      const p = phaseRef.current
+      if (action === 'pause') {
+        if (p !== 'playing') return { phase: p, note: p === 'paused' ? 'Already paused.' : 'Not playing, nothing to pause.' }
+        pause()
+      } else if (action === 'start' || action === 'resume') {
+        if (cardRef.current) setCard(null)
+        aiPlay()
+      } else throw new Error('"action" must be "start", "pause" or "resume".')
+      return { phase: phaseRef.current, score: engine.score }
+    },
+    ...aiTools?.(control),
+  })
 
   // ---- menus
 

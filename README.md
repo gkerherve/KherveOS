@@ -85,12 +85,28 @@ share one origin and the HttpOnly session cookie just works. Data lives in
 Environment variables: `KHERVEOS_HOST`, `KHERVEOS_PORT`, `KHERVEOS_DATA`,
 `KHERVEOS_GAMES_DIR`.
 
+## AI and MCP: Claude controls KherveOS
+
+Every AI in KherveOS uses one set of tools: KherveAI, and Claude Code, Claude
+Desktop, ChatGPT… over MCP (`/mcp` on the server, relayed to your open KherveOS
+tab; Settings › AI & MCP gives the one-line setup for each). The OS tools
+(`src/os/ai/tools.ts`) handle files, Python, `list_apps`, `open_app`,
+`list_windows`, `arrange_window`, `close_window` and `take_screenshot` for any
+app. Each app also has its own tools, `<app>_<action>` (`khervesheet_set_cells`,
+`email_send`, `terminal_run_command`, `tetris_get_state`…): their specs are in
+`src/os/ai/appManifest.ts` and `src/os/ai/manifests/`, their code in the app
+(`useAppTools(win, …)`). They are always listed; calling one opens the app if
+needed. KherveOS asks you before files are deleted or replaced, mail or
+messages are sent, Terminal commands run or AI-written Python runs.
+
 ## Adding an app
 
 1. Create `src/apps/myapp/MyApp.tsx` with a default export taking `{ win, args }: AppProps`.
 2. Add an entry to `APPS` in `src/os/registry.ts` (name, icon, colour, file types…).
 3. Put its menus in the top menu bar with `win.setMenus([...])` (the OS adds Window and Help).
-4. Style it with the theme variables (`--k-bg`, `--k-text`, `--k-accent`…) and the shared
+4. Give it AI tools: a tool set in `src/os/ai/manifests/` (or `appManifest.ts`) and
+   `useAppTools(win, {...})` in the app; `tools/tests/mcp-tools.test.ts` fails until it has one.
+5. Style it with the theme variables (`--k-bg`, `--k-text`, `--k-accent`…) and the shared
    `k-*` classes in `src/styles/global.css`, so it works with every theme.
 
 The wallpaper lives in `public/wallpapers/`.
@@ -99,6 +115,7 @@ The wallpaper lives in `public/wallpapers/`.
 
 ```bash
 npm run typecheck
+node --test tools/tests/*.test.ts tools/tests/*.test.mjs
 cd server && .venv/bin/python -m pytest -q
 ```
 

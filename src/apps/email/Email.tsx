@@ -12,8 +12,10 @@ import { os } from '@/os'
 import type { AppArgs, AppProps, MenuBarMenu, WindowApi } from '@/os'
 import { useAuth } from '@/os/server'
 import { ServerGate, Spinner } from '@/os/ui/ServerGate'
+import { useAppTools } from '@/os/ai/appTools'
 import { mail, type Account, type MessageSummary } from './api'
 import { AccountDialog } from './AccountDialog'
+import { emailAiTools, type ComposeControl, type MailAiHost } from './aiTools'
 import { failure, messageMenuItems } from './actions'
 import { Compose } from './Compose'
 import { MessageList } from './MessageList'
@@ -27,12 +29,17 @@ const CHECK_EVERY = 2 * 60_000
 
 // Opened with { writeTo: 'someone@example.org' } (a mailto: link, os.openUrl) it starts a new message.
 export default function Email({ win, args }: AppProps) {
+  // The AI tools are offered even before sign-in, so they can say what is missing.
+  const host = useRef<MailAiHost | null>(null)
+  useAppTools(win, emailAiTools(() => host.current))
   return (
     <ServerGate app="Email" icon={Mail}>
-      <MailApp win={win} args={args} />
+      <MailApp win={win} args={args} host={host} />
     </ServerGate>
   )
 }
+
+type HostRef = React.RefObject<MailAiHost | null>
 
 function announce(win: WindowApi, store: MailStore, account: Account, messages: MessageSummary[]) {
   const first = messages[0]
@@ -57,7 +64,7 @@ function announce(win: WindowApi, store: MailStore, account: Account, messages: 
   })
 }
 
-function MailApp({ win, args }: { win: WindowApi; args: AppArgs }) {
+function MailApp({ win, args, host }: { win: WindowApi; args: AppArgs; host: HostRef }) {
   const [store] = useState(() => {
     const created: MailStore = createMailStore({
       onNewMail: (account, messages) => announce(win, created, account, messages),
@@ -67,7 +74,7 @@ function MailApp({ win, args }: { win: WindowApi; args: AppArgs }) {
   })
   return (
     <MailContext.Provider value={store}>
-      <MailLayout win={win} args={args} />
+      <MailLayout win={win} args={args} host={host} />
     </MailContext.Provider>
   )
 }
@@ -174,7 +181,7 @@ function Welcome({ onAdd }: { onAdd(): void }) {
 const unreadInboxes = (s: MailState) =>
   Object.values(s.folders).reduce((n, list) => n + (list?.find((f) => f.role === 'inbox')?.unread ?? 0), 0)
 
-function MailLayout({ win, args }: { win: WindowApi; args: AppArgs }) {
+function MailLayout({ win, args, host }: { win: WindowApi; args: AppArgs; host: HostRef }) {
   const store = useMailStore()
   const userName = useAuth((s) => s.user?.display_name ?? '')
   const accounts = useMail((s) => s.accounts)
@@ -260,6 +267,27 @@ function MailLayout({ win, args }: { win: WindowApi; args: AppArgs }) {
     },
     [store],
   )
+
+  // What the AI tools work with (see aiTools.ts).
+  const composeControl = useRef<ComposeControl | null>(null)
+  const composing = useRef(false)
+  composing.current = compose !== null
+  useEffect(() => {
+    host.current = {
+      store,
+      compose(init) {
+        if (composing.current) return false
+        composing.current = true
+        setCompose(init)
+        return true
+      },
+      draft: () => (composing.current ? composeControl.current : null),
+      sent: onSent,
+    }
+    return () => {
+      host.current = null
+    }
+  }, [host, store, onSent])
 
   const currentAccount = accounts?.find((a) => a.id === current?.accountId)
   const reading = detail && detail.uid === selected ? detail : null
@@ -441,7 +469,7 @@ function MailLayout({ win, args }: { win: WindowApi; args: AppArgs }) {
         </div>
       )}
       {compose && !!accounts?.length && (
-        <Compose init={compose} accounts={accounts} win={win} onClose={() => setCompose(null)} onSent={onSent} />
+        <Compose init={compose} accounts={accounts} win={win} onClose={() => setCompose(null)} onSent={onSent} control={composeControl} />
       )}
       {dialog && (
         <AccountDialog

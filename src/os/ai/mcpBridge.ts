@@ -23,6 +23,7 @@ import { create } from 'zustand'
 import { realtime, useRealtime, type ServerEvent } from '@/os/server'
 import { allTools, runTool, type ToolResult } from './tools'
 import { appToolRegistry } from './appTools'
+import { toMcpTools } from './mcpCore'
 
 export interface McpActivity {
   id: string
@@ -48,25 +49,9 @@ export const useMcpBridge = create<BridgeState>(() => ({ registered: null, activ
 /** This page's id, so the server can send a call to one tab only. */
 const TAB = `tab-${Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, '0')).join('')}`
 
-/** Hints for MCP clients (ChatGPT, for one, asks less before read-only tools). */
-const READ_ONLY = new Set(['list_files', 'read_file', 'search_files', 'list_apps', 'list_windows'])
-const MAY_DESTROY = new Set(['write_file', 'create_notebook', 'run_python'])
-
-const titleOf = (name: string) => {
-  const words = name.replace(/_/g, ' ').replace(/\bpython\b/, 'Python')
-  return words.charAt(0).toUpperCase() + words.slice(1)
-}
-
-/** The tools as MCP clients see them. */
+/** The tools as MCP clients see them (mcpCore.ts). */
 export function mcpToolList() {
-  return allTools().map((t) => ({
-    name: t.name,
-    description: t.app ? `${t.description} (Opens the app if it is not open.)` : t.description,
-    inputSchema: t.inputSchema,
-    annotations: READ_ONLY.has(t.name) || t.readOnly
-      ? { title: titleOf(t.name), readOnlyHint: true }
-      : { title: titleOf(t.name), readOnlyHint: false, destructiveHint: !!t.destructive || MAY_DESTROY.has(t.name) },
-  }))
+  return toMcpTools(allTools())
 }
 
 const running = new Map<string, AbortController>()

@@ -6,9 +6,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Flag, Undo2, Wand2 } from 'lucide-react'
 import type { AppProps } from '@/os'
-import { GameShell, Stat, useScores, type GameInfo, type Phase } from './GameShell'
+import type { AppTools } from '@/os/ai/appTools'
+import { GameShell, Stat, useScores, type GameControl, type GameInfo, type Phase } from './GameShell'
 import { fmt, themeColor } from './fx'
-import { POINTS, type Solitaire as Rules } from './solitaireRules'
+import { POINTS, RANK_NAMES, cardName, type Card, type Solitaire as Rules, type Source, type Target } from './solitaireRules'
 import { H, SolitaireEngine, W } from './solitaireEngine'
 import './ports.css'
 
@@ -35,6 +36,122 @@ const same = (a: Stats, b: Stats) => (Object.keys(a) as (keyof Stats)[]).every((
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
 const keepFocus = (e: { preventDefault(): void }) => e.preventDefault()
+
+// ------------------------------------------------------------ AI tools
+
+/** The table as the AI reads it. */
+function table(g: Rules) {
+  const top = (pile: Card[]) => (pile.length ? cardName(pile[pile.length - 1]) : null)
+  return {
+    stock: g.stock.length,
+    waste: top(g.waste),
+    waste_cards: g.waste.length,
+    foundations: g.foundations.map(top),
+    columns: g.tableau.map((pile, i) => ({
+      column: i + 1,
+      face_down: pile.filter((c) => !c.up).length,
+      cards: pile.filter((c) => c.up).map(cardName),
+    })),
+  }
+}
+
+const SUIT_LETTERS: Record<string, Card['suit']> = {
+  d: 'diamonds', '♦': 'diamonds', h: 'hearts', '♥': 'hearts', s: 'spades', '♠': 'spades', c: 'clubs', '♣': 'clubs',
+}
+
+/** "7H", "7♥", "10d", "qs" → rank and suit. */
+function parseCard(text: string): { rank: number; suit: Card['suit'] } | null {
+  const m = /^(10|[2-9]|[ajqk1])\s*([dhsc♦♥♠♣])/i.exec(text.trim().replace(/[\uFE0E\uFE0F]/g, ''))
+  if (!m) return null
+  const rank = RANK_NAMES.indexOf(m[1].toUpperCase() === '1' ? 'A' : m[1].toUpperCase())
+  return rank > 0 ? { rank, suit: SUIT_LETTERS[m[2].toLowerCase()] } : null
+}
+
+/** "column 3", "foundation 2", "waste" → its number (1-based in the text), or 0 for none given. */
+function place(text: string): { kind: string; n: number } {
+  const m = /^\s*(waste|foundation|column|tableau|col)s?\s*#?\s*(\d*)\s*$/i.exec(text)
+  if (!m) throw new Error(`"${text}" is not a place: use "waste", "column 1".."column 7" or "foundation 1".."foundation 4".`)
+  const kind = m[1].toLowerCase()
+  return { kind: kind === 'tableau' || kind === 'col' ? 'column' : kind, n: m[2] ? Number(m[2]) : 0 }
+}
+
+function solitaireAiTools(engine: SolitaireEngine, game: GameControl, refresh: () => void): AppTools {
+  const g = () => engine.game
+  const ready = () => {
+    game.ensurePlaying()
+    if (g().state !== 'play' || g().finishing) throw new Error('The game is finishing by itself. Wait for game over, then call solitaire_new_game.')
+  }
+  const after = (extra: Record<string, unknown>) => {
+    refresh()
+    return { ...extra, score: g().score, moves: g().moves, ...table(g()) }
+  }
+  return {
+    move: async (a) => {
+      ready()
+      const rules = g()
+      const from = place(String(a.from ?? ''))
+      let src: Source
+      if (from.kind === 'waste') src = { kind: 'waste' }
+      else if (from.kind === 'foundation') {
+        if (from.n < 1 || from.n > 4) throw new Error('Say which foundation: "foundation 1" to "foundation 4".')
+        src = { kind: 'foundation', index: from.n - 1 }
+      } else {
+        if (from.n < 1 || from.n > 7) throw new Error('Say which column: "column 1" to "column 7".')
+        const pile = rules.tableau[from.n - 1]
+        if (!pile.length) throw new Error(`Column ${from.n} is empty.`)
+        let row = pile.length - 1
+        if (typeof a.card === 'string' && a.card.trim()) {
+          const want = parseCard(a.card)
+          if (!want) throw new Error(`"${a.card}" is not a card: write it like "7H", "10D", "Q♠", "AC".`)
+          row = pile.findIndex((c) => c.up && c.rank === want.rank && c.suit === want.suit)
+          if (row < 0) throw new Error(`${a.card} is not face up in column ${from.n}. Its face-up cards: ${pile.filter((c) => c.up).map(cardName).join(' ') || 'none'}.`)
+        }
+        src = { kind: 'tableau', index: from.n - 1, row }
+      }
+      const cards = rules.cardsAt(src)
+      if (!cards.length) throw new Error(`There is no card to move from ${String(a.from)}.`)
+
+      const to = String(a.to ?? '').trim().toLowerCase()
+      let dst: Target | null
+      if (to === 'auto') dst = rules.bestTarget(src)
+      else {
+        const t = place(to)
+        if (t.kind === 'waste') throw new Error('Cards cannot be moved onto the waste.')
+        if (t.kind === 'foundation' && !t.n) {
+          const i = [0, 1, 2, 3].find((f) => rules.canMove(src, { kind: 'foundation', index: f }))
+          dst = i === undefined ? null : { kind: 'foundation', index: i }
+        } else {
+          const max = t.kind === 'foundation' ? 4 : 7
+          if (t.n < 1 || t.n > max) throw new Error(`Say which ${t.kind}: 1 to ${max}.`)
+          dst = { kind: t.kind === 'foundation' ? 'foundation' : 'tableau', index: t.n - 1 }
+        }
+      }
+      const what = cards.length > 1 ? `${cardName(cards[0])} (with ${cards.length - 1} card${cards.length > 2 ? 's' : ''} on it)` : cardName(cards[0])
+      if (!dst || !rules.canMove(src, dst)) throw new Error(`${what} cannot go ${to === 'auto' ? 'anywhere' : `to ${String(a.to)}`} now.`)
+      rules.move(src, dst)
+      const where = dst.kind === 'foundation' ? `foundation ${dst.index + 1}` : `column ${dst.index + 1}`
+      return after({ moved: what, to: where, ...(rules.won && { won: true }) })
+    },
+    action: async (a, ctx) => {
+      const action = String(a.action ?? '')
+      ready()
+      const rules = g()
+      let ok: boolean
+      if (action === 'draw') ok = rules.draw()
+      else if (action === 'undo') ok = rules.undo()
+      else if (action === 'auto') ok = rules.autoMove()
+      else if (action === 'give_up') {
+        if (!(await ctx.confirm('give up this game of Solitaire', `It ends with ${rules.score} points.`))) throw new Error('The user kept playing.')
+        ok = rules.resign()
+      } else throw new Error('"action" must be "draw", "undo", "auto" or "give_up".')
+      if (!ok) {
+        const why = action === 'draw' ? 'The stock and the waste are both empty.' : action === 'undo' ? 'There is nothing to undo.' : action === 'auto' ? 'No card can go up to a foundation now.' : 'The game has already ended.'
+        throw new Error(why)
+      }
+      return after({ done: action })
+    },
+  }
+}
 
 const INFO: GameInfo = {
   id: 'solitaire',
@@ -119,6 +236,8 @@ export default function Solitaire({ win }: AppProps) {
   }, [engine])
 
   const playing = stats.phase === 'playing'
+  const aiState = () => ({ moves: engine.game.moves, seconds: Math.floor(engine.game.elapsed), cards_up: engine.game.foundations.reduce((n, f) => n + f.length, 0), ...table(engine.game) })
+  const aiTools = (game: GameControl) => solitaireAiTools(engine, game, onFrame)
   const best = Math.max(scores[0]?.score ?? 0, stats.score)
 
   const panel = (
@@ -155,5 +274,5 @@ export default function Solitaire({ win }: AppProps) {
     </>
   )
 
-  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} className="mg-solitaire" />
+  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} aiState={aiState} aiTools={aiTools} className="mg-solitaire" />
 }

@@ -29,6 +29,9 @@
 // Keep descriptions short and schemas small: small local models read all of it.
 
 import type { AppToolSet, Schema } from './appToolsCore.ts'
+import { COMMUNICATION_TOOL_SETS } from './manifests/communication.ts'
+import { SYSTEM_TOOL_SETS } from './manifests/system.ts'
+import { GAME_TOOL_SETS } from './manifests/games.ts'
 
 const str = (description: string): Schema => ({ type: 'string', description })
 const int = (description: string): Schema => ({ type: 'integer', description })
@@ -678,6 +681,9 @@ export const APP_TOOL_SETS: AppToolSet[] = [
       },
     ],
   },
+  ...COMMUNICATION_TOOL_SETS,
+  ...SYSTEM_TOOL_SETS,
+  ...GAME_TOOL_SETS,
 ]
 
 export function appToolSet(app: string): AppToolSet | undefined {

@@ -7,6 +7,8 @@ import type { AppProps, MenuBarMenu } from '@/os'
 import { useAuth, useRealtime } from '@/os/server'
 import { useWindows } from '@/os/windows'
 import { ServerGate } from '@/os/ui/ServerGate'
+import { useAppTools } from '@/os/ai/appTools'
+import { messagesAiTools } from './aiTools'
 import { confirmSignOut } from './account'
 import { ConversationList } from './ConversationList'
 import { ConversationView } from './ConversationView'
@@ -27,6 +29,8 @@ import {
 import './messages.css'
 
 export default function Messages(props: AppProps) {
+  // Offered even before sign-in, so the tools can say what is missing.
+  useAppTools(props.win, messagesAiTools())
   return (
     <div className="k-app">
       <ServerGate app="Messages" icon={MessageCircle}>

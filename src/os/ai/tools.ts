@@ -459,7 +459,9 @@ export const KTOOLS: KTool[] = [
   },
   {
     name: 'list_windows',
-    description: 'List the windows open on the KherveOS screen, front first: id, app, title, the file shown, focused and minimised ones.',
+    description:
+      'List the windows open on the KherveOS screen, front first: id, app, title, the file shown, position and size, ' +
+      'focused / minimised / maximised, and the app tools ("<app>_…") that act inside each window.',
     inputSchema: object({}),
     async run() {
       const { windows, focusedId } = useWindows.getState()
@@ -468,15 +470,93 @@ export const KTOOLS: KTool[] = [
           .sort((x, y) => y.z - x.z)
           .map((w) => {
             const doc = w.docPath !== undefined ? w.docPath : w.args.path
+            const tools = appToolNames(w.appId)
             return {
               id: w.id,
               app: w.appId,
               title: w.title,
               ...(typeof doc === 'string' && doc && { path: pretty(doc) }),
+              bounds: { x: Math.round(w.x), y: Math.round(w.y), w: Math.round(w.w), h: Math.round(w.h) },
               ...(w.id === focusedId && { focused: true }),
               ...(w.minimized && { minimized: true }),
+              ...(w.maximized && { maximized: true }),
+              ...(w.snapped && { snapped: w.snapped }),
+              ...(tools.length && { tools: tools.length > 8 ? [...tools.slice(0, 8), '…'] : tools }),
             }
           }),
+      }
+    },
+  },
+  {
+    name: 'arrange_window',
+    description:
+      'Bring a window to the front ("focus"), minimise, maximise, restore it, snap it to the left or right half, or move / resize it ' +
+      '(x, y, w, h in pixels). The window id comes from list_windows or open_app.',
+    inputSchema: object(
+      {
+        id: str('The window id, e.g. "w3".'),
+        action: { type: 'string', enum: ['focus', 'minimize', 'maximize', 'restore', 'snap_left', 'snap_right', 'move'], description: 'What to do (default "focus"; "move" uses x, y, w, h).' },
+        x: { type: 'integer', description: 'For "move": left edge, pixels.' },
+        y: { type: 'integer', description: 'For "move": top edge, pixels.' },
+        w: { type: 'integer', description: 'For "move": width, pixels.' },
+        h: { type: 'integer', description: 'For "move": height, pixels.' },
+      },
+      ['id'],
+    ),
+    async run(a) {
+      const id = text(a, 'id').trim()
+      const wm = useWindows.getState()
+      const w = wm.windows.find((x) => x.id === id)
+      if (!w) throw new Error(`There is no window "${id}". list_windows shows the open ones.`)
+      const action = optText(a, 'action')?.trim().toLowerCase() || 'focus'
+      switch (action) {
+        case 'focus':
+          wm.focus(id)
+          break
+        case 'minimize':
+        case 'minimise':
+          wm.minimize(id)
+          break
+        case 'maximize':
+        case 'maximise':
+          if (!w.maximized) wm.snap(id, 'max')
+          else wm.focus(id)
+          break
+        case 'restore':
+          if (w.maximized || w.snapped) wm.snap(id, null)
+          else wm.focus(id)
+          break
+        case 'snap_left':
+        case 'snap_right':
+          wm.snap(id, action === 'snap_left' ? 'left' : 'right')
+          break
+        case 'move': {
+          const b: Partial<{ x: number; y: number; w: number; h: number }> = {}
+          for (const k of ['x', 'y', 'w', 'h'] as const) if (typeof a[k] === 'number') b[k] = a[k] as number
+          if (!Object.keys(b).length) throw new Error('"move" needs x, y, w or h.')
+          const app = getApp(w.appId)
+          const min = app?.minSize ?? { w: 200, h: 120 }
+          if (b.w !== undefined) b.w = Math.max(min.w, Math.min(b.w, window.innerWidth))
+          if (b.h !== undefined) b.h = Math.max(min.h, Math.min(b.h, window.innerHeight))
+          if (b.x !== undefined) b.x = Math.max(-((b.w ?? w.w) - 80), Math.min(b.x, window.innerWidth - 80))
+          if (b.y !== undefined) b.y = Math.max(0, Math.min(b.y, window.innerHeight - 40))
+          if (w.maximized || w.snapped) wm.snap(id, null)
+          useWindows.getState().setBounds(id, b)
+          useWindows.getState().focus(id)
+          break
+        }
+        default:
+          throw new Error(`Unknown action "${action}": use focus, minimize, maximize, restore, snap_left, snap_right or move.`)
+      }
+      const now = useWindows.getState().windows.find((x) => x.id === id)!
+      return {
+        id,
+        app: now.appId,
+        bounds: { x: Math.round(now.x), y: Math.round(now.y), w: Math.round(now.w), h: Math.round(now.h) },
+        focused: useWindows.getState().focusedId === id,
+        ...(now.minimized && { minimized: true }),
+        ...(now.maximized && { maximized: true }),
+        ...(now.snapped && { snapped: now.snapped }),
       }
     },
   },

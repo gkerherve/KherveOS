@@ -70,8 +70,9 @@ from .realtime import hub
 
 log = logging.getLogger("kherveos.mcp")
 
-# Seconds a tools/call waits for the KherveOS tab to answer.
-CALL_TIMEOUT = 60.0
+# Seconds a tools/call waits for the KherveOS tab to answer: long enough for the user to answer
+# a question (send this mail? run this command?) and for terminal_run_command's own wait (at most 240 s).
+CALL_TIMEOUT = 300.0
 # Where people open KherveOS, and where MCP clients reach this server.
 OS_URL = os.environ.get("KHERVEOS_OS_URL", "http://localhost:5173")
 PUBLIC_URL = os.environ.get("KHERVEOS_PUBLIC_URL", f"http://localhost:{os.environ.get('KHERVEOS_PORT', '8787')}")
@@ -84,12 +85,19 @@ INSTRUCTIONS = (
     "KherveOS is the user's desktop operating system, running in their web browser. These tools act on it "
     "live: the files on its drive (\"~\" is the home folder, /home/user), its apps and windows, and Python "
     "(Pyodide) running in the browser. They work while KherveOS is open and signed in in a browser tab. "
-    "KherveOS asks the user before anything is deleted or overwritten."
+    "KherveOS asks the user before anything is deleted or overwritten, and before mail or messages are sent "
+    "or Terminal commands run. "
+    "Every app has its own tools, named <app>_<action> (khervesheet_set_cells, email_list_messages, "
+    "tetris_get_state...): they are always listed, and calling one opens the app if no window of it is open. "
+    "list_apps shows every app with its tools; open_app opens one (with a file); list_windows shows the open "
+    "windows with their ids; arrange_window focuses, minimises, maximises or moves a window; close_window "
+    "closes one; take_screenshot saves a picture of a window or the screen. An app tool acts on the app's "
+    'front window unless you pass "window" (a window id from list_windows).'
 )
 
 TOKEN_PREFIX = "kos_"
-MAX_TOOLS = 200
-MAX_TOOLS_JSON = 512 * 1024
+MAX_TOOLS = 400
+MAX_TOOLS_JSON = 1024 * 1024
 MAX_RESULT_CHARS = 400_000
 MAX_ERROR_CHARS = 8000
 
@@ -332,7 +340,10 @@ relay = Relay()
 
 def _clean_tools(raw: Any) -> list[dict[str, Any]] | None:
     """The tool definitions a tab sent, checked and trimmed; None if unusable."""
-    if not isinstance(raw, list) or len(raw) > MAX_TOOLS:
+    if not isinstance(raw, list):
+        return None
+    if len(raw) > MAX_TOOLS:
+        log.warning("ignoring a tool list of %d tools (at most %d)", len(raw), MAX_TOOLS)
         return None
     tools: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -358,7 +369,9 @@ def _clean_tools(raw: Any) -> list[dict[str, Any]] | None:
                 tool["annotations"] = kept
         seen.add(name)
         tools.append(tool)
-    if len(json.dumps(tools)) > MAX_TOOLS_JSON:
+    size = len(json.dumps(tools))
+    if size > MAX_TOOLS_JSON:
+        log.warning("ignoring a tool list of %d bytes (at most %d)", size, MAX_TOOLS_JSON)
         return None
     return tools
 

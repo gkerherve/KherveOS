@@ -92,6 +92,10 @@ export default function Pinball({ win }: AppProps) {
   }, [engine])
 
   const best = Math.max(scores[0]?.score ?? 0, stats.score)
+  const aiState = () => {
+    const s = readStats(engine.game)
+    return { ball: s.ball, bonus: s.bonus, multiplier: s.multiplier, ball_save: s.save, super: s.superOn, lanes_lit: s.lanes }
+  }
 
   const panel = (
     <>
@@ -129,5 +133,5 @@ export default function Pinball({ win }: AppProps) {
     </>
   )
 
-  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} className="mg-pinball" />
+  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} aiState={aiState} className="mg-pinball" />
 }

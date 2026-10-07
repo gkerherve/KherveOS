@@ -25,8 +25,10 @@ export function McpSection() {
       <h2>AI &amp; MCP</h2>
       <p className="k-muted">
         Let AI apps work in KherveOS. Claude Code, Claude Desktop, ChatGPT and other apps that speak MCP (the Model
-        Context Protocol) can read and write your files, open apps and run Python here, through this browser tab, while
-        it is open. KherveOS asks you before anything is deleted or replaced.
+        Context Protocol) can read and write your files, open, arrange and close windows, run Python, and control every
+        app with its own tools (KherveSheet, Email, Terminal, Settings, the games…), through this browser tab, while it
+        is open. KherveOS asks you before anything is deleted or replaced, a mail or message is sent, or a Terminal
+        command runs.
       </p>
       <div className="st-mcp-gate">
         <ServerGate app="AI & MCP" icon={Sparkles}>
@@ -93,22 +95,30 @@ function McpSetup() {
   const origin = originOf(info.url)
   const tunnelBase = tunnelOrigin(tunnel) || 'https://<your-tunnel>.trycloudflare.com'
 
-  const claudeCode = (t: string) => `claude mcp add --transport http kherveos ${info.url} --header "Authorization: Bearer ${t}"`
+  // --scope user: KherveOS is there in every folder Claude Code is started in.
+  const claudeCode = (t: string) => `claude mcp add --scope user --transport http kherveos ${info.url} --header "Authorization: Bearer ${t}"`
+  const desktopServer = (t: string) => ({
+    command: 'npx',
+    args: ['-y', 'mcp-remote', info.url, '--header', 'Authorization:${KHERVEOS_AUTH}'],
+    env: { KHERVEOS_AUTH: `Bearer ${t}` },
+  })
   // mcp-remote fills in ${KHERVEOS_AUTH} itself (Claude Desktop on Windows breaks arguments that contain spaces).
   const claudeDesktop = (t: string) =>
     JSON.stringify(
       {
-        mcpServers: {
-          kherveos: {
-            command: 'npx',
-            args: ['-y', 'mcp-remote', info.url, '--header', 'Authorization:${KHERVEOS_AUTH}'],
-            env: { KHERVEOS_AUTH: `Bearer ${t}` },
-          },
-        },
+        mcpServers: { kherveos: desktopServer(t) },
       },
       null,
       2,
     )
+  // One command that adds KherveOS to claude_desktop_config.json, keeping the servers already there.
+  const claudeDesktopCommand = (t: string) =>
+    `python3 -c 'import json,os,sys,pathlib; h=pathlib.Path.home(); ` +
+    `d=h/"Library/Application Support/Claude" if sys.platform=="darwin" else (pathlib.Path(os.environ["APPDATA"])/"Claude" if sys.platform=="win32" else h/".config/Claude"); ` +
+    `p=d/"claude_desktop_config.json"; c=json.loads(p.read_text() or "{}") if p.exists() else {}; ` +
+    `c.setdefault("mcpServers",{})["kherveos"]=json.loads(sys.argv[1]); d.mkdir(parents=True,exist_ok=True); ` +
+    `p.write_text(json.dumps(c,indent=2)); print("KherveOS added to",p,"- restart Claude Desktop.")' ` +
+    `'${JSON.stringify(desktopServer(t))}'`
   const tokenUrl = (base: string, t: string) => `${base}/mcp/t/${t}`
   const ready = connected && registered !== null
 
@@ -140,13 +150,21 @@ function McpSetup() {
       </div>
 
       <h3>Claude Code</h3>
-      <p>Run this in a terminal:</p>
+      <p>
+        Run this once in a terminal (the Copy button copies it with the real token). Then, in Claude Code, ask for
+        example “open Tetris in KherveOS and tell me my best score”; <code>/mcp</code> shows the connection.
+      </p>
       <Snippet text={claudeCode(shown)} copy={claudeCode(token)} />
 
       <h3>Claude Desktop</h3>
       <p>
-        In Claude, open Settings › Developer › Edit Config and add this to <code>claude_desktop_config.json</code> (inside
-        your <code>"mcpServers"</code> if you already have some), then restart Claude. It needs Node.js.
+        Run this once in a terminal (macOS or Linux; it needs Python 3, and Claude Desktop needs Node.js), then quit and
+        restart Claude Desktop. It adds KherveOS to <code>claude_desktop_config.json</code> and keeps your other servers.
+      </p>
+      <Snippet text={claudeDesktopCommand(shown)} copy={claudeDesktopCommand(token)} />
+      <p>
+        Or, on Windows or by hand: in Claude, open Settings › Developer › Edit Config and add this to{' '}
+        <code>claude_desktop_config.json</code> (inside your <code>"mcpServers"</code> if you already have some).
       </p>
       <Snippet text={claudeDesktop(shown)} copy={claudeDesktop(token)} />
 

@@ -8,7 +8,9 @@ import {
 } from 'lucide-react'
 import { os, type AppProps, type MenuBarMenu, type MenuItem } from '@/os'
 import { useWindows } from '@/os/windows'
+import { useAppTools } from '@/os/ai/appTools'
 import { exportChat, openChatsFolder } from './actions'
+import { kherveaiAiTools } from './aiTools'
 import { regenerate, sendMessage } from './agent'
 import { ChatView } from './ChatView'
 import { composerCommand } from './Composer'
@@ -79,6 +81,9 @@ export default function KherveAI({ win, args }: AppProps) {
   const remote = useAi((s) => s.remote)
   const keys = useAi((s) => s.keys)
   const supportsTools = useAi((s) => (chat ? modelSupportsTools(chat.provider, chat.model, s) : false))
+
+  // kherveai_new_chat, kherveai_list_chats (src/os/ai/manifests/system.ts).
+  useAppTools(win, kherveaiAiTools(() => win.focus()))
 
   // Start: watch the chat files, open an empty chat, ask Ollama what it has.
   useEffect(() => {

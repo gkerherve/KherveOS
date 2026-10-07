@@ -11,6 +11,7 @@ import { os, type WindowApi } from '@/os'
 import { ApiError, api, useAuth, useServer } from '@/os/server'
 import { ServerGate, Spinner } from '@/os/ui/ServerGate'
 import { useWindows } from '@/os/windows'
+import { useAppTools, waitUntil } from '@/os/ai/appTools'
 import './games.css'
 
 interface Started {
@@ -54,6 +55,12 @@ async function startGame(id: string): Promise<Started> {
   throw new ApiError(res.status, detail ?? `The KherveOS server answered ${res.status}.`)
 }
 
+/** What the AI tools need from the game's frame. */
+interface FrameControl {
+  reload(): void
+  loading(): boolean
+}
+
 type Phase =
   | { kind: 'starting'; restart: boolean }
   | { kind: 'ready'; url: string; managed: boolean }
@@ -66,8 +73,14 @@ export function WebGame({ game, win }: { game: string; win: WindowApi }) {
   const app = os.getApp(game)
   const name = app?.name ?? game
   const Icon = app?.icon ?? Gamepad2
-  const [phase, setPhase] = useState<Phase>({ kind: 'starting', restart: false })
+  const [phase, setPhaseState] = useState<Phase>({ kind: 'starting', restart: false })
+  const phaseRef = useRef(phase)
+  const setPhase = useCallback((p: Phase) => {
+    phaseRef.current = p
+    setPhaseState(p)
+  }, [])
   const attempt = useRef(0)
+  const frame = useRef<FrameControl | null>(null)
 
   /** Start the game's server (stopping ours first to restart it), then show the game. */
   const launch = useCallback(
@@ -93,7 +106,7 @@ export function WebGame({ game, win }: { game: string; win: WindowApi }) {
         setPhase(status === 0 ? { kind: 'offline' } : status === 401 ? { kind: 'signin' } : { kind: 'error', status, message })
       }
     },
-    [game, name],
+    [game, name, setPhase],
   )
   const restart = useCallback(() => void launch(true), [launch])
 
@@ -106,6 +119,56 @@ export function WebGame({ game, win }: { game: string; win: WindowApi }) {
   useEffect(() => {
     if (phase.kind === 'offline' && serverStatus === 'online') void launch()
   }, [phase.kind, serverStatus, launch])
+
+  // ---- AI tools (get_status, restart, reload; specs in src/os/ai/manifests/games.ts)
+
+  const status = () => {
+    const p = phaseRef.current
+    return {
+      phase: p.kind,
+      ...(p.kind === 'ready' && { url: p.url, managed_by_kherveos: p.managed, page_loading: frame.current?.loading() ?? false }),
+      ...(p.kind === 'error' && { error: p.message.split('\n')[0] }),
+      ...(p.kind === 'offline' && { note: 'The KherveOS server is not running: start it with "npm run server" in the KherveOS folder.' }),
+      ...(p.kind === 'signin' && { note: 'The user must sign in to KherveOS first.' }),
+    }
+  }
+  /** Waits (up to a minute) for the game to be shown or to fail. */
+  const settled = async (signal?: AbortSignal) => {
+    await waitUntil(() => phaseRef.current.kind !== 'starting', 60_000, signal)
+    if (phaseRef.current.kind === 'ready') await waitUntil(() => !!frame.current && !frame.current.loading(), 25_000, signal)
+    return status()
+  }
+
+  useAppTools(win, {
+    get_status: async () => {
+      let server: Record<string, unknown> | null = null
+      try {
+        const r = await api<{ games: { id: string; port: number; available: boolean; running: boolean; managed: boolean }[] }>('/games')
+        const g = r.games.find((x) => x.id === game)
+        if (g) server = { installed: g.available, running: g.running, started_by_kherveos: g.managed, port: g.port }
+      } catch {
+        // offline or signed out: the phase says so
+      }
+      return { game: name, ...status(), ...(server && { game_server: server }) }
+    },
+    restart: async (_a, ctx) => {
+      if (!(await ctx.confirm(`restart ${name}'s game server`, 'Progress in the game that is not saved will be lost.'))) throw new Error('The user said no.')
+      void launch(true)
+      return settled(ctx.signal)
+    },
+    reload: async (_a, ctx) => {
+      const p = phaseRef.current
+      if (p.kind !== 'ready') {
+        if (p.kind === 'starting') return settled(ctx.signal)
+        void launch() // the error / offline screens: try again
+        return settled(ctx.signal)
+      }
+      if (!frame.current) throw new Error(`${name} is not shown in its window yet. Try again in a moment.`)
+      if (!(await ctx.confirm(`reload ${name}`, 'Progress in the game that is not saved will be lost.'))) throw new Error('The user said no.')
+      frame.current.reload()
+      return settled(ctx.signal)
+    },
+  })
 
   switch (phase.kind) {
     case 'starting':
@@ -121,13 +184,15 @@ export function WebGame({ game, win }: { game: string; win: WindowApi }) {
     case 'error':
       return <Failed name={name} status={phase.status} message={phase.message} onRetry={() => void launch()} />
     case 'ready':
-      return <GameFrame key={phase.url} win={win} name={name} icon={Icon} url={phase.url} managed={phase.managed} onRestart={restart} />
+      return <GameFrame key={phase.url} control={frame} win={win} name={name} icon={Icon} url={phase.url} managed={phase.managed} onRestart={restart} />
   }
 }
 
 // ------------------------------------------------------------------ the game
 
 interface GameFrameProps {
+  /** Filled in for the AI tools. */
+  control: { current: FrameControl | null }
   win: WindowApi
   name: string
   icon: LucideIcon
@@ -136,7 +201,7 @@ interface GameFrameProps {
   onRestart: () => void
 }
 
-function GameFrame({ win, name, icon: Icon, url, managed, onRestart }: GameFrameProps) {
+function GameFrame({ control, win, name, icon: Icon, url, managed, onRestart }: GameFrameProps) {
   const [frameKey, setFrameKey] = useState(0)
   const [loading, setLoading] = useState(true)
   const frameRef = useRef<HTMLIFrameElement>(null)
@@ -154,6 +219,21 @@ function GameFrame({ win, name, icon: Icon, url, managed, onRestart }: GameFrame
     setLoading(true)
     setFrameKey((k) => k + 1)
   }, [])
+  const loadingRef = useRef(loading)
+  loadingRef.current = loading
+  useEffect(() => {
+    control.current = {
+      reload: () => {
+        loadingRef.current = true // before the next render, for whoever waits on it
+        reload()
+      },
+      loading: () => loadingRef.current,
+    }
+    return () => {
+      control.current = null
+    }
+  }, [control, reload])
+
   const openReal = useCallback(() => {
     os.openInRealBrowser(url)
   }, [url])

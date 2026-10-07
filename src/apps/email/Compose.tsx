@@ -4,7 +4,8 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { CircleAlert, HardDrive, LoaderCircle, Monitor, Paperclip, Send, Trash2, X } from 'lucide-react'
 import { HOME, os, path } from '@/os'
 import type { WindowApi } from '@/os'
-import { errorMessage, mail, type Account } from './api'
+import { errorMessage, mail, type Account, type SendResult } from './api'
+import type { ComposeControl } from './aiTools'
 import { blobToBase64, formatBytes, guessType, splitAddresses, type ComposeInit } from './util'
 
 const LIMIT = 25 * 1024 * 1024
@@ -28,9 +29,11 @@ interface ComposeProps {
   win: WindowApi
   onClose(): void
   onSent(init: ComposeInit): void
+  /** Filled in while open, for the AI tools (email_send sends what is being written). */
+  control?: React.RefObject<ComposeControl | null>
 }
 
-export function Compose({ init, accounts, win, onClose, onSent }: ComposeProps) {
+export function Compose({ init, accounts, win, onClose, onSent, control }: ComposeProps) {
   const id = useId()
   const [accountId, setAccountId] = useState(init.accountId)
   const [to, setTo] = useState(init.to)
@@ -133,20 +136,16 @@ export function Compose({ init, accounts, win, onClose, onSent }: ComposeProps) 
     }
   }
 
-  const sendNow = async () => {
-    if (sending) return
+  /** Checks and sends; throws with a sentence for the user when it can't. */
+  const deliver = async (askNoSubject: boolean): Promise<SendResult | null> => {
     const toList = splitAddresses(to)
     const ccList = splitAddresses(cc)
     const bccList = splitAddresses(bcc)
-    if (!toList.length && !ccList.length && !bccList.length) {
-      setError('Add at least one recipient.')
-      toRef.current?.focus()
-      return
-    }
-    if (files.some((f) => f.error)) return setError('An attachment could not be loaded. Remove it to send the message.')
-    if (files.some((f) => !f.blob)) return setError('Wait a moment: the attachments are still loading.')
-    if (totalSize > LIMIT) return setError('Attachments are limited to 25 MB in total.')
-    if (!subject.trim() && !(await os.dialog.confirm('Send this message without a subject?', { title: 'No subject', okLabel: 'Send' }))) return
+    if (!toList.length && !ccList.length && !bccList.length) throw new Error('Add at least one recipient.')
+    if (files.some((f) => f.error)) throw new Error('An attachment could not be loaded. Remove it to send the message.')
+    if (files.some((f) => !f.blob)) throw new Error('Wait a moment: the attachments are still loading.')
+    if (totalSize > LIMIT) throw new Error('Attachments are limited to 25 MB in total.')
+    if (askNoSubject && !subject.trim() && !(await os.dialog.confirm('Send this message without a subject?', { title: 'No subject', okLabel: 'Send' }))) return null
     setSending(true)
     setError(null)
     try {
@@ -167,11 +166,42 @@ export function Compose({ init, accounts, win, onClose, onSent }: ComposeProps) 
       onSent(init)
       os.notify({ title: 'Message sent', body: result.warning ?? (subject.trim() || '(no subject)'), icon: Send, color: '#ef4444' })
       onClose()
+      return result
     } catch (err) {
-      setError(errorMessage(err))
       setSending(false)
+      throw err
     }
   }
+
+  const sendNow = async () => {
+    if (sending) return
+    try {
+      await deliver(true)
+    } catch (err) {
+      setError(errorMessage(err))
+      if (!splitAddresses(to).length && !splitAddresses(cc).length && !splitAddresses(bcc).length) toRef.current?.focus()
+    }
+  }
+
+  // The AI tools see (and can send) what is being written.
+  useEffect(() => {
+    if (!control) return
+    control.current = {
+      fields: () => ({ accountId, to, cc, bcc, subject, body, attachments: files.length, sending }),
+      async send() {
+        if (sending) throw new Error('That message is already being sent.')
+        try {
+          return (await deliver(false))!
+        } catch (err) {
+          setError(errorMessage(err))
+          throw err
+        }
+      },
+    }
+  })
+  useEffect(() => () => {
+    if (control) control.current = null
+  }, [control])
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {

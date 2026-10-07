@@ -92,6 +92,10 @@ export default function Breakout({ win }: AppProps) {
   }, [engine])
 
   const best = Math.max(scores[0]?.score ?? 0, stats.score)
+  const aiState = () => {
+    const s = readStats(engine.game)
+    return { level: s.level, level_name: s.name, lives: s.lives, balls: s.balls, wide_paddle_s: s.wide, slow_ball_s: s.slow }
+  }
 
   const panel = (
     <>
@@ -138,5 +142,5 @@ export default function Breakout({ win }: AppProps) {
     </>
   )
 
-  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} className="mg-breakout" />
+  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} aiState={aiState} className="mg-breakout" />
 }

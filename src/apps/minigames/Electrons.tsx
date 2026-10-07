@@ -6,7 +6,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AppProps } from '@/os'
-import { GameShell, Stat, useScores, type GameInfo } from './GameShell'
+import type { AppTools } from '@/os/ai/appTools'
+import { GameShell, Stat, useScores, type GameControl, type GameInfo } from './GameShell'
 import { fmt, themeColor } from './fx'
 import {
   DURATION, MAX_ELECTRONS, MIN_ELECTRONS, STABLE, STEP, VERY_STABLE, pointsPerSecond,
@@ -40,6 +41,34 @@ const read = (g: Rules): Stats => ({
 })
 
 const same = (a: Stats, b: Stats) => (Object.keys(a) as (keyof Stats)[]).every((k) => a[k] === b[k])
+
+/** The Electron Game's own AI tool: set_electrons (spec in src/os/ai/manifests/games.ts). */
+function electronsAiTools(engine: ElectronsEngine, game: GameControl, refresh: () => void): AppTools {
+  return {
+    set_electrons: async (a) => {
+      const count = Number(a.count)
+      if (!Number.isInteger(count) || count < MIN_ELECTRONS || count > MAX_ELECTRONS)
+        throw new Error(`"count" must be a whole number from ${MIN_ELECTRONS} to ${MAX_ELECTRONS}.`)
+      const distance = Math.min(190, Math.max(20, typeof a.distance === 'number' ? a.distance : 100))
+      game.ensurePlaying()
+      const g = engine.game
+      if (g.state !== 'play') throw new Error('The experiment has ended. Call electrons_new_game to start another.')
+      const before = g.electrons.length
+      while (g.electrons.length > count && g.remove()) {
+        // the newest goes first
+      }
+      while (g.electrons.length < count) {
+        // Round the nucleus as it is on screen (the camera follows it).
+        const angle = Math.random() * Math.PI * 2
+        const cx = g.centre.x - g.view.x
+        const cy = g.centre.y - g.view.y
+        if (!g.add(cx + Math.cos(angle) * distance, cy + Math.sin(angle) * distance)) break
+      }
+      refresh()
+      return { electrons: g.electrons.length, was: before, stability: g.stability, points_per_second: pointsPerSecond(g.electrons.length, g.stability) }
+    },
+  }
+}
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
@@ -109,6 +138,21 @@ export default function Electrons({ win }: AppProps) {
   }, [engine])
 
   const best = Math.max(scores[0]?.score ?? 0, stats.score)
+  const aiState = () => {
+    const g = engine.game
+    return {
+      electrons: g.electrons.length,
+      stability: g.stability,
+      stability_value: Number(g.value.toFixed(3)),
+      points_per_second: pointsPerSecond(g.electrons.length, g.stability),
+      decay_percent: Math.round(g.decay * 100),
+      seconds_left: Math.ceil(g.timeLeft),
+      stable_for_s: Number(g.stableTime.toFixed(1)),
+      longest_stable_s: Number(g.longestStable.toFixed(1)),
+      rules: `Very stable at ${VERY_STABLE} or less, stable at ${STABLE} or less; ${MIN_ELECTRONS}–${MAX_ELECTRONS} electrons.`,
+    }
+  }
+  const aiTools = (game: GameControl) => electronsAiTools(engine, game, onFrame)
   const rate = pointsPerSecond(stats.electrons, stats.stability)
 
   const panel = (
@@ -144,5 +188,5 @@ export default function Electrons({ win }: AppProps) {
     </>
   )
 
-  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} className="mg-electrons" />
+  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} aiState={aiState} aiTools={aiTools} className="mg-electrons" />
 }

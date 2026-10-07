@@ -2,7 +2,7 @@
 // the line editor and Python — see session.ts). This file only does the
 // browser side: sizing, colours, keyboard shortcuts, clipboard and menus.
 
-import { useEffect, useRef, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useMemo, useRef, type MouseEvent as ReactMouseEvent } from 'react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { ClipboardPaste, Copy, Eraser, ScanText } from 'lucide-react'
@@ -10,7 +10,9 @@ import '@xterm/xterm/css/xterm.css'
 import { os, type AppProps, type MenuBarMenu, type MenuItem } from '@/os'
 import { useWindows } from '@/os/windows'
 import { isDarkTheme, useResolvedTheme, useWindowTheme } from '@/os/themes'
+import { useAppTools } from '@/os/ai/appTools'
 import { TerminalSession } from './session'
+import { terminalAiTools } from './aiTools'
 import { monoFont, terminalTheme } from './theme'
 import './terminal.css'
 
@@ -204,6 +206,32 @@ export default function Terminal({ win, args }: AppProps) {
       sessionRef.current = null
     }
   }, [win])
+
+  // AI tools: commands typed at this window's prompt, and its screen text.
+  useAppTools(
+    win,
+    useMemo(
+      () =>
+        terminalAiTools({
+          session: () => sessionRef.current,
+          lines: (n) => {
+            const buf = termRef.current?.buffer.active
+            if (!buf) return []
+            const out: string[] = []
+            for (let i = 0; i < buf.length; i++) {
+              const line = buf.getLine(i)
+              const text = line?.translateToString(!buf.getLine(i + 1)?.isWrapped) ?? ''
+              // A long line wrapped on screen is one line of text.
+              if (line?.isWrapped && out.length) out[out.length - 1] += text
+              else out.push(text)
+            }
+            while (out.length && !out[out.length - 1].trim()) out.pop()
+            return out.slice(-n)
+          },
+        }),
+      [],
+    ),
+  )
 
   // Follow the theme. The desktop applies the new CSS variables in an effect
   // that runs after this one, so read them on the next frame.

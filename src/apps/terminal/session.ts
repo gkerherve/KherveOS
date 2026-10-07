@@ -28,6 +28,27 @@ const MORE = '... '
  */
 type Mode = 'read' | 'busy' | 'python'
 
+/** How a command run for an AI ended (see TerminalSession.runForAi). */
+export interface AiRunResult {
+  /** Exit status, or null when it did not end (Python's >>> prompt opened, the window closed). */
+  status: number | null
+  note?: string
+}
+
+/** A command an AI runs: its output so far, and when it ends. */
+export interface AiRun {
+  done: Promise<AiRunResult>
+  /** The text it wrote so far, without colours. */
+  output(): string
+  /** Stop collecting (the AI stopped waiting); the command keeps running. */
+  detach(): void
+}
+
+interface AiCapture {
+  chunks: string[]
+  finish(r: AiRunResult): void
+}
+
 type PyOutcome<T> = { ok: true; value: T } | { ok: false; status: number }
 
 /** History kept in localStorage, shared by every terminal window. */
@@ -90,6 +111,8 @@ export class TerminalSession {
   private closing = false
   private disposed = false
   private unwatch: () => void
+  /** The command an AI runs, while its output is collected. */
+  private aiRun: AiCapture | null = null
 
   constructor(host: SessionHost, opts: { winId: string; cwd?: string }) {
     this.host = host
@@ -137,6 +160,65 @@ export class TerminalSession {
     }
   }
 
+  /** The current folder. */
+  get cwd(): string {
+    return this.shell.cwd
+  }
+
+  /** A command or Python runs, or Python's >>> prompt is open: no shell prompt to type at. */
+  get busy(): boolean {
+    return this.mode !== 'read' || this.inRepl || this.disposed
+  }
+
+  /**
+   * Type a command line at the shell prompt and run it, as if the user had
+   * (they see it), collecting its output. What the user was typing comes back
+   * at the next prompt. Throws when there is no shell prompt (see busy).
+   */
+  runForAi(line: string, cwd?: string): AiRun {
+    if (this.busy || this.aiRun) throw new Error('busy')
+    if (cwd && cwd !== this.shell.cwd) {
+      this.shell.cwd = cwd
+      this.updateTitle()
+      this.editor.setPrompt(this.prompt())
+    }
+    let finish: (r: AiRunResult) => void = () => {}
+    const done = new Promise<AiRunResult>((resolve) => (finish = resolve))
+    const capture: AiCapture = {
+      chunks: [],
+      finish: (r) => {
+        if (this.aiRun === capture) this.aiRun = null
+        finish(r)
+      },
+    }
+    this.aiRun = capture
+    const typed = this.editor.enter(line)
+    if (typed === null) {
+      this.aiRun = null
+      throw new Error('busy')
+    }
+    if (typed) this.editor.feed(typed)
+    return {
+      done,
+      output: () => capture.chunks.join('').replace(/\r\n?/g, '\n'),
+      detach: () => {
+        if (this.aiRun === capture) this.aiRun = null
+      },
+    }
+  }
+
+  /** Ctrl+C for an AI: stop what runs, or leave Python's >>> prompt. What it did, or null when nothing ran. */
+  interrupt(): string | null {
+    if (this.disposed) return null
+    if (this.mode === 'read') {
+      if (!this.inRepl) return null
+      this.editor.feed('\x03\x04') // drop the line, then leave the prompt
+      return "Left Python's >>> prompt (its variables are lost)."
+    }
+    this.input('\x03')
+    return this.mode === 'python' ? 'Stopped Python (it was restarted, so its variables are lost).' : 'Stopped the running command.'
+  }
+
   /** The terminal changed size. */
   resized(): void {
     if (this.mode === 'read') this.editor.resync()
@@ -165,6 +247,7 @@ export class TerminalSession {
   dispose(): void {
     if (this.disposed) return
     this.disposed = true
+    this.aiRun?.finish({ status: null, note: 'The Terminal window was closed.' })
     this.unwatch()
     this.abort?.abort()
     this.editor.cancel()
@@ -214,6 +297,7 @@ export class TerminalSession {
       this.atLineStart = true
       this.mode = 'busy'
       if (this.disposed) return
+      const ai = this.aiRun
       if (r.type === 'interrupt') {
         this.shell.status = 130
       } else if (r.type === 'eof') {
@@ -222,6 +306,7 @@ export class TerminalSession {
         this.history.add(r.text)
         await this.runLine(r.text)
       }
+      if (ai && this.aiRun === ai) ai.finish({ status: this.shell.status })
     }
   }
 
@@ -262,6 +347,7 @@ export class TerminalSession {
     this.host.write(text)
     const visible = stripAnsi(text)
     if (visible) this.atLineStart = visible.endsWith('\n')
+    this.aiRun?.chunks.push(visible)
   }
 
   /** Start a new line unless the output already ended with one (so prompts never trail output). */
@@ -390,6 +476,10 @@ export class TerminalSession {
     this.write(style.muted('exit() or Ctrl+D leaves · %pip install <package> adds packages') + '\n')
     this.inRepl = true
     this.replMore = false
+    this.aiRun?.finish({
+      status: null,
+      note: "Python's interactive >>> prompt is open and waits for typing: terminal_interrupt leaves it. Use python -c \"…\" or a script instead.",
+    })
     try {
       while (!this.disposed) {
         this.ensureLineStart()

@@ -76,6 +76,10 @@ export default function Asteroids({ win }: AppProps) {
   }, [engine])
 
   const best = Math.max(scores[0]?.score ?? 0, stats.score)
+  const aiState = () => {
+    const s = readStats(engine.game)
+    return { wave: s.wave, lives: s.lives, meteors: s.rocks, shield: s.shield }
+  }
 
   const panel = (
     <>
@@ -102,5 +106,5 @@ export default function Asteroids({ win }: AppProps) {
     </>
   )
 
-  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} className="mg-asteroids" />
+  return <GameShell win={win} info={INFO} engine={engine} panel={panel} onFrame={onFrame} aiState={aiState} className="mg-asteroids" />
 }
