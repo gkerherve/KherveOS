@@ -549,6 +549,124 @@ async def op_trust(args):
     return {"cells": _cells(changes), "py": _py_diff(), "pyPending": 0}
 
 
+async def op_py_names(args):
+    """Names in the =PY namespace, for the Python editor's autocomplete
+    (the desktop's _DialogCodeEditor reads runtime._globals)."""
+    wb = S.workbook
+    rt = getattr(wb, "python", None) if wb else None
+    g = getattr(rt, "_globals", None) or {}
+    return {"names": sorted(k for k in g if not k.startswith("_"))}
+
+
+async def op_science(args):
+    """The Science menu's first seven tools (the desktop's science.py
+    _compute methods): X/Y in, (header, values) columns out."""
+    import numpy as np
+    tool = args.get("tool")
+    o = args.get("opts") or {}
+    y = np.array([np.nan if v is None else v for v in args.get("y") or []],
+                 dtype=float)
+    if y.size == 0:
+        raise ValueError("Select a Y range first.")
+    xs = args.get("x")
+    x = (np.array([np.nan if v is None else v for v in xs], dtype=float)
+         if xs else np.arange(y.size, dtype=float))
+    n = min(x.size, y.size)
+    x, y = x[:n], y[:n]
+    mask = np.isfinite(x) & np.isfinite(y)
+    x, y = x[mask], y[mask]
+    if x.size < 2:
+        raise ValueError("Need at least two finite data points.")
+    order = np.argsort(x)
+    x, y = x[order], y[order]
+    message = None
+    if tool == "Normalisation":
+        lo, hi = float(o.get("lo", 0.0)), float(o.get("hi", 1.0))
+        ymin, ymax = float(np.min(y)), float(np.max(y))
+        if ymax == ymin:
+            raise ValueError("Y is constant \u2014 cannot normalise.")
+        cols = [(f"norm[{lo:g},{hi:g}]",
+                 (y - ymin) / (ymax - ymin) * (hi - lo) + lo)]
+    elif tool == "Integration":
+        try:
+            from numpy import trapezoid as _trapz
+        except ImportError:
+            from numpy import trapz as _trapz
+        if o.get("mode") == 1:
+            total = float(_trapz(y, x))
+            message = f"Definite integral = {total:.6g}"
+            cols = [("integral", np.array([total]))]
+        else:
+            try:
+                from scipy.integrate import cumulative_trapezoid as _cum
+            except ImportError:
+                from scipy.integrate import cumtrapz as _cum
+            cols = [("cum_integral", _cum(y, x, initial=0.0))]
+    elif tool == "Derivative":
+        d = np.gradient(y, x)
+        label = "dy/dx"
+        if o.get("order") == 1:
+            d = np.gradient(d, x)
+            label = "d2y/dx2"
+        cols = [(label, d)]
+    elif tool == "Smooth":
+        win = int(o.get("window", 5))
+        if o.get("method") == 1:
+            from scipy.signal import savgol_filter
+            if win % 2 == 0:
+                win += 1
+            win = min(win, y.size if y.size % 2 else y.size - 1)
+            poly = min(int(o.get("poly", 2)), win - 1)
+            cols = [(f"savgol{win}", savgol_filter(y, win, poly))]
+        else:
+            win = min(win, y.size)
+            cols = [(f"avg{win}",
+                     np.convolve(y, np.ones(win) / win, mode="same"))]
+    elif tool == "FFT":
+        n = y.size
+        dx = float(np.mean(np.diff(x))) if n > 1 else 1.0
+        if dx <= 0:
+            dx = 1.0
+        freq = np.fft.rfftfreq(n, d=dx)
+        spec = np.fft.rfft(y)
+        kind = o.get("kind", "Magnitude")
+        if kind == "Power":
+            mag, label = (np.abs(spec) ** 2) / n, "power"
+        elif kind == "Amplitude":
+            mag, label = np.abs(spec) * 2.0 / n, "amplitude"
+        else:
+            mag, label = np.abs(spec), "magnitude"
+        cols = [("freq", freq), (label, mag)]
+    elif tool == "Interpolation":
+        from scipy.interpolate import interp1d
+        x, idx = np.unique(x, return_index=True)
+        y = y[idx]
+        if x.size < 2:
+            raise ValueError("Need at least two unique X values.")
+        f = interp1d(x, y, kind=o.get("kind", "linear"),
+                     bounds_error=False, fill_value="extrapolate")
+        xn = np.linspace(x.min(), x.max(), int(o.get("points", 200)))
+        cols = [("x_interp", xn), ("y_interp", f(xn))]
+    elif tool == "Find Peaks":
+        from scipy.signal import find_peaks
+        kw = {"distance": int(o.get("distance", 1))}
+        if o.get("height") is not None:
+            kw["height"] = float(o["height"])
+        if o.get("prominence") is not None:
+            kw["prominence"] = float(o["prominence"])
+        idx, _props = find_peaks(y, **kw)
+        if idx.size == 0:
+            return {"columns": [],
+                    "message": "No peaks found with these settings."}
+        cols = [("peak_x", x[idx]), ("peak_y", y[idx])]
+    else:
+        raise ValueError(f"Unknown tool: {tool}")
+    return {"columns": [[h, [float(v) if np.isfinite(v) else None
+                             for v in np.asarray(a, dtype=float)]]
+                        for h, a in cols],
+            "message": message}
+
+
 async def op_recalc(args):
     """Evaluate every formula again (F9): random numbers, =PY cells…"""
     from khervesheet.core.python import is_python_source

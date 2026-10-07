@@ -7,7 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from
 import { useStore } from 'zustand'
 import type { Book } from './book'
 import { AssistPopup, acceptFunction, assistFor, assistKey } from './Assist'
-import { canInsertRef } from './formula'
+import { canInsertRef, toggleAbsoluteRef } from './formula'
 import { a1, isPython, quoteSheet } from './model'
 
 let measurer: CanvasRenderingContext2D | null = null
@@ -103,17 +103,22 @@ export function CellEditor({
       return
     }
     if (e.key === 'Enter') {
-      const newline = e.altKey || (py && !e.shiftKey && !mod)
       e.preventDefault()
-      if (newline) {
+      if (e.altKey) {
         const el = e.currentTarget
         const s = el.selectionStart
         const t = text.slice(0, s) + '\n' + text.slice(el.selectionEnd)
         book.setEdit({ text: t, caret: s + 1, point: null })
         return
       }
-      if (py) book.commitEdit(1, 0)
-      else book.commitEdit(e.shiftKey ? -1 : 1, 0, mod)
+      // As on the desktop, Enter in the cell keeps the entry, =PY too (so
+      // "=PY 1+1" runs); a bare "=PY" opens the formula bar in Python mode
+      // for code over several lines (Enter: new line, Ctrl+Enter: run).
+      if (py && !text.trim().slice(3).trim()) {
+        book.setEdit({ text: '=PY\n', caret: 4, where: 'bar', mode: 'edit', point: null, python: true })
+        return
+      }
+      book.commitEdit(e.shiftKey ? -1 : 1, 0, mod)
       return
     }
     if (e.key === 'Tab') {
@@ -136,6 +141,11 @@ export function CellEditor({
       e.preventDefault()
       book.setEdit({ mode: edit.mode === 'enter' ? 'edit' : 'enter' })
     }
+    if (e.key === 'F4') {
+      e.preventDefault()
+      const next = toggleAbsoluteRef(text, e.currentTarget.selectionStart)
+      if (next) book.setEdit({ text: next.text, caret: next.caret, point: null })
+    }
   }
 
   return (
@@ -149,7 +159,9 @@ export function CellEditor({
         style={{ left: rect.left, top: rect.top, width, height, font, color, background, lineHeight: `${lineH}px` }}
         onChange={(e) => {
           synced.current = { text: e.target.value, caret: e.target.selectionStart }
-          book.setEdit({ text: e.target.value, caret: e.target.selectionStart, point: null })
+          // A formula moves to the formula bar (the desktop's _on_inline_editor_text).
+          const where = e.target.value.startsWith('=') ? 'bar' : 'cell'
+          book.setEdit({ text: e.target.value, caret: e.target.selectionStart, point: null, where })
         }}
         onSelect={(e) => {
           const s = e.currentTarget.selectionStart

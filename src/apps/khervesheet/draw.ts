@@ -7,6 +7,9 @@
 import { adaptBorder, adaptFill, adaptText, withAlpha } from './colors'
 import type { Axis } from './geom'
 import type { RefToken } from './formula'
+import { fmtLoopPeriod } from './pytext'
+
+export { fmtLoopPeriod }
 import {
   H_MASK, V_MASK, isError, isPython, key, mergeRange, rangeSize, type Border, type Cell, type Fmt, type Merge, type Range,
   type Selection, type Sheet,
@@ -386,17 +389,102 @@ function drawCells(ctx: CanvasRenderingContext2D, sh: Sheet, rows: Axis, cols: A
         ctx.fill()
       }
       const cell = sh.cells.get(k)
-      if (cell && isPython(cell.s) && w > 26 && h > 12) {
-        ctx.font = `600 7px ${th.font}`
-        ctx.fillStyle = 'rgba(120, 175, 225, 0.85)'
-        ctx.textAlign = 'right'
-        ctx.textBaseline = 'top'
-        ctx.fillText('PY', x + w - 2, y + 1.5)
-        ctx.textAlign = 'left'
+      if (cell && isPython(cell.s) && w > 26 && h > 8) {
+        // The desktop's faint Python tint over the cell, and the "PY"
+        // badge down its right edge (CellFormatDelegate).
+        ctx.fillStyle = 'rgba(55, 118, 171, 0.047)'
+        ctx.fillRect(x, y, w, h)
+        const loop = Number(sh.pyLoops[rc]) || null
+        drawPyBadge(ctx, x + w - 20, y, 20, h, loop, th.font)
       }
     }
   }
   drawSparklines(ctx, sh, X, Y, rows, cols, p, th)
+}
+
+export const PY_BLUE = '#3776ab'
+export const PY_YELLOW = '#ffd43b'
+
+/**
+ * The desktop's raised two-tone "PY" badge (python_engine.paint_py_badge):
+ * Python blue over yellow, two white "eyes", "PY" in white; a looping cell
+ * shows "PY", a refresh arrow and its period instead of the eyes.
+ */
+export function drawPyBadge(ctx: CanvasRenderingContext2D, x0: number, y0: number, w0: number, h0: number, loop: number | null, family = 'sans-serif') {
+  const x = x0 + 1.5
+  const y = y0 + 1.5
+  const w = w0 - 3
+  const h = h0 - 3
+  if (w <= 1 || h <= 1) return
+  const radius = Math.min(6, w * 0.4)
+  ctx.save()
+  const path = new Path2D()
+  path.roundRect(x, y, w, h, radius)
+  ctx.save()
+  ctx.clip(path)
+  const half = h / 2
+  ctx.fillStyle = PY_BLUE
+  ctx.fillRect(x, y, w, half)
+  ctx.fillStyle = PY_YELLOW
+  ctx.fillRect(x, y + half, w, h - half)
+  if (loop === null) {
+    const dot = Math.max(1, w * 0.12)
+    const dx = w * 0.17
+    const dy = h * 0.17
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.arc(x + w / 2 - dx, y + dy, dot, 0, Math.PI * 2)
+    ctx.arc(x + w / 2 + dx, y + h - dy, dot, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+  // Raised bevel: light inner edge, darker outer edge.
+  ctx.lineWidth = 1.2
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.59)'
+  const inner = new Path2D()
+  inner.roundRect(x + 0.6, y + 0.6, w - 1.2, h - 1.2, radius)
+  ctx.stroke(inner)
+  ctx.lineWidth = 1
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.31)'
+  ctx.stroke(path)
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const pt = (v: number) => v * 1.333
+  if (loop === null) {
+    ctx.font = `bold ${pt(Math.max(6.5, Math.min(9.5, w * 0.42)))}px ${family}`
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.43)'
+    ctx.fillText('PY', x + w / 2 + 0.6, y + h / 2 + 0.9)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillText('PY', x + w / 2, y + h / 2)
+  } else {
+    ctx.font = `bold ${pt(Math.max(6, Math.min(8.5, w * 0.38)))}px ${family}`
+    ctx.fillStyle = '#ffffff'
+    ctx.fillText('PY', x + w / 2, y + (h * 0.52) / 2)
+    const by = y + h * 0.5 + (h * 0.5) / 2
+    const cx = x + w / 2 - w * 0.22
+    const rad = Math.max(2, w * 0.14)
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = Math.max(1, rad * 0.35)
+    ctx.lineCap = 'round'
+    ctx.beginPath()
+    // ~300 degrees, counter-clockwise from 105 degrees (Qt angles).
+    ctx.arc(cx, by, rad, (-105 * Math.PI) / 180, (195 * Math.PI) / 180)
+    ctx.stroke()
+    const a = (105 * Math.PI) / 180
+    const ex = cx + rad * Math.cos(a)
+    const ey = by - rad * Math.sin(a)
+    const hh = rad * 0.7
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.moveTo(ex + hh, ey - hh * 0.2)
+    ctx.lineTo(ex - hh * 0.2, ey - hh)
+    ctx.lineTo(ex - hh * 0.3, ey + hh * 0.3)
+    ctx.fill()
+    ctx.font = `bold ${pt(Math.max(5.5, Math.min(7.5, w * 0.3)))}px ${family}`
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.63)'
+    ctx.fillText(fmtLoopPeriod(loop), x + w / 2 + w * 0.1, by)
+  }
+  ctx.restore()
 }
 
 function wrapLines(ctx: CanvasRenderingContext2D, text: string, font: string, width: number): string[] {

@@ -5,10 +5,10 @@
 import katex from 'katex'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, X } from 'lucide-react'
+import { Maximize2, Minimize2, Search, X } from 'lucide-react'
 import type { Book } from './book'
 import { PALETTE } from './colors'
-import { NUMBER_FORMATS, a1, key, keyCol, keyRow, patchFmt, type Border, type Fmt, type Sheet } from './model'
+import { NUMBER_FORMATS, key, keyCol, keyRow, patchFmt, type Border, type Fmt, type Sheet } from './model'
 import { filterValues, formatCells, formatTargets, setFilterKeep } from './ops'
 
 export function Modal({ title, onClose, children, wide, footer }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; footer?: ReactNode }) {
@@ -92,6 +92,105 @@ export function ColorPopover({ root, at, value, allowNone, noneLabel, onPick, on
           onClose()
         }}
       />
+    </div>,
+    root,
+  )
+}
+
+/**
+ * A non-modal window inside the app (the desktop's non-modal QDialogs: the
+ * Python editor, the Science tools): drag it by its title, resize it from the
+ * corner, double-click the title (or the button) to maximise it over the
+ * window; the grid stays usable behind it.
+ */
+export function FloatWin({ title, root, width, height, maximisable, className, children, onClose }: {
+  title: string
+  root: HTMLElement | null
+  width: number
+  height: number
+  maximisable?: boolean
+  className?: string
+  children: ReactNode
+  onClose: () => void
+}) {
+  const [max, setMax] = useState(false)
+  const [box, setBox] = useState(() => {
+    const W = root?.clientWidth ?? 900
+    const H = root?.clientHeight ?? 700
+    const w = Math.min(width, W - 24)
+    const h = Math.min(height, H - 24)
+    return { x: Math.max(12, (W - w) / 2), y: Math.max(12, (H - h) / 2), w, h }
+  })
+  const drag = useRef<{ kind: 'move' | 'size'; x: number; y: number; box: typeof box } | null>(null)
+  const down = (e: React.PointerEvent<HTMLElement>, kind: 'move' | 'size') => {
+    if (e.button !== 0 || (max && kind === 'move')) return
+    if (kind === 'move' && (e.target as HTMLElement).closest('button')) return
+    e.preventDefault()
+    drag.current = { kind, x: e.clientX, y: e.clientY, box }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const move = (e: React.PointerEvent<HTMLElement>) => {
+    const d = drag.current
+    if (!d) return
+    const dx = e.clientX - d.x
+    const dy = e.clientY - d.y
+    const W = root?.clientWidth ?? 2000
+    const H = root?.clientHeight ?? 2000
+    if (d.kind === 'move') setBox({ ...d.box, x: Math.min(Math.max(-d.box.w + 80, d.box.x + dx), W - 80), y: Math.min(Math.max(0, d.box.y + dy), H - 30) })
+    else setBox({ ...d.box, w: Math.max(360, d.box.w + dx), h: Math.max(220, d.box.h + dy) })
+  }
+  const up = () => {
+    drag.current = null
+  }
+  const style = max ? { left: 0, top: 0, width: '100%', height: '100%' } : { left: box.x, top: box.y, width: box.w, height: box.h }
+  return (
+    <div
+      className={`ks-floatwin${max ? ' max' : ''} ${className ?? ''}`}
+      style={style}
+      role="dialog"
+      aria-label={title}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape' && !e.defaultPrevented) onClose()
+      }}
+    >
+      <div className="ks-floatwin-title" onPointerDown={(e) => down(e, 'move')} onPointerMove={move} onPointerUp={up} onDoubleClick={() => maximisable && setMax(!max)}>
+        <span>{title}</span>
+        {maximisable && (
+          <button className="k-icon-btn" title={max ? 'Restore' : 'Maximise'} aria-label={max ? 'Restore' : 'Maximise'} onClick={() => setMax(!max)}>
+            {max ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+          </button>
+        )}
+        <button className="k-icon-btn" title="Close" aria-label="Close" onClick={onClose}>
+          <X size={14} />
+        </button>
+      </div>
+      {children}
+      {!max && <div className="ks-floatwin-grip" onPointerDown={(e) => down(e, 'size')} onPointerMove={move} onPointerUp={up} />}
+    </div>
+  )
+}
+
+/** Any panel dropped from a toolbar button (symbol and emoji grids, Table Design). */
+export function Popover({ root, at, className, children, onClose }: { root: HTMLElement; at: DOMRect; className?: string; children: ReactNode; onClose: () => void }) {
+  const box = root.getBoundingClientRect()
+  const ref = useRef<HTMLDivElement>(null)
+  const [left, setLeft] = useState(Math.max(4, at.left - box.left))
+  useEffect(() => {
+    const down = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) onClose()
+    }
+    window.addEventListener('pointerdown', down, true)
+    return () => window.removeEventListener('pointerdown', down, true)
+  }, [onClose])
+  useEffect(() => {
+    const w = ref.current?.offsetWidth ?? 0
+    if (left + w > box.width - 4) setLeft(Math.max(4, box.width - 4 - w))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return createPortal(
+    <div ref={ref} className={`ks-popover ${className ?? ''}`} style={{ left, top: at.bottom - box.top + 4 }} onKeyDown={(e) => e.key === 'Escape' && onClose()}>
+      {children}
     </div>,
     root,
   )
@@ -618,27 +717,6 @@ export function FindDialog({ book, replace, onClose }: { book: Book; replace: bo
 
 // ----------------------------------------------------- =PY output, equations
 
-export function PythonOutputDialog({ book, r, c, onClose }: { book: Book; r: number; c: number; onClose: () => void }) {
-  const out = book.active.py.get(key(r, c))
-  return (
-    <Modal title={`Python output — ${a1(r, c)}`} wide onClose={onClose}>
-      {out?.out && (
-        <>
-          <h4 className="ks-h4">Printed</h4>
-          <pre className="ks-pre">{out.out}</pre>
-        </>
-      )}
-      {out?.err && (
-        <>
-          <h4 className="ks-h4 err">Error</h4>
-          <pre className="ks-pre err">{out.err}</pre>
-        </>
-      )}
-      {!out?.out && !out?.err && <p className="ks-note">This cell printed nothing and ran without errors.</p>}
-    </Modal>
-  )
-}
-
 export function EquationDialog({ initial, onDone, onClose }: { initial: string; onDone: (latex: string) => void; onClose: () => void }) {
   const [latex, setLatex] = useState(initial)
   const html = useMemo(() => {
@@ -746,6 +824,119 @@ export function TextDialog({ title, label, initial, multiline, okLabel = 'OK', r
           <input className="k-input" value={value} autoFocus onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && ok()} />
         )}
       </label>
+    </Modal>
+  )
+}
+
+// ------------------------------------------------------- Insert Function
+
+/** Functions picked from Insert Function this session ("Most Recently Used"). */
+const recentFunctions: string[] = []
+
+/**
+ * Insert Function (Shift+F3, the fx button; formulas.InsertFunctionDialog):
+ * search by name or description, or pick a category, see the syntax and
+ * description, and OK writes "=NAME()" in the formula bar.
+ */
+export function InsertFunctionDialog({ book, onClose }: { book: Book; onClose: () => void }) {
+  const cat = book.catalog
+  const all = useMemo(() => (cat ? [...new Set(cat.order.flatMap((c) => cat.categories[c] ?? []))] : []), [cat])
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('All')
+  const [list, setList] = useState<string[]>(all)
+  const [current, setCurrent] = useState<string | null>(all[0] ?? null)
+  const show = (names: string[]) => {
+    setList(names)
+    setCurrent(names[0] ?? null)
+  }
+  const search = () => {
+    const q = query.trim().toUpperCase()
+    if (!q) return show(all)
+    const hits = all.filter((fn) => fn.includes(q) || (cat?.help[fn] ?? '').toLowerCase().includes(q.toLowerCase()))
+    setCategory('All')
+    show(hits.length ? hits : all)
+  }
+  const pickCategory = (c: string) => {
+    setCategory(c)
+    if (c === 'All') show(all)
+    else if (c === 'Most Recently Used') show(recentFunctions.length ? [...recentFunctions] : all.slice(0, 15))
+    else show(cat?.categories[c] ?? [])
+  }
+  const accept = (fn = current) => {
+    if (!fn) return
+    const i = recentFunctions.indexOf(fn)
+    if (i >= 0) recentFunctions.splice(i, 1)
+    recentFunctions.unshift(fn)
+    recentFunctions.length = Math.min(recentFunctions.length, 15)
+    onClose()
+    const text = `=${fn}()`
+    book.startEdit(text, 'bar')
+    book.setEdit({ mode: 'edit', caret: text.length - 1 })
+  }
+  const help = current ? (cat?.help[current] ?? `${current}()`) : ''
+  const [sig, ...desc] = help.split('\n')
+  return (
+    <Modal
+      title="Insert Function"
+      wide
+      onClose={onClose}
+      footer={
+        <>
+          <button className="k-btn" onClick={onClose}>Cancel</button>
+          <button className="k-btn primary" disabled={!current} onClick={() => accept()}>OK</button>
+        </>
+      }
+    >
+      {!cat && <p className="ks-note">Python is starting: the function list comes from the engine.</p>}
+      <div className="ks-insfn">
+        <label>Search for a function:</label>
+        <div className="ks-insfn-row">
+          <input
+            className="k-input"
+            value={query}
+            autoFocus
+            placeholder="Type a brief description of what you want to do and then click Go"
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && search()}
+          />
+          <button className="k-btn" onClick={search}>Go</button>
+        </div>
+        <div className="ks-insfn-row">
+          <label>Or select a category:</label>
+          <select className="k-input" value={category} onChange={(e) => pickCategory(e.target.value)}>
+            <option>All</option>
+            <option>Most Recently Used</option>
+            {(cat?.order ?? []).map((c) => (
+              <option key={c} value={c}>{c.replace(/&&/g, '&')}</option>
+            ))}
+          </select>
+        </div>
+        <label>Select a function:</label>
+        <div className="ks-insfn-list" role="listbox" tabIndex={0} onKeyDown={(e) => {
+          const i = current ? list.indexOf(current) : -1
+          if (e.key === 'ArrowDown' && i < list.length - 1) setCurrent(list[i + 1])
+          else if (e.key === 'ArrowUp' && i > 0) setCurrent(list[i - 1])
+          else if (e.key === 'Enter') accept()
+          else return
+          e.preventDefault()
+        }}>
+          {list.map((fn) => (
+            <div
+              key={fn}
+              role="option"
+              aria-selected={fn === current}
+              className={fn === current ? 'on' : ''}
+              ref={fn === current ? (n) => n?.scrollIntoView?.({ block: 'nearest' }) : undefined}
+              onClick={() => setCurrent(fn)}
+              onDoubleClick={() => accept(fn)}
+            >
+              {fn}
+            </div>
+          ))}
+        </div>
+        <b className="ks-insfn-sig">{sig}</b>
+        <p className="ks-insfn-desc">{desc.join('\n')}</p>
+      </div>
     </Modal>
   )
 }

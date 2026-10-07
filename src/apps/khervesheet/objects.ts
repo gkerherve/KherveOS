@@ -252,10 +252,18 @@ export function noteText(sh: Sheet, r: number, c: number): string | null {
   return typeof n === 'string' ? n : (n.text ?? '')
 }
 
-export function setNote(book: Book, r: number, c: number, text: string | null) {
-  layoutStep(book, text ? 'Note' : 'Delete Note', (s) => {
+/** "comment" (white) or "note" (yellow sticky note), as the desktop keeps them. */
+export function noteKind(sh: Sheet, r: number, c: number): 'comment' | 'note' | null {
+  const n = sh.insertOps.notes?.[rc(r, c)]
+  if (!n) return null
+  return typeof n !== 'string' && n.kind === 'comment' ? 'comment' : 'note'
+}
+
+export function setNote(book: Book, r: number, c: number, text: string | null, kind: 'comment' | 'note' = 'note') {
+  const label = kind === 'comment' ? 'Comment' : 'Note'
+  layoutStep(book, text ? label : `Delete ${label}`, (s) => {
     const notes = { ...(s.insertOps.notes ?? {}) }
-    if (text) notes[rc(r, c)] = { text, kind: 'note' }
+    if (text) notes[rc(r, c)] = { text, kind }
     else delete notes[rc(r, c)]
     s.insertOps = { ...s.insertOps, notes }
   })

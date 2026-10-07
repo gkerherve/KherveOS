@@ -12,7 +12,7 @@ import { SheetBridge, type Answer } from './bridge'
 import { Axis } from './geom'
 import { allFunctions, type Catalog } from './formula'
 import {
-  DEFAULT_COL_W, DEFAULT_ROW_H, MAX_COLS, MAX_ROWS, cellSel, expandMerges, inRange, key, keyCol, keyRow, mergeAt, newSheet,
+  DEFAULT_COL_W, DEFAULT_ROW_H, MAX_COLS, MAX_ROWS, cellSel, expandMerges, inRange, isPython, key, keyCol, keyRow, mergeAt, newSheet,
   normRange, parseRange, splitSheetRef, type Cell, type Chart, type Key, type PyOut, type Range, type Raw, type Selection,
   type Sheet,
 } from './model'
@@ -32,6 +32,12 @@ export interface Edit {
   caret: number
   /** A reference inserted by clicking a cell (or with the arrows); the next one replaces it. */
   point: { start: number; end: number; r: number; c: number } | null
+  /**
+   * The formula bar is in Python mode (Enter: new line, Ctrl+Enter: run): the
+   * cell already held =PY code, or a bare "=PY" was entered (as on the desktop,
+   * typing "=PY 1+1" and Enter still runs it at once).
+   */
+  python?: boolean
 }
 
 export type ObjectRef = { kind: 'chart' | 'image' | 'equation'; id: string } | null
@@ -63,6 +69,8 @@ export interface BookState {
   view: ViewPrefs
   ready: boolean
   loops: boolean
+  /** The Python editor's "Pick": the next clicked cell gives its reference. */
+  picking: boolean
 }
 
 export interface Step {
@@ -112,6 +120,10 @@ export class Book {
   private chartTimer: ReturnType<typeof setTimeout> | null = null
   private flashTimer: ReturnType<typeof setTimeout> | null = null
   private loopTimers = new Map<string, ReturnType<typeof setInterval>>()
+  /** Loop periods chosen with the period button, kept while a loop is stopped ("<sheet id>:r,c"). */
+  private loopSaved = new Map<string, number>()
+  /** Called with "A1" when a cell is clicked while picking (the Python editor's Pick). */
+  pick: ((ref: string) => void) | null = null
   private axes = new Map<string, { v: number; rows: number; cols: number; r: Axis; c: Axis }>()
   private unsubs: (() => void)[] = []
 
@@ -141,6 +153,7 @@ export class Book {
       view: loadView(),
       ready: false,
       loops: true,
+      picking: false,
     }))
     this.bridge.onBusy = (n) => this.set({ busy: n })
     this.bridge.onProgress = (t) => this.set({ progress: t })
@@ -203,6 +216,8 @@ export class Book {
   private rebuildRequests(): { op: string; args: unknown }[] {
     const out: { op: string; args: unknown }[] = [{ op: 'new', args: { sheets: this.sheets.map((s) => s.name) } }]
     for (const sh of this.sheets) out.push({ op: 'replace', args: { sheet: sh.name, cells: this.pythonRaws(sh), numfmts: this.numfmts(sh) } })
+    // Every =PY cell was allowed before: a new Python must not forget it.
+    if (this.state.pyPending === 0 && this.sheets.some((sh) => [...sh.cells.values()].some((c) => isPython(c.s)))) out.push({ op: 'trust', args: {} })
     return out
   }
 
@@ -537,8 +552,10 @@ export class Book {
     const { r, c } = sh.sel.active
     const original = this.cell(sh, r, c)?.s ?? ''
     const t = text ?? original
+    // Formulas are typed in the formula bar, as on the desktop (_redirect_to_formula_bar).
+    const at = t.startsWith('=') ? 'bar' : where
     this.set({
-      edit: { sheet: sh.id, r, c, text: t, original, mode: text === undefined ? 'edit' : 'enter', where, caret: t.length, point: null },
+      edit: { sheet: sh.id, r, c, text: t, original, mode: text === undefined ? 'edit' : 'enter', where: at, caret: t.length, point: null, python: isPython(original) || /^\s*=PY\s*\n/i.test(t) },
       object: null,
     })
   }
@@ -782,6 +799,72 @@ export class Book {
     }
   }
 
+  /**
+   * Run code as the =PY cell (r, c), as the desktop's pop-out editor does
+   * (_run_python_from_dialog): the cell becomes "=PY\n" + code, runs, and
+   * what it gave comes back for the editor's output pane.
+   */
+  async runPythonCell(sh: Sheet, r: number, c: number, code: string): Promise<{ result: string; error: string | null; stdout: string; hasPlot: boolean }> {
+    await this.setCells(sh, [[r, c, `=PY\n${code}`]], 'Python', true)
+    await this.settle()
+    const k = key(r, c)
+    const out = sh.py.get(k)
+    return { result: sh.cells.get(k)?.t ?? '', error: out?.err ?? null, stdout: out?.out ?? '', hasPlot: !!out?.fig }
+  }
+
+  /** Names defined in the =PY namespace (the editor's autocomplete). */
+  async pythonNames(): Promise<string[]> {
+    try {
+      const a = await this.bridge.call('py_names', {})
+      return a.ok && Array.isArray(a.names) ? (a.names as string[]) : []
+    } catch {
+      return []
+    }
+  }
+
+  /** Arm (or disarm, with null) the Python editor's Pick: the next clicked cell is passed on. */
+  setPick(fn: ((ref: string) => void) | null) {
+    this.pick = fn
+    this.set({ picking: !!fn })
+  }
+
+  /** The running loop period of a =PY cell, in seconds (null: not looping). */
+  loopOf(sh: Sheet, r: number, c: number): number | null {
+    const v = Number(sh.pyLoops[`${r},${c}`])
+    return v > 0 ? v : null
+  }
+
+  /** The period the Play button starts (the period button's choice, else 1 s). */
+  savedLoop(sh: Sheet, r: number, c: number): number | null {
+    return this.loopSaved.get(`${sh.id}:${r},${c}`) ?? this.loopOf(sh, r, c)
+  }
+
+  /** The period button: remember the period; a running loop takes it at once. */
+  saveLoopPeriod(sh: Sheet, r: number, c: number, secs: number) {
+    this.loopSaved.set(`${sh.id}:${r},${c}`, secs)
+    if (this.loopOf(sh, r, c)) this.setPyLoop(sh, r, c, secs)
+    else this.bump()
+  }
+
+  /** Start (secs) or stop (null) re-running a =PY cell on a timer (the desktop's _set_py_loop). */
+  setPyLoop(sh: Sheet, r: number, c: number, secs: number | null) {
+    const k = `${r},${c}`
+    const loops = { ...sh.pyLoops }
+    if (secs && secs > 0) {
+      loops[k] = secs
+      this.loopSaved.set(`${sh.id}:${k}`, secs)
+      if (!this.state.loops) this.set({ loops: true })
+    } else {
+      const was = loops[k]
+      if (was) this.loopSaved.set(`${sh.id}:${k}`, Number(was))
+      delete loops[k]
+    }
+    sh.pyLoops = loops
+    this.markDirty()
+    this.startLoops()
+    this.bump()
+  }
+
   /** =PY cells that re-run on a timer (the desktop's Python loops). */
   startLoops() {
     this.stopLoops()
@@ -795,9 +878,12 @@ export class Book {
         this.loopTimers.set(
           id,
           setInterval(() => {
-            if (this.bridge.pending > 0 || this.state.edit) return
+            // Not while Python is busy, nor over the user's typing in that cell.
+            const e = this.state.edit
+            if (this.bridge.pending > 0 || (e && e.sheet === sh.id && e.r === r && e.c === c)) return
+            if (!isPython(sh.cells.get(key(r, c))?.s ?? '')) return
             void this.recalc([sh.name, r, c])
-          }, Math.max(1, s) * 1000),
+          }, Math.max(0.05, s) * 1000),
         )
       }
   }

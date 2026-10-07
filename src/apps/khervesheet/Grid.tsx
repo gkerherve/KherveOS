@@ -15,16 +15,20 @@ import { cellFont, drawGrid, headerWidth, measure, type Theme } from './draw'
 import { Floating, type FloatActions } from './Floating'
 import { refTokens } from './formula'
 import { a1, columnLabels, expandMerges, inSelection, key, mergeAt, mergeRange, normRange, usedExtent, type Pos, type Range } from './model'
-import { dropdownOf, isCheckbox, linkOf, noteText, toggleCheckbox, CHART_TYPES, insertChart } from './objects'
+import { dropdownOf, isCheckbox, linkOf, noteKind, noteText, setNote, toggleCheckbox, CHART_TYPES, insertChart } from './objects'
+import { menuIcon, PLOT_ICONS } from './icons'
+import { loopSubmenu } from './PyEditor'
 import {
   autoFill, autoFitCols, clearContents, copySelection, deleteCols, deleteRows, fillDownRight, fillRange, fillTarget, insertCols,
-  insertRows, pasteText, quickSort, restoreLayout, selectedCols, selectedRows, snapLayout, toggleFlag,
+  insertRows, pasteText, quickSort, restoreLayout, selectedCols, selectedRows, setDesignation, shiftCells, snapLayout, toggleFlag,
 } from './ops'
 
 export interface GridActions extends FloatActions {
   formatCells: () => void
-  editNote: (r: number, c: number) => void
-  showPython: (r: number, c: number) => void
+  /** Add or edit a comment / note (kind: what to add when the cell has none). */
+  editNote: (r: number, c: number, kind?: 'comment' | 'note') => void
+  /** The column header's "Statistics on Column". */
+  columnStats: (col: number) => void
   colWidth: () => void
   rowHeight: () => void
   link: () => void
@@ -432,6 +436,14 @@ export function Grid({ book, actions }: { book: Book; actions: GridActions }) {
       return
     }
     const at = cellUnder(lx, ly)
+    // The Python editor's Pick: this cell's ks("…") reference goes into the code.
+    if (book.pick) {
+      const pick = book.pick
+      if (st.edit) book.commitEdit()
+      book.selectCell(at.r, at.c)
+      pick(a1(at.r, at.c))
+      return
+    }
     // Typing a formula: a click inserts the cell's reference.
     if (st.edit && pointing(book) && !(st.edit.sheet === sh.id && at.r === st.edit.r && at.c === st.edit.c)) {
       e.preventDefault()
@@ -507,7 +519,11 @@ export function Grid({ book, actions }: { book: Book; actions: GridActions }) {
       if (Math.abs(lx - colX(last.c2 + 1, s.x)) <= 5 && Math.abs(ly - rowY(last.r2 + 1, s.y)) <= 5) cursor = 'crosshair'
       const at = cellUnder(lx, ly)
       if (linkOf(sh, at.r, at.c)) cursor = 'pointer'
-      const note = noteText(sh, at.r, at.c)
+      if (book.pick) cursor = 'crosshair'
+      // A note, or a =PY cell's error (its last line) and printed output.
+      const py = sh.py.get(key(at.r, at.c))
+      const pyTip = py && (py.err || py.out) ? [py.err ? py.err.trim().split('\n').pop() : '', py.out?.trim() ?? ''].filter(Boolean).join('\n') : null
+      const note = noteText(sh, at.r, at.c) ?? pyTip
       if (tipTimer.current) clearTimeout(tipTimer.current)
       if (note) {
         const x = colX(at.c + 1, s.x) * zoom + 4
@@ -578,29 +594,34 @@ export function Grid({ book, actions }: { book: Book; actions: GridActions }) {
     e.preventDefault()
     const { lx, ly } = local(e.clientX, e.clientY)
     if (book.state.edit) book.commitEdit()
-    const mod = MAC ? '⌘' : 'Ctrl+'
-    const clipboard: MenuItem[] = [
-      { label: 'Cut', shortcut: `${mod}X`, onClick: () => cutToClipboard() },
-      { label: 'Copy', shortcut: `${mod}C`, onClick: () => copyToClipboard() },
-      { label: 'Paste', shortcut: `${mod}V`, onClick: () => void pasteFromClipboard(false) },
-      { label: 'Paste Values Only', onClick: () => void pasteFromClipboard(true) },
-    ]
+    // The desktop's right-click menus (sheet._header_menu, _row_header_menu, _cell_menu).
+    const plot: MenuItem = { label: 'Plot', submenu: CHART_TYPES.map((t) => ({ label: t, image: menuIcon(PLOT_ICONS[t] ?? 'plot_line'), onClick: () => insertChart(book, t) })) }
     if (ly < hh && lx >= hw) {
       const c = colAt(lx)
       if (!inSelection(sh.sel, 0, c) || !sh.sel.ranges.some((g) => g.r1 === 0 && g.r2 >= sh.rows - 1)) book.selectCols(c, c)
       os.contextMenu(e, [
-        ...clipboard,
+        plot,
         '-',
-        { label: 'Insert Columns Left', onClick: () => insertCols(book) },
-        { label: 'Insert Columns Right', onClick: () => insertCols(book, true) },
-        { label: 'Delete Columns', onClick: () => deleteCols(book) },
-        { label: 'Clear Contents', onClick: () => void clearContents(book) },
+        {
+          label: 'Set As',
+          submenu: [
+            { label: 'X', onClick: () => setDesignation(book, 'X') },
+            { label: 'Y', onClick: () => setDesignation(book, 'Y') },
+            { label: 'None', onClick: () => setDesignation(book, null) },
+          ],
+        },
+        '-',
+        { label: 'Insert Column Left', onClick: () => insertCols(book) },
+        { label: 'Insert Column Right', onClick: () => insertCols(book, true) },
+        { label: 'Delete Column', onClick: () => deleteCols(book) },
         '-',
         { label: 'Column Width…', onClick: actions.colWidth },
         { label: 'AutoFit Column Width', onClick: () => autoFitCols(book, selectedCols(book), (sheet, k) => cellFont(sheet.formats.get(k), themeRef.current?.font ?? 'sans-serif')) },
         '-',
         { label: 'Sort A → Z', onClick: () => quickSort(book, true) },
         { label: 'Sort Z → A', onClick: () => quickSort(book, false) },
+        '-',
+        { label: 'Statistics on Column', onClick: () => actions.columnStats(c) },
       ])
       return
     }
@@ -608,12 +629,8 @@ export function Grid({ book, actions }: { book: Book; actions: GridActions }) {
       const r = rowAt(ly)
       if (!inSelection(sh.sel, r, 0) || !sh.sel.ranges.some((g) => g.c1 === 0 && g.c2 >= sh.cols - 1)) book.selectRows(r, r)
       os.contextMenu(e, [
-        ...clipboard,
-        '-',
-        { label: 'Insert Rows Above', onClick: () => insertRows(book) },
-        { label: 'Insert Rows Below', onClick: () => insertRows(book, true) },
+        { label: 'Insert Rows', onClick: () => insertRows(book) },
         { label: 'Delete Rows', onClick: () => deleteRows(book) },
-        { label: 'Clear Contents', onClick: () => void clearContents(book) },
         '-',
         { label: 'Row Height…', onClick: actions.rowHeight },
       ])
@@ -623,41 +640,28 @@ export function Grid({ book, actions }: { book: Book; actions: GridActions }) {
     const at = cellUnder(lx, ly)
     if (!inSelection(sh.sel, at.r, at.c)) book.selectCell(at.r, at.c)
     const cell = sh.cells.get(key(at.r, at.c))
-    const note = noteText(sh, at.r, at.c)
-    const py = sh.py.get(key(at.r, at.c))
-    const items: MenuItem[] = [
-      ...clipboard,
+    const kind = noteKind(sh, at.r, at.c)
+    const items: MenuItem[] = []
+    if (cell && /^\s*=PY(\s|$)/i.test(cell.s)) items.push(loopSubmenu(book, sh.id, at.r, at.c), '-')
+    items.push(plot, '-')
+    items.push(
+      { label: 'Cut', onClick: () => cutToClipboard() },
+      { label: 'Copy', onClick: () => copyToClipboard() },
+      { label: 'Paste', onClick: () => void pasteFromClipboard(false) },
+      { label: 'Paste Values Only', onClick: () => void pasteFromClipboard(true) },
+      { label: 'Clear', onClick: () => void clearContents(book) },
       '-',
-      {
-        label: 'Insert',
-        submenu: [
-          { label: 'Rows Above', onClick: () => insertRows(book) },
-          { label: 'Rows Below', onClick: () => insertRows(book, true) },
-          { label: 'Columns Left', onClick: () => insertCols(book) },
-          { label: 'Columns Right', onClick: () => insertCols(book, true) },
-        ],
-      },
-      {
-        label: 'Delete',
-        submenu: [
-          { label: 'Rows', onClick: () => deleteRows(book) },
-          { label: 'Columns', onClick: () => deleteCols(book) },
-        ],
-      },
-      { label: 'Clear Contents', shortcut: 'Del', onClick: () => void clearContents(book) },
+      { label: 'Insert Cells', onClick: () => void shiftCells(book, true) },
+      { label: 'Delete Cells', onClick: () => void shiftCells(book, false) },
       '-',
-      { label: 'Format Cells…', shortcut: `${mod}1`, onClick: actions.formatCells },
-      { label: note ? 'Edit Note…' : 'Insert Note…', onClick: () => actions.editNote(at.r, at.c) },
-      { label: 'Link…', onClick: actions.link },
+      { label: 'Format Cells…', onClick: actions.formatCells },
       '-',
-      { label: 'Sort A → Z', onClick: () => quickSort(book, true) },
-      { label: 'Sort Z → A', onClick: () => quickSort(book, false) },
-      { label: 'Insert Chart', submenu: CHART_TYPES.map((t) => ({ label: t, onClick: () => insertChart(book, t) })) },
-    ]
-    if (cell && /^\s*=PY(\s|$)/i.test(cell.s)) {
-      items.push('-', { label: 'Python Output…', disabled: !py?.err && !py?.out, onClick: () => actions.showPython(at.r, at.c) })
-      items.push({ label: 'Run This Cell Again', onClick: () => void book.recalc([sh.name, at.r, at.c]) })
-    }
+    )
+    if (kind) {
+      const label = kind === 'comment' ? 'Comment' : 'Note'
+      items.push({ label: `Edit ${label}…`, onClick: () => actions.editNote(at.r, at.c) }, { label: `Delete ${label}`, onClick: () => setNote(book, at.r, at.c, null, kind) })
+    } else
+      items.push({ label: 'Add Comment…', onClick: () => actions.editNote(at.r, at.c, 'comment') }, { label: 'Add Note…', onClick: () => actions.editNote(at.r, at.c, 'note') })
     os.contextMenu(e, items)
   }
 
@@ -815,7 +819,7 @@ export function Grid({ book, actions }: { book: Book; actions: GridActions }) {
             <div className="ks-layer-clip" style={{ left: hw * zoom, top: hh * zoom }}>
               <div className="ks-layer" ref={layerRef}>
                 <Floating book={book} sheet={sh} rows={rows} cols={cols} zoom={zoom} selected={object} actions={actions} />
-                {e && editorRect && (
+                {e && editorRect && e.where === 'cell' && (
                   <CellEditor book={book} rect={editorRect} font={editorFont} color={themeRef.current?.text ?? '#fff'} background={editorBg} zoom={zoom} />
                 )}
               </div>

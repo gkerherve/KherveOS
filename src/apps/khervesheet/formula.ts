@@ -134,3 +134,18 @@ export function helpOf(cat: Catalog | null, name: string): { syntax: string; tex
 
 /** The catalogue category names without the menu's "&&". */
 export const categoryLabel = (name: string) => name.replace(/&&/g, '&')
+
+/** F4: cycle the reference at the caret A1 → $A$1 → A$1 → $A1 → A1 (sheet._toggle_absolute_ref). */
+export function toggleAbsoluteRef(text: string, caret: number): { text: string; caret: number } | null {
+  const re = /(\$?)([A-Za-z]{1,3})(\$?)(\d{1,7})/g
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    const start = m.index
+    const end = start + m[0].length
+    if (start <= caret && caret <= end) {
+      const [, dc, letters, dr, digits] = m
+      const next = !dc && !dr ? `$${letters}$${digits}` : dc && dr ? `${letters}$${digits}` : !dc && dr ? `$${letters}${digits}` : `${letters}${digits}`
+      return { text: text.slice(0, start) + next + text.slice(end), caret: start + next.length }
+    }
+  }
+  return null
+}

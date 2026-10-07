@@ -684,3 +684,10 @@ export function cellNumber(cell: Cell | undefined): number | null {
 export const isError = (t: string) => /^#(DIV\/0!|NAME\?|NUM!|VALUE!|REF!|N\/A|ERROR|PYERR|NULL!)$/.test(t)
 export const isPython = (s: string) => /^\s*=PY(\s|$)/i.test(s)
 export const isFormula = (s: string) => s.startsWith('=') && s.length > 1
+
+/** The Python code of a =PY cell (core.python.strip_marker). */
+export function stripMarker(text: string): string {
+  let body = text.trimStart().slice(3)
+  if (body[0] === '\n' || body[0] === ' ') body = body.slice(1)
+  return body
+}

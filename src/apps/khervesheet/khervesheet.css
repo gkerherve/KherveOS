@@ -9,35 +9,44 @@
 }
 
 /* ------------------------------------------------------------- toolbars */
+/* The desktop's Standard, Font and Plot toolbars side by side, 32 px icons,
+   flat (auto-raise) buttons; they wrap onto a second line when narrow. */
 
 .ks-app .ks-toolbars {
   flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   background: var(--k-chrome);
   border-bottom: 1px solid var(--k-border);
+  padding: 1px 4px;
 }
 .ks-app .ks-toolbar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  min-height: 36px;
-  padding: 3px 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  gap: 0;
+  min-height: 40px;
+  padding: 0 4px;
+  flex: none;
 }
 .ks-app .ks-toolbar + .ks-toolbar {
-  border-top: 1px solid var(--k-border);
-  min-height: 34px;
+  border-left: 1px solid var(--k-border);
+  margin-left: 2px;
+  padding-left: 6px;
+}
+.ks-app .ks-toolbar:last-child {
+  flex: 1;
 }
 .ks-app .ks-tb {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  height: 28px;
-  min-width: 28px;
-  padding: 0 5px;
-  border: none;
-  border-radius: var(--k-radius-sm);
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
   background: transparent;
   color: var(--k-text);
   cursor: pointer;
@@ -48,7 +57,7 @@
 }
 .ks-app .ks-tb.on {
   background: var(--k-selection);
-  color: var(--k-text);
+  border-color: color-mix(in srgb, var(--k-accent) 45%, transparent);
 }
 .ks-app .ks-tb:disabled {
   opacity: 0.35;
@@ -60,18 +69,30 @@
   flex: none;
 }
 .ks-app .ks-split .ks-tb:first-child {
-  border-radius: var(--k-radius-sm) 0 0 var(--k-radius-sm);
-  padding-right: 3px;
+  border-radius: 3px 0 0 3px;
+  width: 36px;
 }
-.ks-app .ks-tb-arrow {
-  min-width: 14px;
-  padding: 0 2px;
-  border-radius: 0 var(--k-radius-sm) var(--k-radius-sm) 0;
-  color: var(--k-muted);
+.ks-app .ks-split:hover .ks-tb {
+  background: var(--k-button-hover);
+}
+.ks-app .ks-tb.ks-tb-arrow {
+  width: 14px;
+  border-radius: 0 3px 3px 0;
+  color: var(--k-text);
+}
+.ks-app .ks-tb-corner {
+  position: absolute;
+  right: 2px;
+  bottom: 3px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.7;
 }
 .ks-app .ks-tb-sep {
   width: 1px;
-  height: 20px;
+  height: 26px;
   margin: 0 5px;
   background: var(--k-border);
   flex: none;
@@ -97,8 +118,8 @@
   background: color-mix(in srgb, var(--k-warning) 26%, transparent);
 }
 .ks-app .ks-tb-select {
-  height: 26px;
-  border-radius: var(--k-radius-sm);
+  height: 28px;
+  border-radius: 4px;
   border: 1px solid var(--k-border);
   background: var(--k-bg);
   color: var(--k-text);
@@ -106,57 +127,47 @@
   outline: none;
   flex: none;
 }
+.ks-app .ks-tb-select:hover,
 .ks-app .ks-tb-select:focus {
   border-color: var(--k-accent);
 }
 .ks-app .ks-tb-select.font {
-  width: 132px;
+  width: 150px;
 }
 .ks-app .ks-tb-select.size {
-  width: 54px;
+  width: 52px;
   margin-left: 4px;
 }
-.ks-app .ks-tb-select.numfmt {
-  width: 150px;
-  margin-right: 2px;
-}
-.ks-app .ks-colorbtn {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 20px;
-}
-.ks-app .ks-colorbtn i {
-  position: absolute;
-  left: 1px;
-  right: 1px;
-  bottom: 0;
-  height: 4px;
-  border-radius: 1px;
-  border: 1px solid color-mix(in srgb, var(--k-text) 25%, transparent);
+.ks-app .kss-colorglyph {
+  display: block;
+  color: var(--k-text);
 }
 
 /* ---------------------------------------------------------- formula bar */
+/* "Cell: [A1] fx [formula]" and the grip under it (sheet.py). */
 
 .ks-app .ks-fbar {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  padding: 5px 8px;
+  gap: 4px;
+  padding: 2px 4px;
   background: var(--k-surface);
-  border-bottom: 1px solid var(--k-border);
   flex: none;
 }
+.ks-app .ks-cell-label {
+  min-width: 28px;
+  line-height: 24px;
+  font-size: 12px;
+  color: var(--k-text);
+}
 .ks-app .ks-namebox {
-  width: 96px;
-  height: 26px;
-  padding: 0 7px;
-  border-radius: var(--k-radius-sm);
+  width: 64px;
+  height: 24px;
+  padding: 1px 4px;
+  border-radius: 0;
   border: 1px solid var(--k-border);
   background: var(--k-bg);
   color: var(--k-text);
-  font-family: var(--k-mono);
   font-size: 12px;
   outline: none;
   flex: none;
@@ -165,16 +176,21 @@
   border-color: var(--k-accent);
 }
 .ks-app .ks-fx {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 26px;
+  height: 24px;
+  padding: 1px 8px;
   border: 1px solid var(--k-border);
-  border-radius: var(--k-radius-sm);
-  background: var(--k-button);
-  color: var(--k-accent);
+  border-radius: 0;
+  background: var(--k-bg);
+  color: #3a78b4;
+  font: italic bold 13px/1 var(--k-font);
   cursor: pointer;
   flex: none;
+}
+.ks-app .ks-fx {
+  color: color-mix(in srgb, #3a78b4 70%, var(--k-text));
+}
+[data-dark='0'] .ks-app .ks-fx {
+  color: #3a78b4;
 }
 .ks-app .ks-fx:hover {
   background: var(--k-button-hover);
@@ -184,59 +200,99 @@
   flex: 1;
   min-width: 0;
   display: flex;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background: var(--k-bg);
+}
+.ks-app .ks-fbar-input:focus-within {
+  border-color: var(--k-accent);
 }
 .ks-app .ks-fbar-input textarea {
   flex: 1;
-  min-height: 26px;
-  padding: 4px 8px;
-  border-radius: var(--k-radius-sm);
-  border: 1px solid var(--k-border);
-  background: var(--k-bg);
+  height: 100%;
+  padding: 3px 6px;
+  border: none;
+  background: transparent;
   color: var(--k-text);
-  font-family: var(--k-mono);
+  font-family: var(--k-font);
   font-size: 12.5px;
   line-height: 16px;
+  white-space: pre;
   resize: none;
   outline: none;
-}
-.ks-app .ks-fbar-input textarea:focus {
-  border-color: var(--k-accent);
 }
 .ks-app .ks-fbar-input textarea::placeholder {
   color: var(--k-placeholder);
 }
+/* Python mode: monospace, highlighted (the text is drawn by the <pre> under a
+   transparent textarea), a faint Python-blue tint, the badge on the right. */
+.ks-app .ks-fbar-input.py {
+  background: color-mix(in srgb, #3776ab 6%, var(--k-bg));
+}
+.ks-app .ks-fbar-input.py textarea,
+.ks-app .ks-fbar-hl {
+  font-family: Consolas, var(--k-mono);
+  font-size: 13.3px;
+  line-height: 17px;
+  padding: 3px 120px 3px 6px;
+  tab-size: 4;
+}
 .ks-app .ks-fbar-input.py textarea {
-  padding-left: 34px;
-  border-color: color-mix(in srgb, var(--k-link) 45%, var(--k-border));
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: var(--k-text);
+  overflow: auto;
 }
-.ks-app .ks-py-badge {
+.ks-app .ks-fbar-input.py textarea::selection {
+  color: transparent;
+  background: color-mix(in srgb, var(--k-accent) 35%, transparent);
+}
+.ks-app .ks-fbar-hl {
   position: absolute;
-  left: 6px;
-  top: 5px;
-  padding: 0 4px;
-  border-radius: 4px;
-  font: 700 10px/16px var(--k-font);
-  color: var(--k-accent-text);
-  background: color-mix(in srgb, var(--k-link) 70%, #2f6fb0);
+  left: 0;
+  top: 0;
+  margin: 0;
+  color: var(--k-text);
+  pointer-events: none;
+  white-space: pre;
 }
-.ks-app .ks-fbar-btn {
+.ks-app .ks-py-btns {
+  position: absolute;
+  z-index: 2;
+  top: 2px;
+  right: 26px;
+  display: flex;
+  gap: 2px;
+}
+.ks-app .ks-py-btn {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border: none;
-  border-radius: var(--k-radius-sm);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
   background: transparent;
-  color: var(--k-muted);
   cursor: pointer;
-  flex: none;
 }
-.ks-app .ks-fbar-btn:hover {
+.ks-app .ks-py-btn:hover {
   background: var(--k-button-hover);
-  color: var(--k-text);
 }
-.ks-app .ks-fbar-btn.err {
-  color: var(--k-danger);
+.ks-app .ks-fbar-badge {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 22px;
+}
+.ks-app .ks-fbar-grip {
+  height: 4px;
+  flex: none;
+  cursor: ns-resize;
+  background: linear-gradient(var(--k-border), color-mix(in srgb, var(--k-border) 80%, var(--k-text)));
+  border-bottom: 1px solid var(--k-border);
 }
 
 /* the Python banner */
@@ -491,34 +547,50 @@
 .ks-app .ks-handle-w { left: -6px; top: calc(50% - 5px); cursor: ew-resize; }
 
 /* ------------------------------------------------------------ sheet tabs */
+/* QTabWidget South, document mode: ◀ ▶ + ∨ in the corner, closable tabs. */
 
 .ks-app .ks-tabs {
   display: flex;
   align-items: stretch;
-  height: 30px;
+  height: 34px;
   background: var(--k-chrome);
-  border-top: 1px solid var(--k-border);
+  border-top: 2px solid var(--k-accent);
   flex: none;
   user-select: none;
 }
 .ks-app .ks-tabs-nav {
   display: flex;
   align-items: center;
-  gap: 1px;
-  padding: 0 4px;
-  border-right: 1px solid var(--k-border);
+  padding: 0 2px;
   flex: none;
 }
-.ks-app .ks-tabs-nav .k-icon-btn {
-  width: 24px;
-  height: 24px;
+.ks-app .ks-tabs-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--k-text);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ks-app .ks-tabs-btn:hover:not(:disabled) {
+  background: var(--k-button-hover);
+}
+.ks-app .ks-tabs-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 .ks-app .ks-tabs-strip {
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
+  gap: 2px;
   overflow-x: auto;
   scrollbar-width: none;
   min-width: 0;
+  padding-left: 4px;
 }
 .ks-app .ks-tab-slot {
   display: flex;
@@ -528,27 +600,50 @@
   border-left-color: var(--k-accent);
 }
 .ks-app .ks-tab {
-  padding: 0 16px;
-  border: none;
-  border-right: 1px solid var(--k-border);
-  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+  padding: 0 8px 0 20px;
+  border: 1px solid transparent;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background: var(--k-alt);
   color: var(--k-muted);
   cursor: pointer;
   white-space: nowrap;
-  font-size: 12.5px;
+  font-size: 12px;
+  outline: none;
 }
-.ks-app .ks-tab:hover {
+.ks-app .ks-tab:hover:not(.on) {
   background: var(--k-button-hover);
   color: var(--k-text);
 }
 .ks-app .ks-tab.on {
   background: var(--k-bg);
   color: var(--k-text);
-  box-shadow: inset 0 -2px 0 var(--k-accent);
-  font-weight: 600;
+  border-color: var(--k-accent);
+  margin-top: -2px;
+  height: 32px;
+  font-weight: 700;
 }
 .ks-app .ks-tab.moving {
   opacity: 0.5;
+}
+.ks-app .ks-tab-x {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--k-text);
+  cursor: pointer;
+}
+.ks-app .ks-tab-x:hover {
+  background: color-mix(in srgb, var(--k-danger) 25%, transparent);
 }
 .ks-app .ks-tab-input {
   width: 120px;
@@ -562,14 +657,11 @@
 }
 
 /* ------------------------------------------------------------ status bar */
+/* "Ready" … Average / Count / Sum … − [zoom] 100% + (_build_status_bar) */
 
 .ks-app .ks-statusbar {
   gap: 14px;
-}
-.ks-app .ks-sb-file {
-  max-width: 34%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  background: var(--k-alt);
 }
 .ks-app .ks-sb-msg {
   flex: 1;
@@ -578,48 +670,38 @@
   gap: 6px;
   min-width: 0;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--k-text);
 }
 .ks-app .ks-sb-stats {
+  min-width: 300px;
+  padding: 0 8px;
+  text-align: right;
   white-space: pre;
   color: var(--k-text);
 }
-.ks-app .ks-sb-sel {
-  font-family: var(--k-mono);
-  font-size: 11px;
-}
 .ks-app .ks-sb-zoom {
-  border: none;
-  background: none;
-  color: var(--k-muted);
-  cursor: pointer;
-  padding: 0 4px;
-  font-size: 11.5px;
-}
-.ks-app .ks-sb-zoom:hover {
-  color: var(--k-text);
-}
-.ks-app .ks-sb-py {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  padding: 0 4px;
 }
-.ks-app .ks-sb-py i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--k-muted);
+.ks-app .ks-sb-zoom button {
+  border: none;
+  background: none;
+  color: var(--k-text);
+  cursor: pointer;
+  padding: 0 3px;
+  font-size: 13px;
 }
-.ks-app .ks-sb-py.idle i {
-  background: var(--k-success);
+.ks-app .ks-sb-zoom input[type='range'] {
+  width: 120px;
+  accent-color: var(--k-accent);
 }
-.ks-app .ks-sb-py.busy i,
-.ks-app .ks-sb-py.starting i {
-  background: var(--k-warning);
-}
-.ks-app .ks-sb-py.dead i {
-  background: var(--k-danger);
+.ks-app .ks-sb-pct {
+  min-width: 36px;
+  color: var(--k-text);
 }
 
 /* --------------------------------------------------------------- dialogs */
@@ -1007,4 +1089,597 @@
 .ks-doc h2 {
   margin: 0 0 4px;
   font-size: 22px;
+}
+
+/* ------------------------------------------------- the desktop's icons */
+/* Not scoped: menus (portalled to the page) show them too. */
+
+.kss-ico {
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+}
+.kss-ico img {
+  display: block;
+  pointer-events: none;
+}
+.kss-ico-l {
+  display: none !important;
+}
+[data-dark='0'] .kss-ico-l {
+  display: block !important;
+}
+[data-dark='0'] .kss-ico-d {
+  display: none !important;
+}
+.k-menu-icon.image .kss-ico img {
+  width: 16px;
+  height: 16px;
+}
+
+/* --------------------------------------------- Python: colours and badge */
+/* python_engine.PythonHighlighter; lighter equivalents on the dark theme. */
+
+.kpy-kw {
+  color: #7aa2ff;
+  font-weight: bold;
+}
+.kpy-num {
+  color: #4ec9a0;
+}
+.kpy-str {
+  color: #e8927a;
+}
+.kpy-com {
+  color: #8f9a93;
+  font-style: italic;
+}
+[data-dark='0'] .kpy-kw {
+  color: #0000c0;
+}
+[data-dark='0'] .kpy-num {
+  color: #098658;
+}
+[data-dark='0'] .kpy-str {
+  color: #a31515;
+}
+[data-dark='0'] .kpy-com {
+  color: #808080;
+}
+.kpy-line {
+  min-height: 1lh;
+}
+
+/* The "PY" badge (paint_py_badge): Python blue over yellow, raised. */
+.kpy-badge {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 6px;
+  margin: 1.5px;
+  box-shadow: inset 0 0 0 1.2px rgba(255, 255, 255, 0.59), 0 0 0 1px rgba(0, 0, 0, 0.31);
+  pointer-events: auto;
+}
+.kpy-badge-top,
+.kpy-badge-bot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+}
+.kpy-badge-top {
+  top: 0;
+}
+.kpy-badge-bot {
+  bottom: 0;
+}
+.kpy-eye {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+}
+.kpy-eye.a {
+  left: calc(50% - 3.4px - 2px);
+  top: calc(17% - 2px);
+}
+.kpy-eye.b {
+  left: calc(50% + 3.4px - 2px);
+  bottom: calc(17% - 2px);
+}
+.kpy-badge-py {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  font: bold 10px/1 Arial, Helvetica, sans-serif;
+  color: #fff;
+  text-shadow: 0.6px 0.9px 0 rgba(0, 0, 0, 0.43);
+}
+.kpy-badge-py.up {
+  top: 26%;
+  font-size: 9px;
+}
+.kpy-badge-loop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 75%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.kpy-badge-loop i {
+  font: bold 8px/1 Arial, Helvetica, sans-serif;
+  font-style: normal;
+  color: rgba(0, 0, 0, 0.63);
+}
+
+/* ------------------------------------------------ non-modal windows */
+
+.ks-app .ks-floatwin {
+  position: absolute;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--k-surface);
+  color: var(--k-text);
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+.ks-app .ks-floatwin.max {
+  border-radius: 0;
+  box-shadow: none;
+}
+.ks-app .ks-floatwin-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 4px 0 12px;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  cursor: default;
+  user-select: none;
+  flex: none;
+}
+.ks-app .ks-floatwin-title > span {
+  flex: 1;
+  font-weight: 600;
+  font-size: 12.5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ks-app .ks-floatwin-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--k-border) 50%, var(--k-border) 60%, transparent 60%, transparent 70%, var(--k-border) 70%, var(--k-border) 80%, transparent 80%);
+}
+
+/* ------------------------------------- the pop-out Python editor */
+
+.ks-app .kpy-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-bottom: 1px solid var(--k-border);
+  flex: none;
+}
+.ks-app .kpy-tb {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+}
+.ks-app .kpy-tb:hover {
+  background: var(--k-button-hover);
+}
+.ks-app .kpy-tb.on {
+  background: var(--k-selection);
+  border-color: color-mix(in srgb, var(--k-accent) 50%, transparent);
+}
+.ks-app .kpy-sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 3px;
+  background: var(--k-border);
+}
+.ks-app .kpy-running {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.ks-app .kpy-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px 8px;
+  gap: 4px;
+}
+.ks-app .kpy-hint {
+  color: var(--k-muted);
+  font-size: 12px;
+  flex: none;
+}
+.ks-app .kpy-split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ks-app .kpy-editor {
+  position: relative;
+  flex: 4;
+  min-height: 80px;
+  display: flex;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+  overflow: hidden;
+}
+.ks-app .kpy-editor:focus-within {
+  border-color: var(--k-accent);
+}
+.ks-app .kpy-gutter {
+  width: var(--kpy-gutter);
+  flex: none;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--k-text) 6%, var(--k-bg));
+  color: #808080;
+  user-select: none;
+}
+[data-dark='0'] .ks-app .kpy-gutter {
+  background: #f0f0f0;
+}
+.ks-app .kpy-gutter,
+.ks-app .kpy-code {
+  font-family: Consolas, var(--k-mono);
+  font-size: 14.6px;
+  line-height: 19px;
+}
+.ks-app .kpy-gutter > div {
+  padding-top: 2px;
+}
+.ks-app .kpy-ln {
+  height: 19px;
+  padding-right: 4px;
+  text-align: right;
+}
+.ks-app .kpy-code {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.ks-app .kpy-lines {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 2px;
+  pointer-events: none;
+}
+.ks-app .kpy-cur,
+.ks-app .kpy-err {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.ks-app .kpy-cur {
+  background: color-mix(in srgb, #3a78b4 14%, transparent);
+}
+[data-dark='0'] .ks-app .kpy-cur {
+  background: #eef5ff;
+}
+.ks-app .kpy-err {
+  background: color-mix(in srgb, #e04848 28%, transparent);
+}
+[data-dark='0'] .ks-app .kpy-err {
+  background: #ffe0e0;
+}
+.ks-app .kpy-code .kpy-hl,
+.ks-app .kpy-ta {
+  margin: 0;
+  padding: 2px 4px;
+  font: inherit;
+  line-height: 19px;
+  white-space: pre;
+  tab-size: 4;
+}
+.ks-app .kpy-code .kpy-hl {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--k-text);
+  pointer-events: none;
+}
+.ks-app .kpy-ta {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--k-text);
+  overflow: auto;
+}
+.ks-app .kpy-ta::selection {
+  color: transparent;
+  background: color-mix(in srgb, var(--k-accent) 35%, transparent);
+}
+.ks-app .kpy-complete {
+  position: absolute;
+  z-index: 5;
+  min-width: 160px;
+  max-height: 180px;
+  overflow: auto;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+}
+.ks-app .kpy-complete div {
+  padding: 1px 8px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ks-app .kpy-complete div.on {
+  background: var(--k-accent);
+  color: var(--k-accent-text);
+}
+.ks-app .kpy-output {
+  flex: 1;
+  min-height: 40px;
+  max-height: 150px;
+  margin: 0;
+  padding: 4px 6px;
+  overflow: auto;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+  color: var(--k-text);
+  font-family: Consolas, var(--k-mono);
+  font-size: 12.5px;
+  white-space: pre-wrap;
+}
+.ks-app .kpy-dialog.max .kpy-output {
+  max-height: 30%;
+}
+.ks-app .kpy-output.empty {
+  color: var(--k-placeholder);
+}
+.ks-app .kpy-output.err {
+  color: #e05a6a;
+}
+[data-dark='0'] .ks-app .kpy-output.err {
+  color: #b00020;
+}
+.ks-app .kpy-foot {
+  display: flex;
+  justify-content: flex-end;
+  flex: none;
+}
+.ks-doc.kpy-help table {
+  border-collapse: collapse;
+  margin: 6px 0;
+}
+.ks-doc.kpy-help th,
+.ks-doc.kpy-help td {
+  border: 1px solid var(--k-border);
+  padding: 3px 6px;
+  text-align: left;
+}
+.ks-doc.kpy-help pre {
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--k-alt);
+  overflow: auto;
+}
+
+/* The Python editor's Pick: a click on the grid gives a reference. */
+.ks-app.picking .ks-canvas {
+  cursor: crosshair !important;
+}
+
+/* ---------------------------------- symbol / emoji grids, Table Design */
+
+.ks-app .ks-symbols {
+  display: grid;
+  grid-template-columns: repeat(10, 28px);
+  gap: 1px;
+  padding: 4px;
+}
+.ks-app .ks-symbols button,
+.ks-app .ks-emoji-grid button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--k-border);
+  border-radius: 3px;
+  background: var(--k-button);
+  color: var(--k-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+.ks-app .ks-symbols button:hover,
+.ks-app .ks-emoji-grid button:hover {
+  background: var(--k-button-hover);
+  border-color: var(--k-accent);
+}
+.ks-app .ks-emoji {
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ks-app .ks-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 28px);
+  gap: 1px;
+}
+.ks-app .ks-emoji-grid button {
+  border-color: transparent;
+  background: transparent;
+  font-size: 16px;
+}
+.ks-app .ks-tabledesign {
+  max-height: 420px;
+  overflow: auto;
+  padding: 4px 8px 8px;
+}
+.ks-app .ks-td-opts {
+  display: flex;
+  gap: 14px;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--k-border);
+}
+.ks-app .ks-td-opts label {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.ks-app .ks-td-cat {
+  display: block;
+  margin: 8px 0 4px;
+}
+.ks-app .ks-td-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 78px);
+  gap: 4px;
+}
+.ks-app .ks-td-btn {
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  line-height: 0;
+  cursor: pointer;
+}
+.ks-app .ks-td-btn:hover {
+  border-color: #3078c6;
+}
+
+/* ----------------------------------------------------- Science tools */
+
+.ks-app .ks-sci-body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+}
+.ks-app .ks-sci-body fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 6px 8px 8px;
+  border: 1px solid var(--k-border);
+  border-radius: 4px;
+}
+.ks-app .ks-sci-body legend {
+  padding: 0 4px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.ks-app .ks-sci-body label {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+.ks-app .ks-sci-body label.disabled {
+  opacity: 0.5;
+}
+.ks-app .ks-sci-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ks-app .ks-sci-row input {
+  width: 90px;
+}
+.ks-app .ks-sci-ref.picking {
+  border-color: var(--k-accent);
+  background: color-mix(in srgb, var(--k-accent) 10%, var(--k-bg));
+}
+.ks-app .ks-sci-hint {
+  margin-left: 116px;
+  color: var(--k-muted);
+  font-size: 12px;
+}
+.ks-app .ks-sci-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ks-stats {
+  margin: 0;
+  font-family: var(--k-font);
+  white-space: pre;
+}
+
+/* Insert Function (Shift+F3) */
+.ks-app .ks-insfn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ks-app .ks-insfn-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ks-app .ks-insfn-row .k-input {
+  flex: 1;
+}
+.ks-app .ks-insfn-list {
+  height: 200px;
+  overflow: auto;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+  outline: none;
+}
+.ks-app .ks-insfn-list:focus {
+  border-color: var(--k-accent);
+}
+.ks-app .ks-insfn-list div {
+  padding: 1px 6px;
+  cursor: default;
+}
+.ks-app .ks-insfn-list div.on {
+  background: var(--k-accent);
+  color: var(--k-accent-text);
+}
+.ks-app .ks-insfn-sig {
+  min-height: 1.2em;
+}
+.ks-app .ks-insfn-desc {
+  min-height: 36px;
+  margin: 0;
+  white-space: pre-wrap;
 }

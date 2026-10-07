@@ -175,12 +175,36 @@ export function toggleFlag(book: Book, flag: 'bold' | 'italic' | 'underline' | '
   void formatCells(book, { [flag]: on ? true : undefined }, label)
 }
 
-export type BorderKind = 'all' | 'outside' | 'inside' | 'top' | 'bottom' | 'left' | 'right' | 'none' | 'thick'
+export type BorderKind =
+  | 'all' | 'outside' | 'inside' | 'top' | 'bottom' | 'left' | 'right' | 'none' | 'thick'
+  | 'thick_outside' | 'bottom_double' | 'thick_bottom' | 'top_bottom' | 'top_thick_bottom' | 'top_double_bottom'
 
+/** The desktop's Borders menu (mainwindow._BORDER_PRESETS), in its order; null = separator. */
+export const BORDER_PRESETS: ([string, BorderKind] | null)[] = [
+  ['Bottom Border', 'bottom'],
+  ['Top Border', 'top'],
+  ['Left Border', 'left'],
+  ['Right Border', 'right'],
+  ['No Border', 'none'],
+  null,
+  ['All Borders', 'all'],
+  ['Outside Borders', 'outside'],
+  ['Thick Outside Borders', 'thick_outside'],
+  null,
+  ['Bottom Double Border', 'bottom_double'],
+  ['Thick Bottom Border', 'thick_bottom'],
+  ['Top and Bottom Border', 'top_bottom'],
+  ['Top and Thick Bottom Border', 'top_thick_bottom'],
+  ['Top and Double Bottom Border', 'top_double_bottom'],
+]
+
+/** Apply a border preset to the selection, as the desktop's _apply_border_preset. */
 export function setBorders(book: Book, kind: BorderKind, color = '#000000') {
   const sh = book.active
   const thin: Border = { style: 1, color, width: 1 }
-  const thick: Border = { style: 1, color, width: 2.5 }
+  const thick: Border = { style: 1, color, width: 2 }
+  // The desktop approximates a double line with a dashed one.
+  const double: Border = { style: 2, color, width: 1 }
   const ranges = sh.sel.ranges
   const edge = (r: number, c: number) => {
     const g = ranges.find((x) => r >= x.r1 && r <= x.r2 && c >= x.c1 && c <= x.c2)!
@@ -191,23 +215,32 @@ export function setBorders(book: Book, kind: BorderKind, color = '#000000') {
     (f, r, c) => {
       const e = edge(r, c)
       const p: Partial<Fmt> = {}
-      if (kind === 'none') Object.assign(p, { b_top: undefined, b_bottom: undefined, b_left: undefined, b_right: undefined })
-      else if (kind === 'all') Object.assign(p, { b_top: thin, b_bottom: thin, b_left: thin, b_right: thin })
-      else if (kind === 'outside' || kind === 'thick') {
-        const b = kind === 'thick' ? thick : thin
+      const box = (b: Border) => {
         if (e.top) p.b_top = b
         if (e.bottom) p.b_bottom = b
         if (e.left) p.b_left = b
         if (e.right) p.b_right = b
-      } else if (kind === 'inside') {
+      }
+      if (kind === 'none') Object.assign(p, { b_top: undefined, b_bottom: undefined, b_left: undefined, b_right: undefined })
+      else if (kind === 'all') Object.assign(p, { b_top: thin, b_bottom: thin, b_left: thin, b_right: thin })
+      else if (kind === 'outside') box(thin)
+      else if (kind === 'thick' || kind === 'thick_outside') box(thick)
+      else if (kind === 'inside') {
         if (!e.bottom) p.b_bottom = thin
         if (!e.right) p.b_right = thin
         if (!e.top) p.b_top = thin
         if (!e.left) p.b_left = thin
+      } else if (kind === 'bottom_double') {
+        if (e.bottom) p.b_bottom = double
+      } else if (kind === 'thick_bottom') {
+        if (e.bottom) p.b_bottom = thick
+      } else if (kind === 'top_bottom' || kind === 'top_thick_bottom' || kind === 'top_double_bottom') {
+        if (e.top) p.b_top = thin
+        if (e.bottom) p.b_bottom = kind === 'top_bottom' ? thin : kind === 'top_thick_bottom' ? thick : double
       } else if (e[kind]) p[`b_${kind}` as const] = thin
       return patchFmt(f, p)
     },
-    'Borders',
+    `Border: ${kind}`,
   )
 }
 
@@ -1117,3 +1150,117 @@ export function fillTarget(sh: Sheet, src: Range, r: number, c: number): Range {
 }
 
 export const colLabel = colName
+
+// ------------------------------------------------------------ sparklines
+
+/** One sparkline per selected column, in a target row (insert_ops.insert_sparklines_bulk). */
+export function insertSparklines(book: Book, targetRow: number, type: 'line' | 'bar' | 'winloss' = 'line', color = '#4472c4') {
+  const g = book.active.sel.ranges[0]
+  layoutStep(book, 'Insert Sparklines', (s) => {
+    const sp = { ...(s.insertOps.sparklines ?? {}) }
+    for (let c = g.c1; c <= g.c2; c++) sp[`${targetRow},${c}`] = { col: c, r1: g.r1, r2: g.r2, type, color }
+    s.insertOps = { ...s.insertOps, sparklines: sp }
+  })
+}
+
+/** A sparkline in one cell from a column range (insert_ops.SparklineDialog). */
+export function insertSparkline(book: Book, r: number, c: number, data: Range, type: 'line' | 'bar' | 'winloss' = 'line', color = '#4472c4') {
+  layoutStep(book, 'Insert Sparkline', (s) => {
+    s.insertOps = { ...s.insertOps, sparklines: { ...(s.insertOps.sparklines ?? {}), [`${r},${c}`]: { col: data.c1, r1: data.r1, r2: data.r2, type, color } } }
+  })
+}
+
+/** Remove the sparklines of the selected cells; false when there were none. */
+export function removeSparklines(book: Book): boolean {
+  const sh = book.active
+  const sp = sh.insertOps.sparklines ?? {}
+  const gone = Object.keys(sp).filter((rc) => {
+    const [r, c] = rc.split(',').map(Number)
+    return sh.sel.ranges.some((g) => r >= g.r1 && r <= g.r2 && c >= g.c1 && c <= g.c2)
+  })
+  if (!gone.length) return false
+  layoutStep(book, 'Remove Sparklines', (s) => {
+    const next = { ...(s.insertOps.sparklines ?? {}) }
+    for (const rc of gone) delete next[rc]
+    s.insertOps = { ...s.insertOps, sparklines: next }
+  })
+  return true
+}
+
+/** Insert a character at the caret while typing, else after the cell's text (_insert_symbol). */
+export function insertCharacters(book: Book, text: string) {
+  const e = book.state.edit
+  if (e) {
+    const t = e.text.slice(0, e.caret) + text + e.text.slice(e.caret)
+    book.setEdit({ text: t, caret: e.caret + text.length, point: null })
+    return
+  }
+  const sh = book.active
+  const { r, c } = sh.sel.active
+  const old = sh.cells.get(key(r, c))?.s ?? ''
+  void book.setCells(sh, [[r, c, old + text]], 'Insert Symbol')
+}
+
+// ------------------------------------------- statistics, transpose, cells
+
+export { fmt6g, statisticsText } from './pytext'
+
+/** The numbers in ranges of the sheet (cells that read as numbers). */
+export function numbersIn(sh: Sheet, ranges: Range[]): number[] {
+  const out: number[] = []
+  for (const g of ranges)
+    for (const [k, cell] of sh.cells) {
+      const r = keyRow(k)
+      const c = keyCol(k)
+      if (r < g.r1 || r > g.r2 || c < g.c1 || c > g.c2) continue
+      const v = cell.n ?? (cell.t.trim() ? Number(cell.t) : NaN)
+      if (Number.isFinite(v)) out.push(v)
+    }
+  return out
+}
+
+/** Insert ▸ Pivot / Transpose: swap the selection's rows and columns in place (insert_ops.transpose_selection). */
+export async function transposeSelection(book: Book) {
+  const sh = book.active
+  const g = sh.sel.ranges[0]
+  const nr = g.r2 - g.r1 + 1
+  const nc = g.c2 - g.c1 + 1
+  if (g.r1 + nc > sh.rows || g.c1 + nr > sh.cols) return book.showFlash('Not enough rows or columns for the transposed data.')
+  const src = (r: number, c: number) => sh.cells.get(key(r, c))?.s ?? ''
+  const out = new Map<Key, [number, number, string]>()
+  for (let r = g.r1; r <= g.r2; r++) for (let c = g.c1; c <= g.c2; c++) out.set(key(r, c), [r, c, ''])
+  for (let r = 0; r < nr; r++) for (let c = 0; c < nc; c++) out.set(key(g.r1 + c, g.c1 + r), [g.r1 + c, g.c1 + r, src(g.r1 + r, g.c1 + c)])
+  const cells = [...out.values()].filter(([r, c, s]) => src(r, c) !== s)
+  if (cells.length) await book.setCells(sh, cells, 'Transpose')
+  const t = { r1: g.r1, c1: g.c1, r2: g.r1 + nc - 1, c2: g.c1 + nr - 1 }
+  book.select({ ranges: [t], active: { r: t.r1, c: t.c1 }, anchor: { r: t.r1, c: t.c1 } })
+}
+
+/**
+ * Insert Cells (shift down) / Delete Cells (shift up) in the selected
+ * columns only (sheet._insert_cells / _delete_cells): the cells' contents
+ * and formats move.
+ */
+export async function shiftCells(book: Book, down: boolean) {
+  const sh = book.active
+  const g = sh.sel.ranges[0]
+  const n = g.r2 - g.r1 + 1
+  const last = Math.min(sh.rows - 1, Math.max(usedExtent(sh).rows, g.r2) + n)
+  const cells: [number, number, string][] = []
+  const fmts: { r: number; c: number }[] = []
+  const newFmt = new Map<Key, Fmt | undefined>()
+  for (let c = g.c1; c <= g.c2; c++)
+    for (let r = g.r1; r <= last; r++) {
+      const from = down ? r - n : r + n
+      const blank = down && r < g.r1 + n
+      const value = blank ? '' : (sh.cells.get(key(from, c))?.s ?? '')
+      if ((sh.cells.get(key(r, c))?.s ?? '') !== value) cells.push([r, c, value])
+      const f = blank ? undefined : sh.formats.get(key(from, c))
+      if (JSON.stringify(sh.formats.get(key(r, c)) ?? null) !== JSON.stringify(f ?? null)) {
+        fmts.push({ r, c })
+        newFmt.set(key(r, c), f)
+      }
+    }
+  if (cells.length) await book.setCells(sh, cells, down ? 'Insert Cells' : 'Delete Cells')
+  if (fmts.length) await formatCells(book, (_f, r, c) => newFmt.get(key(r, c)), down ? 'Insert Cells' : 'Delete Cells', fmts)
+}
