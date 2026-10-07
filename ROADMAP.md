@@ -129,7 +129,7 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       Solitaire, MiniGame, ChemistryLab) as TypeScript ports in the same style.
 
 ### Requested 2026-10-07 (to do next)
-- [ ] **KherveDB 5.0 parity** (user, 2026-10-07): the desktop KherveDB-React 5.0 has a tabbed
+- [x] **KherveDB 5.0 parity** (done 2026-10-07; check in a real browser: the Claude test pane blocks sandboxed frames) (user, 2026-10-07): the desktop KherveDB-React 5.0 has a tabbed
       "Other Databases & Properties" window with embedded browsers that follow the selected
       element (commit 2026-09-27 07:48, src-tauri/src/references.rs). The KherveOS port opened
       those sites in new browser tabs instead. Do it inside KherveOS: the periodic table
@@ -138,7 +138,7 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       shown in sandboxed iframes without allow-same-origin (third-party scripts must not
       reach KherveOS cookies/storage); decline cookie banners like the desktop does; Google
       Scholar may still need a real tab.
-- [ ] **Every web link opens in the KherveOS Browser** (user, 2026-10-07): one
+- [x] **Every web link opens in the KherveOS Browser** (done 2026-10-07) (user, 2026-10-07): one
       `os.openUrl()` used by all apps instead of window.open/target=_blank (KherveDB,
       Email, KherveAI, KherveBook, Help menus…), plus a shell-wide catch for links. Sites
       that refuse framing need the server page-fetcher from the KherveDB item: public hosts
