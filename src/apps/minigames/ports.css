@@ -1,0 +1,55 @@
+/* Extras for the KherveFitting ports (Meteor Smash, Flappy Khervey,
+   Solitaire, Electron Game, Material Lab), on top of minigames.css. Scoped
+   under .mg-app; colours from the theme variables. */
+
+/* a meter in the side panel (Electron Game's decay, Material Lab's progress) */
+.mg-app .mg-meter {
+  position: relative;
+  height: 8px;
+  margin-top: 3px;
+  border-radius: 4px;
+  background: var(--k-button);
+  border: 1px solid var(--k-border);
+  overflow: hidden;
+}
+.mg-app .mg-meter > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 4px;
+  background: var(--k-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--k-accent) 55%, transparent);
+  transition: width 0.15s linear;
+}
+.mg-app .mg-meter.mg-hot > i {
+  background: var(--k-danger);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--k-danger) 55%, transparent);
+}
+
+/* the lights used as buttons (Flappy's difficulty) */
+.mg-app button.mg-light {
+  padding: 0;
+  cursor: pointer;
+}
+.mg-app button.mg-light:disabled {
+  cursor: default;
+}
+
+/* a row of small buttons in the side panel */
+.mg-app .mg-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mg-app .mg-tools .k-btn {
+  flex: 1;
+  padding: 0 6px;
+}
+
+/* where clicks place things */
+.mg-app.mg-electrons.mg-playing .mg-stage {
+  cursor: crosshair;
+}
+.mg-app.mg-solitaire.mg-playing .mg-stage,
+.mg-app.mg-lab.mg-playing .mg-stage {
+  cursor: default;
+}
