@@ -114,8 +114,8 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       2026-10-07 (desktop core in Pyodide). Check: typing straight into a selected cell
       (the formula bar works); not ported: lmfit peak dialog, cell buttons, =MYFUNC from
       =PY, printing, spell check.
-- [x] KhervePaint (`../KhervePaint`) — raster + vector canvas — ported 2026-10-07, committed
-      before a browser test: open it and check (no molecule/crystal palettes, raster PDF)
+- [x] KhervePaint (`../KhervePaint`) — raster + vector canvas — done 2026-10-07, tested in the
+      browser (draw, properties). Not ported: molecule/crystal/3D palettes; PDF is raster
 - [ ] KherveFitting (`../KherveFitting`, develop) — first extract a wx-free fitting
       core (`Peak_Functions.py`, backgrounds, file readers) to run in Pyodide, then the
       web UI (spectrum plot, peak table, fit)
