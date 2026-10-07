@@ -2,7 +2,7 @@
 // downloaded the first time a window of theirs opens.
 
 import {
-  Atom, Blocks, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
+  Atom, Blocks, FlaskConical, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sheet, Sigma, Sparkles, SquareTerminal,
 } from 'lucide-react'
 import type { AppManifest } from './types'
@@ -99,6 +99,21 @@ export const APPS: AppManifest[] = [
     defaultSize: { w: 1200, h: 760 },
     minSize: { w: 640, h: 420 },
     fileTypes: ['.kslide'],
+  },
+  {
+    id: 'khervelab',
+    name: 'KherveLAB',
+    icon: FlaskConical,
+    color: '#22b357',
+    image: '/icons/apps/khervelab.png',
+    brand: { label: 'KLab', from: '#3ccf6e', to: '#138a3c' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'Book the lab’s instruments together: calendars, approval and rates',
+    load: () => import('@/apps/khervelab/KherveLAB'),
+    defaultSize: { w: 1180, h: 760 },
+    minSize: { w: 760, h: 480 },
+    singleton: true,
   },
   {
     id: 'khervepy',

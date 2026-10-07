@@ -307,6 +307,57 @@ export const APP_TOOL_SETS: AppToolSet[] = [
     ],
   },
   {
+    app: 'khervelab',
+    name: 'KherveLAB',
+    summary: 'lab instrument booking (instruments, free slots, my bookings).',
+    keywords: ['khervelab', 'instrument', 'instruments', 'booking', 'bookings', 'book', 'slot', 'slots', 'lab', 'reserve', 'xps', 'tga', 'bet', 'glovebox'],
+    tools: [
+      {
+        action: 'list_instruments',
+        description: 'List the lab\'s instruments: id, name, how they are booked (hours, slots), approval, your hourly rate and status (out of order…).',
+        inputSchema: object({}),
+        readOnly: true,
+      },
+      {
+        action: 'free_slots',
+        description: 'Show the slots of an instrument you could book now (free, within its rules), from a date for some days. Times are lab time.',
+        inputSchema: object(
+          {
+            instrument: str('Instrument name or id, e.g. "XPS".'),
+            date: str('First day, "YYYY-MM-DD" (default: today).'),
+            days: int('How many days (1-14, default 1).'),
+          },
+          ['instrument'],
+        ),
+        readOnly: true,
+      },
+      {
+        action: 'book',
+        description: 'Book an instrument from start to end (lab time, "YYYY-MM-DD HH:MM"). Checks the rules first, then asks the user to confirm. Adjacent slots can be one booking.',
+        inputSchema: object(
+          {
+            instrument: str('Instrument name or id.'),
+            start: str('Start, e.g. "2026-10-07 09:00".'),
+            end: str('End, e.g. "2026-10-07 11:00".'),
+            purpose: str('What it is for (samples, project).'),
+          },
+          ['instrument', 'start', 'end'],
+        ),
+      },
+      {
+        action: 'my_bookings',
+        description: 'List your upcoming bookings (id, instrument, times, status, cost, whether you can still cancel).',
+        inputSchema: object({}),
+        readOnly: true,
+      },
+      {
+        action: 'cancel_booking',
+        description: 'Cancel one of your own bookings that has not started (asks the user to confirm). Get the id from khervelab_my_bookings.',
+        inputSchema: object({ booking_id: int('The booking id.'), reason: str('Why (optional).') }, ['booking_id']),
+      },
+    ],
+  },
+  {
     app: 'files',
     name: 'Files',
     summary: 'the file manager window.',

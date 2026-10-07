@@ -1,0 +1,835 @@
+/* KherveLAB — every rule is scoped under .kl-root and uses only the theme's --k-* colours. */
+
+.kl-root {
+  --kl-closed: color-mix(in srgb, var(--k-text) 3%, var(--k-bg));
+  --kl-free: color-mix(in srgb, var(--k-accent) 7%, var(--k-surface));
+  --kl-free-border: color-mix(in srgb, var(--k-accent) 22%, var(--k-border));
+  --kl-booked: color-mix(in srgb, var(--k-accent) 62%, var(--k-bg));
+  --kl-problem: color-mix(in srgb, var(--k-warning) 28%, var(--k-surface));
+  --kl-down: color-mix(in srgb, var(--k-danger) 30%, var(--k-surface));
+  --kl-line: color-mix(in srgb, var(--k-border) 60%, transparent);
+}
+
+.kl-root .kl-app {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  outline: none;
+  position: relative;
+}
+.kl-root .kl-flex {
+  flex: 1;
+}
+.kl-root .kl-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.kl-root .kl-small {
+  font-size: 12px;
+}
+.kl-root .kl-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--k-text) 15%, transparent);
+}
+.kl-root .kl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kl-root .kl-row.kl-wrap {
+  flex-wrap: wrap;
+}
+.kl-root .kl-center-row {
+  justify-content: center;
+}
+
+/* ------------------------------------------------------------------ sidebar */
+
+.kl-root .kl-side {
+  width: 196px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px;
+  background: var(--k-chrome);
+  border-right: 1px solid var(--k-border);
+  overflow-y: auto;
+}
+.kl-root .kl-side-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 10px;
+  font-weight: 600;
+  color: var(--k-accent);
+}
+.kl-root .kl-side-head span {
+  color: var(--k-text);
+}
+.kl-root .kl-side-label {
+  padding: 6px 8px 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--k-muted);
+}
+.kl-root .kl-side-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--k-radius-sm, 6px);
+  background: transparent;
+  color: var(--k-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.kl-root .kl-side-item:hover {
+  background: var(--k-button-hover);
+}
+.kl-root .kl-side-item.active {
+  background: var(--k-selection);
+}
+.kl-root .kl-side-issue {
+  margin-left: auto;
+  display: inline-flex;
+}
+.kl-root .kl-side-issue.down {
+  color: var(--k-danger);
+}
+.kl-root .kl-side-issue.problem {
+  color: var(--k-warning);
+}
+.kl-root .kl-side-sep {
+  height: 1px;
+  margin: 8px 4px;
+  background: var(--k-border);
+}
+.kl-root .kl-badge {
+  margin-left: auto;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--k-accent);
+  color: var(--k-accent-text);
+  font-size: 11px;
+  text-align: center;
+}
+.kl-root .kl-side-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-top: 1px solid var(--k-border);
+  font-size: 12px;
+}
+.kl-root .kl-side-foot span {
+  color: var(--k-muted);
+  font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ main and toolbar */
+
+.kl-root .kl-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg);
+}
+.kl-root .kl-banner {
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--k-warning) 16%, var(--k-bg));
+  border-bottom: 1px solid var(--k-border);
+  font-size: 13px;
+}
+.kl-root .kl-toolbar {
+  gap: 6px;
+}
+.kl-root .kl-title {
+  margin-left: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.kl-root .kl-seg {
+  display: inline-flex;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm, 6px);
+  overflow: hidden;
+  flex: none;
+}
+.kl-root .kl-seg button {
+  padding: 4px 12px;
+  border: none;
+  background: var(--k-button);
+  color: var(--k-text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.kl-root .kl-seg button + button {
+  border-left: 1px solid var(--k-border);
+}
+.kl-root .kl-seg button:hover {
+  background: var(--k-button-hover);
+}
+.kl-root .kl-seg button.active {
+  background: var(--k-accent);
+  color: var(--k-accent-text);
+}
+.kl-root .kl-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  padding: 6px 14px 0;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.kl-root .kl-issue-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+.kl-root .kl-issue-line.down {
+  color: var(--k-danger);
+}
+.kl-root .kl-issue-line.problem {
+  color: var(--k-warning);
+}
+.kl-root .kl-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 6px 14px 8px;
+  font-size: 11px;
+  color: var(--k-muted);
+}
+.kl-root .kl-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.kl-root .kl-legend i {
+  width: 12px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--k-border);
+}
+.kl-root .kl-legend i.free {
+  background: var(--kl-free);
+  border-color: var(--kl-free-border);
+}
+.kl-root .kl-legend i.booked {
+  background: var(--kl-booked);
+}
+.kl-root .kl-legend i.pending {
+  border: 1px dashed var(--k-accent);
+  background: color-mix(in srgb, var(--k-accent) 18%, var(--k-bg));
+}
+.kl-root .kl-legend i.problem {
+  background: var(--kl-problem);
+}
+.kl-root .kl-legend i.down {
+  background: var(--kl-down);
+}
+.kl-root .kl-legend i.closed {
+  background: var(--kl-closed);
+}
+.kl-root .kl-status {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------------ calendar */
+
+.kl-root .kl-cal {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--k-border);
+}
+.kl-root .kl-cal-head {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  border-bottom: 1px solid var(--k-border);
+  background: var(--k-surface);
+}
+.kl-root .kl-gutter {
+  width: 52px;
+  flex: none;
+  position: relative;
+}
+.kl-root .kl-cal-colhead {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  border-left: 1px solid var(--k-border);
+}
+.kl-root .kl-cal-colhead.today {
+  color: var(--k-accent);
+}
+.kl-root .kl-cal-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.kl-root .kl-cal-body {
+  display: flex;
+  position: relative;
+}
+.kl-root .kl-hour-label {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--k-muted);
+  font-variant-numeric: tabular-nums;
+}
+.kl-root .kl-cal-grid {
+  flex: 1;
+  position: relative;
+  user-select: none;
+  touch-action: none;
+}
+.kl-root .kl-col {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--kl-closed);
+  border-left: 1px solid var(--k-border);
+  /* the hours, marked lightly beside the time labels */
+  background-image: linear-gradient(to bottom, var(--kl-line) 1px, transparent 1px);
+  background-size: 8px 45px;
+  background-repeat: repeat-y;
+}
+.kl-root .kl-col.plain {
+  background-image: none;
+  background-color: var(--k-bg);
+}
+.kl-root .kl-col.today {
+  background-color: color-mix(in srgb, var(--k-accent) 4%, var(--kl-closed));
+}
+.kl-root .kl-hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--kl-line);
+  pointer-events: none;
+}
+.kl-root .kl-slot {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  border-radius: 6px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--k-text) 3%, var(--kl-free)), var(--kl-free));
+  border: 1px solid var(--kl-free-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  cursor: crosshair;
+  box-sizing: border-box;
+}
+.kl-root .kl-slot + .kl-slot {
+  margin-top: 1px;
+}
+.kl-root .kl-slot.clip-top {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top-style: dotted;
+}
+.kl-root .kl-slot.clip-bottom {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-style: dotted;
+}
+.kl-root .kl-slot.problem {
+  background: var(--kl-problem);
+  border-color: color-mix(in srgb, var(--k-warning) 50%, var(--k-border));
+}
+.kl-root .kl-slot.down {
+  background: var(--kl-down);
+  border-color: color-mix(in srgb, var(--k-danger) 50%, var(--k-border));
+}
+.kl-root .kl-slot-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px;
+  font-size: 10px;
+  color: var(--k-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+}
+.kl-root .kl-selection {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--k-accent) 35%, transparent);
+  border: 2px solid var(--k-accent);
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 3;
+}
+.kl-root .kl-selection span,
+.kl-root .kl-ghost span {
+  display: block;
+  padding: 2px 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--k-text);
+}
+.kl-root .kl-booking {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 2px 5px 2px 7px;
+  border-radius: 6px;
+  background: var(--kl-booked);
+  color: var(--k-accent-text);
+  border-left: 4px solid var(--kl-inst, var(--k-accent));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  font-size: 11px;
+  line-height: 1.3;
+  overflow: hidden;
+  z-index: 2;
+  cursor: pointer;
+}
+.kl-root .kl-booking.editable {
+  cursor: grab;
+}
+.kl-root .kl-booking.mine {
+  background: color-mix(in srgb, var(--k-accent) 82%, var(--k-bg));
+}
+.kl-root .kl-booking.pending {
+  background: color-mix(in srgb, var(--k-accent) 16%, var(--k-bg));
+  color: var(--k-text);
+  border-top: 1px dashed var(--k-accent);
+  border-right: 1px dashed var(--k-accent);
+  border-bottom: 1px dashed var(--k-accent);
+}
+.kl-root .kl-booking.issue-down {
+  outline: 2px solid var(--k-danger);
+  outline-offset: -2px;
+}
+.kl-root .kl-booking.issue-problem {
+  outline: 2px solid var(--k-warning);
+  outline-offset: -2px;
+}
+.kl-root .kl-booking.dragging {
+  opacity: 0.35;
+}
+.kl-root .kl-booking-who {
+  font-weight: 600;
+}
+.kl-root .kl-booking-line {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0.9;
+}
+.kl-root .kl-resize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  cursor: ns-resize;
+}
+.kl-root .kl-ghost {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: 2px dashed var(--k-accent);
+  border-left: 4px solid var(--kl-inst, var(--k-accent));
+  background: color-mix(in srgb, var(--k-accent) 25%, transparent);
+  pointer-events: none;
+  z-index: 4;
+}
+.kl-root .kl-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--k-danger);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ------------------------------------------------------------------ pages, tables */
+
+.kl-root .kl-page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 18px 24px;
+}
+.kl-root .kl-page h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.kl-root .kl-page h3 {
+  margin: 18px 0 6px;
+  font-size: 13px;
+  color: var(--k-muted);
+}
+.kl-root .kl-page-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.kl-root .kl-whose {
+  width: auto;
+  min-width: 140px;
+}
+.kl-root .kl-summary {
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.kl-root .kl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.kl-root .kl-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--k-muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--k-border);
+  white-space: nowrap;
+}
+.kl-root .kl-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--k-border) 60%, transparent);
+  vertical-align: middle;
+}
+.kl-root .kl-table tbody tr:hover {
+  background: var(--k-alt);
+}
+.kl-root .kl-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.kl-root .kl-table .kl-purpose {
+  max-width: 260px;
+}
+.kl-root .kl-table .kl-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.kl-root .kl-table .kl-actions > * + * {
+  margin-left: 6px;
+}
+.kl-root .kl-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  white-space: nowrap;
+  border: 1px solid var(--k-border);
+}
+.kl-root .kl-pill + .kl-pill {
+  margin-left: 4px;
+}
+.kl-root .kl-pill.approved {
+  background: color-mix(in srgb, var(--k-success) 20%, var(--k-bg));
+  border-color: color-mix(in srgb, var(--k-success) 45%, var(--k-border));
+}
+.kl-root .kl-pill.pending {
+  background: color-mix(in srgb, var(--k-warning) 18%, var(--k-bg));
+  border-color: color-mix(in srgb, var(--k-warning) 45%, var(--k-border));
+}
+.kl-root .kl-pill.rejected {
+  background: color-mix(in srgb, var(--k-danger) 18%, var(--k-bg));
+  border-color: color-mix(in srgb, var(--k-danger) 45%, var(--k-border));
+}
+.kl-root .kl-pill.cancelled {
+  color: var(--k-muted);
+}
+.kl-root .kl-tag {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--k-muted);
+}
+
+/* ------------------------------------------------------------------ admin */
+
+.kl-root .kl-split {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.kl-root .kl-split-list {
+  width: 190px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 0;
+}
+.kl-root .kl-split-list .k-btn {
+  margin-bottom: 4px;
+}
+.kl-root .kl-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--k-radius-sm, 6px);
+  background: transparent;
+  color: var(--k-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.kl-root .kl-list-item:hover {
+  background: var(--k-button-hover);
+}
+.kl-root .kl-list-item.active {
+  background: var(--k-selection);
+}
+.kl-root .kl-list-item.retired {
+  color: var(--k-muted);
+}
+.kl-root .kl-split-main {
+  flex: 1;
+  min-width: 0;
+}
+.kl-root .kl-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kl-root .kl-editor.kl-narrow {
+  max-width: 620px;
+}
+.kl-root .kl-fieldset {
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  background: var(--k-surface);
+  min-width: 0;
+}
+.kl-root .kl-fieldset legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--k-accent);
+}
+.kl-root .kl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px 14px;
+}
+.kl-root .kl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.kl-root .kl-field > span {
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.kl-root .kl-field small {
+  font-size: 11px;
+}
+.kl-root .kl-field textarea {
+  resize: vertical;
+  font: inherit;
+}
+.kl-root .kl-num {
+  max-width: 110px;
+}
+.kl-root .kl-colour {
+  width: 54px;
+  height: 30px;
+  padding: 0 2px;
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+  background: var(--k-button);
+}
+.kl-root .kl-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.kl-root .kl-trained {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 4px 12px;
+}
+.kl-root .kl-sessions {
+  margin-top: 8px;
+}
+.kl-root .kl-sessions td .k-input {
+  min-width: 70px;
+}
+.kl-root .kl-days {
+  white-space: nowrap;
+}
+.kl-root .kl-days label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 10px;
+  color: var(--k-muted);
+  margin-right: 2px;
+}
+.kl-root .kl-editor-buttons,
+.kl-root .kl-modal-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ------------------------------------------------------------------ dialogs */
+
+.kl-root .kl-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.kl-root .kl-modal {
+  width: min(460px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg);
+  color: var(--k-text);
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  box-shadow: var(--k-shadow-lg);
+  overflow: hidden;
+}
+.kl-root .kl-modal.wide {
+  width: min(680px, 100%);
+}
+.kl-root .kl-modal-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 0 16px;
+  font-weight: 600;
+}
+.kl-root .kl-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+.kl-root .kl-modal-buttons {
+  justify-content: flex-end;
+  padding: 0 16px 14px;
+}
+.kl-root .kl-muted-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--k-muted);
+}
+.kl-root .kl-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kl-root .kl-quote-item {
+  padding: 8px 10px;
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  background: var(--k-surface);
+}
+.kl-root .kl-quote-item.bad {
+  border-color: color-mix(in srgb, var(--k-danger) 45%, var(--k-border));
+}
+.kl-root .kl-quote-when {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kl-root .kl-quote-item:not(.bad) .kl-quote-when svg {
+  color: var(--k-success);
+}
+.kl-root .kl-quote-item.bad .kl-quote-when svg {
+  color: var(--k-danger);
+}
+.kl-root .kl-quote-cost {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.kl-root .kl-quote-error {
+  margin: 4px 0 0 19px;
+  font-size: 12px;
+  color: var(--k-danger);
+}
+.kl-root .kl-quote-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--k-muted);
+}
+.kl-root .kl-quote-total strong {
+  color: var(--k-text);
+}
+.kl-root .kl-detail-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+.kl-root .kl-detail-grid > span:nth-child(odd) {
+  color: var(--k-muted);
+}
+.kl-root .kl-detail-grid svg {
+  vertical-align: -2px;
+}
+.kl-root .kl-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.kl-root .kl-choice label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}

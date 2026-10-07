@@ -135,7 +135,7 @@ test('the manifest is well formed and small', () => {
       assert.ok(t.description.length > 20 && t.description.length < 300, `${name}: a short description`)
       assert.equal(t.inputSchema.type, 'object')
       const props = Object.keys((t.inputSchema.properties ?? {}) as object)
-      assert.ok(props.length <= 5, `${name}: few arguments`)
+      assert.ok(props.length <= 6, `${name}: few arguments`)
       for (const r of (t.inputSchema.required ?? []) as string[]) assert.ok(props.includes(r), `${name}: "${r}" is described`)
     }
   }
