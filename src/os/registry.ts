@@ -2,7 +2,7 @@
 // downloaded the first time a window of theirs opens.
 
 import {
-  BookMarked, BookOpen, Castle, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
+  Atom, BookMarked, BookOpen, Castle, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sigma, Sparkles, SquareTerminal,
 } from 'lucide-react'
 import type { AppManifest } from './types'
@@ -171,6 +171,20 @@ export const APPS: AppManifest[] = [
     minSize: { w: 480, h: 320 },
     fileTypes: ['.kbook', '.ipynb'],
     desktop: true,
+  },
+  {
+    id: 'khervedb',
+    name: 'KherveDB',
+    icon: Atom,
+    color: '#2fa866',
+    image: '/icons/apps/khervedb.png',
+    brand: { label: 'Kdb', from: '#8ee8b0', to: '#2fa866' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'NIST XPS binding energies with a periodic-table browser',
+    load: () => import('@/apps/khervedb/KherveDB'),
+    defaultSize: { w: 1100, h: 760 },
+    minSize: { w: 720, h: 520 },
   },
   {
     id: 'browser',

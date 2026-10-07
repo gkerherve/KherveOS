@@ -1,0 +1,919 @@
+/* KherveDB. Every rule is scoped under .kdb-app; colours come from the theme
+   variables (--k-*), except the periodic table's category hues, which are
+   mixed into the theme so the tiles stay readable on the dark background. */
+
+.kdb-app {
+  position: relative;
+  overflow: hidden;
+  outline: none;
+  /* Category hue of an element; the tiles, badges and legend mix it with the theme. */
+  --kdb-hue: #8a8f8c;
+}
+
+/* Brighter takes on the desktop app's pastel colours (same hues), tinted down below. */
+.kdb-app .kdb-cat-alkali_metal { --kdb-hue: #ff5c5c; }
+.kdb-app .kdb-cat-alkaline_earth { --kdb-hue: #ffb347; }
+.kdb-app .kdb-cat-transition_metal { --kdb-hue: #ff7f9e; }
+.kdb-app .kdb-cat-post_transition { --kdb-hue: #b8bfbb; }
+.kdb-app .kdb-cat-metalloid { --kdb-hue: #3fdcdc; }
+.kdb-app .kdb-cat-nonmetal { --kdb-hue: #6ee36e; }
+.kdb-app .kdb-cat-halogen { --kdb-hue: #f0e04a; }
+.kdb-app .kdb-cat-noble_gas { --kdb-hue: #b98be0; }
+.kdb-app .kdb-cat-lanthanide { --kdb-hue: #f57ae8; }
+.kdb-app .kdb-cat-actinide { --kdb-hue: #ff6fb0; }
+.kdb-app .kdb-cat-unknown { --kdb-hue: #8a8f8c; }
+
+.kdb-app .kdb-muted {
+  color: var(--k-muted);
+}
+.kdb-app .kdb-small {
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+}
+.kdb-app .kdb-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.kdb-app .kdb-spacer {
+  flex: 1;
+}
+.kdb-app .kdb-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  cursor: pointer;
+  user-select: none;
+}
+.kdb-app .kdb-check input {
+  margin: 0;
+  accent-color: var(--k-accent);
+}
+
+/* ------------------------------------------------------------- layout */
+
+.kdb-app .kdb-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+.kdb-app .kdb-body.kdb-with-panel {
+  grid-template-columns: minmax(0, 1fr) 330px;
+}
+.kdb-app .kdb-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ---------------------------------------------------- periodic table */
+
+.kdb-app .kdb-ptable-wrap {
+  flex: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* Tile size (--kdb-tw × --kdb-th) is worked out by KherveDB.tsx from the room there is. */
+.kdb-app .kdb-ptable {
+  display: grid;
+  width: max-content;
+  margin: 0 auto;
+  grid-template-columns: repeat(18, var(--kdb-tw));
+  grid-template-rows: repeat(7, var(--kdb-th)) 8px repeat(2, var(--kdb-th));
+  gap: 2px;
+  padding: 6px;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+}
+.kdb-app .kdb-tile {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--kdb-hue) 50%, var(--k-surface));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--kdb-hue) 27%, var(--k-surface));
+  color: color-mix(in srgb, var(--kdb-hue) 26%, var(--k-text));
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.08s, background 0.12s, box-shadow 0.12s;
+}
+.kdb-app .kdb-tile:hover:not(.kdb-off) {
+  background: color-mix(in srgb, var(--kdb-hue) 40%, var(--k-surface));
+  transform: scale(1.08);
+  z-index: 2;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+}
+.kdb-app .kdb-tile:active:not(.kdb-off) {
+  transform: scale(1.02);
+}
+.kdb-app .kdb-tile:focus-visible {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 1px;
+  z-index: 3;
+}
+.kdb-app .kdb-tile.kdb-selected {
+  background: color-mix(in srgb, var(--kdb-hue) 46%, var(--k-surface));
+  outline: 2px solid var(--k-text);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--k-accent) 60%, transparent);
+  z-index: 1;
+}
+/* No NIST entries for this element. */
+.kdb-app .kdb-tile.kdb-off {
+  cursor: default;
+  background: color-mix(in srgb, var(--kdb-hue) 7%, var(--k-bg));
+  border-color: color-mix(in srgb, var(--kdb-hue) 18%, var(--k-bg));
+  color: color-mix(in srgb, var(--k-text) 42%, var(--k-bg));
+}
+.kdb-app .kdb-tile .kdb-sym {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: calc(var(--kdb-th) * 0.4);
+  letter-spacing: -0.01em;
+}
+.kdb-app .kdb-tile .kdb-z,
+.kdb-app .kdb-tile .kdb-be,
+.kdb-app .kdb-tile .kdb-line {
+  position: absolute;
+  font-size: max(8px, calc(var(--kdb-th) * 0.2));
+  line-height: 1;
+  opacity: 0.82;
+  white-space: nowrap;
+}
+.kdb-app .kdb-tile .kdb-z {
+  top: 2px;
+  left: 3px;
+}
+.kdb-app .kdb-tile .kdb-be {
+  top: 2px;
+  right: 3px;
+}
+.kdb-app .kdb-tile .kdb-line {
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+/* Small tiles, and the simplified table: the symbol only. */
+.kdb-app .kdb-ptable.kdb-dense .kdb-z,
+.kdb-app .kdb-ptable.kdb-dense .kdb-be,
+.kdb-app .kdb-ptable.kdb-dense .kdb-line,
+.kdb-app .kdb-ptable.kdb-simple .kdb-z,
+.kdb-app .kdb-ptable.kdb-simple .kdb-be,
+.kdb-app .kdb-ptable.kdb-simple .kdb-line {
+  display: none;
+}
+.kdb-app .kdb-ptable.kdb-dense .kdb-sym,
+.kdb-app .kdb-ptable.kdb-simple .kdb-sym {
+  font-size: calc(var(--kdb-th) * 0.48);
+}
+.kdb-app .kdb-ptable.kdb-simple .kdb-tile {
+  background: var(--k-button);
+  border-color: var(--k-border);
+  color: var(--k-text);
+}
+.kdb-app .kdb-ptable.kdb-simple .kdb-tile:hover:not(.kdb-off) {
+  background: var(--k-button-hover);
+}
+.kdb-app .kdb-ptable.kdb-simple .kdb-tile.kdb-selected {
+  background: var(--k-selection);
+}
+.kdb-app .kdb-ptable.kdb-simple .kdb-tile.kdb-off {
+  background: transparent;
+  color: color-mix(in srgb, var(--k-text) 30%, var(--k-bg));
+}
+.kdb-app .kdb-marker {
+  display: grid;
+  place-items: center;
+  color: var(--k-muted);
+  font-size: max(10px, calc(var(--kdb-th) * 0.3));
+}
+
+/* The colour key, in the gap above the transition metals. */
+.kdb-app .kdb-legend {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 6px;
+  overflow: hidden;
+  font-size: max(10px, min(12px, calc(var(--kdb-th) * 0.27)));
+  color: var(--k-muted);
+}
+.kdb-app .kdb-legend-items {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  justify-content: center;
+  gap: 3px 16px;
+}
+.kdb-app .kdb-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.kdb-app .kdb-swatch {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--kdb-hue) 45%, var(--k-surface));
+  border: 1px solid color-mix(in srgb, var(--kdb-hue) 75%, var(--k-surface));
+}
+.kdb-app .kdb-legend-hint {
+  text-align: center;
+  font-size: 0.92em;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -------------------------------------------------------- search bar */
+
+.kdb-app .kdb-searchbar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 10px;
+  padding: 8px 10px;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+}
+.kdb-app .kdb-searchbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--k-muted);
+}
+.kdb-app .kdb-searchbar label > span {
+  padding-left: 2px;
+  line-height: 14px;
+}
+.kdb-app .kdb-searchbar.kdb-short label > span {
+  display: none;
+}
+.kdb-app .kdb-searchbar .k-input {
+  height: 32px;
+  font-size: 13px;
+}
+.kdb-app .kdb-searchbar select.k-input {
+  width: 118px;
+}
+.kdb-app .kdb-searchbar .kdb-grow {
+  flex: 1 1 96px;
+  max-width: 210px;
+}
+.kdb-app .kdb-searchbar .k-btn {
+  height: 32px;
+}
+.kdb-app .kdb-el-box {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 32px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--kdb-hue) 50%, var(--k-surface));
+  background: color-mix(in srgb, var(--kdb-hue) 27%, var(--k-surface));
+  color: color-mix(in srgb, var(--kdb-hue) 26%, var(--k-text));
+  font-size: 15px;
+  font-weight: 700;
+}
+.kdb-app .kdb-searchbar .kdb-big {
+  margin-left: auto;
+  padding: 0 14px;
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------- results */
+
+.kdb-app .kdb-results {
+  flex: 1;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.kdb-app .kdb-thead,
+.kdb-app .kdb-trow {
+  display: grid;
+  column-gap: 8px;
+  padding: 0 10px;
+}
+/* Header and body keep the same room for the scroll bar, so the columns line up. */
+.kdb-app .kdb-thead {
+  flex: none;
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+}
+.kdb-app .kdb-thead button {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 0;
+  border: none;
+  background: none;
+  color: var(--k-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.kdb-app .kdb-thead button:hover,
+.kdb-app .kdb-thead button.kdb-sorted {
+  color: var(--k-text);
+}
+.kdb-app .kdb-thead button.kdb-num {
+  justify-content: flex-end;
+}
+.kdb-app .kdb-tbody {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.kdb-app .kdb-trow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  align-items: center;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.kdb-app .kdb-trow.kdb-odd {
+  background: color-mix(in srgb, var(--k-text) 4%, var(--k-surface));
+}
+.kdb-app .kdb-trow:hover {
+  background: color-mix(in srgb, var(--k-accent) 16%, var(--k-surface));
+}
+.kdb-app .kdb-trow.kdb-active {
+  background: var(--k-selection);
+}
+.kdb-app .kdb-trow span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kdb-app .kdb-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--k-muted);
+}
+.kdb-app .kdb-tstatus {
+  flex: none;
+  padding: 4px 10px;
+  border-top: 1px solid var(--k-border);
+  background: var(--k-chrome);
+  color: var(--k-muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------- other databases & properties */
+
+.kdb-app .kdb-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-surface);
+  border-left: 1px solid var(--k-border);
+}
+/* Narrow windows: the panel floats over the table. */
+.kdb-app .kdb-panel.kdb-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(310px, calc(100% - 40px));
+  z-index: 20;
+  box-shadow: var(--k-shadow-lg);
+  animation: kdb-slide 0.14s ease-out;
+}
+.kdb-app .kdb-panel-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px 10px 12px;
+}
+.kdb-app .kdb-panel-head .k-icon-btn {
+  align-self: flex-start;
+}
+.kdb-app .kdb-panel-name {
+  flex: 1;
+  min-width: 0;
+}
+.kdb-app .kdb-refbar {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--k-border);
+}
+.kdb-app .kdb-refbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  margin-bottom: -1px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: var(--k-muted);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.kdb-app .kdb-refbar button:hover {
+  color: var(--k-text);
+}
+.kdb-app .kdb-refbar button.kdb-on {
+  background: var(--k-bg);
+  border-color: var(--k-border);
+  color: var(--k-text);
+  font-weight: 600;
+}
+.kdb-app .kdb-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--k-bg);
+}
+.kdb-app .kdb-hint {
+  margin: 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--k-accent) 30%, var(--k-border));
+  background: color-mix(in srgb, var(--k-accent) 11%, var(--k-bg));
+  color: color-mix(in srgb, var(--k-accent) 28%, var(--k-text));
+  font-size: 12px;
+  line-height: 1.45;
+}
+.kdb-app .kdb-card {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+}
+.kdb-app .kdb-card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+}
+.kdb-app .kdb-card-title svg {
+  color: var(--k-accent);
+  flex: none;
+}
+.kdb-app .kdb-card-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+.kdb-app .kdb-card-row {
+  display: flex;
+  gap: 6px;
+}
+.kdb-app .kdb-card-row .k-input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+}
+.kdb-app .kdb-card-query {
+  font-family: var(--k-mono);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kdb-app .kdb-card-open {
+  align-self: flex-start;
+}
+
+/* General Properties */
+.kdb-app .kdb-props-page section + section {
+  margin-top: 4px;
+}
+.kdb-app .kdb-props-page h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--k-accent) 55%, var(--k-text));
+}
+.kdb-app .kdb-props-page p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.kdb-app .kdb-props {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+  font-size: 12.5px;
+}
+.kdb-app .kdb-props dt {
+  color: var(--k-muted);
+}
+.kdb-app .kdb-props dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------- floating windows */
+
+.kdb-app .kdb-floating {
+  position: absolute;
+  z-index: 30;
+  width: min(430px, calc(100% - 16px));
+  max-height: calc(100% - 16px);
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg);
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  box-shadow: var(--k-shadow-lg);
+  outline: none;
+  animation: kdb-pop 0.12s ease-out;
+}
+.kdb-app .kdb-floating.kdb-wide {
+  width: min(740px, calc(100% - 16px));
+}
+.kdb-app .kdb-floating.kdb-plot-window {
+  width: min(800px, calc(100% - 16px));
+}
+.kdb-app .kdb-floating-title {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 6px 5px 14px;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  border-radius: 12px 12px 0 0;
+  font-weight: 600;
+}
+.kdb-app .kdb-floating-title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kdb-app .kdb-floating-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 14px 14px;
+}
+
+/* XPS information (right-click) */
+.kdb-app .kdb-info-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.kdb-app .kdb-info-sym {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--kdb-hue) 60%, var(--k-surface));
+  background: color-mix(in srgb, var(--kdb-hue) 30%, var(--k-surface));
+  color: color-mix(in srgb, var(--kdb-hue) 26%, var(--k-text));
+  font-size: 22px;
+  font-weight: 700;
+}
+.kdb-app .kdb-info-name {
+  font-size: 17px;
+  font-weight: 600;
+}
+.kdb-app .kdb-info dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 12px;
+  margin: 0 0 8px;
+}
+.kdb-app .kdb-info dt {
+  color: var(--k-muted);
+}
+.kdb-app .kdb-info dd {
+  margin: 0;
+}
+.kdb-app .kdb-info h4 {
+  margin: 10px 0 4px;
+  font-size: 12.5px;
+}
+.kdb-app .kdb-info p {
+  margin: 6px 0;
+  line-height: 1.45;
+}
+.kdb-app .kdb-peaks {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.kdb-app .kdb-peaks th,
+.kdb-app .kdb-peaks td {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--k-border);
+}
+.kdb-app .kdb-peaks th {
+  text-align: left;
+  color: var(--k-muted);
+  font-weight: 600;
+}
+.kdb-app .kdb-peaks th.kdb-num {
+  text-align: right;
+}
+
+/* All the details of one entry */
+.kdb-app .kdb-details {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.kdb-app .kdb-details th {
+  width: 38%;
+  padding: 4px 14px 4px 0;
+  text-align: left;
+  vertical-align: top;
+  color: var(--k-muted);
+  font-weight: 500;
+}
+.kdb-app .kdb-details td {
+  padding: 4px 0;
+  overflow-wrap: anywhere;
+}
+.kdb-app .kdb-details tr + tr th,
+.kdb-app .kdb-details tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--k-border) 70%, transparent);
+}
+
+/* ------------------------------------------------------------- plot */
+
+.kdb-app .kdb-plot-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.kdb-app .kdb-plot-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--k-muted);
+  cursor: pointer;
+}
+.kdb-app .kdb-plot-controls select.k-input {
+  width: auto;
+  height: 28px;
+  padding: 0 6px;
+  color: var(--k-text);
+}
+.kdb-app .kdb-plot-controls input[type='checkbox'] {
+  margin: 0;
+  accent-color: var(--k-accent);
+}
+.kdb-app .kdb-plot-caption {
+  margin: 8px 0 6px;
+  font-size: 12px;
+}
+.kdb-app .kdb-plot-box {
+  position: relative;
+  width: 100%;
+  user-select: none;
+}
+.kdb-app .kdb-plot-box svg {
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+.kdb-app .kdb-plot-grid {
+  stroke: var(--k-border);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.kdb-app .kdb-plot-axis {
+  stroke: var(--k-muted);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.kdb-app .kdb-plot-tick {
+  fill: var(--k-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.kdb-app .kdb-plot-label {
+  fill: var(--k-text);
+  font-size: 12px;
+}
+.kdb-app .kdb-plot-bar {
+  fill: color-mix(in srgb, var(--k-accent) 60%, transparent);
+  stroke: var(--k-accent);
+  stroke-width: 0.6;
+}
+.kdb-app .kdb-plot-bar.kdb-hot {
+  fill: var(--k-accent);
+  stroke: var(--k-text);
+}
+/* The Python app draws its smooth curve in red. */
+.kdb-app .kdb-plot-kde {
+  fill: none;
+  stroke: var(--k-danger);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.kdb-app .kdb-plot-sel {
+  fill: color-mix(in srgb, var(--k-link) 16%, transparent);
+  stroke: var(--k-link);
+  stroke-dasharray: 4 3;
+}
+.kdb-app .kdb-plot-tip {
+  position: absolute;
+  padding: 5px 8px;
+  border-radius: 7px;
+  border: 1px solid var(--k-border);
+  background: var(--k-chrome);
+  box-shadow: var(--k-shadow);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------- start, welcome */
+
+.kdb-app .kdb-splash {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--k-accent) 15%, var(--k-bg)), var(--k-bg) 72%);
+}
+.kdb-app .kdb-splash-card {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+.kdb-app .kdb-splash-card img {
+  flex: none;
+  border-radius: 22px;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.55));
+}
+.kdb-app .kdb-splash-title {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.kdb-app .kdb-splash-sub {
+  margin: 4px 0 2px;
+  font-size: 16px;
+  color: color-mix(in srgb, var(--k-accent) 45%, var(--k-text));
+}
+.kdb-app .kdb-splash-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--k-muted);
+}
+.kdb-app .kdb-splash-progress {
+  position: relative;
+  width: 220px;
+  height: 3px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--k-text) 12%, transparent);
+}
+.kdb-app .kdb-splash-progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: 3px;
+  background: var(--k-accent);
+  animation: kdb-progress 1.1s ease-in-out infinite;
+}
+.kdb-app .kdb-splash-error {
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  color: var(--k-danger);
+}
+
+.kdb-app .kdb-welcome-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--k-accent) 30%, var(--k-border));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--k-accent) 28%, var(--k-bg)),
+    color-mix(in srgb, var(--k-accent) 6%, var(--k-bg))
+  );
+}
+.kdb-app .kdb-welcome-banner img {
+  flex: none;
+  border-radius: 14px;
+}
+.kdb-app .kdb-welcome-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.kdb-app .kdb-welcome-sub {
+  margin-top: 2px;
+  color: color-mix(in srgb, var(--k-accent) 40%, var(--k-text));
+}
+.kdb-app .kdb-welcome ul {
+  margin: 14px 0 10px;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.kdb-app .kdb-welcome-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+.kdb-app .kdb-welcome-foot .kdb-check {
+  margin-right: auto;
+}
+
+@keyframes kdb-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.985);
+  }
+}
+@keyframes kdb-slide {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes kdb-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
