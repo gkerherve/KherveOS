@@ -235,6 +235,41 @@
   margin: 4px 0;
 }
 
+/* The Applications menu over the Dock (and its submenus): see-through frosted
+   glass like modern macOS, rather than the menu bar's classic white. */
+.k-menu.k-apps-menu {
+  background: rgba(14, 18, 16, 0.42);
+  color: #f1f7f3;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  padding: 6px;
+  font-family: var(--k-font, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45), inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+}
+.k-menu.k-apps-menu .k-menu-item {
+  border-radius: 6px;
+  padding: 0 12px 0 8px;
+}
+.k-menu.k-apps-menu .k-menu-item:hover,
+.k-menu.k-apps-menu .k-menu-item.active {
+  background: color-mix(in srgb, var(--k-accent) 82%, transparent);
+  color: #fff;
+}
+.k-menu.k-apps-menu .k-menu-icon,
+.k-menu.k-apps-menu .k-menu-shortcut,
+.k-menu.k-apps-menu .k-menu-chevron {
+  color: rgba(241, 247, 243, 0.68);
+}
+.k-menu.k-apps-menu .k-menu-item.disabled {
+  color: rgba(241, 247, 243, 0.38);
+}
+.k-menu.k-apps-menu .k-menu-sep {
+  background: rgba(255, 255, 255, 0.14);
+  margin: 5px 8px;
+}
+
 /* ------------------------------------------------------------------- dock */
 /* The modern macOS Dock: a floating frosted-glass panel, a dot under running apps. */
 
@@ -282,6 +317,24 @@
 }
 .k-dock-item:hover {
   z-index: 2;
+}
+/* A minimised window: its picture, with the app's icon on the corner, like macOS. */
+.k-dock-picture {
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+}
+.k-dock-item:active .k-dock-picture {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45)) brightness(0.82);
+}
+.k-dock-badge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
 }
 .k-dock-item:active .k-dock-tile {
   filter: brightness(0.82);
@@ -669,6 +722,11 @@
 }
 
 /* see-through windows (the Terminal): the desktop shows through, blurred */
+/* flying into the Dock or back out of it (minimise / restore) */
+.k-window.flying {
+  pointer-events: none;
+  will-change: transform, opacity;
+}
 .k-window.translucent {
   background: color-mix(in srgb, var(--k-bg) 62%, transparent);
   backdrop-filter: blur(22px) saturate(1.35);

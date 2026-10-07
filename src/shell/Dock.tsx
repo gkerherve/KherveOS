@@ -1,44 +1,19 @@
-// The Dock: Launchpad, the kept apps and the running ones. Click to open or
-// bring forward, click again to hide; right-click for more.
+// The Dock: Applications, the kept apps and the running ones, then — after a
+// separator — the minimised windows, each shown as a picture of itself (like
+// macOS). Click to open or bring forward, click again to hide; right-click for more.
 //
 // Magnification works like macOS: icons near the pointer grow smoothly with
 // distance, the Dock widens, and the icon under the pointer stays under it.
 
-import { useEffect, useRef, useState } from 'react'
-import { LayoutGrid, RotateCw, Settings as SettingsIcon } from 'lucide-react'
-import { APPS, GROUPS, getApp } from '@/os/registry'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { getApp } from '@/os/registry'
 import { useWindows } from '@/os/windows'
 import { useSettings } from '@/os/settings'
 import { closeContextMenu, openMenuOwner, showContextMenu } from '@/os/overlays'
 import { AppIcon } from '@/os/ui/AppIcon'
-import type { AppManifest } from '@/os/types'
 import type { MenuItem } from '@/os/ui/Menu'
-import { openLaunchpad } from './ui'
-
-const APPLICATIONS: AppManifest = {
-  id: 'applications', name: 'Applications', icon: LayoutGrid, color: '#4b5563', category: 'system', group: 'Tools',
-  description: 'All apps', load: async () => ({ default: () => null }),
-  brand: { label: 'KApps', from: '#7a828e', to: '#2b3038', deep: ['#5f6672', '#272b32'] },
-}
-
-/** The Applications menu: one submenu per group (Office, Science, Tools…). */
-function applicationsMenu(open: (id: string) => void): MenuItem[] {
-  const groups: MenuItem[] = GROUPS.map((g) => {
-    const apps = APPS.filter((a) => a.group === g)
-    return {
-      label: g,
-      disabled: apps.length === 0,
-      submenu: apps.map((a) => ({ label: a.name, image: <AppIcon app={a} size={18} />, onClick: () => open(a.id) })),
-    }
-  })
-  return [
-    ...groups,
-    '-',
-    { label: 'All Apps…', icon: LayoutGrid, onClick: openLaunchpad },
-    { label: 'Settings', icon: SettingsIcon, onClick: () => open('settings') },
-    { label: 'Restart KherveOS', icon: RotateCw, onClick: () => location.reload() },
-  ]
-}
+import { APPLICATIONS, applicationsMenu } from './appsMenu'
+import { tileRects, useWindowPictures } from './minimize'
 
 // Geometry of the resting Dock (must match .k-dock in shell.css).
 const PAD = 8 // panel padding left/right
@@ -61,6 +36,8 @@ export function Dock() {
 
   const running = [...new Set(windows.map((w) => w.appId))]
   const ids = [...dock.filter((id) => getApp(id)), ...running.filter((id) => !dock.includes(id))]
+  const minimized = windows.filter((w) => w.minimized).sort((a, b) => (a.minimizedAt ?? 0) - (b.minimizedAt ?? 0))
+  const pictures = useWindowPictures()
 
   // Shrink the icons when the screen is too narrow for them all.
   const [vw, setVw] = useState(() => window.innerWidth)
@@ -73,7 +50,7 @@ export function Dock() {
     window.addEventListener('resize', on)
     return () => window.removeEventListener('resize', on)
   }, [])
-  const icon = Math.max(28, Math.min(48, Math.floor((vw - 56) / (ids.length + 1)) - 10))
+  const icon = Math.max(28, Math.min(48, Math.floor((vw - 56) / (ids.length + minimized.length + 1)) - 10))
   // The biggest an icon may grow to: the setting, but no more than a fifth of the
   // screen's height or a quarter of its width (small screens).
   const maxIcon = Math.max(icon, Math.min(dockZoom, Math.round(vh * 0.2), Math.round(vw / 4.2)))
@@ -101,9 +78,11 @@ export function Dock() {
   type Slot = { key: string; sep?: boolean; left: number; width: number }
   const slots: Slot[] = []
   let x = PAD
-  for (const key of ['applications', '|', ...ids]) {
-    const width = key === '|' ? SEP : icon + ITEM_EXTRA
-    slots.push({ key, sep: key === '|', left: x, width })
+  const keys = ['applications', '|', ...ids, ...(minimized.length ? ['||', ...minimized.map((w) => `win:${w.id}`)] : [])]
+  for (const key of keys) {
+    const sep = key === '|' || key === '||'
+    const width = sep ? SEP : icon + ITEM_EXTRA
+    slots.push({ key, sep, left: x, width })
     x += width + GAP
   }
   const restWidth = x - GAP + PAD
@@ -180,6 +159,12 @@ export function Dock() {
   const item = (size: number) => ({ width: size + ITEM_EXTRA, height: size + ITEM_EXTRA })
   const lpSize = sizeOf('applications')
 
+  // Where each minimised window's tile sits: restoring a window flies it out from there.
+  const navRef = useRef<HTMLElement>(null)
+  useLayoutEffect(() => {
+    navRef.current?.querySelectorAll<HTMLElement>('[data-dock-win]').forEach((el) => tileRects.set(el.dataset.dockWin!, el.getBoundingClientRect()))
+  })
+
   // The Applications menu opens just above its Dock icon; clicking the icon again closes it.
   const toggleApps = (el: HTMLElement) => {
     if (openMenuOwner() === 'applications') {
@@ -204,6 +189,7 @@ export function Dock() {
   return (
     <div className="k-dock-wrap" onContextMenu={(e) => e.preventDefault()}>
       <nav
+        ref={navRef}
         className="k-dock"
         aria-label="Dock"
         style={{ ['--dock-icon' as string]: `${icon}px`, transform: shift ? `translateX(${shift.toFixed(1)}px)` : undefined }}
@@ -244,6 +230,33 @@ export function Dock() {
               <AppIcon app={app} size={size} className="k-dock-tile" />
               <span className="k-dock-label">{app.name}</span>
               {wins.length > 0 && <span className="k-dock-dot" />}
+            </button>
+          )
+        })}
+        {minimized.length > 0 && <span className="k-dock-sep" />}
+        {minimized.map((w) => {
+          const app = getApp(w.appId)!
+          const size = sizeOf(`win:${w.id}`)
+          const picture = pictures[w.id]
+          return (
+            <button
+              key={w.id}
+              className="k-dock-item k-dock-win"
+              style={item(size)}
+              data-dock-win={w.id}
+              aria-label={`${w.title} (minimised)`}
+              onClick={() => focus(w.id)}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                showContextMenu(e, [
+                  { label: 'Restore', onClick: () => focus(w.id) },
+                  { label: 'Close', onClick: () => void close(w.id) },
+                ])
+              }}
+            >
+              {picture ? <img className="k-dock-picture" src={picture} alt="" draggable={false} /> : <AppIcon app={app} size={size} className="k-dock-tile" />}
+              {picture && <AppIcon app={app} size={Math.round(size * 0.4)} className="k-dock-badge" />}
+              <span className="k-dock-label">{w.title}</span>
             </button>
           )
         })}

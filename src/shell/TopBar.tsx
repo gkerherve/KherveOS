@@ -13,6 +13,7 @@ import { HOME } from '@/os/path'
 import { fs } from '@/os/vfs'
 import { KLogo } from './KLogo'
 import { openLaunchpad } from './ui'
+import { appGroups } from './appsMenu'
 import { toggleFullscreen, useFullscreen } from '@/os/fullscreen'
 
 interface TopMenu {
@@ -59,6 +60,9 @@ export function TopBar() {
       className: 'logo',
       items: [
         { label: 'About KherveOS', onClick: () => wm.open('settings', { section: 'about' }) },
+        '-',
+        // The applications, by group — the same menu as the Dock's KApps button.
+        ...appGroups((id) => wm.open(id)),
         '-',
         { label: 'System Settings…', onClick: () => wm.open('settings') },
         { label: 'Launchpad', onClick: openLaunchpad },

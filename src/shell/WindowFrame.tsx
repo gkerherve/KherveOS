@@ -3,7 +3,7 @@
 // order and stacked with z-index — never re-ordered in the DOM, because moving
 // an <iframe> in the DOM reloads it (Browser tabs and games would restart).
 
-import { Component, Suspense, lazy, memo, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { Component, Suspense, lazy, memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
 import { useWindows, setCloseGuard, isSmallScreen, desktopSize, type WinState } from '@/os/windows'
 import { getApp } from '@/os/registry'
 import { setWindowMenus } from '@/os/menus'
@@ -12,6 +12,7 @@ import { Spinner } from '@/os/ui/ServerGate'
 import { os } from '@/os'
 import { HOME, extname } from '@/os/path'
 import type { AppArgs, AppManifest, AppProps, WindowApi } from '@/os/types'
+import { animateMinimize, animateRestore, captureWindow, forgetWindow, tileFor, tileRects } from './minimize'
 
 const lazyApps = new Map<string, ComponentType<AppProps>>()
 function appComponent(app: AppManifest) {
@@ -110,6 +111,42 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
     [win.id],
   )
   useEffect(() => () => setWindowMenus(win.id, null), [win.id])
+
+  // ---- minimising, like macOS: the window flies into its own Dock tile (which shows a
+  // picture of it) and back out. 'hiding' and 'showing' are the flights.
+  const [phase, setPhase] = useState<'shown' | 'hiding' | 'hidden' | 'showing'>(win.minimized ? 'hidden' : 'shown')
+  const wasMinimized = useRef(win.minimized)
+  useLayoutEffect(() => {
+    if (win.minimized === wasMinimized.current) return
+    wasMinimized.current = win.minimized
+    const el = ref.current
+    if (!win.minimized) {
+      setPhase('showing')
+      return
+    }
+    if (!el) return
+    let cancelled = false
+    setPhase('hiding')
+    // The picture is taken during the flight; the window stays laid out until then.
+    const { flying, done } = animateMinimize(el, tileFor(win.id))
+    const picture = flying.then(() => captureWindow(win.id, el))
+    void Promise.all([done, picture]).then(() => !cancelled && setPhase('hidden'))
+    return () => {
+      cancelled = true
+    }
+  }, [win.minimized, win.id])
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (phase !== 'showing' || !el) return
+    let cancelled = false
+    const tile = tileRects.get(win.id) ?? tileFor(win.id)
+    forgetWindow(win.id)
+    void animateRestore(el, tile).then(() => !cancelled && setPhase('shown'))
+    return () => {
+      cancelled = true
+    }
+  }, [phase, win.id])
+  useEffect(() => () => forgetWindow(win.id), [win.id])
 
   const b = boundsFor(win)
 
@@ -218,13 +255,13 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
       {snapHint && <div className={`k-snap-hint ${snapHint}`} style={{ zIndex: win.z - 1 }} />}
       <div
         ref={ref}
-        className={`k-window${focused ? ' focused' : ''}${maxed ? ' maximized' : ''}${fileOver ? ' file-over' : ''}${app.translucent ? ' translucent' : ''}`}
+        className={`k-window${focused ? ' focused' : ''}${maxed ? ' maximized' : ''}${fileOver ? ' file-over' : ''}${app.translucent ? ' translucent' : ''}${phase === 'hiding' || phase === 'showing' ? ' flying' : ''}`}
         data-window-id={win.id}
         data-dark={light?.dark}
         style={{
           ...light?.style,
           left: b.x, top: b.y, width: b.w, height: b.h, zIndex: win.z,
-          display: win.minimized ? 'none' : undefined,
+          display: phase === 'hidden' ? 'none' : undefined,
         }}
         onPointerDownCapture={() => !focused && focus(win.id)}
         // Files dropped from the computer onto a window: copy them to ~/Downloads and open

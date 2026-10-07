@@ -24,6 +24,8 @@ export interface WinState extends Bounds {
   args: AppArgs
   z: number
   minimized: boolean
+  /** When it was minimised: the Dock shows minimised windows in this order. */
+  minimizedAt?: number
   maximized: boolean
   snapped: 'left' | 'right' | null
   /** Bounds to go back to after un-maximising / un-snapping. */
@@ -124,11 +126,11 @@ export const useWindows = create<WMState>((set, get) => ({
     if (!target) return
     if (focusedId === id && !target.minimized && target.z === zTop) return
     const z = ++zTop
-    set({ windows: windows.map((w) => (w.id === id ? { ...w, z, minimized: false } : w)), focusedId: id })
+    set({ windows: windows.map((w) => (w.id === id ? { ...w, z, minimized: false, minimizedAt: undefined } : w)), focusedId: id })
   },
 
   minimize(id) {
-    const rest = get().windows.map((w) => (w.id === id ? { ...w, minimized: true } : w))
+    const rest = get().windows.map((w) => (w.id === id && !w.minimized ? { ...w, minimized: true, minimizedAt: Date.now() } : w))
     const top = rest.filter((w) => !w.minimized).sort((a, b) => b.z - a.z)[0]
     set({ windows: rest, focusedId: top?.id ?? null })
   },
