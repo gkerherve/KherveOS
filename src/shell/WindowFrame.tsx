@@ -152,7 +152,7 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
       el.style.left = `${pos.x}px`
       el.style.top = `${pos.y}px`
       const top = ref.current?.parentElement?.getBoundingClientRect().top ?? 0
-      hint = ev.clientX <= 4 ? 'left' : ev.clientX >= window.innerWidth - 5 ? 'right' : ev.clientY <= top + 2 ? 'max' : null
+      hint = app.fixedSize ? null : ev.clientX <= 4 ? 'left' : ev.clientX >= window.innerWidth - 5 ? 'right' : ev.clientY <= top + 2 ? 'max' : null
       setSnapHint(hint)
     }
     const onUp = () => {
@@ -257,7 +257,7 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
         <div
           className="k-titlebar"
           onPointerDown={startMove}
-          onDoubleClick={(e) => !(e.target as HTMLElement).closest('button') && toggleMaximize(win.id)}
+          onDoubleClick={(e) => !app.fixedSize && !(e.target as HTMLElement).closest('button') && toggleMaximize(win.id)}
         >
           <div className="k-traffic">
             <button className="k-light close" aria-label="Close" title="Close" onClick={() => void close(win.id)}>
@@ -266,7 +266,13 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
             <button className="k-light min" aria-label="Minimise" title="Minimise" onClick={() => minimize(win.id)}>
               <svg viewBox="0 0 10 10"><path d="M2 5h6" /></svg>
             </button>
-            <button className="k-light zoom" aria-label={maxed ? 'Restore' : 'Zoom'} title={maxed ? 'Restore' : 'Zoom'} onClick={() => toggleMaximize(win.id)}>
+            <button
+              className="k-light zoom"
+              aria-label={maxed ? 'Restore' : 'Zoom'}
+              title={app.fixedSize ? undefined : maxed ? 'Restore' : 'Zoom'}
+              disabled={app.fixedSize}
+              onClick={() => toggleMaximize(win.id)}
+            >
               <svg viewBox="0 0 10 10">
                 {maxed ? <path className="fill" d="M5.6 1.8v2.6h2.6zM4.4 8.2V5.6H1.8z" /> : <path className="fill" d="M2.2 2.2h4.2L2.2 6.4zM7.8 7.8H3.6l4.2-4.2z" />}
               </svg>
@@ -278,7 +284,7 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
         <div className="k-window-body">
           <AppHost app={app} api={api} args={win.args} />
         </div>
-        {!maxed && EDGES.map((edge) => <div key={edge} className={`k-resize k-resize-${edge}`} onPointerDown={startResize(edge)} />)}
+        {!maxed && !app.fixedSize && EDGES.map((edge) => <div key={edge} className={`k-resize k-resize-${edge}`} onPointerDown={startResize(edge)} />)}
       </div>
     </>
   )

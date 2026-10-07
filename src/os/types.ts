@@ -78,6 +78,8 @@ export interface AppManifest {
   load: () => Promise<{ default: ComponentType<AppProps> }>
   defaultSize?: { w: number; h: number }
   minSize?: { w: number; h: number }
+  /** The window keeps its default size: no resizing, zoom or snapping (small games). */
+  fixedSize?: boolean
   /** File extensions this app opens, e.g. ['.txt', '.md']. */
   fileTypes?: string[]
   /** Focus the existing window instead of opening a second one. */

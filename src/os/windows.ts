@@ -140,6 +140,8 @@ export const useWindows = create<WMState>((set, get) => ({
   },
 
   snap(id, side) {
+    const target = get().windows.find((x) => x.id === id)
+    if (side && target && getApp(target.appId)?.fixedSize) return
     set({
       windows: get().windows.map((w) => {
         if (w.id !== id) return w

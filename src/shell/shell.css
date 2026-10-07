@@ -565,6 +565,15 @@
 .k-traffic:hover .k-light svg {
   opacity: 1;
 }
+/* A fixed-size window's zoom button, greyed like macOS's. */
+.k-light:disabled,
+.k-window:not(.focused) .k-traffic:not(:hover) .k-light:disabled {
+  background: color-mix(in srgb, var(--k-text) 16%, transparent);
+  border-color: transparent;
+}
+.k-light:disabled svg {
+  display: none;
+}
 .k-title-text {
   flex: 1;
   min-width: 0;
