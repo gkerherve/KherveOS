@@ -106,7 +106,7 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
 - [x] KherveTeX (`../KherveTeX`, package `khervedoc`) — done 2026-10-07. Not ported:
       drawing/flowchart/chemistry/equation-builder editors, Typst, Git history,
       .docx/.pdf/.md import, the KherveRef picker
-- [ ] KherveNote (`../KherveNote`) — transcription later (Whisper on WebGPU)
+- [x] KherveNote (`../KherveNote`) — done 2026-10-07, Whisper in the browser (not ported: camera, Document panel, mic selection)
 - [x] KherveSlide (`../KherveSlide`) — done 2026-10-07 (not ported: PowerPoint, drawing/chemistry editors, video, two screens)
 
 ### 4. KherveSheet, KhervePaint, KherveFitting
