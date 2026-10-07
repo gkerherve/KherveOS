@@ -110,7 +110,10 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
 - [ ] KherveSlide (`../KherveSlide`)
 
 ### 4. KherveSheet, KhervePaint, KherveFitting
-- [ ] KherveSheet (`../KherveSheet`, dev) — grid, `=PY` cells in Pyodide, charts
+- [x] KherveSheet (`../KherveSheet`, dev) — grid, `=PY` cells in Pyodide, charts — done
+      2026-10-07 (desktop core in Pyodide). Check: typing straight into a selected cell
+      (the formula bar works); not ported: lmfit peak dialog, cell buttons, =MYFUNC from
+      =PY, printing, spell check.
 - [ ] KhervePaint (`../KhervePaint`) — raster + vector canvas
 - [ ] KherveFitting (`../KherveFitting`, develop) — first extract a wx-free fitting
       core (`Peak_Functions.py`, backgrounds, file readers) to run in Pyodide, then the
@@ -134,6 +137,12 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       shown in sandboxed iframes without allow-same-origin (third-party scripts must not
       reach KherveOS cookies/storage); decline cookie banners like the desktop does; Google
       Scholar may still need a real tab.
+- [ ] **AI that can drive the apps** (user: "KherveAI does not appear to do much"): the 15
+      tools only reach files, windows and Python, so "select oxygen in KherveDB" failed
+      (fixed for that case: open_app takes `element`). Let apps register their own AI tools
+      while a window is open (KherveDB: select element / filter / list lines; KherveSheet:
+      read/write cells; KherveBook: add/run cells; Browser: open URL…), exposed to KherveAI
+      and MCP, and list them in the system prompt.
 - [ ] **Copy and paste of files**: Copy / Cut / Paste in Files and on the Desktop (menus,
       right-click, ⌘C/⌘X/⌘V). On this computer by default; when signed in, Copy also puts
       the files on the KherveOS server (per-user clipboard, size limit) so another computer
