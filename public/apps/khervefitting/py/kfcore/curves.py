@@ -9,14 +9,17 @@
 # KherveOS port: the curves the desktop draws — each peak from its row of the
 # peak table (PlotManager.plot_peak), the envelope and the residuals
 # (PlotManager.update_overall_fit_and_residuals). Same models and parameters;
-# the web page draws the arrays.
+# the web page draws the arrays. Synced with KherveFitting-AI (dev-AI v1.93):
+# the new line shapes, the apex-anchored skewed Voigt and the Gaussian
+# broadening (Wg) of SingleEntity envelopes.
 
 import numpy as np
 import lmfit
 
 from .peak_functions import PeakFunctions
 
-SKIPPED = ("Unfitted", "SurveyID", "D-parameter", "Fermi", "VBM", "Cut-Off")
+SKIPPED = ("Unfitted", "SurveyID", "D-parameter", "Fermi", "VBM", "Cut-Off", "Curie-Weiss",
+           "Equivalent Circuit")
 
 
 def _singleentity_curve(window, row, x_values, by_position):
@@ -26,6 +29,10 @@ def _singleentity_curve(window, row, x_values, by_position):
     peaks = window.Data['Core levels'][sheet_name].get('Fitting', {}).get('Peaks', {})
     position_shift = float(grid.GetCellValue(row, 7))
     area_scale = float(grid.GetCellValue(row, 8))
+    try:
+        current_wg = float(grid.GetCellValue(row, 9))  # Wg col 9
+    except (ValueError, TypeError):
+        current_wg = 0.0
     peak_data = None
     for name, data in peaks.items():
         if data.get('Fitting Model') != 'SingleEntity':
@@ -40,9 +47,18 @@ def _singleentity_curve(window, row, x_values, by_position):
     if not peak_data or 'x_data' not in peak_data or 'y_data' not in peak_data:
         return None
     from scipy.interpolate import interp1d
-    interpolator = interp1d(np.array(peak_data['x_data']), np.array(peak_data['y_data']), kind='cubic',
+    x_env = np.array(peak_data['x_data'])
+    interpolator = interp1d(x_env, np.array(peak_data['y_data']), kind='cubic',
                             bounds_error=False, fill_value=0.0)
-    return interpolator(x_values - position_shift) * area_scale
+    y_interpolated = interpolator(x_values - position_shift)
+    if current_wg > 0.01:
+        from scipy.ndimage import gaussian_filter1d
+        dx = abs(np.mean(np.diff(np.sort(x_env))))
+        if dx > 0:
+            sigma_pts = current_wg / (2 * np.sqrt(2 * np.log(2))) / dx
+            if sigma_pts >= 0.5:
+                y_interpolated = gaussian_filter1d(y_interpolated, sigma_pts)
+    return y_interpolated * area_scale
 
 
 def peak_curve(window, row, x_values, envelope=False):
@@ -74,7 +90,7 @@ def peak_curve(window, row, x_values, envelope=False):
         amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
         params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
     elif fitting_model == "Voigt (Area, L/G, σ, S)":
-        peak_model = lmfit.models.SkewedVoigtModel()
+        peak_model = PeakFunctions.create_skewed_voigt_model()
         params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), sigma=float(g(row, 7)) / 2.355,
                                         gamma=float(g(row, 8)) / 2, skew=float(g(row, 9)))
     elif fitting_model == "DS (A, σ, γ)":
@@ -106,6 +122,44 @@ def peak_curve(window, row, x_values, envelope=False):
         peak_model = lmfit.Model(PeakFunctions.LAxG)
         params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), fwhm=fwhm, sigma=float(g(row, 7)),
                                         gamma=float(g(row, 8)), fwhm_g=float(g(row, 9)))
+    elif fitting_model == "LF (Area, σ, γ, w)":
+        peak_model = lmfit.Model(PeakFunctions.LF)
+        params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), fwhm=fwhm, sigma=float(g(row, 7)),
+                                        gamma=float(g(row, 8)), w=float(g(row, 9)))
+    elif fitting_model == "DL (A, σ, γ, aDL)":
+        peak_model = lmfit.Model(PeakFunctions.DL)
+        params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), sigma=float(g(row, 7)),
+                                        gamma=float(g(row, 8)), a_dl=float(g(row, 9)))
+    elif fitting_model in ("TLA (A, μ, α, Wg)", "TLA (A, μ, Wg, α)"):
+        # (the desktop's plot_peak tests the second spelling, which no peak
+        # carries, so only its envelope draws TLA; both are drawn here)
+        peak_model = lmfit.Model(PeakFunctions.TLA)
+        params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), fwhm=fwhm, mu=float(g(row, 7)),
+                                        wg=float(g(row, 9)), alpha=float(g(row, 8)))
+    elif fitting_model == "SB (Height)":
+        peak_model = lmfit.Model(PeakFunctions.SB_voigt)
+        params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+    elif fitting_model in ("A*GL (Area, a, b)", "A*SGL (Area, a, b)"):
+        peak_model = lmfit.Model(PeakFunctions.A_GL if fitting_model == "A*GL (Area, a, b)" else PeakFunctions.A_SGL)
+        params = peak_model.make_params(center=x, amplitude=y, fwhm=fwhm, fraction=lg_ratio,
+                                        a=float(g(row, 7)), b=float(g(row, 8)))
+    elif fitting_model == "Voigt (Area)":
+        peak_model = lmfit.Model(PeakFunctions.voigt_simple)
+        if envelope:
+            area = float(g(row, 6))
+        else:
+            unit_apex = float(PeakFunctions.voigt_simple(0.0, 0.0, 1.0, fwhm, lg_ratio))
+            area = y / unit_apex if unit_apex > 0 else 0.0
+        params = peak_model.make_params(center=x, area=area, fwhm=fwhm, fraction=lg_ratio)
+    elif fitting_model == "Voigt (Area, L/G, S)":
+        peak_model = lmfit.Model(PeakFunctions.voigt_simple_skewed)
+        skew = float(g(row, 9))
+        if envelope:
+            area = float(g(row, 6))
+        else:
+            unit_apex = float(PeakFunctions.voigt_simple_skewed(0.0, 0.0, 1.0, fwhm, lg_ratio, skew))
+            area = y / unit_apex if unit_apex > 0 else 0.0
+        params = peak_model.make_params(center=x, area=area, fwhm=fwhm, fraction=lg_ratio, skew=skew)
     elif fitting_model == "GL (Height)":
         peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
         params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)

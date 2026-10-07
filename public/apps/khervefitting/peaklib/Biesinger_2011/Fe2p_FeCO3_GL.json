@@ -1,0 +1,105 @@
+{
+  "Core levels": {
+    "Fe2p": {
+      "Fitting": {
+        "Peaks": {
+          "Fe2p3/2 FeCO3 peak 1": {
+            "Position": 709.3,
+            "Height": 12835.91,
+            "FWHM": 1.5,
+            "L/G": 30.0,
+            "Area": 20495.1,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0
+          },
+          "Fe2p3/2 FeCO3 peak 2": {
+            "Position": 710.602856525902,
+            "Height": 6969.897671385154,
+            "FWHM": 1.5,
+            "L/G": 30.0,
+            "Area": 11128.8393,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+1.30#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.35:1.65",
+              "L/G": "A*1",
+              "Area": "A*0.543",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 FeCO3 peak 3": {
+            "Position": 711.5028565259021,
+            "Height": 9220.46008706876,
+            "FWHM": 3.6,
+            "L/G": 30.0,
+            "Area": 35333.5524,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.20#0.1",
+              "Height": "1:1e7",
+              "FWHM": "3.45:3.75",
+              "L/G": "A*1",
+              "Area": "A*1.724",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 FeCO3 peak 4": {
+            "Position": 715.102856525902,
+            "Height": 4660.566934960986,
+            "FWHM": 3.4,
+            "L/G": 30.0,
+            "Area": 16867.467299999997,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+5.80#0.1",
+              "Height": "1:1e7",
+              "FWHM": "3.25:3.55",
+              "L/G": "A*1",
+              "Area": "A*0.823",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 FeCO3 peak 5": {
+            "Position": 718.902856525902,
+            "Height": 372.2413120997596,
+            "FWHM": 1.5,
+            "L/G": 30.0,
+            "Area": 594.3579,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+9.60#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.5",
+              "L/G": "A*1",
+              "Area": "A*0.029",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}

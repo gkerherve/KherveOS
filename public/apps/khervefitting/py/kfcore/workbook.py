@@ -11,7 +11,9 @@
 # it, a .json file with everything else (window.Data: backgrounds, peaks,
 # constraints, results tables). Opening follows FileMenu/Open.open_xlsx_file
 # and ConfigFile.add_core_level_Data; saving follows FileMenu/Save.save_data,
-# save_to_excel and save_results_table.
+# save_to_excel and save_results_table. Synced with KherveFitting-AI (dev-AI
+# v1.93): small numbers keep significant figures in the JSON, and the results
+# sheet has the weight % and the seven 1-sigma uncertainty columns.
 
 import io
 import json
@@ -22,6 +24,7 @@ import numpy as np
 from .curves import overall_fit, peak_curve
 from .grid import PEAK_COLUMNS
 from .session import empty_data
+from .uncertainty import RESULT_ERROR_COLUMNS, RESULT_ERROR_FIRST_COL
 
 RESULT_COLUMNS = [
     "Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "L/G \nσ/γ (%)",
@@ -29,12 +32,14 @@ RESULT_COLUMNS = [
     "Corr. Area\n(a.u.)", "σ or α\nW_g", "γ or β\nW_l", "Bkg Type", "Bkg Low\n(eV)",
     "Bkg High\n(eV)", "Bkg Offset Low\n(CPS)", "Bkg Offset High\n(CPS)", "Sheetname", "Position\nConstraint",
     "Height\nConstraint", "FWHM\nConstraint", "L/G\nConstraint", "Area\nConstraint", "σ\nConstraint",
-    "γ\nConstraint", "Weight\n(%)", "Mass\n(amu)"]
+    "γ\nConstraint", "Weight\n(%)", "Mass\n(amu)"] + [hdr for _key, _qty, hdr in RESULT_ERROR_COLUMNS]
 
 RESULT_FIELDS = ['Name', 'Position', 'Height', 'FWHM', 'L/G', 'Area', 'at. %', 'Checkbox', 'RSF', 'TXFN', 'ECF',
                  'Instrument', 'Fitting Model', 'Rel. Area', 'Sigma', 'Gamma', 'Bkg Type', 'Bkg Low', 'Bkg High',
                  'Bkg Offset Low', 'Bkg Offset High', 'Sheetname', 'Pos. Constraint', 'Height Constraint',
-                 'FWHM Constraint', 'L/G Constraint', 'Area Constraint', 'Sigma Constraint', 'Gamma Constraint']
+                 'FWHM Constraint', 'L/G Constraint', 'Area Constraint', 'Sigma Constraint', 'Gamma Constraint',
+                 'wt. %', None]
+RESULT_FIELDS += [None] * (RESULT_ERROR_FIRST_COL - len(RESULT_FIELDS)) + [key for key, _q, _h in RESULT_ERROR_COLUMNS]
 
 #: Kinds of sheets the desktop opens elsewhere (maps, profiles, EDX/EELS).
 SPECIAL = re.compile(r'^(zzProfile|zzMap|XPS~Map|EDX~|EELS~)|~Map')
@@ -132,8 +137,10 @@ def open_workbook(xlsx_bytes, json_text=None, file_path=''):
     openpyxl = _openpyxl()
     wb = openpyxl.load_workbook(io.BytesIO(xlsx_bytes), data_only=True)
     names = [n for n in wb.sheetnames if n.lower() not in ("results table", "experimental description")]
-    dismissed = [(n, "default Excel name (e.g. Sheet1)") for n in names if n.startswith('Sheet')]
-    names = [n for n in names if not n.startswith('Sheet')]
+    invalid = [n for n in names if re.match(r'^Sheet\d+$', n, re.IGNORECASE)]
+    dismissed = [(n, "default Excel name (e.g. Sheet1)") for n in invalid]
+    names = [n for n in names if n not in invalid]
+    from .sheets import is_xps_like_sheet
 
     rows_by_sheet = {}
     valid = []
@@ -146,7 +153,9 @@ def open_workbook(xlsx_bytes, json_text=None, file_path=''):
         if len(rows) == 0 or max((len(r) for r in rows), default=0) < 2:
             dismissed.append((name, "fewer than 2 columns or no data"))
             continue
-        if not _is_valid_header(rows[0][0], rows[0][1]):
+        # dev-AI: every non-XPS technique writes its own axis label into
+        # column A, so the sheet name (its technique prefix) decides for those.
+        if not (_is_valid_header(rows[0][0], rows[0][1]) or not is_xps_like_sheet(None, name)):
             dismissed.append((name, f"unrecognised column headers (Col1='{rows[0][0]}', Col2='{rows[0][1]}')"))
             continue
         rows_by_sheet[name] = rows
@@ -168,12 +177,24 @@ def open_workbook(xlsx_bytes, json_text=None, file_path=''):
 
 
 # ── Saving ───────────────────────────────────────────────────────────────
+def _round_keep_small(value, decimal_places):
+    """Save._round_keep_small: round(value, decimal_places), except that a
+    number below 1 keeps five significant figures instead of being rounded
+    to 0.00 - small peak areas, their uncertainties, normalised intensities."""
+    value = float(value)
+    a = abs(value)
+    if a == 0 or a >= 1 or not np.isfinite(value):
+        return round(value, decimal_places) if np.isfinite(value) else value
+    return round(value, max(decimal_places, 4 - int(np.floor(np.log10(a)))))
+
+
 def to_json_data(obj, decimal_places=2):
-    """Save.convert_to_serializable_and_round: floats rounded to 2 decimals."""
+    """Save.convert_to_serializable_and_round: floats rounded to 2 decimals
+    (5 significant figures below 1)."""
     if isinstance(obj, bool):
         return obj
     if isinstance(obj, (float, np.floating)):
-        return round(float(obj), decimal_places)
+        return _round_keep_small(obj, decimal_places)
     if isinstance(obj, (int, np.integer)):
         return int(obj)
     if isinstance(obj, np.ndarray):

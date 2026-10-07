@@ -19,11 +19,13 @@ const END = '\x02/KF-JSON\x03'
 export const PY_FILES = [
   'kfcore/__init__.py',
   'kfcore/compat.py',
+  'kfcore/numberformat.py',
   'kfcore/shirley.py',
   'kfcore/peak_functions.py',
   'kfcore/backgrounds.py',
   'kfcore/grid.py',
   'kfcore/session.py',
+  'kfcore/uncertainty.py',
   'kfcore/fitting.py',
   'kfcore/sheets.py',
   'kfcore/background.py',
@@ -31,10 +33,43 @@ export const PY_FILES = [
   'kfcore/results.py',
   'kfcore/workbook.py',
   'kfcore/importers.py',
+  // dev-AI tools (kfweb/features.py)
+  'kfcore/peaklib.py',
+  'kfcore/sheetops.py',
+  'kfcore/becorr.py',
+  'kfcore/samples.py',
+  'kfcore/survey.py',
+  'kfcore/dparam.py',
+  'kfcore/area.py',
+  'kfcore/pca.py',
+  'kfcore/fitops.py',
   'kfweb/__init__.py',
+  'kfweb/gridstyle.py',
+  'kfweb/tables.py',
+  'kfweb/features.py',
   'kfweb/bridge.py',
   'data/library.json',
+  'data/autoid.json',
+  'data/splittings.json',
 ]
+
+/**
+ * The pure-Python packages the engine needs that Pyodide does not ship, at the
+ * desktop's versions (KherveFittingPro requirements.txt), served with the app
+ * from py/wheels/ and unpacked in the worker: installing them from PyPI with
+ * micropip could stall "Opening…" for minutes, or fail offline.
+ */
+export const WHEELS = [
+  'lmfit-1.3.2-py3-none-any.whl',
+  'asteval-1.0.5-py3-none-any.whl',
+  'dill-0.4.1-py3-none-any.whl',
+  'openpyxl-3.1.2-py2.py3-none-any.whl',
+  'et_xmlfile-1.1.0-py3-none-any.whl',
+  'vamas-0.1.1-py3-none-any.whl',
+]
+
+/** Files the engine runs without (a missing one is skipped). */
+const OPTIONAL = new Set<string>()
 
 export interface Answer {
   ok: boolean
@@ -57,7 +92,19 @@ interface Job {
 /** A Python string literal (JSON's escapes are all valid Python). */
 const pyStr = (s: string) => JSON.stringify(s)
 
-const INSTALL = `def _kf_install(files, root):
+const INSTALL = `def _kf_wheels(wheels, root):
+    import base64, io, os, zipfile
+    site = root + '/site'
+    os.makedirs(site, exist_ok=True)
+    for name, b64 in wheels.items():
+        mark = site + '/.' + name
+        if os.path.exists(mark):
+            continue
+        zipfile.ZipFile(io.BytesIO(base64.b64decode(b64))).extractall(site)
+        open(mark, 'w').close()
+
+
+def _kf_install(files, root):
     import importlib, os, sys
     for rel, text in files.items():
         path = root + '/' + rel
@@ -66,6 +113,9 @@ const INSTALL = `def _kf_install(files, root):
             f.write(text)
     if root not in sys.path:
         sys.path.insert(0, root)
+    site = root + '/site'
+    if site not in sys.path:
+        sys.path.insert(1, site)
     for name in [m for m in sys.modules if m.split('.')[0] in ('kfweb', 'kfcore')]:
         del sys.modules[name]
     importlib.invalidate_caches()
@@ -85,6 +135,7 @@ export class FitBridge {
   private installedFor: PythonKernel | null = null
   private installs = 0
   private files: Promise<Record<string, string>> | null = null
+  private wheels: Promise<Record<string, string>> | null = null
   private waiters: (() => void)[] = []
   private unsub: () => void
   private disposed = false
@@ -131,11 +182,14 @@ export class FitBridge {
     this.files ??= Promise.all(
       PY_FILES.map(async (rel) => {
         const r = await fetch(BASE + rel, { cache: 'no-cache' })
-        if (!r.ok) throw new Error(`${rel}: HTTP ${r.status}`)
+        if (!r.ok) {
+          if (OPTIONAL.has(rel)) return null
+          throw new Error(`${rel}: HTTP ${r.status}`)
+        }
         return [rel, await r.text()] as const
       }),
     )
-      .then((pairs) => Object.fromEntries(pairs))
+      .then((pairs) => Object.fromEntries(pairs.filter((p): p is readonly [string, string] => p !== null)))
       .catch((e: unknown) => {
         this.files = null
         throw e
@@ -143,10 +197,28 @@ export class FitBridge {
     return this.files
   }
 
+  private loadWheels(): Promise<Record<string, string>> {
+    this.wheels ??= Promise.all(
+      WHEELS.map(async (w) => {
+        const r = await fetch(`${BASE}wheels/${w}`)
+        if (!r.ok) throw new Error(`wheels/${w}: HTTP ${r.status}`)
+        return [w, toBase64(new Uint8Array(await r.arrayBuffer()))] as const
+      }),
+    )
+      .then((pairs) => Object.fromEntries(pairs))
+      .catch((e: unknown) => {
+        this.wheels = null
+        throw e
+      })
+    return this.wheels
+  }
+
   private async install() {
-    const files = await this.loadFiles()
+    const [files, wheels] = await Promise.all([this.loadFiles(), this.loadWheels()])
     await this.kernel.start()
-    const code = `${INSTALL}_kf_install(__import__('json').loads(${pyStr(JSON.stringify(files))}), ${pyStr(ROOT)})\ndel _kf_install`
+    const code =
+      `${INSTALL}_kf_wheels(__import__('json').loads(${pyStr(JSON.stringify(wheels))}), ${pyStr(ROOT)})\n` +
+      `_kf_install(__import__('json').loads(${pyStr(JSON.stringify(files))}), ${pyStr(ROOT)})\ndel _kf_install, _kf_wheels`
     const r = await this.kernel.runCell(code)
     if (!r.ok) throw new Error(r.error?.message ?? 'The fitting engine could not be installed.')
     this.installedFor = this.kernel

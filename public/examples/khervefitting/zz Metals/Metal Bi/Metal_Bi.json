@@ -1,5 +1,5 @@
 {
-  "FilePath": "C:\\Users\\gwilh\\OneDrive - Imperial College London\\Documents\\MEGAsync\\Programs\\Python\\KherveFitting\\Data-Examples\\zz Metals\\Metal Bi\\Metal_Bi.xlsx",
+  "FilePath": "C:\\Users\\gwilh\\OneDrive - Imperial College London\\Documents\\MEGAsync\\Programs\\Python\\KherveFitting-AI\\Data-Examples\\zz Metals\\Metal Bi\\Metal_Bi.xlsx",
   "Number of Core levels": 8,
   "Core levels": {
     "Wide": {
@@ -16907,13 +16907,14 @@
         },
         {
           "text": "Table",
-          "x": 0.02,
-          "y": 0.98,
+          "x": 0.12,
+          "y": 0.93,
           "rotation": 0,
           "fontsize": 10,
           "fontfamily": "Arial",
           "is_table": 1,
-          "coordinate_system": "axes"
+          "coordinate_system": "axes",
+          "figure_coords": 1
         },
         {
           "text": "M. Engelhard, D. Baer, Surface Science Spectra, Vol. 7, No. 1, 2000",
@@ -38558,5 +38559,6 @@
   },
   "Results Table57508": {
     "Peak": {}
-  }
+  },
+  "SampleNames": {}
 }

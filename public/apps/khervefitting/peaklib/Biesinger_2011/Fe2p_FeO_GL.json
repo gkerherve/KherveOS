@@ -1,0 +1,116 @@
+{
+  "Core levels": {
+    "Fe2p": {
+      "Fitting": {
+        "Peaks": {
+          "Fe2p3/2 FeO peak 1": {
+            "Position": 708.42,
+            "Height": 12449.46,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 18552.86,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "708.02:708.82",
+              "Height": "",
+              "FWHM": "1.25:1.55",
+              "L/G": "Fixed",
+              "Area": "1:1e7",
+              "Sigma": "",
+              "Gamma": "",
+              "Skew": ""
+            }
+          },
+          "Fe2p3/2 FeO peak 2": {
+            "Position": 709.72,
+            "Height": 13562.13,
+            "FWHM": 1.6,
+            "L/G": 30.0,
+            "Area": 23098.31,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+1.3",
+              "Height": "1:1e7",
+              "FWHM": "1.45:1.75",
+              "L/G": "A*1",
+              "Area": "A*1.245",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 FeO peak 3": {
+            "Position": 710.92,
+            "Height": 6525.07,
+            "FWHM": 1.6,
+            "L/G": 30.0,
+            "Area": 11113.16,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.5",
+              "Height": "1:1e7",
+              "FWHM": "1.45:1.75",
+              "L/G": "A*1",
+              "Area": "A*0.599",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 FeO peak 4": {
+            "Position": 712.12,
+            "Height": 6358.67,
+            "FWHM": 2.9,
+            "L/G": 30.0,
+            "Area": 19628.93,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+3.7",
+              "Height": "1:1e7",
+              "FWHM": "2.75:3.05",
+              "L/G": "A*1",
+              "Area": "A*1.058",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 FeO peak 5": {
+            "Position": 715.42,
+            "Height": 1610.46,
+            "FWHM": 2.5,
+            "L/G": 30.0,
+            "Area": 4285.71,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+7.0",
+              "Height": "1:1e7",
+              "FWHM": "2.5",
+              "L/G": "A*1",
+              "Area": "A*0.231",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}

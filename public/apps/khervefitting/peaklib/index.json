@@ -1,0 +1,324 @@
+[
+{
+"group": "KherveFitting",
+"name": "Br3d_Cs4d_Iperov_1doublet_Voigt_GK_2501",
+"file": "Br3d_Cs4d_Iperov_1doublet_Voigt_GK_2501.json",
+"coreLevel": "Br3d",
+"peaks": 4
+},
+{
+"group": "KherveFitting",
+"name": "Br3d_Iperov_1doublet_Voigt_GK_2412",
+"file": "Br3d_Iperov_1doublet_Voigt_GK_2412.json",
+"coreLevel": "Br3d",
+"peaks": 2
+},
+{
+"group": "KherveFitting",
+"name": "C1s_C-C_3peaks_Voigt_GK_2412",
+"file": "C1s_C-C_3peaks_Voigt_GK_2412.json",
+"coreLevel": "C1s",
+"peaks": 3
+},
+{
+"group": "KherveFitting",
+"name": "C1s_C=C_21_LA_GK_2412",
+"file": "C1s_C=C_21_LA_GK_2412.json",
+"coreLevel": "C1s",
+"peaks": 6
+},
+{
+"group": "KherveFitting",
+"name": "Ce3d_11peaks_SGL_GK_2503",
+"file": "Ce3d_11peaks_SGL_GK_2503.json",
+"coreLevel": "Ce3d",
+"peaks": 11
+},
+{
+"group": "KherveFitting",
+"name": "Cr2p_CrIIIOxide_GL",
+"file": "Cr2p_CrIIIOxide_GL.json",
+"coreLevel": "Cr2p",
+"peaks": 5
+},
+{
+"group": "KherveFitting",
+"name": "I3d_Iperov_1doublet_Voigt_GK_2412",
+"file": "I3d_Iperov_1doublet_Voigt_GK_2412.json",
+"coreLevel": "I3d",
+"peaks": 2
+},
+{
+"group": "KherveFitting",
+"name": "N1s_NbN_4peaks_Voigt_GK_2501",
+"file": "N1s_NbN_4peaks_Voigt_GK_2501.json",
+"coreLevel": "N1s",
+"peaks": 4
+},
+{
+"group": "KherveFitting",
+"name": "Nb3d_NbN_3doublet_Voigt_GK_2501",
+"file": "Nb3d_NbN_3doublet_Voigt_GK_2501.json",
+"coreLevel": "Nb3d",
+"peaks": 6
+},
+{
+"group": "KherveFitting",
+"name": "Nb3d_NbN_3doublet_Voigt_GK_2501_0",
+"file": "Nb3d_NbN_3doublet_Voigt_GK_2501_0.json",
+"coreLevel": "Nb3d",
+"peaks": 6
+},
+{
+"group": "KherveFitting",
+"name": "O1s_NbN_4peaks_Voigt_GK_2501",
+"file": "O1s_NbN_4peaks_Voigt_GK_2501.json",
+"coreLevel": "O1s",
+"peaks": 4
+},
+{
+"group": "KherveFitting",
+"name": "O1s_O-Lat_3peaks_Voigt_GK_2412",
+"file": "O1s_O-Lat_3peaks_Voigt_GK_2412.json",
+"coreLevel": "O1s",
+"peaks": 3
+},
+{
+"group": "KherveFitting",
+"name": "O1s_O-Lat_C=O_3peaks_Voigt_GK_2412",
+"file": "O1s_O-Lat_C=O_3peaks_Voigt_GK_2412.json",
+"coreLevel": "O1s",
+"peaks": 3
+},
+{
+"group": "KherveFitting",
+"name": "Pb4f_Iperov_1doublets_Voigt_GK_2412",
+"file": "Pb4f_Iperov_1doublets_Voigt_GK_2412.json",
+"coreLevel": "Pb4f",
+"peaks": 2
+},
+{
+"group": "KherveFitting",
+"name": "Pt4f_PtO2_LA-GL_GK_2502",
+"file": "Pt4f_PtO2_LA-GL_GK_2502.json",
+"coreLevel": "Pt4f",
+"peaks": 9
+},
+{
+"group": "KherveFitting",
+"name": "Sr3d_STO_1doublets_LA_GK_2412",
+"file": "Sr3d_STO_1doublets_LA_GK_2412.json",
+"coreLevel": "Sr3d",
+"peaks": 2
+},
+{
+"group": "KherveFitting",
+"name": "Sr3d_STO_1doublets_Voigt_GK_2412",
+"file": "Sr3d_STO_1doublets_Voigt_GK_2412.json",
+"coreLevel": "Sr3d",
+"peaks": 2
+},
+{
+"group": "KherveFitting",
+"name": "Sr3d_STO_2doublets_Voigt_GK_2412",
+"file": "Sr3d_STO_2doublets_Voigt_GK_2412.json",
+"coreLevel": "Sr3d",
+"peaks": 4
+},
+{
+"group": "KherveFitting",
+"name": "Ti2p_NbN_xdoublet_Voigt_GK_2501",
+"file": "Ti2p_NbN_xdoublet_Voigt_GK_2501.json",
+"coreLevel": "Ti2p",
+"peaks": 11
+},
+{
+"group": "KherveFitting",
+"name": "Ti2p_STO_1doublets_LA_GK_2412",
+"file": "Ti2p_STO_1doublets_LA_GK_2412.json",
+"coreLevel": "Ti2p",
+"peaks": 2
+},
+{
+"group": "KherveFitting",
+"name": "Ti2p_STO_2doublets_Voigt_GK_2412",
+"file": "Ti2p_STO_2doublets_Voigt_GK_2412.json",
+"coreLevel": "Ti2p",
+"peaks": 4
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Co2p_Co(OH)2_GL",
+"file": "Biesinger_2011/Co2p_Co(OH)2_GL.json",
+"coreLevel": "Co2p",
+"peaks": 4
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Co2p_Co3O4_GL",
+"file": "Biesinger_2011/Co2p_Co3O4_GL.json",
+"coreLevel": "Co2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Co2p_CoOOH_GL",
+"file": "Biesinger_2011/Co2p_CoOOH_GL.json",
+"coreLevel": "Co2p",
+"peaks": 4
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Co2p_CoO_GL",
+"file": "Biesinger_2011/Co2p_CoO_GL.json",
+"coreLevel": "Co2p",
+"peaks": 4
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Cr2p_CrIIIOxide_GL",
+"file": "Biesinger_2011/Cr2p_CrIIIOxide_GL.json",
+"coreLevel": "Cr2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Cr2p_FeCr2O4_GL",
+"file": "Biesinger_2011/Cr2p_FeCr2O4_GL.json",
+"coreLevel": "Cr2p",
+"peaks": 4
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Cr2p_Mixed_CrIIIOxide_GL",
+"file": "Biesinger_2011/Cr2p_Mixed_CrIIIOxide_GL.json",
+"coreLevel": "Cr2p",
+"peaks": 7
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Cr2p_NiCr2O4_GL",
+"file": "Biesinger_2011/Cr2p_NiCr2O4_GL.json",
+"coreLevel": "Cr2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Cs3d_Iperov_1doublet_Voigt_GK_2412",
+"file": "Biesinger_2011/Cs3d_Iperov_1doublet_Voigt_GK_2412.json",
+"coreLevel": "Cs3d",
+"peaks": 2
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_Fe2O3_GL",
+"file": "Biesinger_2011/Fe2p_Fe2O3_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 6
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_Fe3O4_GL",
+"file": "Biesinger_2011/Fe2p_Fe3O4_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 7
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_FeCO3_GL",
+"file": "Biesinger_2011/Fe2p_FeCO3_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_FeOOH_GL",
+"file": "Biesinger_2011/Fe2p_FeOOH_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 6
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_FeO_GL",
+"file": "Biesinger_2011/Fe2p_FeO_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_alpha-Fe2O3_GL",
+"file": "Biesinger_2011/Fe2p_alpha-Fe2O3_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 6
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_alpha-FeOOH_GL",
+"file": "Biesinger_2011/Fe2p_alpha-FeOOH_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 6
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_gamma-Fe2O3_GL",
+"file": "Biesinger_2011/Fe2p_gamma-Fe2O3_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 6
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Fe2p_gamma-FeOOH_GL",
+"file": "Biesinger_2011/Fe2p_gamma-FeOOH_GL.json",
+"coreLevel": "Fe2p",
+"peaks": 6
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Mn2p_Mn(II)O_GL",
+"file": "Biesinger_2011/Mn2p_Mn(II)O_GL.json",
+"coreLevel": "Mn2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Mn2p_Mn(III)2O3_GL",
+"file": "Biesinger_2011/Mn2p_Mn(III)2O3_GL.json",
+"coreLevel": "Mn2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Mn2p_Mn(III)Manganite_GL",
+"file": "Biesinger_2011/Mn2p_Mn(III)Manganite_GL.json",
+"coreLevel": "Mn2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Mn2p_Mn(IV)O2_GL",
+"file": "Biesinger_2011/Mn2p_Mn(IV)O2_GL.json",
+"coreLevel": "Mn2p",
+"peaks": 6
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Ni2p_Ni(OH)2_GL",
+"file": "Biesinger_2011/Ni2p_Ni(OH)2_GL.json",
+"coreLevel": "Ni2p",
+"peaks": 6
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Ni2p_NiO_GL",
+"file": "Biesinger_2011/Ni2p_NiO_GL.json",
+"coreLevel": "Ni2p",
+"peaks": 5
+},
+{
+"group": "Biesinger_Applied SurfaceScience_257(2011)2717",
+"name": "Ni2p_gamma_NiOOH_GL",
+"file": "Biesinger_2011/Ni2p_gamma_NiOOH_GL.json",
+"coreLevel": "Ni2p",
+"peaks": 7
+}
+]

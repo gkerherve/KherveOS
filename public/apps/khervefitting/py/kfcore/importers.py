@@ -10,7 +10,10 @@
 # VAMAS (.vms, FileMenu/Open.open_vamas_file, read with the `vamas` package
 # as on the desktop), two-column CSV (import_xps_csv_file) and text files
 # (import_raman_txt_file). Each block becomes a core level, as the desktop's
-# converted workbook would give.
+# converted workbook would give. Synced with KherveFitting-AI (dev-AI v1.93,
+# FileMenu/Vamas_Import.py): PHI spin-orbit digits dropped from region names,
+# blocks trimmed to the points both axes have, the full Experimental
+# Description block.
 
 import os
 import re
@@ -23,6 +26,17 @@ CASA_INFO_FIELDS = [
     'Neutraliser', 'Charge Balance', 'Filament Current', 'Filament Bias',
     'Magnet Lens Trim Coil', 'Aperture', 'Iris Position'
 ]
+
+
+# Labels of the per-sheet Experimental Description block (Vamas_Import, dev-AI)
+VAMAS_EXP_LABELS = [
+    "Sample ID", "Date", "Time", "Technique", "Species & Transition", "Number of scans",
+    "Source Label", "Source Energy", "Source width X", "Source width Y", "Pass Energy", "Work Function",
+    "Analyzer Mode", "Sputtering Energy", "Sputter Time", "Sample Tilt",
+    "Take-off Polar Angle", "Take-off Azimuth", "Target Bias",
+    "Analysis Width X", "Analysis Width Y", "X Label", "X Units", "X Start", "X Step", "Num Y Values",
+    "Num Scans", "Collection Time", "Time Correction", "Y Unit", "# Comment Lines", "Block Comment"
+] + list(CASA_INFO_FIELDS)
 
 
 def normalize_sheet_name(name):
@@ -52,6 +66,18 @@ def normalize_sheet_name(name):
     if suffix_match and not re.search(r'\d+$', new_name):
         new_name = f"{new_name}{suffix_match.group(1)}"
     return new_name
+
+
+_SPIN_ORBIT_DIGITS = {'p': '13', 'd': '35', 'f': '57'}
+
+
+def phi_region_base(name):
+    """Open.phi_region_base: 'Fe2p3' (a PHI 2p3/2 window) -> 'Fe2p'; only a
+    digit that is a valid j label for that orbital is removed."""
+    m = re.match(r'^([A-Z][a-z]?\d[pdf])(\d)$', str(name).strip())
+    if m and m.group(2) in _SPIN_ORBIT_DIGITS[m.group(1)[-1]]:
+        return m.group(1)
+    return name
 
 
 def normalize_auger_and_valence_names(sheet_name):
@@ -147,7 +173,7 @@ def vamas_blocks(path, workfunction=0.0):
             raw_sheet_name = f"{block.species_label}{block.transition_or_charge_state_label}"
         raw_sheet_name = raw_sheet_name.replace("/", "_")
         raw_sheet_name = normalize_auger_and_valence_names(raw_sheet_name)
-        sheet_name = normalize_sheet_name(raw_sheet_name)
+        sheet_name = normalize_sheet_name(phi_region_base(raw_sheet_name))
         if sheet_name in names:
             count = 1
             while f"{sheet_name}{count}" in names:
@@ -179,6 +205,12 @@ def vamas_blocks(path, workfunction=0.0):
         else:
             x_label = block.x_label
 
+        # num_y_values counts the ordinates of all corresponding variables:
+        # trim to what both axes have
+        n_points = min(len(x_values), len(y_values))
+        x_values = x_values[:n_points]
+        y_values = y_values[:n_points]
+
         rows = [[x_label, "Corrected Data", "Raw Data", "Transmission"]]
         if len(block.corresponding_variables) > 1:
             raw_t = block.corresponding_variables[1].y_values
@@ -197,23 +229,47 @@ def vamas_blocks(path, workfunction=0.0):
                 corrected_y = (y / abs(trans)) / num_scans
             rows.append([x, corrected_y, y, trans])
 
-        info = {
-            "Sample ID": block.sample_identifier,
-            "Date": f"{block.year}/{block.month}/{block.day}",
-            "Time": f"{block.hour}:{block.minute}:{block.second}",
-            "Technique": block.technique,
-            "Species & Transition": f"{block.species_label} {block.transition_or_charge_state_label}",
-            "Number of scans": num_scans,
-            "Source Label": block.analysis_source_label,
-            "Source Energy": block.analysis_source_characteristic_energy,
-            "Pass Energy": block.analyzer_pass_energy_or_retard_ratio_or_mass_res,
-            "Analyzer Mode": block.analyzer_mode,
-            "X Label": block.x_label,
-            "Collection Time": block.signal_collection_time,
-            "Y Unit": y_unit,
-            "Block Comment": block.block_comment,
-        }
-        info.update(parse_casa_info_lines(block.block_comment))
+        sputter_source = getattr(block, 'sputtering_source', None)
+        sputter_time_val = ''
+        if sputter_source is not None:
+            sputter_time_val = getattr(sputter_source, 'mode', '') or ''
+        values = [
+            block.sample_identifier,
+            f"{block.year}/{block.month}/{block.day}",
+            f"{block.hour}:{block.minute}:{block.second}",
+            block.technique,
+            f"{block.species_label} {block.transition_or_charge_state_label}",
+            block.num_scans_to_compile_block,
+            block.analysis_source_label,
+            block.analysis_source_characteristic_energy,
+            getattr(block, 'analysis_source_beam_width_x', ''),
+            getattr(block, 'analysis_source_beam_width_y', ''),
+            block.analyzer_pass_energy_or_retard_ratio_or_mass_res,
+            getattr(block, 'analyzer_work_function_or_acceptance_energy', ''),
+            block.analyzer_mode,
+            block.sputtering_source_energy if hasattr(block, 'sputtering_source_energy') else 'N/A',
+            sputter_time_val,
+            getattr(block, 'sample_normal_polar_angle_tilt', ''),
+            getattr(block, 'analyzer_axis_take_off_polar_angle', ''),
+            getattr(block, 'analyzer_axis_take_off_azimuth', ''),
+            getattr(block, 'target_bias', ''),
+            getattr(block, 'analysis_width_x', ''),
+            getattr(block, 'analysis_width_y', ''),
+            block.x_label,
+            getattr(block, 'x_units', ''),
+            block.x_start,
+            block.x_step,
+            block.num_y_values,
+            block.num_scans_to_compile_block,
+            block.signal_collection_time,
+            getattr(block, 'signal_time_correction', ''),
+            y_unit,
+            getattr(block, 'num_lines_block_comment', ''),
+            block.block_comment,
+        ]
+        casa_info = parse_casa_info_lines(block.block_comment)
+        values.extend(casa_info.get(f, '') for f in CASA_INFO_FIELDS)
+        info = dict(zip(VAMAS_EXP_LABELS, values))
         out.append((sheet_name, rows, {k: str(v) for k, v in info.items()}))
     return out
 

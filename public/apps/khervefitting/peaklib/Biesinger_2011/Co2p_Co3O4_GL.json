@@ -1,0 +1,116 @@
+{
+  "Core levels": {
+    "Co2p": {
+      "Fitting": {
+        "Peaks": {
+          "Co2p3/2 Co3O4 peak 1": {
+            "Position": 779.6,
+            "Height": 8067.4,
+            "FWHM": 1.39,
+            "L/G": 30.0,
+            "Area": 11936.6,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "779.2:780.0",
+              "Height": "",
+              "FWHM": "1.24:1.54",
+              "L/G": "Fixed",
+              "Area": "1:1e7",
+              "Sigma": "",
+              "Gamma": "",
+              "Skew": ""
+            }
+          },
+          "Co2p3/2 Co3O4 peak 2": {
+            "Position": 780.87,
+            "Height": 4976.94,
+            "FWHM": 1.62,
+            "L/G": 30.0,
+            "Area": 8582.42,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+1.30#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.47:1.77",
+              "L/G": "A*1",
+              "Area": "A*0.719",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Co2p3/2 Co3O4 peak 3": {
+            "Position": 782.17,
+            "Height": 1928.96,
+            "FWHM": 2.18,
+            "L/G": 30.0,
+            "Area": 4476.23,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.60#0.1",
+              "Height": "1:1e7",
+              "FWHM": "2.03:2.33",
+              "L/G": "A*1",
+              "Area": "A*0.375",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Co2p3/2 Co3O4 peak 4": {
+            "Position": 785.17,
+            "Height": 505.12,
+            "FWHM": 4.44,
+            "L/G": 30.0,
+            "Area": 2387.32,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+5.60#0.1",
+              "Height": "1:1e7",
+              "FWHM": "4.29:4.59",
+              "L/G": "A*1",
+              "Area": "A*0.200",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Co2p3/2 Co3O4 peak 5": {
+            "Position": 789.47,
+            "Height": 606.7,
+            "FWHM": 3.29,
+            "L/G": 30.0,
+            "Area": 2124.71,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+9.90#0.1",
+              "Height": "1:1e7",
+              "FWHM": "3.14:3.44",
+              "L/G": "A*1",
+              "Area": "A*0.178",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}

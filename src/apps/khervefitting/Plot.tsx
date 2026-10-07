@@ -1,545 +1,932 @@
-// The spectrum plot (the desktop's matplotlib canvas): data points, the
-// background, each peak filled down to the background, the envelope and the
-// residuals below, on a binding-energy axis that runs from high to low.
+// The spectrum plot, drawn as the desktop's matplotlib figure (PlotManager in
+// Plot_Operations.py): white figure, axes at left 0.10 / right 0.95 / top 0.95
+// / bottom 0.10, the residuals in a strip below (rows 18–19 of a 20-row grid),
+// data as black dots, the background dashed brown, the envelope black, peaks
+// filled (solid, hatched or as lines) down to the background, the legend of
+// the peaks (upper left), the core-level title (top right), the intensity in
+// ×10ⁿ, a binding-energy axis running from high to low, χ beside the
+// residuals. SVG, so the same component renders in Node for tests.
 //
-// Mouse: drag a peak's top to move it (position and height); drag the two
-// dashed lines to set the background limits; double-click (or click in
-// "add" mode) to add a peak there; drag on empty space to zoom into a box;
-// the wheel zooms the energy axis (Shift+wheel: intensity); right-click for
-// a menu.
+// Mouse (as the desktop): click a peak top to select it (blue ×), drag the ×
+// to move it; drag the red dashed lines (Peak Fitting window, BKG tab) to set
+// the region; Zoom In tool: drag a box; Drag tool: pan; double-click: Plot
+// Limits; wheel: zoom the energy axis (Shift: intensity); right-click: menu.
 
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode, type WheelEvent } from 'react'
 import { peaksOf, reversedAxis, xLabel, type View } from './model'
-import {
-  exponentFor, extent, fromPx, hitLine, hitTop, niceTicks, ordered, padded, scale, superscript, tickLabel, toPx, valueAt, zoomRange,
-  type Range, type Scale,
-} from './plotmath'
+import { PLOT_STYLE, PT, autoTicks, formatTicks, formatSheetName, legendPeaks, mathPieces, minorTicks, peakColours } from './mpl'
+import { valueAt } from './plotmath'
 
-export interface Zoom {
-  x: Range | null
-  y: Range | null
+export interface Limits {
+  xmin: number
+  xmax: number
+  ymin: number
+  ymax: number
+}
+
+/** The display toggles (ToggleToolbar, View menu, Preferences). */
+export interface PlotOptions {
+  /** 0 off, 1 on the main plot (scaled), 2 in a strip below (default). */
+  residuals: 0 | 1 | 2
+  /** 0 hidden, 1 full (data, background, fit, peaks), 2 peaks only (default). */
+  legend: 0 | 1 | 2
+  /** 0 values, 1 hidden, 2 "Intensity (a.u.)" without values. */
+  yAxis: 0 | 1 | 2
+  peakFill: boolean
+  fitResults: boolean
+  /** Show the fitted model at all (Toggle Plot). */
+  showFit: boolean
+  /** A+ / A− steps added to every font size. */
+  fontDelta: number
+  /** Per-peak fill: 'Solid Fill' | 'Hatch' | 'None'. */
+  fillTypes: string[]
+  hatches: string[]
+}
+
+export const DEFAULT_OPTIONS: PlotOptions = {
+  residuals: 2, legend: 2, yAxis: 0, peakFill: true, fitResults: false, showFit: true, fontDelta: 0, fillTypes: [], hatches: [],
+}
+
+export type PlotMode = 'none' | 'zoom' | 'drag'
+
+export interface PlotLabel {
+  text: string
+  x: number
+  y?: number | null
+  rotation?: number
+  fontsize?: number
+}
+
+/** The D-parameter derivative the desktop draws instead of the fit (Dpara_Screen). */
+export interface DParamCurve {
+  x: number[]
+  y: number[]
+  color_after_calculate?: string
+  hide?: string[]
+}
+
+/** Measure Area fills: data above the background, per area row (AreaFit_Screen). */
+export interface AreaFills {
+  fills: { label: string; peak_index: number; x: number[]; y: number[]; bkg: number[] }[]
+  envelope: boolean
+}
+
+/** A Survey Identification line (survey.plot_element_lines): fraction of the axis height. */
+export interface IdLine {
+  x: number
+  frac: number
+  text: string
 }
 
 export interface PlotProps {
   view: View
+  limits: Limits
+  options: PlotOptions
   selected: number | null
-  /** Background limits being edited (binding energies), or null. */
-  limits: [number, number] | null
-  showResiduals: boolean
-  addMode: boolean
-  zoom: Zoom
-  onZoom: (z: Zoom) => void
-  onSelect: (peak: number | null) => void
-  onLimits: (low: number, high: number, final: boolean) => void
-  onPeakDrag: (peak: number, x: number, y: number, phase: 'start' | 'move' | 'end') => void
-  onAdd: (x: number, y: number) => void
-  onContextMenu: (e: ReactMouseEvent, at: { x: number; y: number; peak: number }) => void
+  /** The red dashed region lines (binding energies), or null when hidden. */
+  vlines: [number, number] | null
+  greenLine: number | null
+  mode: PlotMode
+  labels?: PlotLabel[]
+  chi?: number | null
+  dparam?: DParamCurve | null
+  areaFills?: AreaFills | null
+  idLines?: IdLine[]
+  /** The empty plot's faint KherveFitting picture (plot_initial_logo). */
+  logo?: string | null
+  /** Fixed size (tests); otherwise the plot follows its panel. */
+  size?: { w: number; h: number }
+  onLimits?: (l: Limits) => void
+  onCursor?: (at: { x: number; y: number } | null) => void
+  onSelect?: (peak: number | null) => void
+  onPeakDrag?: (peak: number, x: number, y: number, phase: 'start' | 'move' | 'end') => void
+  onVlines?: (lo: number, hi: number, final: boolean) => void
+  onGreenLine?: (x: number) => void
+  onDoubleClick?: () => void
+  onContextMenu?: (e: ReactMouseEvent, at: { x: number; y: number; peak: number }) => void
 }
 
-/** Peak colours: the theme's own distinct hues. */
-const PEAK_VARS = ['--k-syn-function', '--k-syn-def', '--k-syn-string', '--k-syn-type', '--k-syn-keyword', '--k-syn-property', '--k-syn-number', '--k-warning']
-
-const M = { left: 66, right: 16, top: 12, bottom: 40 }
-const RESID_H = 64
-
-type Drag =
-  | { kind: 'peak'; peak: number; x: number; y: number }
-  | { kind: 'line'; line: number; other: number }
-  | { kind: 'box'; x0: number; y0: number; x1: number; y1: number; moved: boolean }
-  | null
+interface Box {
+  x0: number
+  x1: number
+  y0: number
+  y1: number
+}
 
 interface Frame {
-  sx: Scale
-  sy: Scale
-  sr: Scale | null
-  plot: { x: number; y: number; w: number; h: number }
-  resid: { x: number; y: number; w: number; h: number } | null
+  main: Box
+  resid: Box | null
+  /** BE → px */
+  X: (v: number) => number
+  /** px → BE */
+  iX: (px: number) => number
+  Y: (v: number) => number
+  iY: (py: number) => number
+  R: ((v: number) => number) | null
+  rlim: [number, number] | null
+  rev: boolean
 }
 
-function cssVar(el: Element, name: string, fallback: string) {
-  return getComputedStyle(el).getPropertyValue(name).trim() || fallback
+const px = (pt: number) => pt * PT
+const FONT = PLOT_STYLE.font
+
+/** Width of a text in pixels (canvas when there is one, a Calibri-like estimate otherwise). */
+let measureCtx: CanvasRenderingContext2D | null | undefined
+export function textWidth(text: string, size: number, bold = false): number {
+  if (measureCtx === undefined) {
+    try {
+      measureCtx = typeof document !== 'undefined' ? document.createElement('canvas').getContext('2d') : null
+    } catch {
+      measureCtx = null
+    }
+  }
+  if (measureCtx) {
+    measureCtx.font = `${bold ? 'bold ' : ''}${size}px ${FONT}`
+    return measureCtx.measureText(text).width
+  }
+  let w = 0
+  for (const ch of text) w += /[ilI.,:;'|!()[\]]/.test(ch) ? 0.25 : /[mwMW]/.test(ch) ? 0.8 : /[A-Z]/.test(ch) ? 0.6 : /\d/.test(ch) ? 0.507 : 0.47
+  return w * size * (bold ? 1.06 : 1)
 }
+
+/** matplotlib line styles in pixels for a line width in points. */
+const DASH = (lw: number) => `${px(3.7 * lw).toFixed(2)} ${px(1.6 * lw).toFixed(2)}`
+
+function pathOf(xs: readonly (number | null)[], ys: readonly (number | null)[] | null | undefined, X: (v: number) => number, Y: (v: number) => number): string {
+  if (!ys) return ''
+  let d = ''
+  let on = false
+  for (let i = 0; i < xs.length; i++) {
+    const x = xs[i]
+    const y = ys[i]
+    if (x === null || y === null || y === undefined || !Number.isFinite(y)) {
+      on = false
+      continue
+    }
+    d += `${on ? 'L' : 'M'}${X(x).toFixed(2)} ${Y(y).toFixed(2)}`
+    on = true
+  }
+  return d
+}
+
+/** fill_between(x, lower, upper): one closed polygon per run of finite values. */
+function fillPath(xs: readonly (number | null)[], lower: readonly (number | null)[], upper: readonly (number | null)[], X: (v: number) => number, Y: (v: number) => number): string {
+  let d = ''
+  let run: number[] = []
+  const flush = () => {
+    if (run.length > 1) {
+      d += run.map((i, k) => `${k ? 'L' : 'M'}${X(xs[i]!).toFixed(2)} ${Y(upper[i]!).toFixed(2)}`).join('')
+      for (let k = run.length - 1; k >= 0; k--) d += `L${X(xs[run[k]]!).toFixed(2)} ${Y(lower[run[k]]!).toFixed(2)}`
+      d += 'Z'
+    }
+    run = []
+  }
+  for (let i = 0; i < xs.length; i++) {
+    const ok = xs[i] !== null && upper[i] !== null && upper[i] !== undefined && lower[i] !== null && lower[i] !== undefined && Number.isFinite(upper[i]!) && Number.isFinite(lower[i]!)
+    if (ok) run.push(i)
+    else flush()
+  }
+  flush()
+  return d
+}
+
+/** matplotlib hatch patterns ('/', '\\', '|', '-', '+', 'x', '.', 'o', '*') as SVG pattern content. */
+function hatchPattern(id: string, hatch: string, density: number, colour: string, alpha: number): ReactNode {
+  const n = (c: string) => hatch.split('').filter((h) => h === c).length * density
+  const cell = px(72)
+  const lines: ReactNode[] = []
+  const stroke = { stroke: colour, strokeOpacity: alpha, strokeWidth: px(1), fill: 'none' }
+  const ne = n('/') + n('x') + n('X')
+  const se = n('\\') + n('x') + n('X')
+  const ve = n('|') + n('+')
+  const ho = n('-') + n('+')
+  const dots = n('.') + n('o') + n('O') + n('*')
+  // Size the tile to one line spacing so the pattern repeats seamlessly.
+  const k = Math.max(ne, se, ve, ho, dots, 1)
+  const s = cell / k
+  if (ne) lines.push(<path key="ne" d={`M0 ${s}L${s} 0M${-s} ${s}L${s} ${-s}M0 ${2 * s}L${2 * s} 0`} {...stroke} />)
+  if (se) lines.push(<path key="se" d={`M0 0L${s} ${s}M${-s} 0L${s} ${2 * s}M0 ${-s}L${2 * s} ${s}`} {...stroke} />)
+  if (ve) lines.push(<path key="v" d={`M${s / 2} 0V${s}`} {...stroke} />)
+  if (ho) lines.push(<path key="h" d={`M0 ${s / 2}H${s}`} {...stroke} />)
+  if (dots) lines.push(<circle key="o" cx={s / 2} cy={s / 2} r={Math.max(0.8, s / 6)} fill={colour} fillOpacity={alpha} />)
+  return (
+    <pattern key={id} id={id} patternUnits="userSpaceOnUse" width={s} height={s}>
+      {lines}
+    </pattern>
+  )
+}
+
+/** The measured FWHM of a peak curve above the background (for the selected peak's note). */
+function measuredFwhm(xs: readonly (number | null)[], curve: readonly (number | null)[], bkg: readonly (number | null)[]): number | null {
+  let imax = -1
+  let vmax = -Infinity
+  for (let i = 0; i < xs.length; i++) {
+    const c = curve[i]
+    const b = bkg[i]
+    if (c === null || b === null || xs[i] === null) continue
+    if (c - b > vmax) {
+      vmax = c - b
+      imax = i
+    }
+  }
+  if (imax < 0 || !(vmax > 0)) return null
+  const half = vmax / 2
+  const cross = (dir: 1 | -1) => {
+    for (let i = imax; i >= 0 && i < xs.length; i += dir) {
+      const j = i + dir
+      if (j < 0 || j >= xs.length) return null
+      const a = (curve[i] ?? NaN) - (bkg[i] ?? NaN)
+      const b = (curve[j] ?? NaN) - (bkg[j] ?? NaN)
+      if (!Number.isFinite(b)) return null
+      if (a >= half && b < half) return xs[i]! + ((a - half) / (a - b)) * (xs[j]! - xs[i]!)
+    }
+    return null
+  }
+  const l = cross(-1)
+  const r = cross(1)
+  return l !== null && r !== null ? Math.abs(r - l) : null
+}
+
+/** A size for plots rendered without a layout engine (Node tests). */
+export const PlotSizeHint = createContext<{ w: number; h: number } | null>(null)
 
 export function Plot(props: PlotProps) {
-  const { view, selected, limits, showResiduals, addMode, zoom } = props
+  const { view, limits, options: o, selected, vlines, greenLine, mode } = props
   const wrapRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [size, setSize] = useState({ w: 600, h: 400 })
-  const [drag, setDrag] = useState<Drag>(null)
-  const [hover, setHover] = useState<{ x: number; y: number; px: number; py: number } | null>(null)
-  const [cursor, setCursor] = useState('crosshair')
-  const frameRef = useRef<Frame | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+  const hint = useContext(PlotSizeHint)
+  const [measured, setMeasured] = useState({ w: 800, h: 600 })
+  const size = props.size ?? hint ?? measured
+  const [drag, setDrag] = useState<
+    | { kind: 'peak'; peak: number; x: number; y: number }
+    | { kind: 'vline'; line: 0 | 1 }
+    | { kind: 'green' }
+    | { kind: 'box'; x0: number; y0: number; x1: number; y1: number }
+    | { kind: 'pan'; px0: number; py0: number; l: Limits }
+    | null
+  >(null)
 
-  // Follow the size of the panel.
   useEffect(() => {
     const el = wrapRef.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setSize({ w: Math.max(200, el.clientWidth), h: Math.max(160, el.clientHeight) }))
+    if (!el || props.size) return
+    const ro = new ResizeObserver(() => setMeasured({ w: Math.max(240, el.clientWidth), h: Math.max(200, el.clientHeight) }))
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [props.size])
 
   const xs = view.x ?? []
   const ys = view.y ?? []
   const bkg = view.bkg ?? []
   const peaks = peaksOf(view.grid)
   const rev = reversedAxis(view.sheet)
-
-  /** Scales for the current zoom and size. */
-  const frame = (): Frame | null => {
-    const dataX = extent(xs)
-    const dataY = extent(ys, bkg, view.envelope)
-    if (!dataX || !dataY) return null
-    const hasResid = showResiduals && !!view.residuals && view.residuals.some((v) => v !== null)
-    const plot = { x: M.left, y: M.top, w: size.w - M.left - M.right, h: size.h - M.top - M.bottom - (hasResid ? RESID_H + 8 : 0) }
-    const xr = zoom.x ?? dataX
-    const yr = zoom.y ?? padded({ min: Math.min(0, dataY.min), max: dataY.max }, 0.02, 0.08)
-    const sx = scale(xr, plot.x, plot.x + plot.w, rev)
-    const sy = scale(yr, plot.y + plot.h, plot.y)
-    let sr: Scale | null = null
-    let resid = null
-    if (hasResid) {
-      resid = { x: plot.x, y: plot.y + plot.h + 8, w: plot.w, h: RESID_H }
-      const r = extent(view.residuals)
-      const m = r ? Math.max(Math.abs(r.min), Math.abs(r.max)) || 1 : 1
-      sr = scale({ min: -m * 1.1, max: m * 1.1 }, resid.y + resid.h, resid.y)
-    }
-    return { sx, sy, sr, plot, resid }
+  const hide = new Set(props.dparam?.hide ?? [])
+  if (props.areaFills && !props.areaFills.envelope) {
+    hide.add('envelope')
+    hide.add('residuals')
+  }
+  const hasResid = !hide.has('residuals') && o.showFit && o.residuals === 2 && !!view.residuals && view.residuals.some((v) => v !== null)
+  const fs = {
+    tick: PLOT_STYLE.axisNumberSize + o.fontDelta,
+    title: PLOT_STYLE.axisTitleSize + o.fontDelta,
+    legend: PLOT_STYLE.legendFontSize + o.fontDelta,
+    core: PLOT_STYLE.coreLevelTextSize + o.fontDelta,
   }
 
-  const peakTop = (f: Frame, i: number): { x: number; y: number } | null => {
+  // ------------------------------------------------------------ geometry
+  const frame: Frame = useMemo(() => {
+    const W = size.w
+    const H = size.h
+    const left = 0.1 * W
+    const right = 0.95 * W
+    const top = 0.05 * H
+    const bottomAll = 0.9 * H
+    const mainBottom = hasResid ? H * (1 - 0.185) : bottomAll
+    const main = { x0: left, x1: right, y0: top, y1: mainBottom }
+    const resid = hasResid ? { x0: left, x1: right, y0: mainBottom, y1: bottomAll } : null
+    const [a, b] = rev ? [limits.xmax, limits.xmin] : [limits.xmin, limits.xmax]
+    const X = (v: number) => left + ((v - a) / (b - a || 1)) * (right - left)
+    const iX = (p: number) => a + ((p - left) / (right - left)) * (b - a)
+    const Y = (v: number) => mainBottom - ((v - limits.ymin) / (limits.ymax - limits.ymin || 1)) * (mainBottom - top)
+    const iY = (p: number) => limits.ymin + ((mainBottom - p) / (mainBottom - top)) * (limits.ymax - limits.ymin)
+    let R: Frame['R'] = null
+    let rlim: [number, number] | null = null
+    if (resid && view.residuals) {
+      // setup_residual_subplot: min/max of the residuals ± 10 %
+      let lo = Infinity
+      let hi = -Infinity
+      for (const v of view.residuals) {
+        if (v === null || !Number.isFinite(v)) continue
+        lo = Math.min(lo, v)
+        hi = Math.max(hi, v)
+      }
+      if (lo <= hi) {
+        const m = hi !== lo ? 0.1 * (hi - lo) : 0.1
+        rlim = [lo - m, hi + m]
+      } else rlim = [-1, 1]
+      const [r0, r1] = rlim
+      R = (v: number) => resid.y1 - ((v - r0) / (r1 - r0 || 1)) * (resid.y1 - resid.y0)
+    }
+    return { main, resid, X, iX, Y, iY, R, rlim, rev }
+  }, [size.w, size.h, hasResid, rev, limits.xmin, limits.xmax, limits.ymin, limits.ymax, view.residuals])
+
+  const { main, resid, X, Y } = frame
+
+  // ------------------------------------------------------------ ticks
+  const xr = [limits.xmin, limits.xmax] as const
+  const xTicks = autoTicks(xr[0], xr[1], main.x1 - main.x0, fs.tick, 'x')
+  const xFmt = formatTicks(xTicks, xr[0], xr[1], false)
+  const xMinor = minorTicks(xTicks, xr[0], xr[1], PLOT_STYLE.xSublines + 1)
+  const yTicks = autoTicks(limits.ymin, limits.ymax, main.y1 - main.y0, fs.tick, 'y')
+  const yFmt = formatTicks(yTicks, limits.ymin, limits.ymax, true)
+  const yMinor = minorTicks(yTicks, limits.ymin, limits.ymax, PLOT_STYLE.ySublines + 1)
+  const rTicks = resid && frame.rlim ? autoTicks(frame.rlim[0], frame.rlim[1], resid.y1 - resid.y0, fs.tick, 'y') : []
+  const rFmt = resid && frame.rlim ? formatTicks(rTicks, frame.rlim[0], frame.rlim[1], true) : null
+
+  // ------------------------------------------------------------ peaks
+  const labels = peaks.map((p) => p.label)
+  const colours = peakColours(labels, PLOT_STYLE.peakColors, PLOT_STYLE.peakAlpha)
+  const fillOf = (i: number) => o.fillTypes[colours[i]?.styleOf ?? i] ?? 'Solid Fill'
+  const hatchOf = (i: number) => o.hatches[colours[i]?.styleOf ?? i] ?? '/'
+  const curves = o.showFit ? (view.peaks ?? []) : []
+  const unfitted = (i: number) => /^Unfitted|^D-parameter|^Fermi|^VBM|^Cut-Off|^SurveyID/.test(peaks[i]?.model ?? '')
+
+  const inView = (t: number, lo: number, hi: number) => t >= lo - Math.abs(hi - lo) * 1e-9 && t <= hi + Math.abs(hi - lo) * 1e-9
+
+  // ------------------------------------------------------------ mouse
+  const local = (e: { clientX: number; clientY: number }) => {
+    const r = svgRef.current!.getBoundingClientRect()
+    return { x: e.clientX - r.left, y: e.clientY - r.top }
+  }
+  const inMain = (p: { x: number; y: number }) => p.x >= main.x0 && p.x <= main.x1 && p.y >= main.y0 && p.y <= main.y1
+  const topOf = (i: number) => {
     const p = peaks[i]
     if (!p || !Number.isFinite(p.position) || !Number.isFinite(p.height)) return null
-    if (drag?.kind === 'peak' && drag.peak === i) return { x: toPx(f.sx, drag.x), y: toPx(f.sy, drag.y) }
+    if (drag?.kind === 'peak' && drag.peak === i) return { x: X(drag.x), y: Y(drag.y) }
     const b = valueAt(xs, bkg, p.position) ?? 0
-    return { x: toPx(f.sx, p.position), y: toPx(f.sy, p.height + b) }
+    return { x: X(p.position), y: Y(p.height + b) }
   }
-
-  // ------------------------------------------------------------- drawing
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const root = wrapRef.current
-    if (!canvas || !root) return
-    const dpr = window.devicePixelRatio || 1
-    canvas.width = Math.round(size.w * dpr)
-    canvas.height = Math.round(size.h * dpr)
-    canvas.style.width = `${size.w}px`
-    canvas.style.height = `${size.h}px`
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    const c = {
-      bg: cssVar(root, '--k-bg', '#000'),
-      surface: cssVar(root, '--k-surface', '#111'),
-      text: cssVar(root, '--k-text', '#eee'),
-      muted: cssVar(root, '--k-muted', '#999'),
-      border: cssVar(root, '--k-border', '#333'),
-      accent: cssVar(root, '--k-accent', '#3c3'),
-      danger: cssVar(root, '--k-danger', '#e33'),
-      warning: cssVar(root, '--k-warning', '#ec3'),
-      link: cssVar(root, '--k-link', '#5af'),
-      selection: cssVar(root, '--k-selection', '#264'),
-      font: cssVar(root, '--k-font', 'sans-serif'),
-      peaks: PEAK_VARS.map((v) => cssVar(root, v, '#888')),
-    }
-    ctx.fillStyle = c.bg
-    ctx.fillRect(0, 0, size.w, size.h)
-    const f = frame()
-    frameRef.current = f
-    if (!f) {
-      ctx.fillStyle = c.muted
-      ctx.font = `13px ${c.font}`
-      ctx.textAlign = 'center'
-      ctx.fillText(view.sheet ? 'This core level has no data.' : '', size.w / 2, size.h / 2)
-      return
-    }
-    const { sx, sy, plot } = f
-    const X = (v: number) => toPx(sx, v)
-    const Y = (v: number) => toPx(sy, v)
-
-    // Axes and grid
-    const xr = ordered(sx.d0, sx.d1)
-    const yr = ordered(sy.d0, sy.d1)
-    const xt = niceTicks(xr.min, xr.max, Math.max(3, Math.floor(plot.w / 80)))
-    const yt = niceTicks(yr.min, yr.max, Math.max(3, Math.floor(plot.h / 50)))
-    const exp = exponentFor(Math.max(Math.abs(yr.min), Math.abs(yr.max)))
-    ctx.font = `11px ${c.font}`
-    ctx.strokeStyle = c.border
-    ctx.lineWidth = 1
-    ctx.fillStyle = c.muted
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'top'
-    const bottom = (f.resid ? f.resid.y + f.resid.h : plot.y + plot.h)
-    for (const t of xt.ticks) {
-      const px = Math.round(X(t)) + 0.5
-      ctx.globalAlpha = 0.35
-      ctx.beginPath()
-      ctx.moveTo(px, plot.y)
-      ctx.lineTo(px, bottom)
-      ctx.stroke()
-      ctx.globalAlpha = 1
-      ctx.fillText(tickLabel(t, xt.step), px, bottom + 5)
-    }
-    ctx.textAlign = 'right'
-    ctx.textBaseline = 'middle'
-    for (const t of yt.ticks) {
-      const py = Math.round(Y(t)) + 0.5
-      ctx.globalAlpha = 0.35
-      ctx.beginPath()
-      ctx.moveTo(plot.x, py)
-      ctx.lineTo(plot.x + plot.w, py)
-      ctx.stroke()
-      ctx.globalAlpha = 1
-      ctx.fillText(tickLabel(t / 10 ** exp, yt.step / 10 ** exp), plot.x - 6, py)
-    }
-    ctx.fillStyle = c.text
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'bottom'
-    ctx.fillText(xLabel(view.sheet), plot.x + plot.w / 2, size.h - 4)
-    ctx.save()
-    ctx.translate(13, plot.y + plot.h / 2)
-    ctx.rotate(-Math.PI / 2)
-    ctx.textBaseline = 'middle'
-    ctx.fillText(`Intensity (CPS${exp ? ` ×10${superscript(exp)}` : ''})`, 0, 0)
-    ctx.restore()
-
-    ctx.save()
-    ctx.beginPath()
-    ctx.rect(plot.x, plot.y, plot.w, plot.h)
-    ctx.clip()
-
-    // Recorded background regions
-    const regions = view.background?.ranges ?? []
-    ctx.fillStyle = c.selection
-    ctx.globalAlpha = 0.18
-    for (const r of regions) {
-      const a = X(r[2])
-      const b = X(r[3])
-      ctx.fillRect(Math.min(a, b), plot.y, Math.abs(b - a), plot.h)
-    }
-    ctx.globalAlpha = 1
-
-    const line = (arr: readonly (number | null)[], close?: readonly (number | null)[]) => {
-      ctx.beginPath()
-      let on = false
-      for (let i = 0; i < xs.length; i++) {
-        const x = xs[i]
-        const y = arr[i]
-        if (x === null || y === null || y === undefined) {
-          on = false
-          continue
-        }
-        if (on) ctx.lineTo(X(x), Y(y))
-        else ctx.moveTo(X(x), Y(y))
-        on = true
+  const peakAt = (p: { x: number; y: number }) => {
+    let best = -1
+    let bd = 14 * 14
+    peaks.forEach((_, i) => {
+      if (!curves[i]) return
+      const t = topOf(i)
+      if (!t) return
+      const d = (t.x - p.x) ** 2 + (t.y - p.y) ** 2
+      if (d < bd) {
+        bd = d
+        best = i
       }
-      if (close) {
-        for (let i = xs.length - 1; i >= 0; i--) {
-          const x = xs[i]
-          const y = close[i]
-          if (x === null || y === null || y === undefined || arr[i] === null) continue
-          ctx.lineTo(X(x), Y(y))
-        }
-        ctx.closePath()
-      }
-    }
-
-    // Peaks, filled down to the background
-    ;(view.peaks ?? []).forEach((curve, i) => {
-      if (!curve) return
-      const col = c.peaks[i % c.peaks.length]
-      ctx.fillStyle = col
-      ctx.globalAlpha = selected === i ? 0.5 : 0.28
-      line(curve, bkg)
-      ctx.fill()
-      ctx.globalAlpha = 1
-      ctx.strokeStyle = col
-      ctx.lineWidth = selected === i ? 2 : 1.2
-      line(curve)
-      ctx.stroke()
     })
-
-    // Background
-    if (view.background?.type) {
-      ctx.strokeStyle = c.warning
-      ctx.lineWidth = 1.4
-      ctx.setLineDash([6, 4])
-      line(bkg)
-      ctx.stroke()
-      ctx.setLineDash([])
-    }
-
-    // Data
-    ctx.fillStyle = c.text
-    const r = xs.length > 1500 ? 1.1 : 1.8
-    for (let i = 0; i < xs.length; i++) {
-      const x = xs[i]
-      const y = ys[i]
-      if (x === null || y === null) continue
-      ctx.beginPath()
-      ctx.arc(X(x), Y(y), r, 0, Math.PI * 2)
-      ctx.fill()
-    }
-
-    // Envelope
-    if (view.envelope) {
-      ctx.strokeStyle = c.accent
-      ctx.lineWidth = 1.8
-      line(view.envelope)
-      ctx.stroke()
-    }
-
-    // Background limits
-    if (limits) {
-      ctx.strokeStyle = c.link
-      ctx.lineWidth = 1.5
-      ctx.setLineDash([4, 3])
-      ctx.fillStyle = c.link
-      ctx.font = `11px ${c.font}`
-      ctx.textBaseline = 'top'
-      for (const v of limits) {
-        const px = X(v)
-        ctx.beginPath()
-        ctx.moveTo(px, plot.y)
-        ctx.lineTo(px, plot.y + plot.h)
-        ctx.stroke()
-        ctx.textAlign = 'center'
-        ctx.fillText(v.toFixed(2), px, plot.y + 3)
-      }
-      ctx.setLineDash([])
-    }
-
-    // Peak tops (handles)
-    ctx.font = `bold 11px ${c.font}`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'bottom'
-    peaks.forEach((p, i) => {
-      const t = peakTop(f, i)
-      if (!t || !(view.peaks ?? [])[i]) return
-      const col = c.peaks[i % c.peaks.length]
-      const s = selected === i ? 6 : 4
-      ctx.strokeStyle = selected === i ? c.text : col
-      ctx.lineWidth = selected === i ? 2 : 1.4
-      ctx.beginPath()
-      ctx.moveTo(t.x - s, t.y)
-      ctx.lineTo(t.x + s, t.y)
-      ctx.moveTo(t.x, t.y - s)
-      ctx.lineTo(t.x, t.y + s)
-      ctx.stroke()
-      ctx.fillStyle = col
-      ctx.fillText(p.letter, t.x, t.y - s - 2)
-    })
-
-    // Zoom box
-    if (drag?.kind === 'box' && drag.moved) {
-      ctx.strokeStyle = c.link
-      ctx.fillStyle = c.selection
-      ctx.globalAlpha = 0.25
-      ctx.fillRect(Math.min(drag.x0, drag.x1), Math.min(drag.y0, drag.y1), Math.abs(drag.x1 - drag.x0), Math.abs(drag.y1 - drag.y0))
-      ctx.globalAlpha = 1
-      ctx.strokeRect(Math.min(drag.x0, drag.x1) + 0.5, Math.min(drag.y0, drag.y1) + 0.5, Math.abs(drag.x1 - drag.x0), Math.abs(drag.y1 - drag.y0))
-    }
-    ctx.restore()
-
-    // Frame
-    ctx.strokeStyle = c.muted
-    ctx.lineWidth = 1
-    ctx.strokeRect(plot.x + 0.5, plot.y + 0.5, plot.w, plot.h)
-
-    // Residuals
-    if (f.resid && f.sr && view.residuals) {
-      const rr = f.resid
-      const sr = f.sr
-      ctx.strokeRect(rr.x + 0.5, rr.y + 0.5, rr.w, rr.h)
-      ctx.save()
-      ctx.beginPath()
-      ctx.rect(rr.x, rr.y, rr.w, rr.h)
-      ctx.clip()
-      ctx.strokeStyle = c.border
-      ctx.beginPath()
-      ctx.moveTo(rr.x, toPx(sr, 0))
-      ctx.lineTo(rr.x + rr.w, toPx(sr, 0))
-      ctx.stroke()
-      ctx.strokeStyle = c.danger
-      ctx.lineWidth = 1.2
-      ctx.beginPath()
-      let on = false
-      for (let i = 0; i < xs.length; i++) {
-        const x = xs[i]
-        const y = view.residuals[i]
-        if (x === null || y === null || y === undefined) {
-          on = false
-          continue
-        }
-        if (on) ctx.lineTo(X(x), toPx(sr, y))
-        else ctx.moveTo(X(x), toPx(sr, y))
-        on = true
-      }
-      ctx.stroke()
-      ctx.restore()
-      ctx.fillStyle = c.muted
-      ctx.font = `11px ${c.font}`
-      ctx.textAlign = 'left'
-      ctx.textBaseline = 'top'
-      ctx.fillText('Residuals', rr.x + 4, rr.y + 3)
-    }
-
-    // Legend
-    const items = peaks.map((p, i) => ({ label: p.label || p.letter, color: c.peaks[i % c.peaks.length], shown: !!(view.peaks ?? [])[i] })).filter((x) => x.shown)
-    if (items.length) {
-      ctx.font = `11px ${c.font}`
-      const wmax = Math.max(...items.map((x) => ctx.measureText(x.label).width)) + 26
-      const lh = 15
-      const lx = plot.x + 8
-      const ly = plot.y + 8
-      ctx.fillStyle = c.surface
-      ctx.globalAlpha = 0.85
-      ctx.fillRect(lx, ly, wmax, items.length * lh + 6)
-      ctx.globalAlpha = 1
-      items.forEach((it, i) => {
-        ctx.fillStyle = it.color
-        ctx.fillRect(lx + 5, ly + 6 + i * lh, 12, 9)
-        ctx.fillStyle = c.text
-        ctx.textAlign = 'left'
-        ctx.textBaseline = 'top'
-        ctx.fillText(it.label, lx + 22, ly + 4 + i * lh)
-      })
-    }
-
-    // Read-out of the mouse position
-    if (hover) {
-      ctx.fillStyle = c.muted
-      ctx.font = `11px ${c.font}`
-      ctx.textAlign = 'right'
-      ctx.textBaseline = 'top'
-      ctx.fillText(`${hover.x.toFixed(2)} eV   ${Math.round(hover.y)} CPS`, plot.x + plot.w - 6, plot.y + 6)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, size, selected, limits, showResiduals, zoom, drag, hover])
-
-  // ------------------------------------------------------------- mouse
-  const local = (e: { clientX: number; clientY: number }) => {
-    const r = canvasRef.current!.getBoundingClientRect()
-    return { px: e.clientX - r.left, py: e.clientY - r.top }
+    return best
   }
-  const toData = (f: Frame, px: number, py: number) => ({ x: fromPx(f.sx, px), y: fromPx(f.sy, py) })
-  const inPlot = (f: Frame, px: number, py: number) =>
-    px >= f.plot.x && px <= f.plot.x + f.plot.w && py >= f.plot.y && py <= f.plot.y + f.plot.h
-
-  const what = (f: Frame, px: number, py: number) => {
-    const lines = limits ? limits.map((v) => toPx(f.sx, v)) : []
-    const line = inPlot(f, px, py) ? hitLine(lines, px) : -1
-    const tops = peaks.map((_, i) => ((view.peaks ?? [])[i] ? peakTop(f, i) : null))
-    const peak = hitTop(tops, px, py)
-    return { line, peak }
+  const vlineAt = (p: { x: number }) => {
+    if (!vlines) return -1
+    const d0 = Math.abs(X(vlines[0]) - p.x)
+    const d1 = Math.abs(X(vlines[1]) - p.x)
+    if (Math.min(d0, d1) > 6) return -1
+    return d0 <= d1 ? 0 : 1
   }
 
-  const onPointerDown = (e: ReactPointerEvent<HTMLCanvasElement>) => {
+  const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (e.button !== 0) return
-    const f = frameRef.current
-    if (!f) return
-    const { px, py } = local(e)
-    if (!inPlot(f, px, py)) return
+    const p = local(e)
+    if (!inMain(p)) return
     e.currentTarget.setPointerCapture(e.pointerId)
-    const { line, peak } = what(f, px, py)
-    const d = toData(f, px, py)
+    if (mode === 'zoom') return setDrag({ kind: 'box', x0: p.x, y0: p.y, x1: p.x, y1: p.y })
+    if (mode === 'drag') return setDrag({ kind: 'pan', px0: p.x, py0: p.y, l: limits })
+    const line = vlineAt(p)
+    if (line >= 0) return setDrag({ kind: 'vline', line: line as 0 | 1 })
+    if (greenLine !== null && Math.abs(X(greenLine) - p.x) < 6) return setDrag({ kind: 'green' })
+    const peak = peakAt(p)
     if (peak >= 0) {
-      props.onSelect(peak)
-      setDrag({ kind: 'peak', peak, x: d.x, y: d.y })
-      props.onPeakDrag(peak, d.x, d.y, 'start')
-    } else if (line >= 0 && limits) {
-      setDrag({ kind: 'line', line, other: limits[1 - line] })
-    } else if (addMode) {
-      props.onAdd(d.x, d.y)
-    } else {
-      setDrag({ kind: 'box', x0: px, y0: py, x1: px, y1: py, moved: false })
-    }
-  }
-
-  const onPointerMove = (e: ReactPointerEvent<HTMLCanvasElement>) => {
-    const f = frameRef.current
-    if (!f) return
-    const { px, py } = local(e)
-    const d = toData(f, px, py)
-    if (inPlot(f, px, py)) setHover({ ...d, px, py })
-    else setHover(null)
-    if (!drag) {
-      const { line, peak } = inPlot(f, px, py) ? what(f, px, py) : { line: -1, peak: -1 }
-      setCursor(peak >= 0 ? 'grab' : line >= 0 ? 'ew-resize' : addMode ? 'copy' : 'crosshair')
+      props.onSelect?.(peak)
+      const t = topOf(peak)!
+      setDrag({ kind: 'peak', peak, x: frame.iX(t.x), y: frame.iY(t.y) })
+      props.onPeakDrag?.(peak, frame.iX(t.x), frame.iY(t.y), 'start')
       return
     }
+  }
+
+  const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    const p = local(e)
+    const inside = inMain(p) || (resid && p.x >= resid.x0 && p.x <= resid.x1 && p.y >= resid.y0 && p.y <= resid.y1)
+    props.onCursor?.(inside ? { x: frame.iX(p.x), y: frame.iY(p.y) } : null)
+    if (!drag) return
+    const dx = frame.iX(p.x)
+    const dy = frame.iY(p.y)
     if (drag.kind === 'peak') {
-      setDrag({ ...drag, x: d.x, y: d.y })
-      props.onPeakDrag(drag.peak, d.x, d.y, 'move')
-    } else if (drag.kind === 'line') {
-      props.onLimits(Math.min(d.x, drag.other), Math.max(d.x, drag.other), false)
-    } else if (drag.kind === 'box') {
-      setDrag({ ...drag, x1: px, y1: py, moved: drag.moved || Math.abs(px - drag.x0) + Math.abs(py - drag.y0) > 5 })
+      setDrag({ ...drag, x: dx, y: dy })
+      props.onPeakDrag?.(drag.peak, dx, dy, 'move')
+    } else if (drag.kind === 'vline' && vlines) {
+      const other = vlines[1 - drag.line]
+      props.onVlines?.(Math.min(dx, other), Math.max(dx, other), false)
+    } else if (drag.kind === 'green') props.onGreenLine?.(dx)
+    else if (drag.kind === 'box') setDrag({ ...drag, x1: p.x, y1: p.y })
+    else if (drag.kind === 'pan') {
+      const l = drag.l
+      const sx = (l.xmax - l.xmin) / (main.x1 - main.x0)
+      const sy = (l.ymax - l.ymin) / (main.y1 - main.y0)
+      const ddx = (p.x - drag.px0) * sx * (rev ? 1 : -1)
+      const ddy = (p.y - drag.py0) * sy
+      props.onLimits?.({ xmin: l.xmin + ddx, xmax: l.xmax + ddx, ymin: l.ymin + ddy, ymax: l.ymax + ddy })
     }
   }
 
-  const onPointerUp = (e: ReactPointerEvent<HTMLCanvasElement>) => {
-    const f = frameRef.current
+  const onPointerUp = (e: ReactPointerEvent<SVGSVGElement>) => {
     const cur = drag
     setDrag(null)
-    if (!f || !cur) return
-    const { px, py } = local(e)
-    const d = toData(f, px, py)
-    if (cur.kind === 'peak') props.onPeakDrag(cur.peak, d.x, d.y, 'end')
-    else if (cur.kind === 'line') props.onLimits(Math.min(d.x, cur.other), Math.max(d.x, cur.other), true)
-    else if (cur.kind === 'box') {
-      if (!cur.moved) {
-        props.onSelect(null)
-        return
-      }
-      const a = toData(f, cur.x0, cur.y0)
-      props.onZoom({ x: ordered(a.x, d.x), y: ordered(a.y, d.y) })
+    if (!cur) return
+    const p = local(e)
+    const dx = frame.iX(p.x)
+    const dy = frame.iY(p.y)
+    if (cur.kind === 'peak') props.onPeakDrag?.(cur.peak, dx, dy, 'end')
+    else if (cur.kind === 'vline' && vlines) {
+      const other = vlines[1 - cur.line]
+      props.onVlines?.(Math.min(dx, other), Math.max(dx, other), true)
+    } else if (cur.kind === 'box') {
+      if (Math.abs(cur.x1 - cur.x0) < 4 || Math.abs(cur.y1 - cur.y0) < 4) return
+      const a = frame.iX(cur.x0)
+      const b = frame.iX(cur.x1)
+      const c = frame.iY(cur.y0)
+      const d = frame.iY(cur.y1)
+      props.onLimits?.({ xmin: Math.min(a, b), xmax: Math.max(a, b), ymin: Math.min(c, d), ymax: Math.max(c, d) })
     }
   }
 
-  const onWheel = (e: WheelEvent<HTMLCanvasElement>) => {
-    const f = frameRef.current
-    if (!f) return
-    const { px, py } = local(e)
-    if (!inPlot(f, px, py)) return
-    const factor = e.deltaY > 0 ? 1.15 : 1 / 1.15
-    const d = toData(f, px, py)
-    if (e.shiftKey) props.onZoom({ x: zoom.x, y: zoomRange(ordered(f.sy.d0, f.sy.d1), d.y, factor) })
-    else props.onZoom({ x: zoomRange(ordered(f.sx.d0, f.sx.d1), d.x, factor), y: zoom.y })
+  const onWheel = (e: WheelEvent<SVGSVGElement>) => {
+    const p = local(e)
+    if (!inMain(p)) return
+    const f = e.deltaY > 0 ? 1.15 : 1 / 1.15
+    if (e.shiftKey) {
+      const c = frame.iY(p.y)
+      props.onLimits?.({ ...limits, ymin: c - (c - limits.ymin) * f, ymax: c + (limits.ymax - c) * f })
+    } else {
+      const c = frame.iX(p.x)
+      props.onLimits?.({ ...limits, xmin: c - (c - limits.xmin) * f, xmax: c + (limits.xmax - c) * f })
+    }
   }
 
-  const onDoubleClick = (e: ReactMouseEvent<HTMLCanvasElement>) => {
-    const f = frameRef.current
-    if (!f) return
-    const { px, py } = local(e)
-    if (!inPlot(f, px, py) || what(f, px, py).peak >= 0) return
-    const d = toData(f, px, py)
-    props.onAdd(d.x, d.y)
-  }
-
-  const onContextMenu = (e: ReactMouseEvent<HTMLCanvasElement>) => {
+  const onContextMenu = (e: ReactMouseEvent<SVGSVGElement>) => {
     e.preventDefault()
-    const f = frameRef.current
-    if (!f) return
-    const { px, py } = local(e)
-    const d = toData(f, px, py)
-    props.onContextMenu(e, { ...d, peak: inPlot(f, px, py) ? what(f, px, py).peak : -1 })
+    const p = local(e)
+    props.onContextMenu?.(e, { x: frame.iX(p.x), y: frame.iY(p.y), peak: inMain(p) ? peakAt(p) : -1 })
   }
+
+  // ------------------------------------------------------------ drawing
+  const clipMain = `kf-clip-main-${view.sheet.replace(/\W/g, '')}`
+  const clipRes = `${clipMain}-r`
+  const defs: ReactNode[] = []
+  const fills: ReactNode[] = []
+  const lines: ReactNode[] = []
+  const lw = px(1)
+
+  if (o.showFit) {
+    curves.forEach((curve, i) => {
+      if (!curve) return
+      const c = colours[i]
+      const ft = fillOf(i)
+      if (unfitted(i)) {
+        if (props.areaFills || props.dparam) return
+        // Area measurement (no peak model): data above the background, alpha 0.5
+        fills.push(<path key={`u${i}`} d={fillPath(xs, bkg, curve, X, Y)} fill={c.colour} fillOpacity={0.5} stroke="none" />)
+        return
+      }
+      if (o.peakFill && ft === 'Solid Fill') fills.push(<path key={`f${i}`} d={fillPath(xs, bkg, curve, X, Y)} fill={c.colour} fillOpacity={c.alpha} stroke="none" />)
+      else if (o.peakFill && ft === 'Hatch') {
+        const id = `${clipMain}-h${i}`
+        defs.push(hatchPattern(id, hatchOf(i), PLOT_STYLE.hatchDensity, c.colour, c.alpha))
+        fills.push(<path key={`f${i}`} d={fillPath(xs, bkg, curve, X, Y)} fill={`url(#${id})`} stroke={c.colour} strokeOpacity={c.alpha} strokeWidth={lw} />)
+      }
+      const lineColour = o.peakFill ? PLOT_STYLE.peakLineColor : c.colour
+      const lineAlpha = o.peakFill ? PLOT_STYLE.peakLineAlpha : Math.min(c.alpha + 0.1, 1)
+      lines.push(<path key={`l${i}`} d={pathOf(xs, curve, X, Y)} fill="none" stroke={lineColour} strokeOpacity={lineAlpha} strokeWidth={lw} />)
+    })
+  }
+
+  if (props.areaFills) {
+    for (const f of props.areaFills.fills) {
+      const c = colours[f.peak_index] ?? { colour: PLOT_STYLE.peakColors[f.peak_index % PLOT_STYLE.peakColors.length], alpha: 0.5 }
+      fills.push(<path key={`a${f.peak_index}`} d={fillPath(f.x, f.bkg, f.y, X, Y)} fill={c.colour} fillOpacity={0.5} stroke="none" />)
+    }
+  }
+  if (props.dparam) {
+    lines.push(<path key="dparam" d={pathOf(props.dparam.x, props.dparam.y, X, Y)} fill="none" stroke={props.dparam.color_after_calculate ?? 'red'} strokeWidth={lw} />)
+  }
+
+  // Legend entries (update_legend)
+  const handleBox = (i: number) => {
+    const c = colours[i]
+    const ft = fillOf(i)
+    if (!o.peakFill) return { kind: 'line' as const, colour: c.colour, alpha: Math.min(c.alpha + 0.1, 1) }
+    if (ft === 'Hatch') return { kind: 'hatch' as const, colour: c.colour, alpha: c.alpha, i }
+    if (ft === 'None') return { kind: 'line' as const, colour: PLOT_STYLE.peakLineColor, alpha: PLOT_STYLE.peakLineAlpha }
+    return { kind: 'solid' as const, colour: c.colour, alpha: unfitted(i) ? 0.5 : c.alpha }
+  }
+  const legendEntries: { text: string; h: ReturnType<typeof handleBox> | { kind: 'dots' | 'dash' | 'env' } }[] = []
+  if (o.legend && o.showFit && !hide.has('legend')) {
+    const shown = legendPeaks(labels, view.sheet).filter((e) => curves[e.index])
+    if (o.legend === 1) {
+      legendEntries.push({ text: 'Raw Data', h: { kind: 'dots' } })
+      if (view.background?.type) legendEntries.push({ text: 'Background', h: { kind: 'dash' } })
+      if (view.envelope) legendEntries.push({ text: 'Overall Fit', h: { kind: 'env' } })
+      for (const e of shown) legendEntries.push({ text: labels[e.index].replace(/(\d+\/\d+)/g, '$_{$1}$'), h: handleBox(e.index) })
+    } else for (const e of shown) legendEntries.push({ text: e.text, h: handleBox(e.index) })
+  }
+
+  const bkgShown = !!view.background?.type && bkg.length > 0 && !hide.has('background')
+  const dataR = Math.sqrt(PLOT_STYLE.scatterSize) * PT / 2 + px(0.5)
+  let dots = ''
+  for (let i = 0; i < xs.length; i++) {
+    const x = xs[i]
+    const y = ys[i]
+    if (x === null || y === null) continue
+    const cx = X(x)
+    const cy = Y(y)
+    dots += `M${(cx - dataR).toFixed(2)} ${cy.toFixed(2)}a${dataR.toFixed(2)} ${dataR.toFixed(2)} 0 1 0 ${(2 * dataR).toFixed(2)} 0a${dataR.toFixed(2)} ${dataR.toFixed(2)} 0 1 0 ${(-2 * dataR).toFixed(2)} 0`
+  }
+
+  // Residuals on the main plot (state 1)
+  let residOnMain: ReactNode = null
+  let yLabel = o.yAxis === 2 ? 'Intensity (a.u.)' : 'Intensity (CPS)'
+  if (o.showFit && o.residuals === 1 && view.residuals && !hide.has('residuals')) {
+    const yv = ys.filter((v): v is number => v !== null)
+    const maxY = Math.max(...yv)
+    const minY = Math.min(...yv)
+    const maxR = Math.max(...view.residuals.map((v) => (v === null ? 0 : Math.abs(v))))
+    const k = maxR ? (0.05 * (maxY - minY)) / maxR : 1
+    const base = 1.07 * maxY
+    residOnMain = (
+      <g>
+        <line x1={main.x0} x2={main.x1} y1={Y(base)} y2={Y(base)} stroke="grey" strokeOpacity={0.1} strokeDasharray={`${px(6.4)} ${px(1.6)} ${px(1)} ${px(1.6)}`} strokeWidth={lw} />
+        <path d={pathOf(xs, view.residuals.map((v) => (v === null ? null : v * k + base)), X, Y)} fill="none" stroke={PLOT_STYLE.residualColor} strokeOpacity={PLOT_STYLE.residualAlpha} strokeWidth={lw} />
+      </g>
+    )
+    if (o.yAxis !== 2) yLabel = `Intensity (CPS), residual x ${k.toFixed(2)}`
+  }
+
+  // Selected peak: the blue × with its letter and note (add_cross_to_peak)
+  let cross: ReactNode = null
+  if (selected !== null && curves[selected] && peaks[selected]) {
+    const t = topOf(selected)
+    if (t) {
+      const s = px(15) / 2
+      const p = peaks[selected]
+      const yOff = Math.abs(Y(limits.ymax * 0.02) - Y(0))
+      const fw = drag?.kind === 'peak' ? null : measuredFwhm(xs, curves[selected]!, bkg)
+      const areaCell = view.grid[selected * 2]?.[6] ?? ''
+      cross = (
+        <g pointerEvents="none">
+          <path d={`M${t.x - s} ${t.y - s}L${t.x + s} ${t.y + s}M${t.x - s} ${t.y + s}L${t.x + s} ${t.y - s}`} stroke="blue" strokeWidth={px(1)} />
+          <text x={t.x} y={t.y - yOff} fontSize={px(12 + o.fontDelta)} textAnchor="middle" fontFamily={FONT}>
+            {p.letter}
+          </text>
+          {fw !== null && (
+            <text x={X(p.position - fw / 2)} y={t.y - yOff} fontSize={px(8)} fill="grey" fontFamily={FONT}>
+              {[`Model: ${p.model}`, `Position: ${view.grid[selected * 2]?.[2] ?? ''} eV`, `FWHM meas.: ${fw.toFixed(3)} eV`, `Area: ${areaCell} CPS`].map((line, k) => (
+                <tspan key={k} x={X(p.position - fw / 2)} dy={k ? px(8) * 1.2 : px(8)}>
+                  {line}
+                </tspan>
+              ))}
+            </text>
+          )}
+        </g>
+      )
+    }
+  }
+
+  // ------------------------------------------------------------ axes art
+  const tickLen = px(3.5)
+  const minorLen = px(2)
+  const tickW = px(0.8)
+  const minorW = px(0.6)
+  const tickFont = px(fs.tick)
+  const axisFont = px(fs.title)
+  const showXOnMain = !resid
+
+  const xAxis = (b: Box, labelsOn: boolean, pad: number) => (
+    <g>
+      {xMinor.filter((t) => inView(t, xr[0], xr[1])).map((t, k) => (
+        <line key={`m${k}`} x1={X(t)} x2={X(t)} y1={b.y1} y2={b.y1 + minorLen} stroke="black" strokeWidth={minorW} />
+      ))}
+      {xTicks.map((t, k) =>
+        inView(t, xr[0], xr[1]) ? (
+          <g key={k}>
+            <line x1={X(t)} x2={X(t)} y1={b.y1} y2={b.y1 + tickLen} stroke="black" strokeWidth={tickW} />
+            {labelsOn && (
+              <text x={X(t)} y={b.y1 + tickLen + px(pad) + tickFont * 0.78} fontSize={tickFont} textAnchor="middle" fontFamily={FONT}>
+                {xFmt.labels[k]}
+              </text>
+            )}
+          </g>
+        ) : null,
+      )}
+      {labelsOn && (
+        <text x={(b.x0 + b.x1) / 2} y={b.y1 + tickLen + px(pad) + tickFont + px(4) + axisFont * 0.8} fontSize={axisFont} textAnchor="middle" fontFamily={FONT}>
+          {xLabel(view.sheet)}
+        </text>
+      )}
+    </g>
+  )
+
+  const offsetText = (order: number, b: Box, size: number) =>
+    order ? (
+      <text x={b.x0} y={b.y0 - px(3)} fontSize={size} fontFamily={FONT}>
+        ×10<tspan fontSize={size * 0.7} dy={-size * 0.38}>{String(order).replace('-', '−')}</tspan>
+      </text>
+    ) : null
+
+  const yTickLabelWidth = Math.max(0, ...yFmt.labels.map((l) => textWidth(l, tickFont)))
+  const yAxis = (
+    <g>
+      {o.yAxis !== 1 &&
+        yMinor.filter((t) => inView(t, limits.ymin, limits.ymax)).map((t, k) => (
+          <line key={`m${k}`} x1={main.x0 - minorLen} x2={main.x0} y1={Y(t)} y2={Y(t)} stroke="black" strokeWidth={minorW} />
+        ))}
+      {o.yAxis !== 1 &&
+        yTicks.map((t, k) =>
+          inView(t, limits.ymin, limits.ymax) ? (
+            <g key={k}>
+              <line x1={main.x0 - tickLen} x2={main.x0} y1={Y(t)} y2={Y(t)} stroke="black" strokeWidth={tickW} />
+              {o.yAxis === 0 && (
+                <text x={main.x0 - tickLen - px(3.5)} y={Y(t) + tickFont * 0.35} fontSize={tickFont} textAnchor="end" fontFamily={FONT}>
+                  {yFmt.labels[k]}
+                </text>
+              )}
+            </g>
+          ) : null,
+        )}
+      {o.yAxis === 0 && offsetText(yFmt.order, main, tickFont)}
+      {o.yAxis !== 1 && (
+        <text
+          transform={`translate(${main.x0 - tickLen - px(3.5) - (o.yAxis === 0 ? yTickLabelWidth : 0) - px(4)} ${(main.y0 + main.y1) / 2}) rotate(-90)`}
+          fontSize={axisFont}
+          textAnchor="middle"
+          fontFamily={FONT}
+        >
+          {yLabel}
+        </text>
+      )}
+    </g>
+  )
+
+  // Residual strip (setup_residual_subplot)
+  let residArt: ReactNode = null
+  if (resid && frame.R && frame.rlim && rFmt && view.residuals) {
+    const R = frame.R
+    const [r0, r1] = frame.rlim
+    const rLabelW = Math.max(0, ...rFmt.labels.map((l) => textWidth(l, tickFont)))
+    residArt = (
+      <g>
+        <g clipPath={`url(#${clipRes})`}>
+          {/* grid(True, alpha=0.8) */}
+          {xTicks.filter((t) => inView(t, xr[0], xr[1])).map((t, k) => (
+            <line key={`gx${k}`} x1={X(t)} x2={X(t)} y1={resid.y0} y2={resid.y1} stroke="#b0b0b0" strokeOpacity={0.8} strokeWidth={px(0.8)} />
+          ))}
+          {rTicks.filter((t) => inView(t, r0, r1)).map((t, k) => (
+            <line key={`gy${k}`} x1={resid.x0} x2={resid.x1} y1={R(t)} y2={R(t)} stroke="#b0b0b0" strokeOpacity={0.8} strokeWidth={px(0.8)} />
+          ))}
+          <path d={pathOf(xs, view.residuals, X, R)} fill="none" stroke={PLOT_STYLE.residualColor} strokeOpacity={PLOT_STYLE.residualAlpha} strokeWidth={lw} />
+        </g>
+        <rect x={resid.x0} y={resid.y0} width={resid.x1 - resid.x0} height={resid.y1 - resid.y0} fill="none" stroke="black" strokeWidth={px(1)} />
+        {o.yAxis !== 1 &&
+          rTicks.map((t, k) =>
+            inView(t, r0, r1) ? (
+              <g key={k}>
+                <line x1={resid.x0 - tickLen} x2={resid.x0} y1={R(t)} y2={R(t)} stroke="black" strokeWidth={tickW} />
+                {o.yAxis === 0 && (
+                  <text x={resid.x0 - tickLen - px(3.5)} y={R(t) + tickFont * 0.35} fontSize={tickFont} textAnchor="end" fontFamily={FONT}>
+                    {rFmt.labels[k]}
+                  </text>
+                )}
+              </g>
+            ) : null,
+          )}
+        {o.yAxis === 0 && offsetText(rFmt.order, resid, tickFont)}
+        {o.yAxis !== 1 && (
+          <text
+            transform={`translate(${resid.x0 - tickLen - px(3.5) - (o.yAxis === 0 ? rLabelW : 0) - px(4)} ${(resid.y0 + resid.y1) / 2}) rotate(-90)`}
+            fontSize={axisFont}
+            textAnchor="middle"
+            fontFamily={FONT}
+          >
+            Res.
+          </text>
+        )}
+        {xAxis(resid, true, 8)}
+        {props.chi !== undefined && props.chi !== null && (
+          <text x={X(limits.xmin + (rev ? 0.2 : -0.4))} y={(resid.y0 + resid.y1) / 2 + px(9) * 0.35} fontSize={px(9)} textAnchor="end" fontFamily={FONT}>
+            χ: {props.chi.toFixed(2)}
+          </text>
+        )}
+      </g>
+    )
+  }
+
+  // Legend (loc='upper left', fancybox, framealpha 0.1, edgecolor gray)
+  let legend: ReactNode = null
+  if (legendEntries.length) {
+    const F = px(fs.legend)
+    const pad = 0.4 * F
+    const hl = 2 * F
+    const hh = 0.7 * F
+    const gap = 0.8 * F
+    const row = F * 1.2
+    const spacing = 0.5 * F
+    const tw = Math.max(...legendEntries.map((e) => mathPieces(e.text).reduce((s, p) => s + textWidth(p.text, p.sub ? F * 0.7 : F), 0)))
+    const bx = main.x0 + 0.5 * F
+    const by = main.y0 + 0.5 * F
+    const bw = pad * 2 + hl + gap + tw
+    const bh = pad * 2 + legendEntries.length * row + (legendEntries.length - 1) * spacing
+    legend = (
+      <g>
+        <rect x={bx} y={by} width={bw} height={bh} rx={0.2 * F} fill="white" fillOpacity={0.1} stroke="gray" strokeOpacity={0.1} strokeWidth={px(1)} />
+        {legendEntries.map((e, k) => {
+          const cy = by + pad + k * (row + spacing) + row / 2
+          const hx = bx + pad
+          const h = e.h
+          let handle: ReactNode
+          if (h.kind === 'solid') handle = <rect x={hx} y={cy - hh / 2} width={hl} height={hh} fill={h.colour} fillOpacity={h.alpha} />
+          else if (h.kind === 'hatch') {
+            const id = `${clipMain}-lh${k}`
+            defs.push(hatchPattern(id, hatchOf(h.i), PLOT_STYLE.hatchDensity, h.colour, h.alpha))
+            handle = <rect x={hx} y={cy - hh / 2} width={hl} height={hh} fill={`url(#${id})`} stroke={h.colour} strokeOpacity={h.alpha} strokeWidth={lw} />
+          } else if (h.kind === 'line') handle = <line x1={hx} x2={hx + hl} y1={cy} y2={cy} stroke={h.colour} strokeOpacity={h.alpha} strokeWidth={lw} />
+          else if (h.kind === 'dots') handle = <circle cx={hx + hl / 2} cy={cy} r={dataR} fill="black" />
+          else if (h.kind === 'dash')
+            handle = <line x1={hx} x2={hx + hl} y1={cy} y2={cy} stroke={PLOT_STYLE.backgroundColor} strokeOpacity={PLOT_STYLE.backgroundAlpha} strokeDasharray={DASH(1)} strokeWidth={lw} />
+          else handle = <line x1={hx} x2={hx + hl} y1={cy} y2={cy} stroke={PLOT_STYLE.envelopeColor} strokeOpacity={PLOT_STYLE.envelopeAlpha} strokeWidth={lw} />
+          return (
+            <g key={k}>
+              {handle}
+              <text x={hx + hl + gap} y={cy + F * 0.33} fontSize={F} fontFamily={FONT}>
+                {mathPieces(e.text).map((p, j) =>
+                  p.sub ? (
+                    <tspan key={j} fontSize={F * 0.7} dy={F * 0.2}>
+                      {p.text}
+                    </tspan>
+                  ) : (
+                    <tspan key={j} dy={j && mathPieces(e.text)[j - 1].sub ? -F * 0.2 : 0}>
+                      {p.text}
+                    </tspan>
+                  ),
+                )}
+              </text>
+            </g>
+          )
+        })}
+      </g>
+    )
+  }
+
+  // Fit results box (toggle_fitting_results)
+  let fitBox: ReactNode = null
+  if (o.fitResults && view.fit && view.fit.r2 !== null) {
+    const F = px(9 + o.fontDelta)
+    const linesTxt = [`R²: ${view.fit.r2.toFixed(5)}`, `χ: ${(props.chi ?? view.fit.rsd ?? 0).toFixed(2)}`, `Red. χ²: ${view.fit.redChi2.toFixed(2)}`]
+    fitBox = (
+      <text x={main.x1 - 0.02 * (main.x1 - main.x0)} y={main.y0 + 0.02 * (main.y1 - main.y0) + px(fs.core) * 1.3 + F} fontSize={F} textAnchor="end" fontFamily={FONT}>
+        {linesTxt.map((l, k) => (
+          <tspan key={k} x={main.x1 - 0.02 * (main.x1 - main.x0)} dy={k ? F * 1.2 : 0}>
+            {l}
+          </tspan>
+        ))}
+      </text>
+    )
+  }
+
+  const cursor = drag?.kind === 'peak' ? 'grabbing' : mode === 'zoom' ? 'crosshair' : mode === 'drag' ? 'move' : 'default'
+  const W = size.w
+  const H = size.h
 
   return (
     <div className="kf-plot" ref={wrapRef}>
-      <canvas
-        ref={canvasRef}
-        style={{ cursor: drag?.kind === 'peak' ? 'grabbing' : cursor }}
+      <svg
+        ref={svgRef}
+        width={W}
+        height={H}
+        viewBox={`0 0 ${W} ${H}`}
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ cursor }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={() => setDrag(null)}
-        onPointerLeave={() => !drag && setHover(null)}
+        onPointerLeave={() => !drag && props.onCursor?.(null)}
         onWheel={onWheel}
-        onDoubleClick={onDoubleClick}
+        onDoubleClick={(e) => inMain(local(e)) && props.onDoubleClick?.()}
         onContextMenu={onContextMenu}
-      />
+      >
+        <defs>
+          <clipPath id={clipMain}>
+            <rect x={main.x0} y={main.y0} width={main.x1 - main.x0} height={main.y1 - main.y0} />
+          </clipPath>
+          {resid && (
+            <clipPath id={clipRes}>
+              <rect x={resid.x0} y={resid.y0} width={resid.x1 - resid.x0} height={resid.y1 - resid.y0} />
+            </clipPath>
+          )}
+          {defs}
+        </defs>
+        <rect x={0} y={0} width={W} height={H} fill="white" />
+        <g clipPath={`url(#${clipMain})`}>
+          {props.logo && (
+            <g opacity={0.07} style={{ opacity: 0.07 }}>
+              <image href={props.logo} x={main.x0} y={main.y0} width={main.x1 - main.x0} height={main.y1 - main.y0} preserveAspectRatio="none" />
+            </g>
+          )}
+          {fills}
+          {lines}
+          {bkgShown && (
+            <path d={pathOf(xs, bkg, X, Y)} fill="none" stroke={PLOT_STYLE.backgroundColor} strokeOpacity={PLOT_STYLE.backgroundAlpha} strokeWidth={lw} strokeDasharray={DASH(1)} />
+          )}
+          <path d={dots} fill={PLOT_STYLE.scatterColor} />
+          {o.showFit && view.envelope && !hide.has('envelope') && (
+            <path d={pathOf(xs, view.envelope, X, Y)} fill="none" stroke={PLOT_STYLE.envelopeColor} strokeOpacity={PLOT_STYLE.envelopeAlpha} strokeWidth={lw} />
+          )}
+          {residOnMain}
+          {vlines &&
+            vlines.map((v, k) => {
+              // add_vline_text_labels: grey 10 pt in a white rounded box, high BE at 90 % of the height, low BE at 80 %
+              const ty = Y(limits.ymin + (k === 1 ? 0.9 : 0.8) * (limits.ymax - limits.ymin))
+              const t = v.toFixed(2)
+              const tw = textWidth(t, px(10)) + px(4)
+              return (
+                <g key={`v${k}`}>
+                  <line x1={X(v)} x2={X(v)} y1={main.y0} y2={main.y1} stroke="red" strokeOpacity={0.7} strokeWidth={lw} strokeDasharray={DASH(1)} />
+                  <rect x={X(v) - tw / 2} y={ty - px(10) * 0.65} width={tw} height={px(10) * 1.3} rx={px(2)} fill="white" fillOpacity={0.8} stroke="black" strokeOpacity={0.8} strokeWidth={px(0.5)} />
+                  <text x={X(v)} y={ty + px(10) * 0.35} fontSize={px(10)} fill="grey" textAnchor="middle" fontFamily={FONT}>
+                    {t}
+                  </text>
+                </g>
+              )
+            })}
+          {greenLine !== null && (
+            <g>
+              <line x1={X(greenLine)} x2={X(greenLine)} y1={main.y0} y2={main.y1} stroke="green" strokeOpacity={0.7} strokeWidth={lw} />
+              <rect
+                x={X(greenLine) - textWidth(greenLine.toFixed(2), px(10)) / 2 - px(2)}
+                y={main.y0 + 0.05 * (main.y1 - main.y0)}
+                width={textWidth(greenLine.toFixed(2), px(10)) + px(4)}
+                height={px(10) * 1.25}
+                rx={px(2)}
+                fill="lightgreen"
+                fillOpacity={0.8}
+                stroke="black"
+                strokeOpacity={0.8}
+                strokeWidth={px(0.5)}
+              />
+              <text x={X(greenLine)} y={main.y0 + 0.05 * (main.y1 - main.y0) + px(10)} fontSize={px(10)} fill="darkgreen" textAnchor="middle" fontFamily={FONT}>
+                {greenLine.toFixed(2)}
+              </text>
+            </g>
+          )}
+          {(props.idLines ?? []).map((l, k) => {
+            const h = l.frac * (main.y1 - main.y0)
+            return (
+              <g key={`id${k}`}>
+                <line x1={X(l.x)} x2={X(l.x)} y1={main.y1 + h} y2={main.y1 - h} stroke="blue" strokeWidth={lw} />
+                <text transform={`translate(${X(l.x + (rev ? 0.1 : -0.1))} ${main.y1 - 0.01 * (main.y1 - main.y0)}) rotate(-90)`} fontSize={px(7)} fontFamily={FONT}>
+                  {mathPieces(l.text).map((p, j) => (p.sub ? <tspan key={j} fontSize={px(5)} dy={px(1.5)}>{p.text}</tspan> : <tspan key={j}>{p.text}</tspan>))}
+                </text>
+              </g>
+            )
+          })}
+          {(props.labels ?? []).map((l, k) => {
+            const lx = X(l.x)
+            const ly = l.y !== null && l.y !== undefined ? Y(l.y) : main.y0 + 0.1 * (main.y1 - main.y0)
+            const fsz = px((l.fontsize ?? 10) + o.fontDelta)
+            return (
+              <text key={`lb${k}`} transform={`translate(${lx} ${ly}) rotate(${-(l.rotation ?? 0)})`} fontSize={fsz} textAnchor={l.rotation ? 'start' : 'middle'} fontFamily={FONT}>
+                {mathPieces(l.text).map((p, j) => (p.sub ? <tspan key={j} fontSize={fsz * 0.7} dy={fsz * 0.2}>{p.text}</tspan> : <tspan key={j} dy={j && mathPieces(l.text)[j - 1].sub ? -fsz * 0.2 : 0}>{p.text}</tspan>))}
+              </text>
+            )
+          })}
+          {cross}
+          {drag?.kind === 'box' && (
+            <rect
+              x={Math.min(drag.x0, drag.x1)}
+              y={Math.min(drag.y0, drag.y1)}
+              width={Math.abs(drag.x1 - drag.x0)}
+              height={Math.abs(drag.y1 - drag.y0)}
+              fill="none"
+              stroke="black"
+              strokeDasharray="3 3"
+            />
+          )}
+        </g>
+        <rect x={main.x0} y={main.y0} width={main.x1 - main.x0} height={main.y1 - main.y0} fill="none" stroke="black" strokeWidth={px(1)} />
+        {showXOnMain && xAxis(main, true, 3.5)}
+        {yAxis}
+        {view.sheet && (
+          <text x={main.x1 - 0.02 * (main.x1 - main.x0)} y={main.y0 + 0.02 * (main.y1 - main.y0) + px(fs.core) * 0.92} fontSize={px(fs.core)} fontWeight="bold" textAnchor="end" fontFamily={FONT}>
+            {formatSheetName(view.sheet)}
+          </text>
+        )}
+        {legend}
+        {fitBox}
+        {residArt}
+      </svg>
     </div>
   )
 }

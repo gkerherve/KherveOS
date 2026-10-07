@@ -1,0 +1,116 @@
+{
+  "Core levels": {
+    "Cr2p": {
+      "Fitting": {
+        "Peaks": {
+          "Cr2p3/2 NiCr2O4 peak 1": {
+            "Position": 575.01,
+            "Height": 863.05,
+            "FWHM": 1.2,
+            "L/G": 30.0,
+            "Area": 1001.37,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "574.71:575.31",
+              "Height": "",
+              "FWHM": "1.0:1.4",
+              "L/G": "Fixed",
+              "Area": "1:1e7",
+              "Sigma": "",
+              "Gamma": "",
+              "Skew": ""
+            }
+          },
+          "Cr2p3/2 NiCr2O4 peak 2": {
+            "Position": 576.03,
+            "Height": 838.02,
+            "FWHM": 1.09,
+            "L/G": 30.0,
+            "Area": 972.33,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+1.02#0.1",
+              "Height": "1:1e7",
+              "FWHM": "A*1",
+              "L/G": "A*1",
+              "Area": "A*0.971",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Cr2p3/2 NiCr2O4 peak 3": {
+            "Position": 576.84,
+            "Height": 443.61,
+            "FWHM": 1.09,
+            "L/G": 30.0,
+            "Area": 514.7,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+1.83#0.1",
+              "Height": "1:1e7",
+              "FWHM": "A*1",
+              "L/G": "A*1",
+              "Area": "A*0.514",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Cr2p3/2 NiCr2O4 peak 4": {
+            "Position": 577.89,
+            "Height": 221.8,
+            "FWHM": 1.09,
+            "L/G": 30.0,
+            "Area": 257.35,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.88#0.1",
+              "Height": "1:1e7",
+              "FWHM": "A*1",
+              "L/G": "A*1",
+              "Area": "A*0.257",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Cr2p3/2 NiCr2O4 peak 5": {
+            "Position": 579.02,
+            "Height": 98.39,
+            "FWHM": 1.09,
+            "L/G": 30.0,
+            "Area": 114.16,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+4.01#0.1",
+              "Height": "1:1e7",
+              "FWHM": "A*1",
+              "L/G": "A*1",
+              "Area": "A*0.114",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}

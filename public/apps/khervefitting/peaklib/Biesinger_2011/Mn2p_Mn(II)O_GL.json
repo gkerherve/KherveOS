@@ -1,0 +1,116 @@
+{
+  "Core levels": {
+    "Mn2p": {
+      "Fitting": {
+        "Peaks": {
+          "Mn2p3/2 MnO peak 1": {
+            "Position": 640.53,
+            "Height": 12822.86,
+            "FWHM": 1.23,
+            "L/G": 30.0,
+            "Area": 16788.9,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "640.03:641.03",
+              "Height": "",
+              "FWHM": "0.7:1.5",
+              "L/G": "Fixed",
+              "Area": "1:1e7",
+              "Sigma": "",
+              "Gamma": "",
+              "Skew": ""
+            }
+          },
+          "Mn2p3/2 MnO peak 2": {
+            "Position": 641.5,
+            "Height": 14848.87,
+            "FWHM": 1.23,
+            "L/G": 30.0,
+            "Area": 19441.55,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+0.97#0.1",
+              "Height": "1:1e7",
+              "FWHM": "A*1",
+              "L/G": "A*1",
+              "Area": "A*1.158",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Mn2p3/2 MnO peak 3": {
+            "Position": 642.43,
+            "Height": 11809.85,
+            "FWHM": 1.23,
+            "L/G": 30.0,
+            "Area": 15462.58,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+1.90#0.1",
+              "Height": "1:1e7",
+              "FWHM": "A*1",
+              "L/G": "A*1",
+              "Area": "A*0.921",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Mn2p3/2 MnO peak 4": {
+            "Position": 643.38,
+            "Height": 6680.71,
+            "FWHM": 1.23,
+            "L/G": 30.0,
+            "Area": 8747.02,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.85#0.1",
+              "Height": "1:1e7",
+              "FWHM": "A*1",
+              "L/G": "A*1",
+              "Area": "A*0.521",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Mn2p3/2 MnO peak 5": {
+            "Position": 644.52,
+            "Height": 2513.28,
+            "FWHM": 1.23,
+            "L/G": 30.0,
+            "Area": 3290.62,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+3.99#0.1",
+              "Height": "1:1e7",
+              "FWHM": "A*1",
+              "L/G": "A*1",
+              "Area": "A*0.196",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}

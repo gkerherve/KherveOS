@@ -1,457 +1,897 @@
-/* KherveFitting. Everything is scoped under .kf-app (the dialogs' content
-   under .kf-doc); only the theme's --k-* colours are used. */
+/* KherveFitting: the desktop KherveFitting-AI main window (wxPython on
+   Windows): grey panels of the chosen panel theme (View > Theme / Style),
+   flat toolbars with 25 px icons, white wx grids with the constraint rows in
+   the grid colour, a white matplotlib figure, a two-field status bar. The
+   colours are the desktop's own (theme.ts sets the --kf-* variables). */
 
 .kf-app {
+  --kf-font: 'Segoe UI', Tahoma, 'Helvetica Neue', Arial, sans-serif;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--kf-panel);
+  color: #000;
+  font: 12px var(--kf-font);
   outline: none;
-  font-size: 12.5px;
+  overflow: hidden;
+  user-select: none;
+}
+.kf-app *,
+.kf-app *::before,
+.kf-app *::after {
+  box-sizing: border-box;
 }
 
+/* ---------------------------------------------------------------- toolbars */
+.kf-app .kf-toolbar {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 0;
+  padding: 2px 3px;
+  min-height: 35px;
+  background: var(--kf-panel);
+  border-bottom: 1px solid var(--kf-panel-line);
+  overflow: hidden;
+}
 .kf-app .kf-grow {
-  flex: 1;
+  flex: 1 1 auto;
 }
-.kf-app .kf-sep {
+.kf-app .kf-tool {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: default;
+}
+.kf-app .kf-tool img {
+  display: block;
+  width: 25px;
+  height: 25px;
+  pointer-events: none;
+}
+.kf-app .kf-tool:hover:not(:disabled) {
+  background: var(--kf-hover);
+}
+.kf-app .kf-tool:active:not(:disabled),
+.kf-app .kf-tool.kf-checked {
+  background: var(--kf-press);
+}
+.kf-app .kf-tool:disabled img {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+.kf-app .kf-vsep {
+  flex: none;
   width: 1px;
-  height: 20px;
-  background: var(--k-border);
+  height: 25px;
   margin: 0 4px;
+  background: var(--kf-panel-line);
 }
-.kf-app .kf-sheet-select {
-  width: auto;
-  min-width: 110px;
-  height: 28px;
+.kf-app .kf-hsep {
+  flex: none;
+  height: 1px;
+  width: 25px;
+  margin: 4px 3px;
+  background: var(--kf-panel-line);
+}
+.kf-app .kf-control {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 2px;
+}
+.kf-app .kf-combo {
+  width: 120px;
+  height: 23px;
+  padding: 0 2px;
+  border: 1px solid #7a7a7a;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font: 12px var(--kf-font);
 }
 
-/* ── Main area: side panel | plot over tables ───────────────────────── */
-.kf-app .kf-main {
+/* wx.SpinCtrlDouble */
+.kf-app .kf-spin {
+  display: inline-flex;
+  height: 23px;
+  border: 1px solid #7a7a7a;
+  background: #fff;
+}
+.kf-app .kf-spin input {
   flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0 3px;
+  font: 12px var(--kf-font);
+  color: #000;
+  background: #fff;
+  outline: none;
+}
+.kf-app .kf-spin-btns {
+  display: flex;
+  flex-direction: column;
+  width: 15px;
+  border-left: 1px solid #c8c8c8;
+}
+.kf-app .kf-spin-btns button {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  background: #f0f0f0;
+  color: #333;
+  font-size: 6px;
+  line-height: 1;
+}
+.kf-app .kf-spin-btns button:hover {
+  background: #e0eef9;
+}
+
+/* ------------------------------------------------------------ main area */
+.kf-app .kf-content {
+  flex: 1 1 auto;
   display: flex;
   min-height: 0;
 }
-.kf-app .kf-center {
-  flex: 1;
+.kf-app .kf-vtoolbar {
+  flex: none;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  width: 33px;
+  padding: 2px 0;
+  background: var(--kf-panel);
+  border-right: 1px solid var(--kf-panel-line);
+  overflow: hidden;
+}
+.kf-app .kf-splitter {
+  flex: 1 1 auto;
+  display: flex;
   min-width: 0;
   min-height: 0;
 }
-.kf-app .kf-plot {
-  flex: 1;
-  min-height: 140px;
-  position: relative;
-  overflow: hidden;
+.kf-app .kf-plotpanel {
+  flex: none;
+  display: flex;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--kf-panel-line);
 }
-.kf-app .kf-plot canvas {
+.kf-app .kf-plot {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.kf-app .kf-plot svg {
   display: block;
   touch-action: none;
 }
-.kf-app .kf-hsplit {
-  height: 5px;
+.kf-app .kf-sash {
   flex: none;
-  cursor: row-resize;
-  background: var(--k-chrome);
-  border-top: 1px solid var(--k-border);
-  border-bottom: 1px solid var(--k-border);
-}
-.kf-app .kf-vsplit {
   width: 5px;
-  flex: none;
   cursor: col-resize;
-  background: var(--k-chrome);
-  border-left: 1px solid var(--k-border);
-  border-right: 1px solid var(--k-border);
+  background: var(--kf-panel);
 }
-.kf-app .kf-bottom {
-  display: flex;
-  flex: none;
-  min-height: 0;
-}
-.kf-app .kf-peaks,
-.kf-app .kf-res {
+.kf-app .kf-grids {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  padding: 0 2px 2px 0;
+}
+.kf-app .kf-gridpane {
+  display: flex;
+  min-height: 0;
+  flex: none;
 }
 
-/* ── Side panel ─────────────────────────────────────────────────────── */
-.kf-app .kf-side {
-  width: 232px;
-  flex: none;
+/* wx.StaticBox */
+.kf-app .kf-box {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--k-border);
-  background: var(--k-surface);
-  overflow-y: auto;
+  min-width: 0;
   min-height: 0;
-}
-.kf-app .kf-section-head {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 8px 4px 10px;
-  font-weight: 600;
-  color: var(--k-muted);
-  text-transform: uppercase;
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
-}
-.kf-app .kf-section-head .k-icon-btn {
-  width: 22px;
-  height: 22px;
-}
-.kf-app .kf-sheets {
-  list-style: none;
   margin: 0;
-  padding: 0 6px 6px;
-  max-height: 168px;
-  overflow-y: auto;
+  padding: 4px 6px 6px;
+  border: 1px solid #dcdcdc;
+  border-radius: 0;
 }
-.kf-app .kf-sheets li {
-  padding: 3px 8px;
-  border-radius: var(--k-radius-sm);
-  cursor: default;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.kf-app[data-theme^='Simple '] .kf-box {
+  border-color: var(--kf-panel-line);
 }
-.kf-app .kf-sheets li:hover {
-  background: var(--k-button-hover);
-}
-.kf-app .kf-sheets li.kf-on {
-  background: var(--k-selection);
-  color: var(--k-text);
-  font-weight: 600;
-}
-.kf-app .kf-tabs {
-  display: flex;
-  border-top: 1px solid var(--k-border);
-  border-bottom: 1px solid var(--k-border);
-}
-.kf-app .kf-tabs button {
-  flex: 1;
-  height: 30px;
-  border: 0;
-  background: transparent;
-  color: var(--k-muted);
-  font: inherit;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-}
-.kf-app .kf-tabs button.kf-on {
-  color: var(--k-text);
-  border-bottom-color: var(--k-accent);
-  font-weight: 600;
-}
-.kf-app .kf-form {
-  display: grid;
-  grid-template-columns: 88px 1fr;
-  gap: 5px 6px;
-  align-items: center;
-  padding: 10px;
-}
-.kf-app .kf-form > label {
-  color: var(--k-muted);
-  font-size: 11.5px;
-}
-.kf-app .kf-form .k-input {
-  height: 27px;
-  padding: 0 6px;
-  font-size: 12px;
-}
-.kf-app .kf-form .kf-buttons,
-.kf-app .kf-form .kf-note,
-.kf-app .kf-form .kf-stats {
-  grid-column: 1 / -1;
-}
-.kf-app .kf-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 4px;
-}
-.kf-app .kf-buttons .k-btn {
-  height: 27px;
-  padding: 0 9px;
-  font-size: 12px;
-}
-.kf-app .kf-buttons .kf-num {
-  width: 46px;
-}
-.kf-app .kf-row4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 3px;
-}
-.kf-app .kf-row4 .k-input {
-  padding: 0 3px;
-}
-.kf-app .kf-note {
-  margin: 4px 0 0;
-  color: var(--k-muted);
-  font-size: 11.5px;
-  line-height: 1.4;
-}
-.kf-app .kf-stats {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 10px;
-  padding: 6px 8px;
-  border-radius: var(--k-radius-sm);
-  background: var(--k-bg);
-  border: 1px solid var(--k-border);
-  font-size: 12px;
-}
-.kf-app .kf-stats span {
-  color: var(--k-muted);
-}
-.kf-app .kf-stats b {
-  font-variant-numeric: tabular-nums;
-  text-align: right;
+.kf-app .kf-box legend {
+  padding: 0 2px;
+  font-size: 11px;
+  color: #000;
 }
 
-/* ── Tables (peaks and results) ─────────────────────────────────────── */
-.kf-app .kf-table {
-  flex: 1;
-  overflow: auto;
+/* ---------------------------------------------------------------- grids */
+.kf-app .kf-grid {
+  flex: 1 1 auto;
   min-height: 0;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #a0a0a0;
   outline: none;
-  background: var(--k-bg);
+  font: 11px var(--kf-font);
 }
-.kf-app .kf-table table {
+.kf-app .kf-grid table {
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
+  width: max-content;
 }
-.kf-app .kf-res .kf-table table {
-  table-layout: auto;
-}
-.kf-app .kf-table th {
+.kf-app .kf-grid thead th {
   position: sticky;
   top: 0;
+  z-index: 2;
+  height: 35px;
+  padding: 0 2px;
+  background: var(--kf-panel);
+  border-right: 1px solid #a0a0a0;
+  border-bottom: 1px solid #a0a0a0;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 13px;
+  text-align: center;
+  white-space: pre-line;
+  overflow: hidden;
+  color: #000;
+}
+.kf-app .kf-grid .kf-corner {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  width: 17px;
+  min-width: 17px;
+}
+.kf-app .kf-grid .kf-rowlabel {
+  position: sticky;
+  left: 0;
   z-index: 1;
-  background: var(--k-chrome);
-  color: var(--k-muted);
-  font-weight: 600;
+  width: 17px;
+  min-width: 17px;
+  height: 25px;
+  padding: 0;
+  background: var(--kf-panel);
+  border-right: 1px solid #a0a0a0;
+  border-bottom: 1px solid #a0a0a0;
+  font-weight: 400;
   font-size: 11px;
   text-align: center;
-  padding: 4px 5px;
-  border-bottom: 1px solid var(--k-border);
-  border-right: 1px solid var(--k-border);
+  color: #000;
+}
+.kf-app .kf-grid td {
+  height: 25px;
+  padding: 0 2px;
+  background: #fff;
+  border-right: 1px solid #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
+  color: #000;
+  cursor: cell;
 }
-.kf-app .kf-table td {
-  height: 22px;
-  padding: 0 5px;
-  border-bottom: 1px solid var(--k-border);
-  border-right: 1px solid var(--k-border);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: right;
-  cursor: default;
+.kf-app .kf-grid tr.kf-cons td {
+  background: var(--kf-cons);
 }
-.kf-app .kf-table td:nth-child(2) {
-  text-align: left;
+.kf-app .kf-grid td.kf-selrow {
+  background: #0078d7;
+  color: #fff !important;
 }
-.kf-app .kf-table tr.kf-cons td {
-  background: color-mix(in srgb, var(--k-accent) 9%, var(--k-bg));
-  color: var(--k-muted);
-  font-size: 11.5px;
+.kf-app .kf-grid td.kf-cur {
+  box-shadow: inset 0 0 0 2px #000;
 }
-.kf-app .kf-table tr.kf-sel td {
-  background: color-mix(in srgb, var(--k-selection) 70%, var(--k-bg));
+.kf-app .kf-grid tr.kf-rsel td {
+  background: #cce8ff;
 }
-.kf-app .kf-table tr.kf-cons.kf-sel td {
-  background: color-mix(in srgb, var(--k-selection) 45%, var(--k-bg));
+.kf-app .kf-grid td.kf-key {
+  background: var(--kf-cons);
+  font-weight: 700;
 }
-.kf-app .kf-table td.kf-cur {
-  box-shadow: inset 0 0 0 2px var(--k-accent);
+.kf-app .kf-grid td.kf-err {
+  color: rgb(90, 90, 90);
 }
-.kf-app .kf-table td.kf-ro {
-  color: var(--k-muted);
+.kf-app .kf-grid td.kf-center {
+  text-align: center;
 }
-.kf-app .kf-table td.kf-calc {
-  color: var(--k-success);
+.kf-app .kf-grid .kf-check {
+  margin: 0;
+  width: 13px;
+  height: 13px;
+  vertical-align: middle;
+  accent-color: #0078d7;
 }
-.kf-app .kf-table td.kf-editing {
+.kf-app .kf-grid td.kf-editing {
   padding: 0;
 }
-.kf-app .kf-cell-input {
+.kf-app .kf-grid td.kf-editing input,
+.kf-app .kf-grid td.kf-editing select {
   width: 100%;
-  height: 21px;
-  border: 0;
-  outline: 2px solid var(--k-accent);
-  outline-offset: -2px;
-  background: var(--k-bg);
-  color: var(--k-text);
-  font: inherit;
-  padding: 0 4px;
-  text-align: right;
+  height: 24px;
+  border: 1px solid #0078d7;
+  padding: 0 2px;
+  font: 11px var(--kf-font);
+  color: #000;
+  background: #fff;
+  outline: none;
 }
-.kf-app .kf-cell-select {
-  width: 100%;
-  height: 20px;
-  border: 0;
-  background: transparent;
-  color: var(--k-text);
-  font: inherit;
-  font-size: 11.5px;
+
+/* the Results grid's own toolbar */
+.kf-app .kf-rtoolbar {
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding: 0 0 2px;
 }
-.kf-app .kf-cell-select option,
-.kf-app .kf-cell-select optgroup {
-  background: var(--k-surface);
-  color: var(--k-text);
+
+/* Tabbed grid layout (FlatNotebook) */
+.kf-app .kf-fnb {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
-.kf-app .kf-empty {
-  padding: 14px;
-  color: var(--k-muted);
-  line-height: 1.5;
+.kf-app .kf-fnb > .kf-gridpane {
+  flex: 1 1 auto;
 }
-.kf-app .kf-results-bar {
+.kf-app .kf-fnb-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 2px 2px 0;
+  background: var(--kf-panel);
+}
+.kf-app .kf-fnb-tabs button {
+  padding: 3px 10px;
+  border: 1px solid var(--kf-panel-line);
+  border-bottom: 0;
+  background: var(--kf-panel);
+  font: 12px var(--kf-font);
+  color: #000;
+}
+.kf-app .kf-fnb-tabs button.kf-fnb-on {
+  background: rgb(80, 190, 160);
+}
+
+/* ----------------------------------------------------------- status bar */
+.kf-app .kf-statusbar {
+  flex: none;
+  display: flex;
+  height: 22px;
+  align-items: stretch;
+  background: var(--kf-panel);
+  border-top: 1px solid var(--kf-panel-line);
+  font: 11px var(--kf-font);
+  color: rgb(20, 20, 20);
+}
+.kf-app .kf-sb-main {
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 6px;
-  background: var(--k-chrome);
-  border-bottom: 1px solid var(--k-border);
-  flex: none;
-}
-.kf-app .kf-results-bar .k-btn {
-  height: 24px;
-  padding: 0 8px;
-  font-size: 11.5px;
-}
-.kf-app .kf-results-title {
-  font-weight: 600;
-  color: var(--k-muted);
-  font-size: 11.5px;
-}
-.kf-app .kf-res td.kf-key,
-.kf-app .kf-res th.kf-key {
-  color: var(--k-accent);
-  font-weight: 700;
-}
-.kf-app .kf-res td.kf-editable {
-  text-decoration: underline dotted var(--k-muted);
-}
-.kf-app .kf-res tfoot td {
-  color: var(--k-muted);
-  font-weight: 600;
-  border-bottom: 0;
-}
-.kf-app .kf-res td:first-child {
-  text-align: center;
-}
-.kf-app .kf-res input[type='checkbox'] {
-  accent-color: var(--k-accent);
-  margin: 0;
-}
-
-/* ── Welcome ─────────────────────────────────────────────────────────── */
-.kf-app .kf-welcome {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 24px;
-  text-align: center;
-}
-.kf-app .kf-welcome h2 {
-  margin: 0;
-  font-size: 22px;
-  color: var(--k-accent);
-}
-.kf-app .kf-welcome p {
-  margin: 0;
-  color: var(--k-muted);
-}
-.kf-app .kf-picks {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  max-width: 560px;
-}
-
-/* ── Status bar ──────────────────────────────────────────────────────── */
-.kf-app .kf-status .kf-error {
-  color: var(--k-danger);
-}
-.kf-app .kf-status .kf-path {
+  padding: 0 4px;
+  min-width: 0;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 40%;
 }
-.kf-app .kf-spin {
-  animation: kf-spin 1s linear infinite;
+.kf-app .kf-sb-pos {
   flex: none;
+  width: 200px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  border-left: 1px solid var(--kf-panel-line);
+  white-space: nowrap;
+  overflow: hidden;
 }
-@keyframes kf-spin {
+.kf-app .kf-error {
+  color: #b00020;
+}
+.kf-app .kf-spin-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4fbe9f;
+  animation: kf-pulse 0.9s ease-in-out infinite alternate;
+}
+@keyframes kf-pulse {
+  from {
+    opacity: 0.25;
+  }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
   }
 }
 
-/* ── Dialog contents (rendered by the OS dialogs, outside .kf-app) ───── */
-.kf-doc {
-  max-width: 640px;
-  line-height: 1.5;
+/* ------------------------------------------------------- floating windows */
+.kf-app .kf-float {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: rgb(230, 250, 250);
+  border: 1px solid #4fbe9f;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  font: 12px var(--kf-font);
+  color: #000;
+}
+.kf-app .kf-float-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 0 0 8px;
+  background: #4fbe9f;
+  color: #000;
+  cursor: move;
+  touch-action: none;
+}
+.kf-app .kf-float-title span {
+  flex: 1;
+}
+.kf-app .kf-float-close {
+  width: 40px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: #000;
   font-size: 13px;
 }
-.kf-doc code {
-  font-family: var(--k-mono);
-  font-size: 12px;
-  color: var(--k-accent);
+.kf-app .kf-float-close:hover {
+  background: #e81123;
+  color: #fff;
 }
-.kf-doc kbd {
-  font-family: var(--k-mono);
-  font-size: 11px;
-  padding: 1px 5px;
-  border: 1px solid var(--k-border);
-  border-radius: 4px;
-  background: var(--k-surface);
+.kf-app .kf-float-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 2px;
+}
+
+/* wx.Notebook */
+.kf-app .kf-notebook {
+  display: flex;
+  flex-direction: column;
+}
+.kf-app .kf-tabs {
+  display: flex;
+  padding: 2px 2px 0;
+}
+.kf-app .kf-tabs button {
+  margin-right: -1px;
+  padding: 2px 6px;
+  border: 1px solid #adadad;
+  border-bottom: 0;
+  background: #f0f0f0;
+  font: 12px var(--kf-font);
+  color: #000;
+}
+.kf-app .kf-tabs button.kf-tab-on {
+  position: relative;
+  top: 1px;
+  background: rgb(240, 250, 250);
+  padding-bottom: 3px;
+}
+.kf-app .kf-page {
+  border: 1px solid #adadad;
+  background: rgb(240, 250, 250);
+  padding: 3px;
+}
+
+/* GridBagSizer forms of the tool windows */
+.kf-app .kf-form {
+  display: grid;
+  grid-template-columns: 1fr 125px;
+  align-items: center;
+  gap: 2px 2px;
+}
+.kf-app .kf-form > label {
   white-space: nowrap;
 }
-.kf-doc .kf-keys td {
-  padding: 2px 10px 2px 0;
+.kf-app .kf-form .kf-btns {
+  grid-column: 1 / span 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin-top: 2px;
 }
-.kf-report pre {
-  max-height: 52vh;
+.kf-app .kf-form .kf-btns-1 {
+  grid-template-columns: 1fr;
+}
+.kf-app .kf-wxtext,
+.kf-app .kf-wxcombo {
+  width: 100%;
+  height: 22px;
+  min-width: 0;
+  padding: 0 3px;
+  border: 1px solid #7a7a7a;
+  background: #fff;
+  color: #000;
+  font: 12px var(--kf-font);
+  border-radius: 0;
+}
+.kf-app .kf-wxtext[readonly] {
+  background: #f0f0f0;
+}
+.kf-app .kf-wxbtn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  padding: 1px 4px;
+  border: 1px solid #adadad;
+  border-radius: 0;
+  background: #e1e1e1;
+  color: #000;
+  font: 12px var(--kf-font);
+  line-height: 14px;
+}
+.kf-app .kf-wxbtn:hover:not(:disabled) {
+  border-color: #0078d7;
+  background: #e5f1fb;
+}
+.kf-app .kf-wxbtn:disabled {
+  color: #838383;
+  background: #cccccc;
+  border-color: #bfbfbf;
+}
+.kf-app .kf-info {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid #adadad;
+  background: #e1e1e1;
+  font: 12px var(--kf-font);
+  color: #000;
+}
+.kf-app .kf-regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  min-height: 25px;
+}
+.kf-app .kf-regions button {
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid #adadad;
+  background: #e1e1e1;
+  font: 12px var(--kf-font);
+}
+.kf-app .kf-regions button.kf-region-on {
+  background: #4fbe9f;
+}
+.kf-app .kf-chiplot {
+  background: rgb(240, 250, 250);
+}
+.kf-app .kf-checklist {
+  grid-column: 1 / span 2;
+  height: 140px;
   overflow: auto;
-  margin: 0;
-  padding: 10px;
-  font-family: var(--k-mono);
-  font-size: 11.5px;
-  background: var(--k-bg);
-  border: 1px solid var(--k-border);
-  border-radius: var(--k-radius-sm);
-  white-space: pre;
+  background: #fff;
+  border: 1px solid #7a7a7a;
+  padding: 1px 3px;
 }
-.kf-report .kf-log {
-  margin-bottom: 10px;
-  font-variant-numeric: tabular-nums;
+.kf-app .kf-checklist label {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.kf-app .kf-disabled-form {
+  color: #6d6d6d;
+}
+.kf-app .kf-status-text,
+.kf-app .kf-note {
+  grid-column: 1 / span 2;
+  margin: 2px 0;
+  font-size: 11px;
+  color: #444;
+}
+.kf-app .kf-help-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 3px 4px 2px;
+}
+.kf-app .kf-green-item {
+  color: #1b8c3c;
+}
+
+/* Plot Limits */
+.kf-app .kf-limits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+}
+.kf-app .kf-limrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+.kf-app .kf-limlabel {
+  width: 30px;
+}
+.kf-app .kf-limrow input[type='range'] {
+  flex: 1;
+}
+.kf-app .kf-limbtns {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* The Toggles pop-up (ToggleToolbar) */
+.kf-app .kf-toggles {
+  position: absolute;
+  z-index: 25;
+  display: flex;
+  padding: 2px;
+  background: #f0f0f0;
+  border: 1px solid #a0a0a0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* The way in, over the empty plot */
+.kf-app .kf-welcome {
+  position: absolute;
+  left: 48px;
+  bottom: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 50%;
+  z-index: 5;
+}
+.kf-app .kf-welcome .kf-wxbtn {
+  min-height: 26px;
+}
+
+/* OS dialogs opened by the app (report, preferences, about) */
+.kf-doc {
+  max-width: 760px;
+  max-height: 70vh;
+  overflow: auto;
   font-size: 12px;
 }
-.kf-report .kf-log th,
-.kf-report .kf-log td {
-  padding: 1px 10px;
+.kf-doc pre {
+  font: 11px/1.35 ui-monospace, Menlo, Consolas, monospace;
+  white-space: pre;
+}
+.kf-doc .kf-log {
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+.kf-doc .kf-log td,
+.kf-doc .kf-log th {
+  padding: 1px 8px;
+  border-bottom: 1px solid var(--k-border);
   text-align: right;
+}
+.kf-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 380px;
 }
 .kf-settings label {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  margin-bottom: 10px;
-  color: var(--k-muted);
-  font-size: 12px;
 }
-.kf-settings .kf-note {
+.kf-doc .kf-note {
   color: var(--k-muted);
-  font-size: 12px;
+}
+
+/* Tool windows */
+.kf-app .kf-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.kf-app .kf-btns-row {
+  display: flex;
+  gap: 2px;
+  margin: 3px 0;
+}
+.kf-app .kf-btns-row .kf-wxbtn {
+  flex: 1;
+}
+.kf-app .kf-greyed {
+  color: #8c8c8c;
+}
+.kf-app .kf-dpara,
+.kf-app .kf-pca,
+.kf-app .kf-id {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+}
+.kf-app .kf-dpara-left {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kf-app .kf-dpara-right {
+  flex: 1;
+  min-width: 0;
+}
+.kf-app .kf-dvalue {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.kf-app .kf-reftable {
+  max-height: 260px;
+  overflow: auto;
+  background: #fff;
+  font-size: 11px;
+}
+.kf-app .kf-reftable td {
+  padding: 1px 6px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.kf-app .kf-pt {
+  display: grid;
+  grid-template-columns: repeat(18, 30px);
+  grid-template-rows: repeat(10, 26px);
+  gap: 1px;
+}
+.kf-app .kf-pt button {
+  padding: 0;
+  border: 1px solid #7a7a7a;
+  font: 11px var(--kf-font);
+  color: #000;
+}
+.kf-app .kf-pt button.kf-pt-on {
+  font-weight: 700;
+  border-color: #000;
+}
+.kf-app .kf-id-side {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 120px;
+}
+.kf-app .kf-idrange {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+}
+.kf-app .kf-idrange label {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.kf-app .kf-rangeline {
+  padding: 1px 2px;
+  cursor: default;
+}
+.kf-app .kf-rangeline:hover {
+  background: #e5f1fb;
+}
+.kf-app .kf-autoid,
+.kf-app .kf-becorr {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+}
+.kf-app .kf-pca-left {
+  width: 290px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.kf-app .kf-pca-left fieldset label {
+  display: block;
+}
+.kf-app .kf-pca-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kf-app .kf-miniplot {
+  background: #fff;
+}
+.kf-app .kf-samples {
+  max-height: 420px;
+}
+/* Open Examples — Periodic Table (examples_periodic_table.py) */
+.kf-app .kf-exwin .kf-float-body {
+  background: #f0f0f0;
+}
+.kf-app .kf-ex {
+  padding: 4px;
+}
+.kf-app .kf-ex-top {
+  padding: 3px;
+}
+.kf-app .kf-small {
+  min-height: 22px;
+  font-size: 11px;
+  padding: 1px 6px;
+}
+.kf-app .kf-ex-content {
+  display: flex;
+  gap: 4px;
+}
+.kf-app .kf-ex-pt {
+  position: relative;
+  margin: 6px;
+}
+.kf-app .kf-ex-tile {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  background: rgb(245, 245, 245);
+  color: rgb(195, 195, 195);
+  border: 1px solid rgb(225, 225, 225);
+}
+.kf-app .kf-ex-tile.kf-ex-on {
+  background: rgb(210, 210, 210);
+  color: #000;
+  border-color: rgb(110, 110, 110);
+  cursor: pointer;
+}
+.kf-app .kf-ex-tile.kf-ex-sel {
+  background: rgb(50, 50, 50);
+  color: #fff;
+  border-color: rgb(30, 30, 30);
+}
+.kf-app .kf-ex-cats {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 6px 6px;
+}
+.kf-app .kf-ex-cats .kf-wxbtn {
+  width: 83px;
+  height: 40px;
+  font-size: 9px;
+}
+.kf-app .kf-ex-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  min-width: 130px;
+}
+.kf-app .kf-ex-list {
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #7a7a7a;
+  font-size: 11px;
+}
+.kf-app .kf-ex-list div {
+  padding: 1px 3px;
+  white-space: nowrap;
+  cursor: default;
+}
+.kf-app .kf-ex-list div.kf-ex-pick {
+  background: #0078d7;
+  color: #fff;
 }

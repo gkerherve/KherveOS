@@ -12,11 +12,13 @@
 # PeakManipulation) and when a cell is edited
 # (PeakFittingGrid.on_peak_params_cell_changed, Utilities.propagate_constraint).
 # Only the data side is kept: colours, focus and redraws belong to the web page.
+# Synced with KherveFitting-AI (dev-AI v1.93).
 
 import re
 
 import numpy as np
 
+from .numberformat import format_intensity, round_sig
 from .peak_functions import PeakFunctions
 
 
@@ -30,6 +32,140 @@ def _safe_float(value_str):
         return float(value_str) if value_str else 0.0
     except (ValueError, TypeError):
         return 0.0
+
+
+# PeakFittingGrid.py (dev-AI): default constraints, number formats, and the
+# check of a typed constraint (self-references, missing peaks), unchanged.
+# Default constraint values per column index
+DEFAULT_CONSTRAINTS = {
+    2: '1:1000',   # Position
+    3: '0:1e7',    # Height
+    4: '0.3:3.5',  # FWHM
+    5: '5:80',     # L/G
+    6: '0:1e7',    # Area
+    7: '0.3:3',    # Sigma
+    8: '0.3:3',    # Gamma
+    9: '0.01:2'    # Skew
+}
+
+
+def format_peak_value(value, decimals=2):
+    """Format a number for the peak grid without throwing small ones away.
+
+    The grid was written with '%.2f' throughout, which is right for
+    photoemission - positions in eV and intensities in counts, where two
+    decimal places is more precision than the measurement has.  It is wrong
+    for anything whose numbers are small: a DRT peak 0.0077 wide, or an area
+    of 0.004, comes out as '0.00', and the peak is then a division by zero.
+
+    So: two decimal places as before whenever that actually shows the number,
+    and enough places to keep two significant figures when it does not.  A
+    value that needs more than six places is written in exponent form rather
+    than as a row of zeros.
+    """
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if not np.isfinite(value):
+        return f"{value}"
+    if value == 0:
+        return f"{0.0:.{decimals}f}"
+
+    magnitude = abs(value)
+    if magnitude >= 10.0 ** -decimals:
+        return f"{value:.{decimals}f}"
+    # Two significant figures for anything smaller.
+    places = int(np.floor(-np.log10(magnitude))) + 2
+    if places > 6:
+        return f"{value:.3e}"
+    return f"{value:.{places}f}"
+
+
+def format_peak_bound(value):
+    """Format one end of a constraint, without trailing zeros.
+
+    Bounds are read far more often than they are edited, and the familiar XPS
+    defaults are '0.3:3.5' and '0:1e7' - writing them as '0.30:3.50' and
+    '0.00:1e7' would be the same numbers and a worse thing to scan down a
+    column of.  Small values still keep their significant figures.
+    """
+    text = format_peak_value(value)
+    if 'e' in text or '.' not in text:
+        return text
+    return text.rstrip('0').rstrip('.') or '0'
+
+
+def sanitise_constraint(value, peak_index, col, num_peaks):
+    """Validate a constraint value and return it if valid, or the default if not.
+
+    Checks for:
+    - Self-referencing constraints (e.g., peak A referencing 'A*1')
+    - References to non-existent peaks
+    - Lowercase references (converts to uppercase)
+    Returns (sanitised_value, was_changed)
+    """
+    value = value.strip()
+    if not value:
+        return DEFAULT_CONSTRAINTS.get(col, ''), True
+
+    # Uppercase the leading letter if it looks like a peak reference (a*1 -> A*1)
+    pattern = r'^([a-zA-Z])([+\-*/])(\d+\.?\d*)(?:#(\d+\.?\d*))?$'
+    match = re.match(pattern, value)
+    if match:
+        original = value
+        ref_letter = match.group(1).upper()
+        value = ref_letter + value[1:]  # Replace with uppercase version
+        ref_index = ord(ref_letter) - 65
+        if ref_index == peak_index:
+            return DEFAULT_CONSTRAINTS.get(col, ''), True
+        if ref_index >= num_peaks:
+            return DEFAULT_CONSTRAINTS.get(col, ''), True
+        # Return uppercased value if it was lowercase
+        if value != original:
+            return value, True
+        return value, False
+
+    # Single letter reference like just "A" or "a"
+    if len(value) == 1 and value.upper() in 'ABCDEFGHIJKLMNOP':
+        ref_index = ord(value.upper()) - 65
+        if ref_index == peak_index:
+            return DEFAULT_CONSTRAINTS.get(col, ''), True
+        if ref_index >= num_peaks:
+            return DEFAULT_CONSTRAINTS.get(col, ''), True
+
+    return value, False
+
+
+# Plot_Operations.is_xps_like_sheet (dev-AI): the sheet-name prefixes of the
+# techniques whose x axis is not binding energy.
+_TECHNIQUE_PREFIXES = (
+    lambda n: n.startswith('EDX~Plot'),
+    lambda n: n.startswith('TEM~Plot'),
+    lambda n: n.startswith('AFM~Profile'),
+    lambda n: n.startswith(('SEM', 'TEM~Count', 'TEM~Freq')),
+    lambda n: n.upper().startswith('FTIR'),
+    lambda n: n.upper().startswith('EELS'),
+    lambda n: n.upper().startswith('EIS'),
+    lambda n: n.upper().startswith('SQUID'),
+    lambda n: n.upper().startswith('TGA'),
+    lambda n: n.upper().startswith('XRD'),
+    lambda n: n.startswith('XAS'),
+    lambda n: n.upper().startswith('UVVIS'),
+    lambda n: n.upper().startswith('ELLIPS'),
+    lambda n: n.upper().startswith('PL'),
+    lambda n: n.upper().startswith('MS'),
+    lambda n: n.upper().startswith('GC'),
+    lambda n: n.upper().startswith('DIL'),
+    lambda n: n.upper().startswith('BET'),
+    lambda n: n.startswith('RA') or 'RAMAN' in n.upper() or n.startswith('Ra_'),
+)
+
+
+def is_xps_like_sheet(window, sheet_name):
+    """True when the sheet really is on a binding-energy axis."""
+    name = str(sheet_name or '')
+    return not any(matches(name) for matches in _TECHNIQUE_PREFIXES)
 
 
 def extract_core_level_name(sheet_name):
@@ -81,6 +217,7 @@ def select_sheet(window, selected_sheet):
     window.bg_max_energy = None
     window.selected_peak_index = None
     window.fit_results = None
+    window.fit_errors = {}
     window.vlines = None
     grid = window.peak_params_grid
     grid.DeleteRows(0, grid.GetNumberRows())
@@ -110,23 +247,30 @@ def select_sheet(window, selected_sheet):
             row = i * 2
             grid.SetCellValue(row, 0, chr(65 + i))
             grid.SetCellValue(row, 1, peak_label)
-            try:
-                grid.SetCellValue(row, 2, f"{peak_data.get('Position', 'N/A'):.2f}")
-            except (ValueError, TypeError):
-                grid.SetCellValue(row, 2, f"{peak_data.get('Position', 'N/A')}")
-            grid.SetCellValue(row, 3, f"{peak_data.get('Height', '1e4')}")
-            grid.SetCellValue(row, 4, f"{peak_data.get('FWHM', '1.6')}")
-            grid.SetCellValue(row, 5, f"{peak_data.get('L/G', '20')}")
-            grid.SetCellValue(row, 6, f"{peak_data.get('Area', '1e4')}")
-            grid.SetCellValue(row, 7, f"{peak_data.get('Sigma', '0.6')}")
-            grid.SetCellValue(row, 8, f"{peak_data.get('Gamma', '0.4')}")
-            grid.SetCellValue(row, 9, f"{peak_data.get('Skew', '0.1')}")
+            for col, key, default in ((2, 'Position', 0.0),
+                                      (3, 'Height', 1e4),
+                                      (4, 'FWHM', 1.6),
+                                      (5, 'L/G', 20),
+                                      (6, 'Area', 1e4),
+                                      (7, 'Sigma', 0.6),
+                                      (8, 'Gamma', 0.4),
+                                      (9, 'Skew', 0.1)):
+                grid.SetCellValue(row, col, format_peak_value(peak_data.get(key, default)))
             grid.SetCellValue(row, 13, f"{peak_data.get('Fitting Model', 'GL (Area)')}")
-            grid.SetCellValue(row, 14, f"{peak_data.get('Bkg Type', '0')}")
-            grid.SetCellValue(row, 15, f"{peak_data.get('Bkg Low', '0')}")
-            grid.SetCellValue(row, 16, f"{peak_data.get('Bkg High', '0')}")
-            grid.SetCellValue(row, 17, f"{peak_data.get('Bkg Offset Low', '0')}")
-            grid.SetCellValue(row, 18, f"{peak_data.get('Bkg Offset High', '0')}")
+            # The background columns come from the sheet's background (the
+            # peak's own copy only when the sheet has none), as in dev-AI.
+            bg = core_level_data.get('Background', {}) or {}
+
+            def _bkg(key):
+                v = bg.get(key, '')
+                if v in ('', None):
+                    v = peak_data.get(key, '')
+                return '' if v in ('', None) else v
+            grid.SetCellValue(row, 14, f"{_bkg('Bkg Type')}")
+            grid.SetCellValue(row, 15, f"{_bkg('Bkg Low')}")
+            grid.SetCellValue(row, 16, f"{_bkg('Bkg High')}")
+            grid.SetCellValue(row, 17, f"{_bkg('Bkg Offset Low')}")
+            grid.SetCellValue(row, 18, f"{_bkg('Bkg Offset High')}")
 
             position_constraint = f"{min(x_values):.2f}:{max(x_values):.2f}"
             if 'Constraints' in peak_data:
@@ -177,17 +321,70 @@ def select_sheet(window, selected_sheet):
 
     window.load_view()
     window.update_ratios()
+    # The uncertainties a saved fit carries (peak['Errors']), for the hover text
+    from .uncertainty import errors_by_peak
+    window.fit_errors = errors_by_peak(window, selected_sheet)
 
 
 # ── Adding a peak ───────────────────────────────────────────────────────
+def _peak_scale(window, sheet_name, is_raman):
+    """PeakFittingGrid._peak_scale (dev-AI): starting width, width bounds and
+    the height/area floors for a sheet. XPS and Raman keep their constants;
+    other techniques have them derived from the data."""
+    if is_raman:
+        return {'fwhm': 15.0, 'fwhm_min': 5.0, 'fwhm_max': 50.0,
+                'height_min': 0.0, 'area_min': 0.0, 'sigma_bounds': (5, 50)}
+    if is_xps_like_sheet(window, sheet_name):
+        return {'fwhm': 1.6, 'fwhm_min': 0.3, 'fwhm_max': 3.5,
+                'height_min': 0.0, 'area_min': 0.0,
+                'sigma_bounds': (0.3, 3)}
+
+    span = 0.0
+    try:
+        low, high = window.bg_min_energy, window.bg_max_energy
+        if low is not None and high is not None:
+            span = abs(float(high) - float(low))
+        if not span:
+            x = np.asarray(window.x_values, dtype=float)
+            span = float(np.ptp(x[np.isfinite(x)]))
+    except (AttributeError, TypeError, ValueError):
+        span = 0.0
+    if not np.isfinite(span) or span <= 0:
+        return {'fwhm': 1.6, 'fwhm_min': 0.3, 'fwhm_max': 3.5,
+                'height_min': 0.0, 'area_min': 0.0, 'sigma_bounds': (0.3, 3)}
+
+    try:
+        y = np.asarray(window.y_values, dtype=float)
+        height = float(np.nanmax(np.abs(y[np.isfinite(y)])))
+    except (AttributeError, TypeError, ValueError):
+        height = 0.0
+    if not np.isfinite(height) or height <= 0:
+        height = 1.0
+
+    fwhm = span / 20.0
+    floor = min(1.0, height * 1e-4)
+    return {
+        'fwhm': fwhm,
+        'fwhm_min': span / 500.0,
+        'fwhm_max': span,
+        'height_min': floor,
+        'area_min': floor,
+        'sigma_bounds': (span / 500.0, span / 2.0),
+    }
+
+
 def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
-    """PeakFittingGrid.add_peak_params. Returns the new peak's index.
+    """PeakFittingGrid.add_peak_params (dev-AI). Returns the new peak's index.
 
     Without a position the peak goes where the data (or, once there are
     peaks, the residual passed in) is highest, as on the desktop.
     """
     sheet_name = window.sheet_combobox.GetValue()
-    is_raman = sheet_name.startswith('RA') or 'RAMAN' in sheet_name.upper()
+    is_raman = (sheet_name.startswith('RA') or 'RAMAN' in sheet_name.upper()
+                or sheet_name.upper().startswith('FTIR'))
+    scale = _peak_scale(window, sheet_name, is_raman)
+    _fmt = format_peak_value
+    _bound = format_peak_bound
     grid = window.peak_params_grid
     num_peaks = grid.GetNumberRows() // 2
 
@@ -222,20 +419,22 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
 
     set_(row, 0, letter_id)
     set_(row, 1, f"{core_level_name} p{window.peak_count}")
-    set_(row, 2, f"{peak_x:.2f}")
-    set_(row, 3, f"{peak_y:.2f}")
-    set_(row, 4, "15" if is_raman else "1.6")
+    set_(row, 2, _fmt(peak_x))
+    set_(row, 3, format_intensity(peak_y))
+    set_(row, 4, _bound(scale['fwhm']))
     set_(row, 5, "20")
-    fwhm_val = 15 if is_raman else 1.6
-    if method == 'SGL (Area)':
-        fwhm = fwhm_val
+    fwhm_val = scale['fwhm']
+    if method in ["LA (Area, σ, γ)", "LA (Area, σ/γ, γ)", "LA*G (Area, σ/γ, γ)"]:
+        set_(row, 6, format_intensity(peak_y * fwhm_val * 1.064))
+    elif method in ['SGL (Area)']:
+        fwhm = scale['fwhm']
         fraction = 20
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         gamma = fwhm / 2
         area = peak_y * ((1 - fraction / 100) * sigma * np.sqrt(2 * np.pi) + (fraction / 100) * np.pi * gamma)
-        set_(row, 6, f"{area:.2f}")
+        set_(row, 6, format_intensity(area))
     else:
-        set_(row, 6, f"{peak_y * fwhm_val * 1.064:.2f}")
+        set_(row, 6, format_intensity(peak_y * fwhm_val * 1.064))
     if method == "ExpGauss.(Area, σ, γ)":
         set_(row, 7, "0.3"); set_(row, 8, '1.2'); set_(row, 9, '0.64')
     elif method in ["LA (Area, σ/γ, γ)", "LA*G (Area, σ/γ, γ)"]:
@@ -243,14 +442,30 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
     elif method == "LA (Area, σ, γ)":
         set_(row, 5, "50"); set_(row, 7, "2.7"); set_(row, 8, '2.7'); set_(row, 9, '0')
     elif method == "Voigt (Area, L/G, σ, S)":
-        set_(row, 5, "20"); set_(row, 7, "10" if is_raman else "1.2"); set_(row, 8, '0.4'); set_(row, 9, '0.01')
+        set_(row, 5, "20"); set_(row, 7, _bound(scale['fwhm'] * 0.75)); set_(row, 8, '0.4'); set_(row, 9, '0.01')
+    elif method in ["A*GL (Area, a, b)", "A*SGL (Area, a, b)"]:
+        set_(row, 5, "30"); set_(row, 7, "0.2"); set_(row, 8, '0.4'); set_(row, 9, '0')
+    elif method == "LF (Area, σ, γ, w)":
+        set_(row, 5, "50"); set_(row, 7, "2.7"); set_(row, 8, '2.7'); set_(row, 9, '30')
+    elif method == "DL (A, σ, γ, aDL)":
+        set_(row, 5, "0"); set_(row, 7, "0.4"); set_(row, 8, '1.0'); set_(row, 9, '1.5')
+    elif method == "TLA (A, μ, α, Wg)":
+        set_(row, 4, "1.0"); set_(row, 5, "0"); set_(row, 7, "20"); set_(row, 8, '1'); set_(row, 9, '0.8')
+    elif method == "SB (Height)":
+        set_(row, 5, "30"); set_(row, 7, "0"); set_(row, 8, '0'); set_(row, 9, '0')
+    elif method == "Voigt (Area)":
+        set_(row, 5, "30"); set_(row, 7, "0"); set_(row, 8, '0'); set_(row, 9, '0')
+    elif method == "Voigt (Area, L/G, S)":
+        set_(row, 5, "30"); set_(row, 7, "0"); set_(row, 8, '0'); set_(row, 9, '0')
     elif method == "DS (A, σ, γ)":
         set_(row, 7, "0.5"); set_(row, 8, "0.0"); set_(row, 9, "0.0")
+        set_(row + 1, 7, "0.3:1.5"); set_(row + 1, 8, "-0.1:1.5"); set_(row + 1, 9, "-0.2:0.2")
     elif method == "DS*G (A, σ, γ, S)":
         x_range = np.linspace(-10, 10, 1000)
         y_values = PeakFunctions.DS_G(x_range, 0, 1.0, 0.4, 0.0, 0.8)
-        set_(row, 6, f"{peak_y / np.max(y_values):.2f}")
+        set_(row, 6, format_intensity(peak_y / np.max(y_values)))
         set_(row, 7, "0.8"); set_(row, 8, "0.4"); set_(row, 9, "0.0")
+        set_(row + 1, 7, "0.3:1.5"); set_(row + 1, 8, "0.1:1.5"); set_(row + 1, 9, "0:0.2")
     elif method == "D-parameter":
         set_(row, 5, "2"); set_(row, 7, "1"); set_(row, 8, '1'); set_(row, 9, '7')
     else:
@@ -266,20 +481,37 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
 
     position_constraint = f"{window.bg_min_energy:.2f},{window.bg_max_energy:.2f}"
     set_(row + 1, 2, position_constraint)
-    set_(row + 1, 3, "1:1e7")
-    set_(row + 1, 4, "5:50" if is_raman else "0.3:3.5")
+    set_(row + 1, 3, f"{_bound(scale['height_min'])}:1e7")
+    set_(row + 1, 4, f"{_bound(scale['fwhm_min'])}:{_bound(scale['fwhm_max'])}")
     set_(row + 1, 5, "2:80")
-    set_(row + 1, 6, "1:1e7")
-    set_(row + 1, 7, "5:50" if is_raman else "0.3:3")
-    set_(row + 1, 8, "0.3:3")
+    set_(row + 1, 6, f"{_bound(scale['area_min'])}:1e7")
+    sigma_lo, sigma_hi = scale['sigma_bounds']
+    set_(row + 1, 7, f"{_bound(sigma_lo)}:{_bound(sigma_hi)}")
+    set_(row + 1, 8, f"{_bound(sigma_lo)}:{_bound(sigma_hi)}")
     set_(row + 1, 9, '0.01:2')
     if method == "ExpGauss.(Area, σ, γ)":
         set_(row + 1, 7, "0.01:1"); set_(row + 1, 8, "0.01:3"); set_(row + 1, 9, '0.01:2')
     elif method in ["LA (Area, σ, γ)", "LA (Area, σ/γ, γ)", "LA*G (Area, σ/γ, γ)"]:
         set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "0.01:10"); set_(row + 1, 8, "0.01:10"); set_(row + 1, 9, '0.01:2')
     elif method == "Voigt (Area, L/G, σ, S)":
-        set_(row + 1, 5, "15:85"); set_(row + 1, 7, "5:50" if is_raman else "0.2:1.5")
-        set_(row + 1, 8, "0.2:1.5"); set_(row + 1, 9, '0.01:0.7')
+        set_(row + 1, 5, "15:85")
+        voigt = f"{_bound(sigma_lo)}:{_bound(sigma_hi)}"
+        set_(row + 1, 7, voigt); set_(row + 1, 8, voigt); set_(row + 1, 9, '0.01:0.7')
+    elif method in ["A*GL (Area, a, b)", "A*SGL (Area, a, b)"]:
+        set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "Fixed"); set_(row + 1, 8, "Fixed"); set_(row + 1, 9, '0.01:2')
+    elif method == "LF (Area, σ, γ, w)":
+        set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "0.01:10"); set_(row + 1, 8, "0.01:10"); set_(row + 1, 9, "Fixed")
+    elif method == "DL (A, σ, γ, aDL)":
+        set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "0.05:3"); set_(row + 1, 8, "0.05:3"); set_(row + 1, 9, "1:5")
+    elif method == "TLA (A, μ, α, Wg)":
+        set_(row + 1, 4, "0.3:3.5"); set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "0.1:200")
+        set_(row + 1, 8, "Fixed"); set_(row + 1, 9, "0.2:3")
+    elif method == "SB (Height)":
+        set_(row + 1, 5, "5:80"); set_(row + 1, 7, ""); set_(row + 1, 8, ""); set_(row + 1, 9, "")
+    elif method == "Voigt (Area)":
+        set_(row + 1, 5, "5:80"); set_(row + 1, 7, ""); set_(row + 1, 8, ""); set_(row + 1, 9, "")
+    elif method == "Voigt (Area, L/G, S)":
+        set_(row + 1, 5, "5:80"); set_(row + 1, 7, ""); set_(row + 1, 8, ""); set_(row + 1, 9, "0.01:0.7")
     elif method == "DS (A, σ, γ)":
         set_(row + 1, 7, "0.3:1.5"); set_(row + 1, 8, "-0.1:1.5"); set_(row + 1, 9, "-0.2:0.2")
     elif method == "DS*G (A, σ, γ, S)":
@@ -305,53 +537,76 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
     }
     if method == "Voigt (Area, L/G, σ, S)":
         peak_data = {'Position': peak_x, 'Height': peak_y, 'FWHM': fwhm_val, 'L/G': 20,
-                     'Area': peak_y * fwhm_val * 1.064, 'Sigma': 10 if is_raman else 1.2, 'Gamma': 0.4,
+                     'Area': peak_y * fwhm_val * 1.064, 'Sigma': scale['fwhm'] * 0.75, 'Gamma': 0.4,
                      'Skew': 0.01, **common,
-                     'Constraints': {'Position': position_constraint, 'Height': "1:1e7",
-                                     'FWHM': "5:50" if is_raman else "0.3:3.5", 'L/G': "2:80", 'Area': '1:1e7',
-                                     'Sigma': "5:50" if is_raman else "0.3:3", 'Gamma': "0.3:3", 'Skew': "0.01:2"}}
+                     'Constraints': {'Position': position_constraint, 'Height': "0:1e7",
+                                     'FWHM': f"{_bound(scale['fwhm_min'])}:{_bound(scale['fwhm_max'])}",
+                                     'L/G': "2:80", 'Area': '0:1e7',
+                                     'Sigma': f"{_bound(sigma_lo)}:{_bound(sigma_hi)}",
+                                     'Gamma': "0.3:3", 'Skew': "0.01:2"}}
     elif method in ["DS (A, σ, γ)", "DS*G (A, σ, γ, S)"]:
         ds = method == "DS (A, σ, γ)"
         peak_data = {'Position': peak_x, 'Height': peak_y, 'FWHM': 1.0, 'L/G': 20, 'Area': peak_y * 1.0 * 1.0,
                      'Sigma': 0.5, 'Gamma': 0.0 if ds else 0.5, 'Skew': 0.0, **common,
-                     'Constraints': {'Position': position_constraint, 'Height': "1:1e7", 'FWHM': "0.3:3.5",
-                                     'L/G': "Fixed", 'Area': '1:1e7', 'Sigma': "0.3:1.5", 'Gamma': "0.1:1.5",
+                     'Constraints': {'Position': position_constraint, 'Height': "0:1e7", 'FWHM': "0.3:3.5",
+                                     'L/G': "Fixed", 'Area': '0:1e7', 'Sigma': "0.3:1.5", 'Gamma': "0.1:1.5",
                                      'Skew': "-0.2:0.2" if ds else "0:0.2"}}
     else:
         peak_data = {'Position': peak_x, 'Height': peak_y, 'FWHM': 1.6, 'L/G': 20, 'Area': peak_y * 1.6 * 1.064,
                      'Sigma': 1.2, 'Gamma': 0.4, 'Skew': 0.64, **common,
-                     'Constraints': {'Position': position_constraint, 'Height': "1:1e7", 'FWHM': "0.3:3.5",
-                                     'L/G': "2:80", 'Area': '1:1e7', 'Sigma': "0.3:3", 'Gamma': "0.3:3",
+                     'Constraints': {'Position': position_constraint, 'Height': "0:1e7", 'FWHM': "0.3:3.5",
+                                     'L/G': "2:80", 'Area': '0:1e7', 'Sigma': "0.3:3", 'Gamma': "0.3:3",
                                      'Skew': "0.00:2"}}
+
+    def _c(lg, sigma, gamma, skew=None, fwhm="0.3:3.5"):
+        c = {'Position': position_constraint, 'Height': "0:1e7", 'FWHM': fwhm, 'L/G': lg,
+             'Area': '0:1e7', 'Sigma': sigma, 'Gamma': gamma}
+        if skew is not None:
+            c['Skew'] = skew
+        return c
+
     if method in ["LA (Area, σ, γ)", "LA (Area, σ/γ, γ)"]:
         peak_data.update({'L/G': 50, 'Sigma': 2.75, 'Gamma': 2.75,
-                          'Constraints': {'Position': position_constraint, 'Height': "1:1e7", 'FWHM': "0.3:3.5",
-                                          'L/G': "Fixed", 'Area': '1:1e7', 'Sigma': "0.01:10", 'Gamma': "0.01:10"}})
+                          'Constraints': _c("Fixed", "0.01:10", "0.01:10")})
     elif method == "LA*G (Area, σ/γ, γ)":
         peak_data.update({'L/G': 50, 'Sigma': 2.75, 'Gamma': 2.75, 'Skew': 0.64,
-                          'Constraints': {'Position': position_constraint, 'Height': "1:1e7", 'FWHM': "0.3:3.5",
-                                          'L/G': "Fixed", 'Area': '1:1e7', 'Sigma': "0.01:4", 'Gamma': "0.01:4",
-                                          'Skew': "0.01:2"}})
+                          'Constraints': _c("Fixed", "0.01:4", "0.01:4", "0.01:2")})
     elif method in ["Voigt (Area, L/G, σ)", "Voigt (Area, σ, γ)"]:
-        peak_data.update({'Sigma': 1, 'Gamma': 0.5,
-                          'Constraints': {'Position': position_constraint, 'Height': "1:1e7", 'FWHM': "0.3:3.5",
-                                          'L/G': "1:80", 'Area': '1:1e7', 'Sigma': "0.3:3", 'Gamma': "0.3:3"}})
+        peak_data.update({'Sigma': 1, 'Gamma': 0.5, 'Constraints': _c("1:80", "0.3:3", "0.3:3")})
     elif method == "Voigt (Area, L/G, σ, S)":
         peak_data.update({'Sigma': 1, 'Gamma': 0.5, 'skew': 0.01,
-                          'Constraints': {'Position': position_constraint, 'Height': "1:1e7", 'FWHM': "0.3:3.5",
-                                          'L/G': "1:80", 'Area': '1:1e7', 'Sigma': "0.3:3", 'Gamma': "0.3:3",
-                                          'Skew': "0.01:0.7"}})
+                          'Constraints': _c("1:80", "0.3:3", "0.3:3", "0.01:0.7")})
+    elif method in ["A*GL (Area, a, b)", "A*SGL (Area, a, b)"]:
+        peak_data.update({'L/G': 30, 'Sigma': 0.2, 'Gamma': 0.4, 'Skew': 0.0,
+                          'Constraints': _c("Fixed", "Fixed", "Fixed", "0.01:2")})
+    elif method == "LF (Area, σ, γ, w)":
+        peak_data.update({'L/G': 50, 'Sigma': 2.7, 'Gamma': 2.7, 'Skew': 30.0,
+                          'Constraints': _c("Fixed", "0.01:10", "0.01:10", "Fixed")})
+    elif method == "Voigt (Area)":
+        peak_data.update({'L/G': 30, 'Sigma': 0.0, 'Gamma': 0.0, 'Skew': 0.0,
+                          'Constraints': _c("5:80", "0.3:3", "0.3:3", "0.01:2")})
+    elif method == "Voigt (Area, L/G, S)":
+        peak_data.update({'L/G': 30, 'Sigma': 0.0, 'Gamma': 0.0, 'Skew': 0.0,
+                          'Constraints': _c("5:80", "0.3:3", "0.3:3", "0.01:0.7")})
+    elif method == "TLA (A, μ, α, Wg)":
+        peak_data.update({'FWHM': 1.0, 'L/G': 0, 'Sigma': 20.0, 'Gamma': 1.0, 'Skew': 0.8,
+                          'Constraints': _c("Fixed", "0.1:200", "Fixed", "0.2:3")})
+    elif method == "SB (Height)":
+        peak_data.update({'L/G': 30, 'Sigma': 0.0, 'Gamma': 0.0, 'Skew': 0.0,
+                          'Constraints': _c("5:80", "0.3:3", "0.3:3", "0.01:2")})
+    elif method == "DL (A, σ, γ, aDL)":
+        peak_data.update({'FWHM': 1.2, 'L/G': 0, 'Sigma': 0.4, 'Gamma': 1.0, 'Skew': 1.5,
+                          'Constraints': _c("Fixed", "0.05:3", "0.05:3", "1:5")})
     elif method == "SGL (Area)":
-        fwhm = fwhm_val
+        fwhm = scale['fwhm']
         fraction = 20
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         gamma = fwhm / 2
         sgl_area = peak_y * ((1 - fraction / 100) * sigma * np.sqrt(2 * np.pi) + (fraction / 100) * np.pi * gamma)
         peak_data.update({'Area': sgl_area, 'FWHM': fwhm, 'L/G': fraction,
-                          'Constraints': {'Position': position_constraint, 'Height': "1:1e7",
-                                          'FWHM': "5:50" if is_raman else "0.3:3.5", 'L/G': "1:80",
-                                          'Area': '1:1e7', 'Sigma': "5:50" if is_raman else "0.3:3",
-                                          'Gamma': "0.3:3", 'Skew': "0.01:0.7"}})
+                          'Constraints': _c("1:80", f"{_bound(sigma_lo)}:{_bound(sigma_hi)}", "0.3:3",
+                                            "0.01:0.7",
+                                            fwhm=f"{_bound(scale['fwhm_min'])}:{_bound(scale['fwhm_max'])}")})
 
     cl['Fitting']['Peaks'][core_level_name + f" p{window.peak_count}"] = peak_data
     window.update_ratios()
@@ -380,8 +635,12 @@ def remove_last_peak(window):
     window.update_ratios()
 
 
-def _update_constraint_references(constraint, deleted_index):
-    """On_Mouse_Defs.update_constraint_references: re-letter after a deletion."""
+def _update_constraint_references(constraint, deleted_index, default_range="1:1000"):
+    """On_Mouse_Defs.update_constraint_references: re-letter after a deletion.
+
+    A reference to the deleted peak becomes ``default_range`` - callers
+    pass '0:1e7' for Height / Area, which '1:1000' would cap and floor.
+    """
     if not constraint or constraint in ['Fixed', '']:
         return constraint
 
@@ -391,12 +650,12 @@ def _update_constraint_references(constraint, deleted_index):
         if letter_index > deleted_index:
             return chr(65 + letter_index - 1)
         elif letter_index == deleted_index:
-            return "1:1000"
+            return default_range
         return letter
 
     updated = re.sub(r'([A-Z])(?=[+\-*/]|$)', replace_letter, constraint)
-    if updated.startswith('1:1000') and ':' not in constraint:
-        return "1:1000"
+    if updated.startswith(default_range) and ':' not in constraint:
+        return default_range
     return updated
 
 
@@ -416,7 +675,8 @@ def delete_peak(window, peak_index):
             for label, data in items:
                 for ck, cv in list(data.get('Constraints', {}).items()):
                     if isinstance(cv, str):
-                        data['Constraints'][ck] = _update_constraint_references(cv, peak_index)
+                        data['Constraints'][ck] = _update_constraint_references(
+                            cv, peak_index, '0:1e7' if ck in ('Height', 'Area') else '1:1000')
                 peaks[label] = data
     select_sheet(window, sheet_name)
 
@@ -431,8 +691,8 @@ def update_peak(window, peak_index, new_x, new_height, area=None):
     fitting_model = grid.GetCellValue(row, 13)
     grid.SetCellValue(row, 2, f"{new_x:.2f}")
     if "LA" in fitting_model and area is not None:
-        grid.SetCellValue(row, 6, f"{area:.2f}")
-    grid.SetCellValue(row, 3, f"{new_height:.2f}")
+        grid.SetCellValue(row, 6, format_intensity(area))
+    grid.SetCellValue(row, 3, format_intensity(new_height))
     cl = window.Data['Core levels'].get(sheet_name, {})
     peaks = cl.get('Fitting', {}).get('Peaks', {}) if isinstance(cl.get('Fitting'), dict) else {}
     if peak_label in peaks:
@@ -607,7 +867,7 @@ def propagate_constraint(window, row, col):
             peak_data['Constraints'][constraint_name] = constraint_value
 
 
-# PeakFittingGrid.on_peak_params_cell_changed, unchanged but for the wx calls.
+# PeakFittingGrid.on_peak_params_cell_changed (dev-AI), unchanged but for the wx calls.
 def peak_cell_changed(window, row, col):
     """on_peak_params_cell_changed: the cell (row, col) already holds the new text."""
     new_value = window.peak_params_grid.GetCellValue(row, col)
@@ -620,10 +880,10 @@ def peak_cell_changed(window, row, col):
     # new_value = f"{min(x_values):.2f}:{max(x_values):.2f}"
     default_constraints = {
         2: '1:1000',  # Position
-        3: '1:1e7',  # Height
+        3: '0:1e7',  # Height
         4: '0.3:3.5',  # FWHM
         5: '5:80',  # L/G
-        6: '1:1e7',  # Area
+        6: '0:1e7',  # Area
         7: '0.3:3',  # Sigma
         8: '0.3:3',  # Gamma
         9: '0.01:2' # Skew
@@ -769,7 +1029,7 @@ def peak_cell_changed(window, row, col):
             elif col == 5:
                 new_value = "1:80"
             elif col == 6:
-                new_value = "1:1e7"
+                new_value = "0:1e7"
             elif col == 7:
                 new_value = "0.2:3"
             elif col == 8:
@@ -799,26 +1059,12 @@ def peak_cell_changed(window, row, col):
                 if col in constraint_names:
                     peaks[peak_label]['Constraints'][constraint_names[col]] = new_value
 
-        if match:
-            referenced_peak = match.group(1)
-            letter_index = ord(referenced_peak) - 65
-            current_peak = row // 2
-
-            if letter_index == current_peak:
-                raise CellRejected(f"Cannot reference the same peak ({referenced_peak}).")
-
-            if letter_index * 2 >= window.peak_params_grid.GetNumberRows():
-                raise CellRejected(f"Peak {referenced_peak} does not exist.")
-
-        elif new_value.upper() in 'ABCDEFGHIJKLMNOP':
-            letter_index = ord(new_value.upper()) - 65
-            current_peak = row // 2
-
-            if letter_index == current_peak:
-                raise CellRejected(f"Cannot reference the same peak ({new_value.upper()}).")
-
-            if letter_index * 2 >= window.peak_params_grid.GetNumberRows():
-                raise CellRejected(f"Peak {new_value.upper()} does not exist.")
+        # Validate constraint for self-references and invalid peak refs
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2
+        sanitised, was_changed = sanitise_constraint(new_value, peak_index, col, num_peaks)
+        if was_changed:
+            window.peak_params_grid.SetCellValue(row, col, sanitised)
+            new_value = sanitised
     elif col in [0, 10, 11, 12]:
         raise CellRejected("")
     elif col not in [13, 14] and row % 2 == 1:  # Constraint row
@@ -833,7 +1079,7 @@ def peak_cell_changed(window, row, col):
             raise CellRejected("")
 
 
-    if col == 2 and new_value.upper() in 'ABCDEFGHIJKLMNOP':
+    if col == 2 and len(new_value) == 1 and new_value.upper() in 'ABCDEFGHIJKLMNOP':
         letter_index = ord(new_value.upper()) - 65
         if letter_index * 2 == row - 1:  # Same peak
             new_value = "0:1000"  # Default value
@@ -849,10 +1095,10 @@ def peak_cell_changed(window, row, col):
                     new_value = f"{new_value.upper()}{split_diff:.2f}#0.1"  # split_diff is already negative
             else:
                 new_value = new_value.upper() + '*1'
-    elif col == 6 and new_value.upper() in 'ABCDEFGHIJKLMNOP':
+    elif col == 6 and len(new_value) == 1 and new_value.upper() in 'ABCDEFGHIJKLMNOP':
         letter_index = ord(new_value.upper()) - 65
         if letter_index * 2 == row - 1:  # Same peak
-            new_value = "1:1e7"  # Default value
+            new_value = "0:1e7"  # Default value
         else:
             current_ratio = float(window.peak_params_grid.GetCellValue(row - 1, 11))
             ref_ratio = float(window.peak_params_grid.GetCellValue(letter_index * 2, 11))
@@ -861,7 +1107,7 @@ def peak_cell_changed(window, row, col):
                 new_value = f"{new_value.upper()}*{ratio:.2f}#0.01"
             else:
                 new_value = new_value.upper() + '*1'
-    elif new_value.lower() in 'abcdefghijklmnop':
+    elif len(new_value) == 1 and new_value.lower() in 'abcdefghijklmnop':
         letter_index = ord(new_value.upper()) - 65
         if letter_index * 2 == row - 1:  # Same peak
             if col == 2:
@@ -873,7 +1119,7 @@ def peak_cell_changed(window, row, col):
             elif col ==5:
                 new_value = "1:80"
             elif col ==6:
-                new_value = "1:1e7"
+                new_value = "0:1e7"
             elif col ==7:
                 new_value = "0.2:3"
             elif col ==8:
@@ -1017,32 +1263,33 @@ def peak_cell_changed(window, row, col):
                     skew = try_float(window.peak_params_grid.GetCellValue(row, 9))
                     # Handle SingleEntity model
                     if model == 'SingleEntity':
-                        # For SingleEntity, preserve envelope data during updates
                         current_data = peaks[correct_peak_key]
 
-                        # Store envelope data if it exists
-                        envelope_backup = {}
-                        if 'x_data' in current_data:
-                            envelope_backup['x_data'] = current_data['x_data']
-                        if 'y_data' in current_data:
-                            envelope_backup['y_data'] = current_data['y_data']
-                        if 'Original_Position' in current_data:
-                            envelope_backup['Original_Position'] = current_data['Original_Position']
+                        # Preserve L/G (Original_Area) and all envelope keys - never overwrite
+                        preserved_lg = current_data.get('L/G', fraction)
 
-                        # Update standard parameters
                         peaks[correct_peak_key].update({
                             'Position': float(window.peak_params_grid.GetCellValue(row, 2)),
                             'Height': height,
                             'FWHM': fwhm,
-                            'L/G': fraction,
+                            'L/G': preserved_lg,  # Never changes - holds Original_Area
                             'Area': area,
                             'Sigma': sigma,  # Shift value
                             'Gamma': gamma,  # Scale value
+                            'Skew': skew,  # Wg value
                             'Fitting Model': model
                         })
 
-                        # Restore envelope data
-                        peaks[correct_peak_key].update(envelope_backup)
+                        # Restore all SingleEntity-specific keys
+                        for key in ('x_data', 'y_data',
+                                    'Original_Position', 'Original_Area', 'Original_Height',
+                                    'Constraints'):
+                            if key in current_data:
+                                peaks[correct_peak_key][key] = current_data[key]
+                        # Grid col 5 must always show Original_Area - restore it
+                        window.peak_params_grid.SetCellValue(row, 5, f"{preserved_lg:.2f}")
+                        window.update_ratios()
+                        return  # Skip generic update block below which would corrupt L/G
                     elif model in ["LA (Area, \u03c3/\u03b3, \u03b3)"]:
                         if col == 5:  # L/G ratio changed
                             gamma = float(window.peak_params_grid.GetCellValue(row, 8))
@@ -1129,28 +1376,28 @@ def peak_cell_changed(window, row, col):
                             # For Gaussian-Lorentzian area-based model
                             sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                             height = area / (sigma * np.sqrt(2 * np.pi))
-                            window.peak_params_grid.SetCellValue(row, 3, f"{height:.2f}")
+                            window.peak_params_grid.SetCellValue(row, 3, format_intensity(height))
                     elif model in ["SGL (Area)"]:
                             # For Sum of Gaussian-Lorentzian area-based model
                             sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                             gamma = fwhm / 2
                             height = area / ((1 - fraction / 100) * sigma * np.sqrt(2 * np.pi) + (
                                         fraction / 100) * np.pi * gamma)
-                            window.peak_params_grid.SetCellValue(row, 3, f"{height:.2f}")
+                            window.peak_params_grid.SetCellValue(row, 3, format_intensity(height))
                     elif model == "D-parameter":
                         return
                     else:
                         # Recalculate area
                         area = window.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma,skew)
-                        window.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+                        window.peak_params_grid.SetCellValue(row, 6, format_intensity(area))
 
                     window.update_ratios()
                     # Update grid and data
                     peaks[correct_peak_key].update({
-                        'Height': round(height, 2),
+                        'Height': round_sig(height),
                         'FWHM': round(fwhm, 2),
                         'L/G': round(fraction, 2),
-                        'Area': round(area, 2),
+                        'Area': round_sig(area),
                         'Sigma': round(sigma, 2),
                         'Gamma': round(gamma, 2),
                         'Skew': round(skew, 3)
@@ -1221,6 +1468,83 @@ def peak_cell_changed(window, row, col):
                         window.peak_params_grid.SetCellValue(row + 1, 5, "15:85")  # L/G constraint
                         window.peak_params_grid.SetCellValue(row + 1, 7, "0.2:1.5")  # Sigma constraint
                         window.peak_params_grid.SetCellValue(row + 1, 8, "0.2:1.5")  # Gamma constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 9, "0.01:0.7")  # Skew constraint
+                    elif new_value in ["A*GL (Area, a, b)", "A*SGL (Area, a, b)"]:
+                        # CasaXPS A(a,b,0)GL(p) / A(a,b,0)SGL(p): sigma/gamma columns hold a and b
+                        fraction = 30.0
+                        sigma = 0.2
+                        gamma = 0.4
+                        skew = 0.0
+                        # Set constraints
+                        window.peak_params_grid.SetCellValue(row + 1, 5, "Fixed")  # L/G (p) constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 7, "Fixed")  # a constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 8, "Fixed")  # b constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 9, "0.01:2")  # Skew unused
+                    elif new_value == "LF (Area, σ, γ, w)":
+                        # LA power form with damping width w in the skew column
+                        fraction = 50.0
+                        sigma = 2.7
+                        gamma = 2.7
+                        skew = 30.0
+                        # Set constraints
+                        window.peak_params_grid.SetCellValue(row + 1, 5, "Fixed")  # L/G constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 7, "0.01:10")  # Sigma constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 8, "0.01:10")  # Gamma constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 9, "Fixed")  # damping w
+                    elif new_value == "DL (A, σ, γ, aDL)":
+                        # Double Lorentzian
+                        fraction = 0.0
+                        sigma = 0.4
+                        gamma = 1.0
+                        skew = 1.5
+                        # Set constraints
+                        window.peak_params_grid.SetCellValue(row + 1, 5, "Fixed")  # L/G unused
+                        window.peak_params_grid.SetCellValue(row + 1, 7, "0.05:3")  # Lorentzian width
+                        window.peak_params_grid.SetCellValue(row + 1, 8, "0.05:3")  # Gaussian FWHM
+                        window.peak_params_grid.SetCellValue(row + 1, 9, "1:5")  # asymmetry a_dl
+                    elif new_value == "TLA (A, μ, α, Wg)":
+                        # CasaXPS TLA
+                        fraction = 0.0
+                        sigma = 20.0
+                        gamma = 1.0
+                        skew = 0.8
+                        # Set constraints
+                        window.peak_params_grid.SetCellValue(row + 1, 5, "Fixed")  # L/G unused
+                        window.peak_params_grid.SetCellValue(row + 1, 7, "0.1:200")  # mu
+                        window.peak_params_grid.SetCellValue(row + 1, 8, "Fixed")  # alpha
+                        window.peak_params_grid.SetCellValue(row + 1, 9, "0.2:3")  # wg
+                    elif new_value == "SB (Height)":
+                        # Shirley-background component
+                        fraction = 30.0
+                        sigma = 0.0
+                        gamma = 0.0
+                        skew = 0.0
+                        # Set constraints
+                        window.peak_params_grid.SetCellValue(row + 1, 5, "5:80")  # L/G constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 7, "")
+                        window.peak_params_grid.SetCellValue(row + 1, 8, "")
+                        window.peak_params_grid.SetCellValue(row + 1, 9, "")
+                    elif new_value == "Voigt (Area)":
+                        # Simple Voigt: FWHM column drives the width, L/G the mixing
+                        fraction = 30.0
+                        sigma = 0.0
+                        gamma = 0.0
+                        skew = 0.0
+                        # Set constraints
+                        window.peak_params_grid.SetCellValue(row + 1, 5, "5:80")  # L/G constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 7, "")  # derived
+                        window.peak_params_grid.SetCellValue(row + 1, 8, "")  # derived
+                        window.peak_params_grid.SetCellValue(row + 1, 9, "")  # unused
+                    elif new_value == "Voigt (Area, L/G, S)":
+                        # Hybrid Voigt: FWHM column drives the width, L/G the mixing, S the tail
+                        fraction = 30.0
+                        sigma = 0.0
+                        gamma = 0.0
+                        skew = 0.0
+                        # Set constraints
+                        window.peak_params_grid.SetCellValue(row + 1, 5, "5:80")  # L/G constraint
+                        window.peak_params_grid.SetCellValue(row + 1, 7, "")  # derived
+                        window.peak_params_grid.SetCellValue(row + 1, 8, "")  # derived
                         window.peak_params_grid.SetCellValue(row + 1, 9, "0.01:0.7")  # Skew constraint
                     elif new_value in ["DS (A, \u03c3, \u03b3)"]:
                         # Doniach-Sunjic model
@@ -1309,7 +1633,7 @@ def peak_cell_changed(window, row, col):
 
                     # Recalculate area with new model parameters
                     area = window.calculate_peak_area(new_value, height, fwhm, fraction, sigma, gamma, skew)
-                    window.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+                    window.peak_params_grid.SetCellValue(row, 6, format_intensity(area))
 
                     # Update peak data in memory
                     peaks[correct_peak_key].update({
@@ -1347,7 +1671,12 @@ def peak_cell_changed(window, row, col):
         # Ensure numeric values are displayed with 2 decimal places
     if col in [2, 3, 4, 5, 6, 7, 8, 9] and row % 2 == 0:  # Only for main parameter rows, not constraint rows
         try:
-            formatted_value = f"{float(new_value):.2f}"
+            # Height and Area keep significant figures: '%.2f' turns a
+            # normalised area of 0.004 into 0.00.
+            if col in (3, 6):
+                formatted_value = format_intensity(float(new_value))
+            else:
+                formatted_value = f"{float(new_value):.2f}"
             window.peak_params_grid.SetCellValue(row, col, formatted_value)
         except ValueError:
             pass
@@ -1371,21 +1700,23 @@ def peak_cell_changed(window, row, col):
         existing_data = peaks[peak_label]
         envelope_backup = {}
         if existing_data.get('Fitting Model') == 'SingleEntity':
-            if 'x_data' in existing_data:
-                envelope_backup['x_data'] = existing_data['x_data']
-            if 'y_data' in existing_data:
-                envelope_backup['y_data'] = existing_data['y_data']
-            if 'Original_Position' in existing_data:
-                envelope_backup['Original_Position'] = existing_data['Original_Position']
+            for key in ('x_data', 'y_data', 'Original_Position', 'Original_Height'):
+                if key in existing_data:
+                    envelope_backup[key] = existing_data[key]
+
+        # Preserve Original_Area for SingleEntity - L/G column holds the constant original area
+        _existing_lg = existing_data.get('L/G', float(window.peak_params_grid.GetCellValue(row_data, 5)))
+        _is_single_entity = existing_data.get('Fitting Model') == 'SingleEntity'
 
         peaks[peak_label].update({
             'Position': float(window.peak_params_grid.GetCellValue(row_data, 2)),
             'Height': float(window.peak_params_grid.GetCellValue(row_data, 3)),
             'FWHM': float(window.peak_params_grid.GetCellValue(row_data, 4)),
-            'L/G': float(window.peak_params_grid.GetCellValue(row_data, 5)),
+            'L/G': _existing_lg if _is_single_entity else float(
+                window.peak_params_grid.GetCellValue(row_data, 5)),
             'Area': float(window.peak_params_grid.GetCellValue(row_data, 6)),
-            'Sigma': _safe_float(sigma_str),
-            'Gamma': _safe_float(gamma_str),
+            'Sigma': _safe_float(sigma_str),  # No self.
+            'Gamma': _safe_float(gamma_str),  # No self.
             'Skew': float(window.peak_params_grid.GetCellValue(row_data, 9)),
             'Fitting Model': window.peak_params_grid.GetCellValue(row_data, 13),
         })
@@ -1393,6 +1724,9 @@ def peak_cell_changed(window, row, col):
         # Restore envelope data for SingleEntity
         if envelope_backup:
             peaks[peak_label].update(envelope_backup)
+            # Also ensure Original_Area matches L/G if not already set
+            if 'Original_Area' not in peaks[peak_label]:
+                peaks[peak_label]['Original_Area'] = peaks[peak_label]['L/G']
 
         # Update constraints
 
@@ -1413,13 +1747,13 @@ def peak_cell_changed(window, row, col):
                     max_pos = max(x_values)
                     value = f"{min_pos:.2f}:{max_pos:.2f}"
                 elif key == 'Height':
-                    value = '1:1e7'
+                    value = '0:1e7'
                 elif key == 'FWHM':
                     value = '0.3:3.5'
                 elif key == 'L/G':
                     value = '5:80'
                 elif key == 'Area':
-                    value = '1:1e7'
+                    value = '0:1e7'
                 elif key == 'Sigma':
                     value = '0.3:3'
                 elif key == 'Gamma':

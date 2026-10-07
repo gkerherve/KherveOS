@@ -49,7 +49,7 @@ export class Doc {
   /** The workbook bytes as last opened or saved (kept by Python too). */
   private flashTimer = 0
 
-  constructor(ns: string) {
+  constructor(ns: string, initial: Partial<DocState> = {}) {
     this.bridge = new FitBridge(ns)
     this.store = createStore<DocState>(() => ({
       view: null,
@@ -64,6 +64,7 @@ export class Doc {
       canRedo: false,
       selected: null,
       fitLog: [],
+      ...initial,
     }))
     this.bridge.onBusy = (n) => this.set({ busy: n })
     this.bridge.onProgress = (t) => this.set({ progress: t })

@@ -1,0 +1,95 @@
+{
+  "Core levels": {
+    "Co2p": {
+      "Fitting": {
+        "Peaks": {
+          "Co2p3/2 CoO peak 1": {
+            "Position": 779.93,
+            "Height": 8733.82,
+            "FWHM": 2.24,
+            "L/G": 30.0,
+            "Area": 20824.97,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "779.53:780.33",
+              "Height": "",
+              "FWHM": "2.09:2.39",
+              "L/G": "Fixed",
+              "Area": "1:1e7",
+              "Sigma": "",
+              "Gamma": "",
+              "Skew": ""
+            }
+          },
+          "Co2p3/2 CoO peak 2": {
+            "Position": 782.03,
+            "Height": 4059.85,
+            "FWHM": 2.66,
+            "L/G": 30.0,
+            "Area": 11495.38,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.10#0.1",
+              "Height": "1:1e7",
+              "FWHM": "2.51:2.81",
+              "L/G": "A*1",
+              "Area": "A*0.552",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Co2p3/2 CoO peak 3": {
+            "Position": 785.43,
+            "Height": 290.47,
+            "FWHM": 2.29,
+            "L/G": 30.0,
+            "Area": 708.05,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+5.50#0.1",
+              "Height": "1:1e7",
+              "FWHM": "2.14:2.44",
+              "L/G": "A*1",
+              "Area": "A*0.034",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Co2p3/2 CoO peak 4": {
+            "Position": 786.43,
+            "Height": 2199.94,
+            "FWHM": 4.98,
+            "L/G": 30.0,
+            "Area": 11661.98,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+6.50#0.1",
+              "Height": "1:1e7",
+              "FWHM": "4.83:5.13",
+              "L/G": "A*1",
+              "Area": "A*0.560",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}

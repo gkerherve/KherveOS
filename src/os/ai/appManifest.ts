@@ -403,6 +403,70 @@ export const APP_TOOL_SETS: AppToolSet[] = [
     ],
   },
   {
+    app: 'khervefitting',
+    name: 'KherveFitting',
+    summary: 'XPS peak fitting (core levels, backgrounds, peaks, fit, atomic %), the desktop KherveFitting-AI engine.',
+    keywords: ['khervefitting', 'xps', 'fit', 'fitting', 'peak', 'peaks', 'core level', 'background', 'shirley', 'tougaard', 'binding energy', 'atomic', 'spectrum', 'vamas'],
+    tools: [
+      {
+        action: 'list_core_levels',
+        description: 'The open file and its core levels (sheets: C1s, O1s, Survey…), with the shown one\'s BE range, background and number of peaks.',
+        inputSchema: object({}),
+        readOnly: true,
+      },
+      {
+        action: 'select_core_level',
+        description: 'Show a core level (sheet) in KherveFitting: the plot and the peak grid follow.',
+        inputSchema: object({ sheet: str('Sheet name, e.g. "C1s".') }, ['sheet']),
+      },
+      {
+        action: 'set_background',
+        description: 'Create the background region of a core level between low and high binding energy (eV). Methods: Smart (default), Shirley, Iterated Shirley, Linear, Offset, U4-Tougaard, U2-Tougaard, Active Shirley, Active Tougaard.',
+        inputSchema: object({
+          sheet: SHEET_ARG,
+          low: { type: 'number', description: 'Low BE (eV); default: near the low end of the data.' },
+          high: { type: 'number', description: 'High BE (eV); default: near the high end.' },
+          method: str('Background method (default "Smart").'),
+          offset_low: { type: 'number', description: 'CPS offset at the low-BE end (default 0).' },
+          offset_high: { type: 'number', description: 'CPS offset at the high-BE end (default 0).' },
+        }),
+      },
+      {
+        action: 'add_peak',
+        description: 'Add a peak to a core level (it needs a background), at the data height there. Without a position it goes where the data is highest above the current fit. Does not fit: call khervefitting_fit next.',
+        inputSchema: object({
+          sheet: SHEET_ARG,
+          position: { type: 'number', description: 'Binding energy (eV).' },
+          label: str('Peak label, e.g. "C1s C-C".'),
+          fwhm: { type: 'number', description: 'FWHM (eV).' },
+          lg: { type: 'number', description: 'L/G mix (%).' },
+          model: str('Fitting model, e.g. "SGL (Area)", "GL (Area)", "LA (Area, σ/γ, γ)".'),
+        }),
+      },
+      {
+        action: 'fit',
+        description: 'Fit the peaks of a core level like the Fitting window\'s "Fit Until Stable" (passes until chi is stable; passes=1 is "Fit One Time"). Returns chi (<1 excellent, 1-3 acceptable), R², reduced chi² and the fitted peaks.',
+        inputSchema: object({ sheet: SHEET_ARG, passes: int('Stable passes required (default 6; 1 = one fit).'), max_passes: int('Hard cap (default 40).') }),
+      },
+      {
+        action: 'get_peaks',
+        description: 'The peak table of a core level: ID letter, label, position, height, FWHM, L/G, area, model, Conc. % and constraints, plus the last fit\'s chi / R².',
+        inputSchema: object({ sheet: SHEET_ARG }),
+        readOnly: true,
+      },
+      {
+        action: 'get_results',
+        description: 'The Results grid of the sample (atomic % and weight % of the ticked rows). export=true first adds the shown core level\'s peaks to it.',
+        inputSchema: object({ sheet: SHEET_ARG, export: bool('Export the core level\'s peaks to the Results grid first.') }),
+      },
+      {
+        action: 'open_example',
+        description: 'Open one of KherveFitting\'s example workbooks (e.g. "SP2 Carbon", "Fe2O3", "Ni(0)-NiO"). Without a name, lists them.',
+        inputSchema: object({ name: str('Example name (part of it is enough).') }),
+      },
+    ],
+  },
+  {
     app: 'files',
     name: 'Files',
     summary: 'the file manager window.',

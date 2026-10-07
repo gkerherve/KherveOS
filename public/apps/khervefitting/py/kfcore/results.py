@@ -11,11 +11,17 @@
 # Export.py) and the atomic and weight percentages are worked out as in
 # MyFrame.update_atomic_percentages. The desktop's results grid holds
 # numbers as 2-decimal text; the same rounding is applied here.
+# Synced with KherveFitting-AI (dev-AI v1.93): areas keep significant figures
+# (NumberFormat), and each row carries the 1-sigma uncertainties of its peak
+# from the last fit (Fit_Uncertainty: '± Position' ... '± Atomic %', 'Error
+# from').
 
 import json
 import re
 
 from .backgrounds import AtomicConcentrations
+from .numberformat import format_intensity, round_sig
+from .uncertainty import atomic_percent_errors, fitted_peak_for, result_error_fields
 
 ATOMIC_MASSES = {
     'H': 1.008, 'He': 4.003, 'Li': 6.94, 'Be': 9.012, 'B': 10.81, 'C': 12.01, 'N': 14.01, 'O': 16.00,
@@ -36,6 +42,11 @@ ATOMIC_MASSES = {
 def _2(v):
     """A number as the desktop's grid keeps it: text with 2 decimals."""
     return float(f"{float(v):.2f}")
+
+
+def _intensity(v):
+    """An area as the desktop's results grid keeps it (format_intensity text)."""
+    return float(format_intensity(float(v)))
 
 
 def extract_element_symbol(peak_name):
@@ -130,8 +141,11 @@ def export_results(window):
 
         area = float(g(row, 6))
         ecf = _ecf(window, float(g(row, 2)))
-        normalized_area = 0 if (rsf == 0 or ecf == 0) else area / (rsf * 1.0 * ecf * 1.0)
-        rel_area = round(normalized_area, 2)
+        angular = 1.0
+        if window.use_angular_correction:
+            angular = AtomicConcentrations.calculate_angular_correction(window, g(row, 0), window.analysis_angle)
+        normalized_area = 0 if (rsf == 0 or ecf == 0) else area / (rsf * 1.0 * ecf * angular)
+        rel_area = round_sig(normalized_area)
 
         existing = [int(k.split('_')[1]) for k in results if k.startswith('Peak_') and k.split('_')[1].isdigit()]
         label = f"Peak_{max(existing + [-1]) + 1}"
@@ -142,7 +156,7 @@ def export_results(window):
         entry = {
             'Label': label, 'Name': peak_name,
             'Position': sf(g(row, 2)), 'Height': sf(g(row, 3)), 'FWHM': sf(g(row, 4)), 'L/G': sf(g(row, 5)),
-            'Area': round(area, 2),
+            'Area': round_sig(area),
             'at. %': results.get(label, {}).get('at. %', 0.00),
             'RSF': rsf, 'TXFN': 1.0, 'ECF': ecf_type, 'Instrument': window.current_instrument,
             'Fitting Model': g(row, 13), 'Rel. Area': rel_area,
@@ -155,6 +169,9 @@ def export_results(window):
             'Gamma Constraint': g(row + 1, 8),
             'Checkbox': _checkbox_state(peak_name),
         }
+        # 1-sigma uncertainties from the last fit of this peak (Fit_Uncertainty)
+        entry.update(result_error_fields(fitted_peak_for(window, sheet_name, peak_name, i)))
+        entry['at. % Err'] = results.get(label, {}).get('at. % Err', '')
         if same:
             cl = window.Data['Core levels'][sheet_name]
             peaks = cl.get('Fitting', {}).get('Peaks') if isinstance(cl.get('Fitting'), dict) else None
@@ -175,7 +192,7 @@ def update_atomic_percentages(window, sheet_name=None):
     checked = []
     for label, p in results.items():
         binding_energy = _2(p.get('Position', 0))
-        area = _2(p.get('Area', 0))
+        area = _intensity(p.get('Area', 0))
         rsf = _2(p.get('RSF', 1.0))
         txfn = _2(p.get('TXFN', 1.0))
         ecf = _ecf(window, binding_energy)
@@ -194,6 +211,12 @@ def update_atomic_percentages(window, sheet_name=None):
         else:
             p['at. %'] = 0.00
             p['wt. %'] = 0.00
+    # Uncertainty of the atomic % (Fit_Uncertainty): each row's area error,
+    # taken as independent, pushed through at% = n_i / sum(n)
+    try:
+        atomic_percent_errors(window, key, checked, total)
+    except Exception as e:
+        print(f"Atomic % uncertainty skipped: {e}")
     weights = []
     for label, normalized in checked:
         at = (normalized / total) * 100 if total > 0 else 0
@@ -220,6 +243,11 @@ def results_rows(window, sheet_name=None):
             'instrument': str(p.get('Instrument', '')), 'model': p.get('Fitting Model', ''),
             'relArea': p.get('Rel. Area', 0), 'sheet': p.get('Sheetname', ''), 'wt': p.get('wt. %', 0),
             'mass': ATOMIC_MASSES.get(extract_element_symbol(name), 12.01),
+            # 1-sigma uncertainties (a number, 'fixed' or ''), and where they come from
+            'posErr': p.get('Pos. Err', ''), 'heightErr': p.get('Height Err', ''),
+            'fwhmErr': p.get('FWHM Err', ''), 'lgErr': p.get('L/G Err', ''),
+            'areaErr': p.get('Area Err', ''), 'atErr': p.get('at. % Err', ''),
+            'errMethod': p.get('Err Method', ''),
         })
     return key, rows
 

@@ -80,7 +80,7 @@ export const APPS: AppManifest[] = [
     group: 'Science',
     description: 'XPS peak fitting: backgrounds, peak models, constraints and atomic %',
     load: () => import('@/apps/khervefitting/KherveFitting'),
-    defaultSize: { w: 1280, h: 820 },
+    defaultSize: { w: 1485, h: 820 },
     minSize: { w: 760, h: 520 },
     // .xlsx stays with KherveSheet; KherveFitting opens its workbooks from its own File menu.
     fileTypes: ['.vms'],

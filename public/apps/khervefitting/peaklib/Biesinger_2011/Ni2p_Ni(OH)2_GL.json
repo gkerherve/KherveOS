@@ -1,0 +1,137 @@
+{
+  "Core levels": {
+    "Ni2p": {
+      "Fitting": {
+        "Peaks": {
+          "Ni2p3/2 Ni(OH)2 peak 1": {
+            "Position": 855.03,
+            "Height": 1139.44,
+            "FWHM": 1.16,
+            "L/G": 30.0,
+            "Area": 1406.96,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "854.79:854.99",
+              "Height": "",
+              "FWHM": "1.01:1.31",
+              "L/G": "Fixed",
+              "Area": "1:1e7",
+              "Sigma": "",
+              "Gamma": "",
+              "Skew": ""
+            }
+          },
+          "Ni2p3/2 Ni(OH)2 peak 2": {
+            "Position": 855.8,
+            "Height": 3533.52,
+            "FWHM": 2.29,
+            "L/G": 30.0,
+            "Area": 8613.41,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+0.77#0.1",
+              "Height": "1:1e7",
+              "FWHM": "2.14:2.44",
+              "L/G": "A*1",
+              "Area": "A*6.122",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Ni2p3/2 Ni(OH)2 peak 3": {
+            "Position": 857.82,
+            "Height": 336.67,
+            "FWHM": 1.59,
+            "L/G": 30.0,
+            "Area": 569.82,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.79#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.44:1.74",
+              "L/G": "A*1",
+              "Area": "A*0.405",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Ni2p3/2 Ni(OH)2 peak 4": {
+            "Position": 860.61,
+            "Height": 235.67,
+            "FWHM": 1.06,
+            "L/G": 30.0,
+            "Area": 265.92,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+5.58#0.1",
+              "Height": "1:1e7",
+              "FWHM": "0.91:1.21",
+              "L/G": "A*1",
+              "Area": "A*0.189",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Ni2p3/2 Ni(OH)2 peak 5": {
+            "Position": 861.61,
+            "Height": 1505.66,
+            "FWHM": 4.65,
+            "L/G": 30.0,
+            "Area": 7452.67,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+6.58#0.1",
+              "Height": "1:1e7",
+              "FWHM": "4.5:4.8",
+              "L/G": "A*1",
+              "Area": "A*5.297",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Ni2p3/2 Ni(OH)2 peak 6": {
+            "Position": 866.57,
+            "Height": 219.56,
+            "FWHM": 3.01,
+            "L/G": 30.0,
+            "Area": 703.48,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+11.54#0.1",
+              "Height": "1:1e7",
+              "FWHM": "3.01",
+              "L/G": "A*1",
+              "Area": "A*0.5",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}

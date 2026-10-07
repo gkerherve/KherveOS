@@ -1,303 +1,621 @@
 {
- "source": "KherveFitting (develop) Data-Examples",
+ "source": "KherveFitting-AI (dev-AI v1.93) Data-Examples",
  "menus": [
   {
-   "name": "Al2O3",
-   "items": [
-    {
-     "title": "Al2O3",
-     "file": "Al2O3/Al2O3.xlsx"
-    }
-   ],
-   "groups": []
-  },
-  {
-   "name": "BN",
-   "items": [
-    {
-     "title": "Boron Nitride",
-     "file": "BN/Boron Nitride.xlsx"
-    }
-   ],
-   "groups": []
-  },
-  {
-   "name": "C",
-   "items": [
-    {
-     "title": "Carbon SP2",
-     "file": "C/Carbon SP2.xlsx"
-    },
-    {
-     "title": "Carbon SP3",
-     "file": "C/Carbon SP3.xlsx"
-    }
-   ],
+   "name": "1s B-C … Mg",
+   "items": [],
    "groups": [
     {
-     "name": "HDPE",
+     "name": "05 - B - Boron",
      "items": [
       {
-       "title": "HDPE Kfitting",
-       "file": "C/HDPE/HDPE_Kfitting.xlsx"
+       "title": "Boron Nitride",
+       "file": "1s B-C … Mg/05 - B - Boron/Boron Nitride.xlsx"
       }
      ]
     },
     {
-     "name": "PEEK",
+     "name": "06 - C - Carbon",
      "items": [
       {
-       "title": "PEEK Kfitting",
-       "file": "C/PEEK/PEEK_Kfitting.xlsx"
+       "title": "C60-HOPG-Diamond",
+       "file": "1s B-C … Mg/06 - C - Carbon/C60-HOPG-Diamond.xlsx"
+      },
+      {
+       "title": "HDPE",
+       "file": "1s B-C … Mg/06 - C - Carbon/HDPE.xlsx"
+      },
+      {
+       "title": "PEEK",
+       "file": "1s B-C … Mg/06 - C - Carbon/PEEK.xlsx"
+      },
+      {
+       "title": "PET",
+       "file": "1s B-C … Mg/06 - C - Carbon/PET.xlsx"
+      },
+      {
+       "title": "Polypyrrole-Latex",
+       "file": "1s B-C … Mg/06 - C - Carbon/Polypyrrole-Latex.xlsx"
+      },
+      {
+       "title": "Polyvinyl",
+       "file": "1s B-C … Mg/06 - C - Carbon/Polyvinyl.xlsx"
+      },
+      {
+       "title": "SP2 Carbon",
+       "file": "1s B-C … Mg/06 - C - Carbon/SP2 Carbon.xlsx"
+      },
+      {
+       "title": "SP3 Carbon",
+       "file": "1s B-C … Mg/06 - C - Carbon/SP3 Carbon.xlsx"
       }
      ]
     },
     {
-     "name": "PET",
+     "name": "07 - N - Nitrogen",
      "items": [
       {
-       "title": "PET25 07 Kfitting",
-       "file": "C/PET/PET25_07_Kfitting.xlsx"
-      }
-     ]
-    },
-    {
-     "name": "PolyStyrene",
-     "items": [
-      {
-       "title": "PolyStyrene",
-       "file": "C/PolyStyrene/PolyStyrene.xlsx"
+       "title": "CoNO3",
+       "file": "1s B-C … Mg/07 - N - Nitrogen/CoNO3.xlsx"
       }
      ]
     }
    ]
   },
   {
-   "name": "Ce",
+   "name": "2p Al … Zn",
    "items": [],
    "groups": [
     {
-     "name": "CeOx",
+     "name": "13 - Al _Aluminium",
      "items": [
       {
-       "title": "Ce3d 4+",
-       "file": "Ce/CeOx/Ce3d_4+.xlsx"
+       "title": "Al2O3",
+       "file": "2p Al … Zn/13 - Al _Aluminium/Al2O3.xlsx"
       }
      ]
     },
     {
-     "name": "CePO4",
-     "items": [
-      {
-       "title": "CePO4",
-       "file": "Ce/CePO4/CePO4.xlsx"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "name": "CoOx",
-   "items": [
-    {
-     "title": "CoOx",
-     "file": "CoOx/CoOx.xlsx"
-    }
-   ],
-   "groups": []
-  },
-  {
-   "name": "Cr2O3",
-   "items": [
-    {
-     "title": "Cr2O3 for O 1s fitting (VAMAS)",
-     "file": "Cr2O3/Cr2O3 for O 1s fitting.vms"
-    },
-    {
-     "title": "Cr2O3 for O 1s fitting",
-     "file": "Cr2O3/Cr2O3 for O 1s fitting.xlsx"
-    }
-   ],
-   "groups": []
-  },
-  {
-   "name": "Fe",
-   "items": [],
-   "groups": [
-    {
-     "name": "Fe2O3",
-     "items": [
-      {
-       "title": "Fe2O3",
-       "file": "Fe/Fe2O3/Fe2O3.xlsx"
-      }
-     ]
-    },
-    {
-     "name": "Fe3O4",
-     "items": [
-      {
-       "title": "Fe3O4",
-       "file": "Fe/Fe3O4/Fe3O4.xlsx"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "name": "La",
-   "items": [],
-   "groups": [
-    {
-     "name": "La2O3",
-     "items": [
-      {
-       "title": "La2O3",
-       "file": "La/La2O3/La2O3.xlsx"
-      }
-     ]
-    },
-    {
-     "name": "LaSTO",
-     "items": [
-      {
-       "title": "LaSrTiO3",
-       "file": "La/LaSTO/LaSrTiO3.xlsx"
-      }
-     ]
-    },
-    {
-     "name": "LaSrMnCoO3",
-     "items": [
-      {
-       "title": "LaSrCoMnO3 Kfitting",
-       "file": "La/LaSrMnCoO3/LaSrCoMnO3_Kfitting.xlsx"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "name": "MnOx",
-   "items": [
-    {
-     "title": "Mn2O3",
-     "file": "MnOx/Mn2O3.xlsx"
-    }
-   ],
-   "groups": []
-  },
-  {
-   "name": "Mo",
-   "items": [],
-   "groups": [
-    {
-     "name": "MoO3",
-     "items": [
-      {
-       "title": "MoO3",
-       "file": "Mo/MoO3/MoO3.xlsx"
-      }
-     ]
-    },
-    {
-     "name": "MoS2",
-     "items": [
-      {
-       "title": "MoS2",
-       "file": "Mo/MoS2/MoS2.xlsx"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "name": "RuO2",
-   "items": [
-    {
-     "title": "RuO2 Kfitting",
-     "file": "RuO2/RuO2_Kfitting.xlsx"
-    }
-   ],
-   "groups": []
-  },
-  {
-   "name": "Si",
-   "items": [],
-   "groups": [
-    {
-     "name": "Si3N4",
+     "name": "14 - Si - Silicon",
      "items": [
       {
        "title": "Si3N4",
-       "file": "Si/Si3N4/Si3N4.xlsx"
-      }
-     ]
-    },
-    {
-     "name": "SiC",
-     "items": [
+       "file": "2p Al … Zn/14 - Si - Silicon/Si3N4.xlsx"
+      },
       {
        "title": "SiC",
-       "file": "Si/SiC/SiC.xlsx"
+       "file": "2p Al … Zn/14 - Si - Silicon/SiC.xlsx"
+      },
+      {
+       "title": "SiO2",
+       "file": "2p Al … Zn/14 - Si - Silicon/SiO2.xlsx"
       }
      ]
     },
     {
-     "name": "SiO2",
+     "name": "16 - S - Sulphur",
      "items": [
       {
-       "title": "SiO2",
-       "file": "Si/SiO2/SiO2.xlsx"
+       "title": "BaSO4",
+       "file": "2p Al … Zn/16 - S - Sulphur/BaSO4.xlsx"
+      },
+      {
+       "title": "SrSO4",
+       "file": "2p Al … Zn/16 - S - Sulphur/SrSO4.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "19 - K - Potassium",
+     "items": [
+      {
+       "title": "KBr",
+       "file": "2p Al … Zn/19 - K - Potassium/KBr.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "20 - Ca - Calcium",
+     "items": [
+      {
+       "title": "PdCaCO3",
+       "file": "2p Al … Zn/20 - Ca - Calcium/PdCaCO3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "22 - Ti - Titanium",
+     "items": [
+      {
+       "title": "LaSrTiO3",
+       "file": "2p Al … Zn/22 - Ti - Titanium/LaSrTiO3.xlsx"
+      },
+      {
+       "title": "STO",
+       "file": "2p Al … Zn/22 - Ti - Titanium/STO.xlsx"
+      },
+      {
+       "title": "STO 2doublets",
+       "file": "2p Al … Zn/22 - Ti - Titanium/STO_2doublets.xlsx"
+      },
+      {
+       "title": "TiC",
+       "file": "2p Al … Zn/22 - Ti - Titanium/TiC.xlsx"
+      },
+      {
+       "title": "TiN",
+       "file": "2p Al … Zn/22 - Ti - Titanium/TiN.xlsx"
+      },
+      {
+       "title": "TiN ICL",
+       "file": "2p Al … Zn/22 - Ti - Titanium/TiN_ICL.xlsx"
+      },
+      {
+       "title": "TiO2",
+       "file": "2p Al … Zn/22 - Ti - Titanium/TiO2.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "23 - V - Vanadium",
+     "items": [
+      {
+       "title": "Metal V",
+       "file": "2p Al … Zn/23 - V - Vanadium/Metal_V.xlsx"
+      },
+      {
+       "title": "V2O5",
+       "file": "2p Al … Zn/23 - V - Vanadium/V2O5.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "24 - Cr - Chromium",
+     "items": [
+      {
+       "title": "Cr2O3 for O 1s fitting (VAMAS)",
+       "file": "2p Al … Zn/24 - Cr - Chromium/Cr2O3 for O 1s fitting.vms"
+      },
+      {
+       "title": "Cr2O3 for O 1s fitting",
+       "file": "2p Al … Zn/24 - Cr - Chromium/Cr2O3 for O 1s fitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "25 - Mn - Manganese",
+     "items": [
+      {
+       "title": "LaSrCoMnO3",
+       "file": "2p Al … Zn/25 - Mn - Manganese/LaSrCoMnO3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "26 - Fe - Iron",
+     "items": [
+      {
+       "title": "Basolite",
+       "file": "2p Al … Zn/26 - Fe - Iron/Basolite.xlsx"
+      },
+      {
+       "title": "Fe2O3",
+       "file": "2p Al … Zn/26 - Fe - Iron/Fe2O3.xlsx"
+      },
+      {
+       "title": "Fe3O4",
+       "file": "2p Al … Zn/26 - Fe - Iron/Fe3O4.xlsx"
+      },
+      {
+       "title": "Metal Fe",
+       "file": "2p Al … Zn/26 - Fe - Iron/Metal_Fe.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "27 - Co - Cobalt",
+     "items": [
+      {
+       "title": "CoOx",
+       "file": "2p Al … Zn/27 - Co - Cobalt/CoOx.xlsx"
+      },
+      {
+       "title": "LaSrCoMnO3",
+       "file": "2p Al … Zn/27 - Co - Cobalt/LaSrCoMnO3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "28 - Ni - Nickel",
+     "items": [
+      {
+       "title": "Metal Ni",
+       "file": "2p Al … Zn/28 - Ni - Nickel/Metal_Ni.xlsx"
+      },
+      {
+       "title": "Metal Ni HiRes",
+       "file": "2p Al … Zn/28 - Ni - Nickel/Metal_Ni_HiRes.xlsx"
+      },
+      {
+       "title": "Ni(0)-NiO Kfitting",
+       "file": "2p Al … Zn/28 - Ni - Nickel/Ni(0)-NiO_Kfitting.xlsx"
+      },
+      {
+       "title": "NiOOH Surf. Sci. Spectra 3, 271–278 (1994)",
+       "file": "2p Al … Zn/28 - Ni - Nickel/NiOOH_Surf. Sci. Spectra 3, 271–278 (1994).xlsx"
+      },
+      {
+       "title": "NiO Surf. Sci. Spectra 30, 024028 (2023)",
+       "file": "2p Al … Zn/28 - Ni - Nickel/NiO_Surf. Sci. Spectra 30, 024028 (2023).xlsx"
+      }
+     ]
+    },
+    {
+     "name": "29 - Cu - Copper",
+     "items": [
+      {
+       "title": "CuOx",
+       "file": "2p Al … Zn/29 - Cu - Copper/CuOx.xlsx"
+      },
+      {
+       "title": "Cu Metal Kfitting",
+       "file": "2p Al … Zn/29 - Cu - Copper/Cu_Metal_Kfitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "30 - Zn - Zinc",
+     "items": [
+      {
+       "title": "Metal Zn",
+       "file": "2p Al … Zn/30 - Zn - Zinc/Metal_Zn.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "31 - Ga - Gallium",
+     "items": [
+      {
+       "title": "GaAs",
+       "file": "2p Al … Zn/31 - Ga - Gallium/GaAs.xlsx"
       }
      ]
     }
    ]
   },
   {
-   "name": "SnO2",
-   "items": [
-    {
-     "title": "SnO2",
-     "file": "SnO2/SnO2.xlsx"
-    }
-   ],
-   "groups": []
-  },
-  {
-   "name": "Ti",
+   "name": "3d Ge … Nd",
    "items": [],
    "groups": [
     {
-     "name": "TiO2",
+     "name": "32 - Ge - Germanium",
      "items": [
       {
-       "title": "TiO2 Kfitting",
-       "file": "Ti/TiO2/TiO2_Kfitting.xlsx"
+       "title": "Metal Ge",
+       "file": "3d Ge … Nd/32 - Ge - Germanium/Metal_Ge.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "35 - Br - Bromine",
+     "items": [
+      {
+       "title": "KBr",
+       "file": "3d Ge … Nd/35 - Br - Bromine/KBr.xlsx"
+      },
+      {
+       "title": "SrBr2",
+       "file": "3d Ge … Nd/35 - Br - Bromine/SrBr2.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "38 - Sr - Strontium",
+     "items": [
+      {
+       "title": "LaSrCoMnO3",
+       "file": "3d Ge … Nd/38 - Sr - Strontium/LaSrCoMnO3.xlsx"
+      },
+      {
+       "title": "LaSrTiO3",
+       "file": "3d Ge … Nd/38 - Sr - Strontium/LaSrTiO3.xlsx"
+      },
+      {
+       "title": "STO",
+       "file": "3d Ge … Nd/38 - Sr - Strontium/STO.xlsx"
+      },
+      {
+       "title": "STO 2doublets",
+       "file": "3d Ge … Nd/38 - Sr - Strontium/STO_2doublets.xlsx"
+      },
+      {
+       "title": "STO Tilt",
+       "file": "3d Ge … Nd/38 - Sr - Strontium/STO_Tilt.xlsx"
+      },
+      {
+       "title": "SrBr2",
+       "file": "3d Ge … Nd/38 - Sr - Strontium/SrBr2.xlsx"
+      },
+      {
+       "title": "SrSO4",
+       "file": "3d Ge … Nd/38 - Sr - Strontium/SrSO4.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "39 - Y - Yttrium",
+     "items": [
+      {
+       "title": "Y2O3 Kfitting",
+       "file": "3d Ge … Nd/39 - Y - Yttrium/Y2O3_Kfitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "40 - Zr - Zirconium",
+     "items": [
+      {
+       "title": "UiO66",
+       "file": "3d Ge … Nd/40 - Zr - Zirconium/UiO66.xlsx"
+      },
+      {
+       "title": "ZrO2 Kfitting",
+       "file": "3d Ge … Nd/40 - Zr - Zirconium/ZrO2_Kfitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "41 - Nb - Niobium",
+     "items": [
+      {
+       "title": "Nb2O5",
+       "file": "3d Ge … Nd/41 - Nb - Niobium/Nb2O5.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "42 - Mo - Molybdenum",
+     "items": [
+      {
+       "title": "Mo-Ni-Ox sputtered",
+       "file": "3d Ge … Nd/42 - Mo - Molybdenum/Mo-Ni-Ox sputtered.xlsx"
+      },
+      {
+       "title": "MoO3",
+       "file": "3d Ge … Nd/42 - Mo - Molybdenum/MoO3.xlsx"
+      },
+      {
+       "title": "MoO3 Sputter",
+       "file": "3d Ge … Nd/42 - Mo - Molybdenum/MoO3_Sputter.xlsx"
+      },
+      {
+       "title": "MoS2",
+       "file": "3d Ge … Nd/42 - Mo - Molybdenum/MoS2.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "44 - Ru - Ruthenium",
+     "items": [
+      {
+       "title": "RuO2 Kfitting",
+       "file": "3d Ge … Nd/44 - Ru - Ruthenium/RuO2_Kfitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "45 - Rh - Rhodium",
+     "items": [
+      {
+       "title": "Metal Rh",
+       "file": "3d Ge … Nd/45 - Rh - Rhodium/Metal Rh.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "46 - Pd - Palladium",
+     "items": [
+      {
+       "title": "Metal Pd",
+       "file": "3d Ge … Nd/46 - Pd - Palladium/Metal_Pd.xlsx"
+      },
+      {
+       "title": "PdCaCO3",
+       "file": "3d Ge … Nd/46 - Pd - Palladium/PdCaCO3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "47 - Ag - Silver",
+     "items": [
+      {
+       "title": "Ag2S",
+       "file": "3d Ge … Nd/47 - Ag - Silver/Ag2S.xlsx"
+      },
+      {
+       "title": "Ag Metal",
+       "file": "3d Ge … Nd/47 - Ag - Silver/Ag_Metal.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "49 - In - Indium",
+     "items": [
+      {
+       "title": "In2O3",
+       "file": "3d Ge … Nd/49 - In - Indium/In2O3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "50 - Sn - Tin",
+     "items": [
+      {
+       "title": "FTO",
+       "file": "3d Ge … Nd/50 - Sn - Tin/FTO.xlsx"
+      },
+      {
+       "title": "SnO2",
+       "file": "3d Ge … Nd/50 - Sn - Tin/SnO2.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "56 - Ba - Barium",
+     "items": [
+      {
+       "title": "BaSO4",
+       "file": "3d Ge … Nd/56 - Ba - Barium/BaSO4.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "57 - La - Lanthanum",
+     "items": [
+      {
+       "title": "La2O3",
+       "file": "3d Ge … Nd/57 - La - Lanthanum/La2O3.xlsx"
+      },
+      {
+       "title": "LaSrCoMnO3",
+       "file": "3d Ge … Nd/57 - La - Lanthanum/LaSrCoMnO3.xlsx"
+      },
+      {
+       "title": "LaSrTiO3",
+       "file": "3d Ge … Nd/57 - La - Lanthanum/LaSrTiO3.xlsx"
+      },
+      {
+       "title": "Metal La",
+       "file": "3d Ge … Nd/57 - La - Lanthanum/Metal_La.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "58 - Ce - Cerium",
+     "items": [
+      {
+       "title": "Ce3d 4+",
+       "file": "3d Ge … Nd/58 - Ce - Cerium/Ce3d_4+.xlsx"
+      },
+      {
+       "title": "CePO4",
+       "file": "3d Ge … Nd/58 - Ce - Cerium/CePO4.xlsx"
       }
      ]
     }
    ]
   },
   {
-   "name": "Y2O3",
-   "items": [
+   "name": "4f Hf … Bi",
+   "items": [],
+   "groups": [
     {
-     "title": "Y2O3 Kfitting",
-     "file": "Y2O3/Y2O3_Kfitting.xlsx"
-    }
-   ],
-   "groups": []
-  },
-  {
-   "name": "ZrO2",
-   "items": [
+     "name": "72 - Hf - Hafnium",
+     "items": [
+      {
+       "title": "Metal Hf",
+       "file": "4f Hf … Bi/72 - Hf - Hafnium/Metal_Hf.xlsx"
+      }
+     ]
+    },
     {
-     "title": "ZrO2 Kfitting",
-     "file": "ZrO2/ZrO2_Kfitting.xlsx"
+     "name": "73 - Ta - Tantalum",
+     "items": [
+      {
+       "title": "Metal Ta",
+       "file": "4f Hf … Bi/73 - Ta - Tantalum/Metal_Ta.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "74 - W - Tungsten",
+     "items": [
+      {
+       "title": "Metal W",
+       "file": "4f Hf … Bi/74 - W - Tungsten/Metal_W.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "75 - Re - Rhenium",
+     "items": [
+      {
+       "title": "Metal Re",
+       "file": "4f Hf … Bi/75 - Re - Rhenium/Metal_Re.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "77 - Ir - Iridium",
+     "items": [
+      {
+       "title": "Fe-x Ir-y Ox",
+       "file": "4f Hf … Bi/77 - Ir - Iridium/Fe-x_Ir-y_Ox.xlsx"
+      },
+      {
+       "title": "Metal Ir",
+       "file": "4f Hf … Bi/77 - Ir - Iridium/Metal_Ir.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "78 - Pt - Platinum",
+     "items": [
+      {
+       "title": "Pt4f",
+       "file": "4f Hf … Bi/78 - Pt - Platinum/Pt4f.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "79 - Au - Gold",
+     "items": [
+      {
+       "title": "Au Metal",
+       "file": "4f Hf … Bi/79 - Au - Gold/Au_Metal.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "81 - Tl - Thallium",
+     "items": [
+      {
+       "title": "Metal Tl",
+       "file": "4f Hf … Bi/81 - Tl - Thallium/Metal_Tl.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "82 - Pb - Lead",
+     "items": [
+      {
+       "title": "Metal Pb",
+       "file": "4f Hf … Bi/82 - Pb - Lead/Metal_Pb.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "83 - Bi - Bismuth",
+     "items": [
+      {
+       "title": "Bi-Acetate",
+       "file": "4f Hf … Bi/83 - Bi - Bismuth/Bi-Acetate.xlsx"
+      },
+      {
+       "title": "Bi-Telluride",
+       "file": "4f Hf … Bi/83 - Bi - Bismuth/Bi-Telluride.xlsx"
+      },
+      {
+       "title": "Bi2O3",
+       "file": "4f Hf … Bi/83 - Bi - Bismuth/Bi2O3.xlsx"
+      },
+      {
+       "title": "Metal Bi",
+       "file": "4f Hf … Bi/83 - Bi - Bismuth/Metal_Bi.xlsx"
+      }
+     ]
     }
-   ],
-   "groups": []
+   ]
   },
   {
    "name": "Metals",
@@ -344,7 +662,7 @@
      "items": [
       {
        "title": "Metal Pb",
-       "file": "zz Metals/Metal Pb/Metal_Pb.xlsx"
+       "file": "4f Hf … Bi/82 - Pb - Lead/Metal_Pb.xlsx"
       }
      ]
     },
@@ -353,7 +671,7 @@
      "items": [
       {
        "title": "Metal Pd",
-       "file": "zz Metals/Metal Pd/Metal_Pd.xlsx"
+       "file": "3d Ge … Nd/46 - Pd - Palladium/Metal_Pd.xlsx"
       }
      ]
     },
@@ -366,7 +684,7 @@
       },
       {
        "title": "Pt4f",
-       "file": "zz Metals/Metal Pt/Pt4f.xlsx"
+       "file": "4f Hf … Bi/78 - Pt - Platinum/Pt4f.xlsx"
       }
      ]
     },
@@ -384,7 +702,7 @@
      "items": [
       {
        "title": "Metal Rh",
-       "file": "zz Metals/Metal Rh/Metal Rh.xlsx"
+       "file": "3d Ge … Nd/45 - Rh - Rhodium/Metal Rh.xlsx"
       }
      ]
     },
@@ -402,7 +720,7 @@
      "items": [
       {
        "title": "Metal Tl",
-       "file": "zz Metals/Metal Tl/Metal_Tl.xlsx"
+       "file": "4f Hf … Bi/81 - Tl - Thallium/Metal_Tl.xlsx"
       }
      ]
     },
@@ -411,7 +729,7 @@
      "items": [
       {
        "title": "Metal W",
-       "file": "zz Metals/Metal W/Metal_W.xlsx"
+       "file": "4f Hf … Bi/74 - W - Tungsten/Metal_W.xlsx"
       }
      ]
     },
@@ -435,7 +753,25 @@
      "items": [
       {
        "title": "LaSrTiO3",
-       "file": "zz Mixed Materials/LaSTO/LaSrTiO3.xlsx"
+       "file": "2p Al … Zn/22 - Ti - Titanium/LaSrTiO3.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "LaSrMnCoO3",
+     "items": [
+      {
+       "title": "LaSrCoMnO3 Kfitting",
+       "file": "zz Mixed Materials/LaSrMnCoO3/LaSrCoMnO3_Kfitting.xlsx"
+      }
+     ]
+    },
+    {
+     "name": "PdCaCO3",
+     "items": [
+      {
+       "title": "PdCaCO3 Kfitting",
+       "file": "zz Mixed Materials/PdCaCO3/PdCaCO3_Kfitting.xlsx"
       }
      ]
     },
@@ -444,7 +780,7 @@
      "items": [
       {
        "title": "STO",
-       "file": "zz Mixed Materials/STO/STO.xlsx"
+       "file": "2p Al … Zn/22 - Ti - Titanium/STO.xlsx"
       },
       {
        "title": "STO 2doublets",
@@ -458,24 +794,6 @@
    "name": "Other Techniques",
    "items": [],
    "groups": [
-    {
-     "name": "EDX",
-     "items": [
-      {
-       "title": "EDX SI 0 1 EDX",
-       "file": "zz Other Techniques/EDX/EDX_SI_0 1_EDX.xlsx"
-      }
-     ]
-    },
-    {
-     "name": "Raman",
-     "items": [
-      {
-       "title": "Raman Data",
-       "file": "zz Other Techniques/Raman/Raman_Data.xlsx"
-      }
-     ]
-    },
     {
      "name": "Valence Band",
      "items": [

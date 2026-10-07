@@ -82,3 +82,21 @@ class SheetBox:
 
     def SetValue(self, value):
         self.value = value
+
+
+#: The fitting window's model list (Fitting_Screen, KherveFitting-AI dev-AI
+#: v1.93), in the desktop's order, without its "-----" group headers.
+#: The group a model sits under: Best, Asymmetric, Voigt, LA, Others.
+FITTING_MODEL_GROUPS = [
+    ("Best Models", ["SGL (Area)", "GL (Area)", "LA (Area, σ/γ, γ)", "Voigt (Area, L/G, σ)"]),
+    ("Asymmetric", ["LA (Area, σ, γ)", "DL (A, σ, γ, aDL)", "TLA (A, μ, α, Wg)", "DS*G (A, σ, γ, S)",
+                    "DS (A, σ, γ)", "ExpGauss.(Area, σ, γ)"]),
+    ("Voigt", ["Voigt (Area)", "Voigt (Area, L/G, S)", "Voigt (Area, L/G, σ)", "Voigt (Area, σ, γ)",
+               "Voigt (Area, L/G, σ, S)"]),
+    ("LA", ["LA (Area, σ/γ, γ)", "LA (Area, σ, γ)", "LA*G (Area, σ/γ, γ)", "LF (Area, σ, γ, w)"]),
+    ("Others", ["Pseudo-Voigt (Area)", "GL (Height)", "SGL (Height)", "A*GL (Area, a, b)",
+                "A*SGL (Area, a, b)", "SB (Height)"]),
+]
+# (The desktop combo box writes TLA as "TLA (A, μ, Wg, α)", a name its fit
+# does not know; the peaks and fit_peaks use "TLA (A, μ, α, Wg)", listed here.)
+FITTING_MODELS = list(dict.fromkeys(m for _g, ms in FITTING_MODEL_GROUPS for m in ms))

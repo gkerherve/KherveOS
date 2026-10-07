@@ -11,7 +11,10 @@
 #
 # Session stands in for the desktop's main frame (KherveFitting.py MyFrame):
 # fit_peaks and the background code take it as `window`. The methods below
-# the marked line are copied from MyFrame unchanged.
+# the marked line are copied from MyFrame unchanged (KherveFitting-AI,
+# dev-AI v1.93: update_linked_peak, calculate_height_from_area,
+# recalculate_peak_area and calculate_peak_area spliced in by
+# SCRATCH/sync/gen_session.py).
 
 import re
 
@@ -20,6 +23,7 @@ import lmfit
 
 from .backgrounds import AtomicConcentrations
 from .compat import trapz
+from .numberformat import format_intensity, round_sig
 from .grid import Grid, SheetBox
 from .peak_functions import PeakFunctions
 
@@ -95,6 +99,12 @@ class Session:
         self.peak_count = 0
         self.selected_peak_index = None
         self.fit_results = None
+        # {peak index: {'Position': 1σ, 'Height': …, 'FWHM': …, 'L/G': …, 'Area': …,
+        #  'method': …, 'status': {…}, 'mc': {…}}}: the peak table's "value ± error"
+        # hover text (uncertainty.errors_by_peak), refreshed by fits and sheet changes
+        self.fit_errors = {}
+        self.mc_results = {}        # Monte Carlo statistics by sheet (uncertainty.run_monte_carlo)
+        self.fit_extra_background = None   # Adv. Fitting offset terms (none here)
         self.r_squared = None
         self.x_values = np.array([])
         self.y_values = np.array([])
@@ -198,12 +208,12 @@ class Session:
             else:
                 new_linked_area = current_area
 
-            self.peak_params_grid.SetCellValue(row, 6, f"{new_linked_area:.2f}")
+            self.peak_params_grid.SetCellValue(row, 6, format_intensity(new_linked_area))
 
             # Recalculate height from area
             fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
             new_linked_height = self.calculate_height_from_area(new_linked_area, fwhm, fitting_model, row)
-            self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+            self.peak_params_grid.SetCellValue(row, 3, format_intensity(new_linked_height))
 
             if peak_label in peaks:
                 peaks[peak_label]['Area'] = new_linked_area
@@ -214,12 +224,12 @@ class Session:
                fitting_model) or "DS" in fitting_model) and '_' in area_constraint:
             new_linked_area = self.evaluate_cross_core_constraint(area_constraint, 'Area')
             if new_linked_area is not None:
-                self.peak_params_grid.SetCellValue(row, 6, f"{new_linked_area:.2f}")
+                self.peak_params_grid.SetCellValue(row, 6, format_intensity(new_linked_area))
 
                 # Recalculate height from area
                 fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                 new_linked_height = self.calculate_height_from_area(new_linked_area, fwhm, fitting_model, row)
-                self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+                self.peak_params_grid.SetCellValue(row, 3, format_intensity(new_linked_height))
 
                 if peak_label in peaks:
                     peaks[peak_label]['Area'] = new_linked_area
@@ -228,7 +238,7 @@ class Session:
         # EXISTING CODE - Height constraints
         elif height_constraint.startswith(original_peak_letter):
             # Check if model uses height as primary parameter
-            height_based_models = ["GL (Height)", "SGL (Height)", "D-parameter", "Fermi"]
+            height_based_models = ["GL (Height)", "SGL (Height)", "SB (Height)", "D-parameter", "Fermi"]
 
             if fitting_model in height_based_models:
                 # Only update height for height-based models
@@ -247,17 +257,17 @@ class Session:
                 else:
                     new_linked_height = new_height
 
-                self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+                self.peak_params_grid.SetCellValue(row, 3, format_intensity(new_linked_height))
                 if peak_label in peaks:
                     peaks[peak_label]['Height'] = new_linked_height
 
         # NEW CODE - Handle cross-core-level height constraints
         elif '_' in height_constraint:
-            height_based_models = ["GL (Height)", "SGL (Height)", "D-parameter", "Fermi"]
+            height_based_models = ["GL (Height)", "SGL (Height)", "SB (Height)", "D-parameter", "Fermi"]
             if fitting_model in height_based_models:
                 new_linked_height = self.evaluate_cross_core_constraint(height_constraint, 'Height')
                 if new_linked_height is not None:
-                    self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+                    self.peak_params_grid.SetCellValue(row, 3, format_intensity(new_linked_height))
                     if peak_label in peaks:
                         peaks[peak_label]['Height'] = new_linked_height
 
@@ -434,6 +444,47 @@ class Session:
             y_values = PeakFunctions.LA(x_range, center, area, fwhm, sigma, gamma)
             height = np.max(y_values)
             return height
+        elif model == "LF (Area, \u03c3, \u03b3, w)":
+            if row is None:
+                raise ValueError("Row must be provided for LF model")
+            center = float(self.peak_params_grid.GetCellValue(row, 2))
+            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+            w_damp = float(self.peak_params_grid.GetCellValue(row, 9))
+
+            # Calculate height numerically
+            x_range = np.linspace(center - 5 * fwhm, center + 5 * fwhm, 1000)
+            y_values = PeakFunctions.LF(x_range, center, area, fwhm, sigma, gamma, w_damp)
+            height = np.max(y_values)
+            return height
+        elif model == "A*SGL (Area, a, b)":
+            if row is None:
+                raise ValueError("Row must be provided for A*SGL model")
+            fraction = float(self.peak_params_grid.GetCellValue(row, 5))
+            asym_a = float(self.peak_params_grid.GetCellValue(row, 7))
+            asym_b = float(self.peak_params_grid.GetCellValue(row, 8))
+            return PeakFunctions.A_SGL_area_to_height(area, fwhm, fraction, asym_a, asym_b)
+        elif model == "DL (A, σ, γ, aDL)":
+            if row is None:
+                raise ValueError("Row must be provided for DL model")
+            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+            a_dl = float(self.peak_params_grid.GetCellValue(row, 9))
+            # Apex is anchored at the center, so the unit-area apex value scales the height
+            return area * PeakFunctions.DL(0.0, 0.0, 1.0, sigma, gamma, a_dl)
+        elif model == "Voigt (Area)":
+            if row is None:
+                raise ValueError("Row must be provided for Voigt (Area) model")
+            fraction = float(self.peak_params_grid.GetCellValue(row, 5))
+            return float(PeakFunctions.voigt_simple(0.0, 0.0, area, fwhm, fraction))
+        elif model == "TLA (A, μ, α, Wg)":
+            if row is None:
+                raise ValueError("Row must be provided for TLA model")
+            mu = float(self.peak_params_grid.GetCellValue(row, 7))
+            alpha = float(self.peak_params_grid.GetCellValue(row, 8))
+            wg = float(self.peak_params_grid.GetCellValue(row, 9))
+            # Apex is anchored at the center, so the unit-area apex value scales the height
+            return area * PeakFunctions.TLA(0.0, 0.0, 1.0, fwhm, mu, wg, alpha)
         elif model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
             if row is None:
                 raise ValueError("Row must be provided for LA model")
@@ -448,6 +499,13 @@ class Session:
             height = np.max(y_values)
             return height
 
+        elif model == "A*GL (Area, a, b)":
+            if row is None:
+                raise ValueError("Row must be provided for A*GL model")
+            fraction = float(self.peak_params_grid.GetCellValue(row, 5))
+            asym_a = float(self.peak_params_grid.GetCellValue(row, 7))
+            asym_b = float(self.peak_params_grid.GetCellValue(row, 8))
+            return PeakFunctions.A_GL_area_to_height(area, fwhm, fraction, asym_a, asym_b)
         elif model in ["GL (Area)", "GL (Height)", "SGL (Height)"]:
             return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
         elif model in ["SGL (Area)"]:
@@ -521,7 +579,9 @@ class Session:
         elif model in ["Voigt (Area, L/G, σ)", "Voigt (Area, σ, γ)", "ExpGauss.(Area, σ, γ)",
                        "LA (Area, σ, γ)", "LA (Area, σ/γ, γ)", "LA*G (Area, σ/γ, "
                                                                "γ)", "Voigt (Area, L/G, σ, S)", "DS (A, σ, γ)", "DS*G (A, σ, "
-                                                                                                                "γ, S)"]:
+                                                                                                                "γ, S)",
+                       "A*GL (Area, a, b)", "A*SGL (Area, a, b)", "LF (Area, σ, γ, w)",
+                       "DL (A, σ, γ, aDL)", "TLA (A, μ, α, Wg)"]:
             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
             skew = float(self.peak_params_grid.GetCellValue(row, 9))
@@ -531,7 +591,7 @@ class Session:
         else:
             area = self.calculate_peak_area(model, height, fwhm, fraction)
 
-        self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+        self.peak_params_grid.SetCellValue(row, 6, format_intensity(area))
 
         # Update area in self.Data
         if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
@@ -556,6 +616,48 @@ class Session:
             if sigma is None or gamma is None:
                 raise ValueError("Sigma and gamma are required for Voigt models")
             area = PeakFunctions.skewedvoigt_height_to_area(height, sigma / 2.355, gamma / 2, skew)
+        elif model == "A*GL (Area, a, b)":
+            # sigma/gamma hold the CasaXPS asymmetry parameters a and b
+            asym_a = sigma if sigma is not None else 0.2
+            asym_b = gamma if gamma is not None else 0.4
+            area = PeakFunctions.A_GL_height_to_area(height, fwhm, fraction, asym_a, asym_b)
+        elif model == "A*SGL (Area, a, b)":
+            asym_a = sigma if sigma is not None else 0.2
+            asym_b = gamma if gamma is not None else 0.4
+            area = PeakFunctions.A_SGL_height_to_area(height, fwhm, fraction, asym_a, asym_b)
+        elif model == "LF (Area, σ, γ, w)":
+            if sigma is None or gamma is None:
+                raise ValueError("Sigma and gamma are required for LF model")
+            w_damp = skew if skew is not None else 30.0
+            x_range = np.linspace(-10 * fwhm, 10 * fwhm, 1000)
+            y_temp = PeakFunctions.LF(x_range, 0, 1.0, fwhm, sigma, gamma, w_damp)  # Use unit amplitude
+            max_height = np.max(y_temp)
+            y_values = PeakFunctions.LF(x_range, 0, height / max_height, fwhm, sigma, gamma, w_damp)
+            area = trapz(y_values, x_range)
+            return round_sig(area)
+        elif model == "DL (A, σ, γ, aDL)":
+            sigma = sigma if sigma is not None else 0.4
+            gamma = gamma if gamma is not None else 1.0
+            a_dl = skew if skew is not None else 1.5
+            unit_apex = PeakFunctions.DL(0.0, 0.0, 1.0, sigma, gamma, a_dl)
+            area = height / unit_apex if unit_apex > 0 else 0.0
+            return round_sig(area)
+        elif model == "Voigt (Area)":
+            unit_apex = float(PeakFunctions.voigt_simple(0.0, 0.0, 1.0, fwhm, fraction))
+            area = height / unit_apex if unit_apex > 0 else 0.0
+            return round_sig(area)
+        elif model == "TLA (A, μ, α, Wg)":
+            mu = sigma if sigma is not None else 20.0
+            alpha = gamma if gamma is not None else 1.0
+            wg = skew if skew is not None else 0.8
+            unit_apex = PeakFunctions.TLA(0.0, 0.0, 1.0, fwhm, mu, wg, alpha)
+            area = height / unit_apex if unit_apex > 0 else 0.0
+            return round_sig(area)
+        elif model == "SB (Height)":
+            # Area of the sigmoid step over a +/-10*FWHM window
+            x_range = np.linspace(-10 * fwhm, 10 * fwhm, 1000)
+            y_values = PeakFunctions.SB_voigt(x_range, 0.0, fwhm, fraction, height)
+            return round_sig(float(trapz(y_values, x_range)))
         elif model == "DS (A, \u03c3, \u03b3)":
             # Set default values if parameters are missing
             sigma = sigma or 1.0
@@ -596,7 +698,7 @@ class Session:
             max_height = np.max(y_temp)
             y_values = PeakFunctions.LA(x_range, 0, height / max_height, fwhm, sigma, gamma)
             area = trapz(y_values, x_range)
-            return round(area, 2)
+            return round_sig(area)
         elif model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
             if sigma is None or gamma is None or skew is None:
                 raise ValueError("Sigma, gamma and skew are required for LA*G model")
@@ -606,14 +708,14 @@ class Session:
             max_height = np.max(y_temp)
             y_values = PeakFunctions.LAxG(x_range, 0, height / max_height, fwhm, sigma, gamma, skew)
             area = trapz(y_values, x_range)
-            return round(area, 2)
+            return round_sig(area)
         elif model =="D-parameter":
             return
         elif model =="Fermi":
             return
         else:
             raise ValueError(f"Unknown fitting model: {model}")
-        return round(area, 2)
+        return round_sig(area)
 
 
     def update_ratios(self):

@@ -50,11 +50,13 @@ def _importable(name):
         return False
 
 
-PIP = {"lmfit", "openpyxl", "vamas"}
+# Pure-Python packages shipped with the app (py/wheels/, unpacked into
+# <root>/site by the page): no PyPI round trip, which could stall for minutes.
+PIP = {"lmfit", "openpyxl", "vamas", "asteval", "dill", "et_xmlfile"}
 
 
 async def ensure(names):
-    """Load numpy/scipy from Pyodide and lmfit/openpyxl/vamas from PyPI."""
+    """Load numpy/scipy/uncertainties from Pyodide; lmfit/openpyxl/vamas come with the app (PyPI only as a fallback)."""
     missing = sorted(n for n in set(names) if n and not _importable(n))
     if not missing:
         return
@@ -74,7 +76,7 @@ async def ensure(names):
     importlib.invalidate_caches()
 
 
-CORE = ["numpy", "scipy", "lmfit"]
+CORE = ["numpy", "scipy", "uncertainties", "lmfit"]
 NEEDS = {
     "open": CORE + ["openpyxl"], "save": CORE + ["openpyxl"], "import": CORE + ["vamas"],
 }
@@ -147,6 +149,18 @@ def view(include_arrays=True):
     key, rows = results_rows(w)
     out['resultsKey'] = key
     out['results'] = rows
+    from kfweb.gridstyle import grid_colours
+    from kfweb.tables import fit_stats, results_grid
+    out['gridColours'] = grid_colours(w.peak_params_grid)
+    out['resultsGrid'] = results_grid(w)[1]
+    out['stats'] = fit_stats(w) if name else {}
+    out['peakErrors'] = _peak_errors(w, name)
+    out['extra'] = {}
+    if name and _features() is not None and hasattr(_features(), 'view_extra'):
+        try:
+            out['extra'] = _features().view_extra(w, name) or {}
+        except Exception as e:  # an extra must never break the view
+            out['extra'] = {'error': f"{type(e).__name__}: {e}"}
     if include_arrays and name and len(w.x_values):
         x = w.x_values
         out['x'] = _clean(x)
@@ -173,6 +187,42 @@ def view(include_arrays=True):
             out['envelope'] = None
             out['residuals'] = None
     return out
+
+
+def _peak_errors(w, name):
+    """Per peak, its 1σ uncertainties after a fit (Fit_Uncertainty: 'Errors_MC' or 'Errors')."""
+    out = []
+    try:
+        peaks = ((w.Data['Core levels'].get(name) or {}).get('Fitting') or {}).get('Peaks') or {}
+        for p in peaks.values():
+            e = (p or {}).get('Errors_MC') or (p or {}).get('Errors') or {}
+            row = {}
+            for q in ('Position', 'Height', 'FWHM', 'L/G', 'Area'):
+                v = e.get(q)
+                if isinstance(v, (int, float)) and math.isfinite(v):
+                    row[q] = float(v)
+            st = e.get('status') or {}
+            row.update({f"{q}Status": str(v) for q, v in st.items() if isinstance(v, str)})
+            if e.get('method'):
+                row['method'] = str(e.get('method'))
+            out.append(row)
+    except Exception:
+        return []
+    return out
+
+
+_FEATURES = []
+
+
+def _features():
+    """kfweb.features (the dev-AI tools: peak library, ID, D-parameter...), if present."""
+    if not _FEATURES:
+        try:
+            from kfweb import features
+            _FEATURES.append(features)
+        except Exception:
+            _FEATURES.append(None)
+    return _FEATURES[0]
 
 
 def settings_of(w):
@@ -336,15 +386,28 @@ def op_drag_peak(a):
 
 
 def op_fit(a):
-    from kfcore.fitting import fit_peaks
+    """Fit One Time (mode 'once') or Fit Until Stable (mode 'stable', the
+    Fitting tab's adaptive loop, 'stable' passes, at most 'maxPasses')."""
+    from kfcore import background as BG, fitting as F
     w = _session()
-    iterations = max(1, int(a.get('iterations', 1)))
+    until = getattr(F, 'fit_until_stable', None) or getattr(BG, 'fit_until_stable', None)
+    once = getattr(F, 'fit_once', None) or getattr(BG, 'fit_once', None)
+    mode = a.get('mode') or 'once'
     log = []
-    for i in range(iterations):
-        r = fit_peaks(w, w.peak_params_grid)
-        if r:
-            r2, rsd, red = r
-            log.append({'i': i + 1, 'r2': float(r2), 'redChi2': float(red), 'nfev': int(w.fit_results['nfev'])})
+    if mode == 'stable' and until is not None:
+        passes = until(w, int(a.get('stable', 6) or 6), int(a.get('maxPasses', 40) or 40)) or []
+        for p in passes:
+            log.append({'i': int(p.get('pass', len(log) + 1)), 'r2': float(p.get('r2') or 0),
+                        'redChi2': float(p.get('redChi') or 0), 'chi': float(p.get('chi') or 0),
+                        'nfev': int(p.get('nfev') or 0)})
+    else:
+        n = max(1, int(a.get('iterations', 1) or 1)) if mode != 'stable' else max(1, int(a.get('maxPasses', 6) or 6))
+        for i in range(n):
+            r = once(w) if once is not None else F.fit_peaks(w, w.peak_params_grid)
+            if r:
+                r2, rsd, red = r
+                log.append({'i': i + 1, 'r2': float(r2), 'redChi2': float(red), 'chi': float(rsd),
+                            'nfev': int((w.fit_results or {}).get('nfev', 0) or 0)})
     w.load_view()
     return {'view': view(), 'log': log}
 
@@ -406,16 +469,18 @@ MUTATING = {'settings', 'background', 'clear_background', 'add_peak', 'remove_pe
 def _snapshot():
     import copy
     w = _session()
-    return (copy.deepcopy(w.Data), w.sheet_combobox.GetValue())
+    return (copy.deepcopy(w.Data), w.sheet_combobox.GetValue(), list(S.sheets), S.original)
 
 
 def _restore(snap):
     from kfcore.sheets import select_sheet
     w = _session()
-    w.Data, sheet = snap
-    if sheet:
+    w.Data, sheet, S.sheets, S.original = snap
+    if sheet and sheet in w.Data.get('Core levels', {}):
         select_sheet(w, sheet)
         w.background_method = w.background_method or 'Smart'
+    elif S.sheets:
+        select_sheet(w, S.sheets[0])
 
 
 def op_checkpoint(a):
@@ -456,11 +521,14 @@ async def run(requests_json):
         op = req.get('op')
         args = req.get('args') or {}
         try:
-            await ensure(NEEDS.get(op, CORE))
-            fn = OPS.get(op)
+            feats = _features()
+            f_ops = getattr(feats, 'OPS', {}) if feats is not None else {}
+            await ensure(NEEDS.get(op) or (getattr(feats, 'NEEDS', {}) or {}).get(op) or CORE)
+            fn = OPS.get(op) or f_ops.get(op)
             if fn is None:
                 raise ValueError(f"Unknown request: {op}")
-            if op in MUTATING and S.session is not None and S.session.sheet_combobox.GetValue():
+            mutating = op in MUTATING or op in (getattr(feats, 'MUTATING', set()) if feats is not None else set())
+            if mutating and S.session is not None and S.session.sheet_combobox.GetValue():
                 S.undo.append(_snapshot())
                 del S.undo[:-30]
                 S.redo.clear()

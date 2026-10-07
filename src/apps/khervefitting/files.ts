@@ -37,7 +37,10 @@ function writeJson(key: string, value: unknown) {
   }
 }
 
-export const recentFiles = (): string[] => readJson<string[]>(RECENT_KEY, []).filter((p) => typeof p === 'string')
+export const recentFiles = (): string[] => {
+  const v = readJson<unknown>(RECENT_KEY, [])
+  return Array.isArray(v) ? v.filter((p): p is string => typeof p === 'string') : []
+}
 
 function addRecent(path: string) {
   writeJson(RECENT_KEY, [path, ...recentFiles().filter((p) => p !== path)].slice(0, 10))
@@ -197,4 +200,17 @@ export async function saveAs(doc: Doc): Promise<boolean> {
 export async function save(doc: Doc): Promise<boolean> {
   if (!doc.state.path) return saveAs(doc)
   return writeTo(doc, doc.state.path)
+}
+
+/**
+ * Open from the computer: the chosen files (a workbook with its .json, or a
+ * VAMAS / CSV / TXT spectrum) are copied to ~/Documents/KherveFitting on the
+ * drive, then opened from there, so Save writes back beside them.
+ */
+export async function openFromComputer(doc: Doc, save: () => Promise<boolean>) {
+  if (!(await confirmDiscard(doc, save, 'opening another file'))) return
+  const written = await os.upload(`${HOME}/Documents/KherveFitting`)
+  const pick = written.find((p) => /\.xlsx$/i.test(p)) ?? written.find((p) => OPEN_TYPES.includes(extname(p).toLowerCase()))
+  if (pick) await openPath(doc, pick, save, false)
+  else if (written.length) doc.flash('KherveFitting opens .xlsx workbooks (with their .json), .vms, .csv and .txt files.', true)
 }

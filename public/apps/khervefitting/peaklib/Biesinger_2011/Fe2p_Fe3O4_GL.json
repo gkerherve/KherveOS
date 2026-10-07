@@ -1,0 +1,158 @@
+{
+  "Core levels": {
+    "Fe2p": {
+      "Fitting": {
+        "Peaks": {
+          "Fe2p3/2 Fe3O4 2+ peak 1": {
+            "Position": 708.48,
+            "Height": 10839.44,
+            "FWHM": 1.2,
+            "L/G": 30.0,
+            "Area": 13845.87,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "708.08:708.88",
+              "Height": "",
+              "FWHM": "1.05:1.35",
+              "L/G": "Fixed",
+              "Area": "1:1e7",
+              "Sigma": "",
+              "Gamma": "",
+              "Skew": ""
+            }
+          },
+          "Fe2p3/2 Fe3O4 2+ peak 2": {
+            "Position": 709.28,
+            "Height": 9668.78,
+            "FWHM": 1.2,
+            "L/G": 30.0,
+            "Area": 12350.52,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+0.80#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.05:1.35",
+              "L/G": "A*1",
+              "Area": "A*0.892",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 Fe3O4 3+ peak 1": {
+            "Position": 710.28,
+            "Height": 13267.47,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 19771.9,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+1.80#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.25:1.55",
+              "L/G": "A*1",
+              "Area": "A*1.428",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 Fe3O4 3+ peak 2": {
+            "Position": 711.28,
+            "Height": 9959.9,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 14842.77,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.80#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.25:1.55",
+              "L/G": "A*1",
+              "Area": "A*1.072",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 Fe3O4 3+ peak 3": {
+            "Position": 712.38,
+            "Height": 6828.85,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 10176.71,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+3.90#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.25:1.55",
+              "L/G": "A*1",
+              "Area": "A*0.735",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 Fe3O4 3+ peak 4": {
+            "Position": 713.48,
+            "Height": 3186.79,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 4749.13,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+5.00#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.25:1.55",
+              "L/G": "A*1",
+              "Area": "A*0.343",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 Fe3O4 3+ peak 5": {
+            "Position": 714.58,
+            "Height": 2160.0,
+            "FWHM": 3.3,
+            "L/G": 30.0,
+            "Area": 7587.54,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+6.10#0.1",
+              "Height": "1:1e7",
+              "FWHM": "3.3",
+              "L/G": "A*1",
+              "Area": "A*0.548",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}

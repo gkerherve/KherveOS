@@ -80,32 +80,32 @@ const MOD = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl+'
 
 export function HelpView() {
   const keys: [string, string][] = [
-    ['Double-click on the plot', 'Add a peak there'],
-    ['Drag a peak top (+)', 'Move the peak (position and height)'],
-    ['Drag a dashed line', 'Move a background limit'],
-    ['Drag on empty space', 'Zoom into the box'],
-    ['Wheel / Shift+wheel', 'Zoom the energy / intensity axis'],
-    ['Home or 0', 'Show the whole spectrum'],
-    ['Tab / Q', 'Next / previous peak'],
+    ['Click a peak top', 'Select the peak (blue ×); drag the × to move it'],
+    ['Drag a red dashed line', 'Move the region limits (Peak Fitting window, BKG tab)'],
+    ['Tab', 'Switch region (BKG tab) / next peak (Fitting tab)'],
+    ['Q', 'Previous peak'],
     ['Delete', 'Remove the selected peak'],
-    [`${MOD}[ / ${MOD}]`, 'Previous / next core level'],
-    [`${MOD}F`, 'Fit'],
+    ['Double-click on the plot', 'Plot Limits'],
+    ['Wheel / Shift+wheel', 'Zoom the energy / intensity axis'],
+    ['Zoom In / Zoom Out / Drag tools', 'Box zoom / reset the view / pan'],
+    [`${MOD}[ or ${MOD}9 / ${MOD}] or ${MOD}0`, 'Previous / next sheet'],
+    [`${MOD}P`, 'Peak Fitting window'],
     [`${MOD}Z / ${MOD}Y`, 'Undo / redo'],
-    [`${MOD}O / ${MOD}S`, 'Open / save'],
+    [`${MOD}O / ${MOD}S`, 'Open / quick save'],
   ]
   return (
     <div className="kf-doc">
       <p>
-        KherveFitting fits X-ray photoelectron spectra. Each core level of a workbook has a background (Shirley, Smart, Tougaard…) and peaks
-        whose shapes and constraints are fitted with lmfit — the desktop KherveFitting's own code, running in Python in this window, so a fit gives
-        the same numbers as on the desktop.
+        KherveFitting fits X-ray photoelectron spectra with the desktop KherveFitting-AI's own code, running in Python in this window, so a fit gives
+        the same numbers as on the desktop. The toolbar buttons are the desktop's: hover one for its help.
       </p>
       <ol>
-        <li>Open a workbook (File › Open, or an example), or import a VAMAS / CSV file.</li>
-        <li>Pick a core level, drag the dashed lines around its peaks and press <b>Background</b>.</li>
-        <li>Choose a peak model and press <b>Add Peak</b> (or double-click on the plot) for each component.</li>
-        <li>Type constraints under the values: <code>Fixed</code>, <code>0.5:2</code>, <code>A+1.2#0.2</code> (A plus 1.2 ± 0.2), <code>A*0.5</code>, <code>C1s_A+0.3</code> (another core level).</li>
-        <li>Press <b>Fit</b>, then <b>Export Results</b> to add the peaks to the atomic % table.</li>
+        <li>Open a workbook (File › Open, or File › Open Examples), or import a VAMAS / CSV file (File › Import › XPS).</li>
+        <li>Pick the core level in the sheet selector; open the Peak Fitting window (the C1s button, {MOD}P).</li>
+        <li>BKG tab: drag the red lines around the peaks, choose the method, press <b>Create Region</b>.</li>
+        <li>Fitting tab: choose the model, <b>Add 1 Peak</b> / <b>Add 2 Peaks Doublet</b>, then <b>Fit Until Stable</b>.</li>
+        <li>Type constraints in the green rows: <code>Fixed</code>, <code>0.5:2</code>, <code>A+1.2#0.2</code>, <code>A*0.5</code>, <code>C1s_A+0.3</code>.</li>
+        <li>Export the peaks to the Results grid (its first button) to get the atomic %.</li>
         <li>Save: the workbook (.xlsx) and its .json are written side by side, as the desktop does.</li>
       </ol>
       <table className="kf-keys">
@@ -126,21 +126,19 @@ export function HelpView() {
 
 /** What the desktop has that this edition does not (yet). */
 export const MISSING = [
-  'PCA, Thickogram / thickness, AutoID, survey identification',
-  'EELS, EDX/SEM, XAS background tools, Raman Tougaard, valence band (VBM, cut-off, Fermi edge), D-parameter',
-  'NPL transmission correction, noise analysis, BE correction / C1s auto-calibration',
-  'Peak library (save/load peak sets, SingleEntity envelopes from the library), doublet wizard, propagate fits across samples (batch fit)',
-  'Imports other than KherveFitting workbooks, VAMAS, CSV and TXT: Avantage, Kratos, PHI, SPECS, Scienta, VG, MRS, ASC, Igor',
-  'CasaXPS peak fits inside VAMAS files, profiles and maps (zzProfile, XPS/EDX/EELS maps)',
-  'Plot editor (styles, labels, annotations), exports to PNG/PDF/SVG, Word reports, plot scripts, the plot picture inside the saved workbook',
-  'File manager, multiple windows per workbook, auto-backup, mini-games',
+  'Adv. Fitting (continuous fit, auto-tune of the background offsets), Tougaard / Raman / XAS model window, Mini fitting toolbar',
+  'Plot Modifications, Thickness analysis, VB / Fermi / Cut-Off, Spectral denoising, PCA (noise), Multiplet envelope fit, Wagner plot, AR-XPS',
+  'Profile Creator, Plot Creator (books), Overview, Labels Manager, Preferences other than the instrument / library',
+  'KherveAI chat and MCP inside the app (KherveOS has its own AI tools for KherveFitting), KherveDB opens as its own app',
+  'Imports other than KherveFitting workbooks, VAMAS, CSV and TXT (Avantage, Kratos, PHI, Scienta, VG, MRS, ASC, Igor, other techniques)',
+  'The .kfit (HDF5) and .ksheet formats, Word reports, PDF export, Excel plot pictures, auto-backup',
 ]
 
 export function AboutView({ source }: { source: string }) {
   return (
     <div className="kf-doc">
       <p>
-        <b>KherveFitting</b> — XPS peak fitting. Web edition for KherveOS of the desktop KherveFitting (LG4X-V3) by Gwilherm Kerherve, Imperial
+        <b>KherveFitting</b> — XPS peak fitting. Web edition for KherveOS of the desktop KherveFitting-AI v1.93 (LG4X-V3) by Gwilherm Kerherve, Imperial
         College London, built on LG4X by Hideki Nakajima and LG4X-V2 by Julian A. Hochhaus.
       </p>
       <p>

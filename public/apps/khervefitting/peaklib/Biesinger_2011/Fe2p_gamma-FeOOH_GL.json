@@ -1,0 +1,137 @@
+{
+  "Core levels": {
+    "Fe2p": {
+      "Fitting": {
+        "Peaks": {
+          "Fe2p3/2 gFeOOH peak 1": {
+            "Position": 710.36,
+            "Height": 5579.15,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 8314.35,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "709.9:710.7",
+              "Height": "",
+              "FWHM": "1.25:1.55",
+              "L/G": "Fixed",
+              "Area": "1:1e7",
+              "Sigma": "",
+              "Gamma": "",
+              "Skew": ""
+            }
+          },
+          "Fe2p3/2 gFeOOH peak 2": {
+            "Position": 711.36,
+            "Height": 5640.52,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 8405.81,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+1.00#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.25:1.55",
+              "L/G": "A*1",
+              "Area": "A*1.011",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 gFeOOH peak 3": {
+            "Position": 712.36,
+            "Height": 4106.25,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 6119.36,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+2.00#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.25:1.55",
+              "L/G": "A*1",
+              "Area": "A*0.736",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 gFeOOH peak 4": {
+            "Position": 713.36,
+            "Height": 2147.97,
+            "FWHM": 1.4,
+            "L/G": 30.0,
+            "Area": 3201.02,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+3.00#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.25:1.55",
+              "L/G": "A*1",
+              "Area": "A*0.385",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 gFeOOH peak 5": {
+            "Position": 714.46,
+            "Height": 859.19,
+            "FWHM": 1.8,
+            "L/G": 30.0,
+            "Area": 1646.24,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+4.10#0.1",
+              "Height": "1:1e7",
+              "FWHM": "1.65:1.95",
+              "L/G": "A*1",
+              "Area": "A*0.198",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          },
+          "Fe2p3/2 gFeOOH peak 6": {
+            "Position": 719.56,
+            "Height": 909.4,
+            "FWHM": 2.8,
+            "L/G": 30.0,
+            "Area": 2710.48,
+            "Sigma": 0.0,
+            "Gamma": 0.0,
+            "Skew": 0.0,
+            "Fitting Model": "GL (Area)",
+            "Constraints": {
+              "Position": "A+9.20#0.1",
+              "Height": "1:1e7",
+              "FWHM": "2.8",
+              "L/G": "A*1",
+              "Area": "A*0.326",
+              "Sigma": "A*1",
+              "Gamma": "A*1",
+              "Skew": "A*1"
+            }
+          }
+        },
+        "Model": "GL (Area)"
+      }
+    }
+  }
+}
