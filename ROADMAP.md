@@ -54,8 +54,9 @@ Still open in stage 1:
 - [x] KherveOS tool registry (`src/os/ai/tools.ts`): files, apps, windows, Python,
       notebooks — shared by KherveAI and MCP; delete/overwrite and AI-run Python need
       the user's OK — done 2026-10-07
-- [ ] KherveAI app: chat with Ollama (local; installed here with qwen3.5:4b,
+- [x] KherveAI app: chat with Ollama (local; installed here with qwen3.5:4b,
       granite4:micro-h, phi4-mini), Claude, ChatGPT; tool calling so models act in KherveOS
+      — done 2026-10-07. Next: picture/PDF attachments; Claude extended thinking.
 - [x] MCP server (`server/kherveos_server/mcp_server.py`, `mcp` SDK) at
       http://localhost:8787/mcp with per-user tokens; tool calls relayed to the user's
       KherveOS tab over the websocket; Settings › AI & MCP shows how to connect Claude
