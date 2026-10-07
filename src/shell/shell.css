@@ -235,9 +235,10 @@
   margin: 4px 0;
 }
 
-/* The Applications menu over the Dock (and its submenus): see-through frosted
-   glass like modern macOS, rather than the menu bar's classic white. */
-.k-menu.k-apps-menu {
+/* The Applications menu over the Dock and the desktop's right-click menus (and their
+   submenus): see-through frosted glass like modern macOS, not the menu bar's classic white. */
+.k-menu.k-apps-menu,
+.k-menu.k-glass-menu {
   background: rgba(14, 18, 16, 0.42);
   color: #f1f7f3;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -248,24 +249,32 @@
   backdrop-filter: blur(28px) saturate(1.8);
   -webkit-backdrop-filter: blur(28px) saturate(1.8);
 }
-.k-menu.k-apps-menu .k-menu-item {
+.k-menu.k-apps-menu .k-menu-item,
+.k-menu.k-glass-menu .k-menu-item {
   border-radius: 6px;
   padding: 0 12px 0 8px;
 }
 .k-menu.k-apps-menu .k-menu-item:hover,
-.k-menu.k-apps-menu .k-menu-item.active {
+.k-menu.k-apps-menu .k-menu-item.active,
+.k-menu.k-glass-menu .k-menu-item:hover,
+.k-menu.k-glass-menu .k-menu-item.active {
   background: color-mix(in srgb, var(--k-accent) 82%, transparent);
   color: #fff;
 }
 .k-menu.k-apps-menu .k-menu-icon,
 .k-menu.k-apps-menu .k-menu-shortcut,
-.k-menu.k-apps-menu .k-menu-chevron {
+.k-menu.k-apps-menu .k-menu-chevron,
+.k-menu.k-glass-menu .k-menu-icon,
+.k-menu.k-glass-menu .k-menu-shortcut,
+.k-menu.k-glass-menu .k-menu-chevron {
   color: rgba(241, 247, 243, 0.68);
 }
-.k-menu.k-apps-menu .k-menu-item.disabled {
+.k-menu.k-apps-menu .k-menu-item.disabled,
+.k-menu.k-glass-menu .k-menu-item.disabled {
   color: rgba(241, 247, 243, 0.38);
 }
-.k-menu.k-apps-menu .k-menu-sep {
+.k-menu.k-apps-menu .k-menu-sep,
+.k-menu.k-glass-menu .k-menu-sep {
   background: rgba(255, 255, 255, 0.14);
   margin: 5px 8px;
 }

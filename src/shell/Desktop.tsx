@@ -17,6 +17,8 @@ import { openLaunchpad } from './ui'
 import { isFullscreen, toggleFullscreen } from '@/os/fullscreen'
 
 const DESKTOP = `${HOME}/Desktop`
+/** The desktop's menus are frosted, see-through glass, like the Dock's Applications menu. */
+const GLASS = { className: 'k-glass-menu' }
 
 interface Item {
   key: string
@@ -83,8 +85,8 @@ export function Desktop() {
     setSelected(item.key)
     if (item.key.startsWith('app:')) {
       const id = item.key.slice(4)
-      showContextMenu(e, [{ label: `Open ${item.name}`, onClick: () => open(id) }])
-    } else showContextMenu(e, itemMenu([item.key], { onRename: (p) => setSelected(p) }))
+      showContextMenu(e, [{ label: `Open ${item.name}`, onClick: () => open(id) }], GLASS)
+    } else showContextMenu(e, itemMenu([item.key], { onRename: (p) => setSelected(p) }), GLASS)
   }
 
   return (
@@ -112,6 +114,7 @@ export function Desktop() {
             '-',
             { label: 'Settings…', icon: SettingsIcon, onClick: () => open('settings') },
           ]),
+          GLASS,
         )
       }}
       onKeyDown={async (e) => {
