@@ -1,0 +1,565 @@
+/* KherveRef. Every rule is scoped under .kr-app; colours only from the theme
+   variables (--k-*). */
+
+.kr-app {
+  position: relative;
+  overflow: hidden;
+  font-size: 13px;
+  container: kr / inline-size;
+}
+.kr-app .kr-accent {
+  color: var(--k-accent);
+}
+.kr-app .kr-small {
+  font-size: 12px;
+}
+.kr-app .kr-mono {
+  font-family: var(--k-mono);
+  font-size: 12px;
+}
+.kr-app .kr-spacer {
+  flex: 1;
+}
+.kr-app .kr-row-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* ------------------------------------------------------------ start */
+
+.kr-app.kr-start h2 {
+  margin: 10px 0 4px;
+}
+.kr-app.kr-start p {
+  margin: 0 0 16px;
+}
+
+/* ---------------------------------------------------------- toolbar */
+
+.kr-app .kr-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: min(320px, 40%);
+  color: var(--k-muted);
+}
+.kr-app .kr-search > svg {
+  position: absolute;
+  left: 9px;
+  pointer-events: none;
+}
+.kr-app .kr-search .k-input {
+  height: 28px;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+.kr-app .kr-search .k-icon-btn {
+  position: absolute;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+}
+
+/* ----------------------------------------------------------- layout */
+
+.kr-app .kr-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) minmax(300px, 360px);
+}
+/* A narrow window drops the sidebar, then narrows the details. */
+@container kr (max-width: 900px) {
+  .kr-app .kr-main {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  }
+  .kr-app .kr-sidebar {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------- sidebar */
+
+.kr-app .kr-sidebar {
+  overflow: auto;
+  background: var(--k-surface);
+  border-right: 1px solid var(--k-border);
+  padding: 6px 0 12px;
+  user-select: none;
+}
+.kr-app .kr-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--k-muted);
+}
+.kr-app .kr-side-head .k-icon-btn {
+  width: 22px;
+  height: 22px;
+  color: var(--k-muted);
+}
+.kr-app .kr-clickable {
+  cursor: pointer;
+}
+.kr-app .kr-side-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding-right: 8px;
+  margin: 0 6px;
+  border-radius: var(--k-radius-sm);
+  cursor: pointer;
+  color: var(--k-text);
+  white-space: nowrap;
+}
+.kr-app .kr-side-item > svg {
+  flex: none;
+  color: var(--k-muted);
+}
+.kr-app .kr-side-item:hover {
+  background: var(--k-button-hover);
+}
+.kr-app .kr-side-item.active {
+  background: var(--k-selection);
+}
+.kr-app .kr-side-item.active > svg {
+  color: var(--k-accent);
+}
+.kr-app .kr-side-item.drop {
+  outline: 2px solid var(--k-accent);
+  outline-offset: -2px;
+}
+.kr-app .kr-side-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kr-app .kr-twisty {
+  display: inline-grid;
+  place-items: center;
+  width: 12px;
+  margin-left: -4px;
+  color: var(--k-muted);
+}
+.kr-app .kr-count {
+  font-size: 11px;
+  color: var(--k-muted);
+}
+.kr-app .kr-side-hint {
+  padding: 2px 12px 6px;
+  font-size: 11.5px;
+  color: var(--k-muted);
+  line-height: 1.4;
+}
+
+/* ------------------------------------------------------------ table */
+
+.kr-app .kr-table {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--k-bg);
+}
+.kr-app .kr-thead {
+  display: grid;
+  flex: none;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  user-select: none;
+}
+.kr-app .kr-th {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--k-muted);
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 1px solid color-mix(in srgb, var(--k-border) 60%, transparent);
+}
+.kr-app .kr-th:hover {
+  color: var(--k-text);
+}
+.kr-app .kr-th.sorted {
+  color: var(--k-accent);
+}
+.kr-app .kr-tbody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  outline: none;
+}
+.kr-app .kr-tr {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: grid;
+  align-items: center;
+  cursor: default;
+  user-select: none;
+}
+.kr-app .kr-tr.alt {
+  background: var(--k-alt);
+}
+.kr-app .kr-tr:hover {
+  background: color-mix(in srgb, var(--k-selection) 45%, transparent);
+}
+.kr-app .kr-tr.selected {
+  background: var(--k-selection);
+}
+.kr-app .kr-tbody:focus .kr-tr.selected {
+  background: color-mix(in srgb, var(--k-accent) 30%, var(--k-selection));
+}
+.kr-app .kr-td {
+  padding: 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kr-app .kr-status {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--k-accent);
+}
+.kr-app .kr-warn {
+  color: var(--k-warning);
+}
+.kr-app .kr-table-empty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--k-muted);
+  text-align: center;
+}
+.kr-app .kr-welcome p {
+  margin: 6px 0;
+}
+.kr-app .kr-welcome .k-btn {
+  margin-top: 10px;
+}
+
+/* ---------------------------------------------------------- details */
+
+.kr-app .kr-details {
+  overflow: auto;
+  min-width: 0;
+  padding: 10px 12px 16px;
+  background: var(--k-surface);
+  border-left: 1px solid var(--k-border);
+}
+.kr-app .kr-details-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  color: var(--k-muted);
+}
+.kr-app .kr-details-empty p {
+  margin: 0 0 6px;
+  max-width: 260px;
+  line-height: 1.5;
+}
+.kr-app .kr-keyrow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+.kr-app .kr-keyrow .k-btn svg {
+  margin-right: 2px;
+}
+.kr-app .kr-key {
+  font-weight: 700;
+  color: var(--k-accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: all;
+}
+.kr-app .kr-review {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border-radius: var(--k-radius-sm);
+  background: color-mix(in srgb, var(--k-warning) 16%, transparent);
+  color: var(--k-text);
+  font-size: 12px;
+}
+.kr-app .kr-review svg {
+  color: var(--k-warning);
+}
+.kr-app .kr-form {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 5px 8px;
+  align-items: start;
+}
+.kr-app .kr-form-row {
+  display: contents;
+}
+.kr-app .kr-label {
+  padding-top: 6px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.kr-app .kr-field {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+.kr-app .kr-form .k-input {
+  height: 28px;
+  font-size: 12.5px;
+  padding: 0 8px;
+}
+.kr-app .kr-form textarea.k-input {
+  height: auto;
+  padding: 5px 8px;
+  line-height: 1.4;
+}
+.kr-app .kr-field-link {
+  width: 26px;
+  height: 28px;
+  color: var(--k-link);
+}
+.kr-app .kr-more {
+  justify-self: start;
+  font-size: 12px;
+  padding: 2px 0;
+}
+.kr-app .kr-section {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--k-border);
+}
+.kr-app .kr-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--k-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.kr-app .kr-section textarea.k-input {
+  font-size: 12.5px;
+}
+.kr-app .kr-file {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.kr-app .kr-file-name {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 0;
+}
+.kr-app .kr-file .k-icon-btn {
+  width: 22px;
+  height: 22px;
+}
+.kr-app .kr-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kr-app .kr-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.kr-app .kr-check input {
+  accent-color: var(--k-accent);
+}
+.kr-app .kr-style {
+  margin-left: auto;
+  width: auto;
+  max-width: 190px;
+  height: 24px;
+  font-size: 11.5px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.kr-app .kr-preview {
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: var(--k-radius-sm);
+  background: var(--k-bg);
+  border: 1px solid var(--k-border);
+  line-height: 1.5;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.kr-app .kr-section .kr-row-buttons {
+  justify-content: flex-start;
+}
+.kr-app .kr-bib {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  max-height: 180px;
+  overflow: auto;
+  border-radius: var(--k-radius-sm);
+  background: var(--k-bg);
+  border: 1px solid var(--k-border);
+  font-family: var(--k-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre;
+  user-select: text;
+}
+.kr-app .kr-dates {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  font-size: 11.5px;
+}
+.kr-app .kr-dates .k-icon-btn {
+  margin-left: auto;
+  color: var(--k-muted);
+}
+
+/* ------------------------------------------------------ status, drop */
+
+.kr-app .kr-busy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--k-accent);
+}
+.kr-app .kr-dropzone {
+  position: absolute;
+  inset: 8px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px dashed var(--k-accent);
+  border-radius: var(--k-radius);
+  background: color-mix(in srgb, var(--k-bg) 82%, transparent);
+  color: var(--k-accent);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------- dialogs */
+
+.kr-app .kr-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--k-bg) 55%, transparent);
+}
+.kr-app .kr-modal {
+  width: min(520px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  border-radius: var(--k-radius);
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  box-shadow: var(--k-shadow-lg);
+}
+.kr-app .kr-modal h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.kr-app .kr-modal > p {
+  margin: 0 0 10px;
+  line-height: 1.45;
+  font-size: 12.5px;
+}
+.kr-app .kr-modal textarea.k-input {
+  font-family: var(--k-mono);
+  font-size: 12px;
+}
+.kr-app .kr-modal-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.kr-app .kr-results {
+  width: min(760px, 100%);
+}
+.kr-app .kr-results-list {
+  flex: 1;
+  min-height: 0;
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-bg);
+}
+.kr-app .kr-result {
+  display: grid;
+  grid-template-columns: 120px 150px minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 8px;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--k-border) 50%, transparent);
+}
+.kr-app .kr-result > span,
+.kr-app .kr-result > button {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.kr-app .kr-result-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+.kr-app .kr-result-added .kr-result-status,
+.kr-app .kr-result-attached .kr-result-status {
+  color: var(--k-success);
+}
+.kr-app .kr-result-review .kr-result-status {
+  color: var(--k-warning);
+}
+.kr-app .kr-result-failed .kr-result-status {
+  color: var(--k-danger);
+}
+.kr-app .kr-result-duplicate .kr-result-status {
+  color: var(--k-muted);
+}

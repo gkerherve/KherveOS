@@ -217,6 +217,45 @@ export const APP_TOOL_SETS: AppToolSet[] = [
     ],
   },
   {
+    app: 'kherveref',
+    name: 'KherveRef',
+    summary: 'the reference manager (papers, DOIs, BibTeX/BibLaTeX, citations).',
+    keywords: ['kherveref', 'reference', 'references', 'citation', 'citations', 'bibtex', 'biblatex', '.bib', 'bibliography', 'doi', 'arxiv', 'isbn', 'paper', 'papers'],
+    tools: [
+      {
+        action: 'search',
+        description: 'Search the reference library (words in title, authors, journal, key, DOI, tags). Returns keys, authors, year, title, journal, DOI.',
+        inputSchema: object({
+          query: str('Words to find, e.g. "XPS titanium 2020" (empty: every reference).'),
+          collection: str('Only this collection (its name).'),
+          limit: int('At most this many results (default 25).'),
+        }),
+        readOnly: true,
+      },
+      {
+        action: 'add_by_doi',
+        description: 'Add references by DOI (also arXiv ids and ISBNs): looks up their details online and adds them to the library. Already-present ones are not added twice.',
+        inputSchema: object(
+          {
+            doi: str('One or more DOIs, arXiv ids or ISBNs, separated by spaces or new lines, e.g. "10.1038/nphys1170".'),
+            collection: str('Also put them in this collection (its name; made if missing).'),
+          },
+          ['doi'],
+        ),
+      },
+      {
+        action: 'export_bibtex',
+        description: 'Export references as BibLaTeX (default) or classic BibTeX: write a .bib file, or return the text when no path is given.',
+        inputSchema: object({
+          keys: { type: 'array', items: { type: 'string' }, description: 'Citation keys to export (default: all, or those matching "query").' },
+          query: str('Export the references matching these words.'),
+          dialect: { type: 'string', enum: ['biblatex', 'bibtex'], description: '"biblatex" (default) or classic "bibtex" (natbib).' },
+          path: str('Write to this file, e.g. "~/Documents/paper/refs.bib".'),
+        }),
+      },
+    ],
+  },
+  {
     app: 'files',
     name: 'Files',
     summary: 'the file manager window.',

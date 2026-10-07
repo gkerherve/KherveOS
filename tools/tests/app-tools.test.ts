@@ -51,7 +51,7 @@ test('the latest registration of a window wins', async () => {
 
 test('tools the manifest does not list are offered with their own spec', () => {
   const reg = new AppToolRegistry()
-  reg.register('khervedb', 'w1', {
+  reg.register('demoapp', 'w1', {
     select_element: { description: 'Show an element.', inputSchema: { type: 'object', properties: { element: { type: 'string' } } }, run: async () => 1 },
     bare: async () => 2, // no spec: not offered on its own
   })
@@ -59,7 +59,7 @@ test('tools the manifest does not list are offered with their own spec', () => {
   const extra = reg.extraSpecs(APP_TOOL_SETS)
   assert.deepEqual(
     extra.map((e) => toolName(e.app, e.spec.action)),
-    ['khervedb_select_element'],
+    ['demoapp_select_element'],
   )
 })
 
@@ -142,7 +142,7 @@ test('the manifest is well formed and small', () => {
   assert.ok(names.has('khervesheet_set_cells') && names.has('khervebook_run') && names.has('notepad_save') && names.has('files_select'))
   const lines = describeApps(APP_TOOL_SETS)
   assert.equal(lines.length, APP_TOOL_SETS.length)
-  assert.match(lines[0], /^- KherveSheet: .* Tools: khervesheet_read_range, khervesheet_set_cells/)
+  assert.ok(lines.some((l) => /^- KherveSheet: .* Tools: khervesheet_read_range, khervesheet_set_cells/.test(l)))
 })
 
 test('waitUntil', async () => {

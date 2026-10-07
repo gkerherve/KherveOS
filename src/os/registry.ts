@@ -128,7 +128,7 @@ export const APPS: AppManifest[] = [
     load: () => import('@/apps/kherveref/KherveRef'),
     defaultSize: { w: 1100, h: 700 },
     minSize: { w: 560, h: 380 },
-    fileTypes: ['.bib'],
+    fileTypes: ['.kref', '.bib'],
   },
   {
     id: 'kherveai',
