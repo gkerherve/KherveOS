@@ -131,7 +131,8 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
       small window (fixed size, like a classic Mac game), TypeScript + canvas, keyboard
       controls, high scores kept, the Ktools green look; group Games. Also the
       KherveFitting mini-games (`libraries/Games`: TetrisGame, Asteroid, Flappybird,
-      Solitaire, MiniGame, ChemistryLab) as TypeScript ports in the same style.
+      Solitaire, MiniGame, ChemistryLab) as TypeScript ports in the same style — done
+      2026-10-07 (Meteor Smash, Flappy Khervey, Solitaire, Electron Game, Material Lab).
 
 ### Requested 2026-10-07 (to do next)
 - [x] **KherveDB 5.0 parity** (done 2026-10-07; check in a real browser: the Claude test pane blocks sandboxed frames) (user, 2026-10-07): the desktop KherveDB-React 5.0 has a tabbed
