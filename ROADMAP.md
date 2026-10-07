@@ -175,7 +175,12 @@ In progress (2026-10-07 00:00): a sub-agent was building the LaTeX service
 The user: the ports kept formats and logic but laid apps out differently from the
 desktop. Every app must look and work like the user's desktop app. Reference: the
 desktop source (dev branches) and ../khervefitting-web/public/screenshots/tools/<app>/.
-- [ ] **KherveSlide**: default view = main window (left tool column, Visual | LaTeX |
+- RULE for every port from now on: recreate the desktop UI 1:1 from its source (every
+      toolbar incl. vertical ones, docks, tabs, status bar with its buttons, menus, dialogs,
+      the desktop's own icon files), keep the already-ported logic/formats, and tick a
+      widget-by-widget checklist against the desktop code + website screenshots.
+- [ ] **KherveSlide** (user: "where are the vertical toolbars on the left? there should be a
+      bottom toolbar with presentation, like PowerPoint"): default view = main window (left tool column, Visual | LaTeX |
       Console tabs, slide sorter, Frame/Header fields, Foot fields, status bar
       "Compiled ✓ · Slide n of m · Theme") AND a separate PDF window beside it (PDF |
       Overview tabs) that follows the compile. A LaTeX tab must show the source.
