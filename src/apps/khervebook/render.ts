@@ -6,7 +6,8 @@ import DOMPurify from 'dompurify'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { figureUrl } from '@/os/python/kernel'
-import type { Output } from './format'
+import { isLatexDocument, type Output } from './format'
+import { renderLatexDocument } from './latexdoc'
 
 // --------------------------------------------------------------------- math
 
@@ -146,16 +147,29 @@ export function renderMarkdown(src: string): string {
 
 // --------------------------------------------------------------- LaTeX cells
 
-export type LatexResult = { ok: true; html: string } | { ok: false; error: string }
+export type LatexResult = { ok: true; html: string; document: boolean } | { ok: false; error: string }
 
 /**
- * A LaTeX cell is one equation in display mode. Sources written for the
- * desktop app may carry their own delimiters ($…$, $$…$$) or mix text with
- * $…$ formulas (matplotlib mathtext style); both are understood.
+ * A LaTeX cell is one equation in display mode, or (like the desktop) a whole
+ * document when it has \section, \textbf, \begin{document}… Equations may
+ * carry their own delimiters ($…$, $$…$$) or mix text with $…$ formulas
+ * (matplotlib mathtext style); both are understood.
  */
 export function renderLatex(source: string): LatexResult {
   const t = source.trim()
-  if (!t) return { ok: true, html: '' }
+  if (!t) return { ok: true, html: '', document: false }
+  if (isLatexDocument(t)) {
+    try {
+      return { ok: true, html: renderLatexDocument(t), document: true }
+    } catch (e) {
+      return { ok: false, error: errorText(e) }
+    }
+  }
+  const eq = renderEquation(t)
+  return eq.ok ? { ...eq, document: false } : eq
+}
+
+function renderEquation(t: string): { ok: true; html: string } | { ok: false; error: string } {
   try {
     const whole = /^\$\$([\s\S]+)\$\$$/.exec(t) ?? /^\\\[([\s\S]+)\\\]$/.exec(t) ?? /^\$([^$]+)\$$/.exec(t)
     if (whole && !whole[1].includes('$')) return { ok: true, html: texToHtml(whole[1], true) }
@@ -182,8 +196,9 @@ export function renderLatex(source: string): LatexResult {
 const ANSI = /\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*(?:\x07|\x1b\\)/g
 
 /** Terminal-ish text for display: colour codes dropped, \r overwrites the line (progress bars). */
-export function cleanText(text: string): string {
-  let t = text.replace(ANSI, '')
+export function cleanText(text: string | string[] | null | undefined): string {
+  // Outputs read from files may carry their text as a list of lines, or none at all.
+  let t = (Array.isArray(text) ? text.join('') : (text ?? '')).replace(ANSI, '')
   if (t.includes('\r')) {
     t = t
       .replace(/\r+\n/g, '\n')
@@ -200,7 +215,45 @@ export function cleanText(text: string): string {
 }
 
 export function imageSrc(o: Extract<Output, { kind: 'image' }>): string {
-  if (o.mime === 'image/svg+xml') return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(o.data)}`
+  if (o.mime === 'image/svg+xml') return svgUrl(o.data)
   if (o.mime === 'image/png') return figureUrl(o.data)
   return `data:${o.mime};base64,${o.data}`
+}
+
+/** An SVG as an <img> source: drawn like a picture, so its scripts never run. */
+export function svgUrl(svg: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
+// ---------------------------------------------------------- dark page fix
+
+function rgb(css: string): [number, number, number] | null {
+  const m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?/.exec(css)
+  if (!m || (m[4] !== undefined && Number(m[4]) < 0.2)) return null
+  return [Number(m[1]), Number(m[2]), Number(m[3])]
+}
+
+function luminance([r, g, b]: [number, number, number]): number {
+  const ch = (v: number) => {
+    const s = v / 255
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+  }
+  return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b)
+}
+
+/**
+ * Notes written on the desktop's white page may carry inline colours: a
+ * highlight (pale background) gets dark text, and near-black text is
+ * lightened, so both stay readable on the dark notebook.
+ */
+export function fitInlineColors(root: HTMLElement) {
+  root.querySelectorAll<HTMLElement>('[style]').forEach((el) => {
+    const bg = rgb(el.style.backgroundColor)
+    if (bg) {
+      if (luminance(bg) > 0.45) el.style.color = '#16191a'
+      return
+    }
+    const fg = rgb(el.style.color)
+    if (fg && luminance(fg) < 0.06) el.style.color = `color-mix(in srgb, ${el.style.color} 35%, var(--k-text))`
+  })
 }

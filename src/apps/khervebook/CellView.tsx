@@ -1,17 +1,20 @@
-// One notebook cell: a card with its prompt, the editor or the rendered
-// Markdown / LaTeX, and (for code) the outputs.
+// One notebook cell, like the desktop's CellWidget: a card with a gutter
+// (green run button, red stop while it runs continuously, orange "restart
+// this cell", the collapse chevron and the In [n] / md / tex label), an
+// optional title, the body for its type, and resize grips (bottom: height,
+// right edge: width).
 
-import { Fragment, memo, useCallback, useEffect, useMemo, useRef, type MouseEvent } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, type MouseEvent, type PointerEvent } from 'react'
 import type { EditorView, KeyBinding } from '@codemirror/view'
 import { searchPanelOpen } from '@codemirror/search'
-import { ArrowDown, ArrowUp, CircleAlert, LoaderCircle, Pencil, Play, Trash2 } from 'lucide-react'
-import { os } from '@/os'
-import { CodeEditor } from '@/os/ui/CodeEditor'
-import { mimeType } from '@/os/fileIcons'
-import { resolve } from '@/os/path'
-import type { Cell, CellType, Output } from './format'
-import type { After, Notebook } from './notebook'
-import { cleanText, imageSrc, renderLatex, renderMarkdown } from './render'
+import { ChevronDown, ChevronRight, CirclePlay, CircleStop, LoaderCircle, RotateCcw } from 'lucide-react'
+import { os, type MenuItem } from '@/os'
+import { CodeEditor, type EditorLanguage } from '@/os/ui/CodeEditor'
+import { CELL_TYPES, type Cell, type CellKind } from './format'
+import { hasEditor, type After, type Notebook } from './notebook'
+import { toggleComment } from './edit'
+import { JsView, LatexView, MarkdownView, OtherView, OutputArea, SvgView } from './CellBodies'
+import { SheetView } from './SheetView'
 
 // ------------------------------------------------------------------ editor
 
@@ -33,7 +36,7 @@ function onLastLine(v: EditorView): boolean {
   return !here || !end || end.bottom - here.bottom < 4
 }
 
-function cellKeys(nb: Notebook, id: string): KeyBinding[] {
+function cellKeys(nb: Notebook, id: string, type: CellKind): KeyBinding[] {
   const run = (after: After) => () => {
     nb.run(id, after)
     return true
@@ -43,6 +46,13 @@ function cellKeys(nb: Notebook, id: string): KeyBinding[] {
     { key: 'Mod-Enter', run: run('stay') },
     { key: 'Ctrl-Enter', run: run('stay') },
     { key: 'Alt-Enter', run: run('insert') },
+    {
+      key: 'Mod-/',
+      run: (v) => {
+        toggleComment(v, type)
+        return true
+      },
+    },
     {
       key: 'Escape',
       run: (v) => {
@@ -57,16 +67,26 @@ function cellKeys(nb: Notebook, id: string): KeyBinding[] {
   ]
 }
 
-const PLACEHOLDER: Record<CellType, string> = {
+const PLACEHOLDER: Partial<Record<CellKind, string>> = {
   code: 'Python code. Shift+Enter runs it',
   markdown: 'Markdown text, with $math$. Shift+Enter shows it',
-  latex: 'An equation, e.g. e^{i\\pi} + 1 = 0',
+  latex: 'An equation, e.g. e^{i\\pi} + 1 = 0 — or a whole document (\\section, \\textbf…)',
+  svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 180">…</svg>',
+  js: 'JavaScript, or HTML with <script>. Shift+Enter shows the page',
 }
 
-function CellEditor({ nb, cell }: { nb: Notebook; cell: Cell }) {
+const LANGUAGE: Partial<Record<CellKind, EditorLanguage>> = {
+  code: 'python',
+  markdown: 'markdown',
+  latex: 'latex',
+  svg: 'javascript', // JSX colouring reads well for SVG tags
+  js: 'javascript',
+}
+
+function CellEditor({ nb, cell, lineNumbers }: { nb: Notebook; cell: Cell; lineNumbers: boolean }) {
   const { id, type } = cell
   const viewRef = useRef<EditorView | null>(null)
-  const keys = useMemo(() => cellKeys(nb, id), [nb, id])
+  const keys = useMemo(() => cellKeys(nb, id, type), [nb, id, type])
   useEffect(
     () => () => {
       if (viewRef.current) nb.unregisterEditor(id, viewRef.current)
@@ -77,8 +97,9 @@ function CellEditor({ nb, cell }: { nb: Notebook; cell: Cell }) {
     <CodeEditor
       value={cell.source}
       onChange={(v) => nb.setSource(id, v)}
-      language={type === 'code' ? 'python' : type}
-      wrap={type !== 'code'}
+      language={LANGUAGE[type] ?? 'plain'}
+      wrap={type === 'markdown' || type === 'latex'}
+      lineNumbers={type === 'code' && lineNumbers}
       autoHeight
       keys={keys}
       placeholder={PLACEHOLDER[type]}
@@ -91,224 +112,290 @@ function CellEditor({ nb, cell }: { nb: Notebook; cell: Cell }) {
   )
 }
 
-// ------------------------------------------------------------ text cells
+// -------------------------------------------------------------- the menu
 
-/** A path written in a notebook, relative to the notebook's folder. */
-function drivePath(baseDir: string, href: string): string {
-  let p = href.split(/[?#]/)[0]
-  try {
-    p = decodeURI(p)
-  } catch {
-    /* keep as written */
-  }
-  return resolve(baseDir, p)
+/** The desktop's right-click menu for a cell (plus a sheet's View / Create Plot items). */
+export function cellMenu(nb: Notebook, cell: Cell, looping: boolean, extra: MenuItem[] = []): MenuItem[] {
+  const { id } = cell
+  const i = nb.state.cells.findIndex((c) => c.id === id)
+  const isCode = cell.type === 'code'
+  const items: MenuItem[] = [
+    { label: 'Run Cell', disabled: cell.type === 'other', onClick: () => nb.run(id, 'stay') },
+    ...(isCode
+      ? ([
+          looping ? { label: 'Stop Continuous Run', onClick: () => nb.stopLoop() } : { label: 'Run Continuously', onClick: () => nb.startLoop(id) },
+          { label: 'Restart This Cell', onClick: () => nb.restartCell(id) },
+        ] as MenuItem[])
+      : []),
+    { label: cell.collapsed ? 'Expand Cell' : 'Collapse Cell', onClick: () => nb.setCollapsed(id, !cell.collapsed) },
+    {
+      label: cell.title ? 'Edit Title…' : 'Set Title…',
+      onClick: async () => {
+        const t = await os.dialog.prompt('Title (leave empty to remove):', { title: 'Cell title', defaultValue: cell.title })
+        if (t !== null) nb.setTitle(id, t)
+        nb.refocusSoon()
+      },
+    },
+    ...extra,
+    '-',
+    { label: 'Cut Cell', onClick: () => nb.cutCell(id) },
+    { label: 'Copy Cell', onClick: () => nb.copyCell(id) },
+    { label: 'Paste Cell Below', disabled: !nb.canPaste, onClick: () => nb.pasteCell('below') },
+    {
+      label: 'Convert To',
+      submenu: CELL_TYPES.filter((t) => t.type !== cell.type).map((t) => ({ label: t.label, onClick: () => nb.setType(t.type, id) })),
+    },
+    '-',
+    { label: 'Move Up', disabled: i <= 0, onClick: () => nb.move(-1, id) },
+    { label: 'Move Down', disabled: i < 0 || i >= nb.state.cells.length - 1, onClick: () => nb.move(1, id) },
+    cell.column
+      ? { label: 'Move to Own Row', onClick: () => nb.setColumn(id, false) }
+      : { label: 'Place Beside Cell Above', disabled: i <= 0, onClick: () => nb.setColumn(id, true) },
+    '-',
+    { label: 'Delete Cell', danger: true, onClick: () => nb.remove(id) },
+  ]
+  return items
 }
-
-function MarkdownView({ source, baseDir, onEdit }: { source: string; baseDir: string; onEdit: () => void }) {
-  const html = useMemo(() => (source.trim() ? renderMarkdown(source) : ''), [source])
-  const ref = useRef<HTMLDivElement>(null)
-
-  // ![plot](plot.png): images on the drive are read from the file system.
-  useEffect(() => {
-    const imgs = ref.current?.querySelectorAll<HTMLImageElement>('img[data-nb-src]')
-    if (!imgs?.length) return
-    let alive = true
-    const urls: string[] = []
-    imgs.forEach((img) => {
-      const p = drivePath(baseDir, img.dataset.nbSrc ?? '')
-      const missing = () => {
-        img.classList.add('nb-img-missing')
-        img.title = `Not found: ${p}`
-      }
-      if (!os.fs.isFile(p)) return missing()
-      os.fs.readBytes(p).then((bytes) => {
-        if (!alive) return
-        const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: mimeType(p) }))
-        urls.push(url)
-        img.src = url
-      }, missing)
-    })
-    return () => {
-      alive = false
-      urls.forEach((u) => URL.revokeObjectURL(u))
-    }
-  }, [html, baseDir])
-
-  const onClick = (e: MouseEvent<HTMLDivElement>) => {
-    const a = (e.target as HTMLElement).closest('a')
-    if (!a) return
-    const href = a.getAttribute('href') ?? ''
-    e.preventDefault()
-    if (/^https?:\/\//i.test(href)) os.open('browser', { url: href })
-    else if (href && !href.startsWith('#') && !/^[a-z][a-z0-9+.-]*:/i.test(href)) {
-      const p = drivePath(baseDir, href)
-      if (os.fs.exists(p)) void os.openFile(p)
-      else void os.dialog.alert(`"${p}" doesn't exist.`, { title: 'KherveBook' })
-    }
-  }
-
-  if (!html) {
-    return (
-      <div className="nb-md nb-placeholder" onDoubleClick={onEdit}>
-        Empty Markdown cell. Double-click to write.
-      </div>
-    )
-  }
-  return <div ref={ref} className="nb-md" onClick={onClick} onDoubleClick={onEdit} dangerouslySetInnerHTML={{ __html: html }} />
-}
-
-function LatexView({ source, preview, onEdit }: { source: string; preview: boolean; onEdit: () => void }) {
-  const r = useMemo(() => renderLatex(source), [source])
-  if (!source.trim()) {
-    return (
-      <div className="nb-tex nb-placeholder" onDoubleClick={onEdit}>
-        Empty LaTeX cell. Double-click to write an equation.
-      </div>
-    )
-  }
-  if (!r.ok) {
-    return (
-      <div className={`nb-tex-error${preview ? ' preview' : ''}`} onDoubleClick={onEdit}>
-        <CircleAlert size={14} />
-        <div>
-          <div>{r.error}</div>
-          {!preview && <pre>{source}</pre>}
-        </div>
-      </div>
-    )
-  }
-  return <div className={`nb-tex${preview ? ' preview' : ''}`} onDoubleClick={onEdit} dangerouslySetInnerHTML={{ __html: r.html }} />
-}
-
-// ----------------------------------------------------------------- outputs
-
-function TextOutput({ text, className }: { text: string; className: string }) {
-  const shown = useMemo(() => cleanText(text), [text])
-  return <pre className={className}>{shown}</pre>
-}
-
-function ErrorOutput({ o }: { o: Extract<Output, { kind: 'error' }> }) {
-  const text = useMemo(() => cleanText(o.traceback), [o.traceback])
-  const head = o.ename ? `${o.ename}: ${o.evalue}` : o.evalue
-  const lines = text.split('\n')
-  const isHead = (l: string) => !!o.ename && (l === o.ename || l.startsWith(o.ename + ':'))
-  const showHead = !!head && !lines.some(isHead)
-  return (
-    <pre className="nb-out nb-error">
-      {showHead && <span className="nb-ename">{head}</span>}
-      {showHead && text && '\n'}
-      {text &&
-        lines.map((line, i) => (
-          <Fragment key={i}>
-            {isHead(line) ? <span className="nb-ename">{line}</span> : line.startsWith('Tip:') ? <span className="nb-tip">{line}</span> : line}
-            {i < lines.length - 1 && '\n'}
-          </Fragment>
-        ))}
-    </pre>
-  )
-}
-
-const OutputView = memo(function OutputView({ o }: { o: Output }) {
-  switch (o.kind) {
-    case 'stream':
-      return <TextOutput text={o.text} className={`nb-out nb-stream ${o.name}`} />
-    case 'result':
-      return <TextOutput text={o.text} className="nb-out nb-result" />
-    case 'image':
-      return (
-        <div className="nb-out nb-image">
-          <img src={imageSrc(o)} alt="Figure" draggable={false} />
-        </div>
-      )
-    case 'error':
-      return <ErrorOutput o={o} />
-  }
-})
-
-const OutputArea = memo(function OutputArea({ outputs }: { outputs: Output[] }) {
-  return (
-    <div className="nb-outputs">
-      {outputs.map((o, i) => (
-        <div className="nb-row" key={i}>
-          <div className="nb-prompt out">{o.kind === 'result' ? `Out[${o.count ?? ' '}]:` : ''}</div>
-          <OutputView o={o} />
-        </div>
-      ))}
-    </div>
-  )
-})
 
 // -------------------------------------------------------------------- cell
+
+/** The one-line preview of a collapsed cell without a title (desktop set_collapsed). */
+function summary(source: string): string {
+  const lines = source.trim().split('\n')
+  const first = (lines[0] ?? '').slice(0, 90)
+  return lines.length > 1 ? `${first}   … ${lines.length} lines` : first || '(empty)'
+}
+
+function label(cell: Cell): string {
+  switch (cell.type) {
+    case 'code':
+      return `In [${cell.state !== 'idle' ? '*' : (cell.count ?? ' ')}]:`
+    case 'markdown':
+      return 'md'
+    case 'latex':
+      return 'tex'
+    case 'other':
+      return cell.rawType ?? '?'
+    default:
+      return cell.type
+  }
+}
+
+/** Drag from a grip: `apply` gets the distance moved; double-click resets. */
+function dragGrip(e: PointerEvent<HTMLDivElement>, axis: 'x' | 'y', start: number, apply: (v: number) => void) {
+  if (e.button !== 0) return
+  e.preventDefault()
+  e.stopPropagation()
+  const el = e.currentTarget
+  const p0 = axis === 'x' ? e.clientX : e.clientY
+  el.setPointerCapture(e.pointerId)
+  el.classList.add('dragging')
+  document.body.classList.add('k-dragging')
+  const move = (ev: globalThis.PointerEvent) => apply(start + (axis === 'x' ? ev.clientX : ev.clientY) - p0)
+  const end = () => {
+    el.removeEventListener('pointermove', move)
+    el.removeEventListener('pointerup', end)
+    el.removeEventListener('pointercancel', end)
+    el.classList.remove('dragging')
+    document.body.classList.remove('k-dragging')
+  }
+  el.addEventListener('pointermove', move)
+  el.addEventListener('pointerup', end)
+  el.addEventListener('pointercancel', end)
+}
 
 interface CellViewProps {
   cell: Cell
   selected: boolean
+  /** This cell is the one running continuously. */
+  looping: boolean
   nb: Notebook
   /** Folder that relative links and images resolve against. */
   baseDir: string
+  lineNumbers: boolean
 }
 
-export const CellView = memo(function CellView({ cell, selected, nb, baseDir }: CellViewProps) {
+export const CellView = memo(function CellView({ cell, selected, looping, nb, baseDir, lineNumbers }: CellViewProps) {
   const { id, type } = cell
-  const ref = useCallback((el: HTMLDivElement | null) => nb.registerCellEl(id, el), [nb, id])
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const ref = useCallback(
+    (el: HTMLDivElement | null) => {
+      rootRef.current = el
+      nb.registerCellEl(id, el)
+    },
+    [nb, id],
+  )
   const edit = useCallback(() => nb.focus(id, 'edit'), [nb, id])
-  const isCode = type === 'code'
   const busy = cell.state !== 'idle'
-  const showEditor = isCode || cell.editing
+  const showEditor = hasEditor(cell)
 
-  const cls = ['nb-cell', `nb-${type}`]
+  const cls = ['nb-cell', `nb-cell-${type}`]
   if (selected) cls.push('selected')
   if (busy) cls.push(cell.state)
-  if (!showEditor) cls.push('rendered')
+  if (looping) cls.push('looping')
+  if (cell.collapsed) cls.push('collapsed')
 
-  const prompt = isCode ? `In [${busy ? '*' : (cell.count ?? ' ')}]:` : type === 'markdown' ? 'md' : 'tex'
+  const openMenu = (e: MouseEvent, extra: MenuItem[] = []) => {
+    nb.select(id)
+    os.contextMenu(e, cellMenu(nb, cell, looping, extra))
+  }
 
-  return (
-    <div ref={ref} className={cls.join(' ')} tabIndex={-1} onMouseDown={() => nb.select(id)}>
-      {/* Buttons keep the focus where it is (mousedown is not allowed to move it). */}
-      <div className="nb-cell-tools" onMouseDown={(e) => e.preventDefault()}>
-        {showEditor ? (
-          <button className="k-icon-btn" title={isCode ? 'Run cell' : 'Show the result'} aria-label="Run cell" onClick={() => nb.run(id, 'stay')}>
-            <Play size={14} />
-          </button>
-        ) : (
-          <button className="k-icon-btn" title="Edit" aria-label="Edit cell" onClick={edit}>
-            <Pencil size={14} />
-          </button>
-        )}
-        <button className="k-icon-btn" title="Move up" aria-label="Move cell up" onClick={() => nb.move(-1, id)}>
-          <ArrowUp size={14} />
-        </button>
-        <button className="k-icon-btn" title="Move down" aria-label="Move cell down" onClick={() => nb.move(1, id)}>
-          <ArrowDown size={14} />
-        </button>
-        <button className="k-icon-btn" title="Delete cell" aria-label="Delete cell" onClick={() => nb.remove(id)}>
-          <Trash2 size={14} />
-        </button>
-      </div>
+  const onContextMenu = (e: MouseEvent<HTMLDivElement>) => {
+    // Inside a text editor the browser's own menu (copy, paste…) is more useful.
+    if ((e.target as HTMLElement).closest('.cm-content, input, textarea, iframe')) return
+    e.preventDefault()
+    openMenu(e)
+  }
 
-      <div className="nb-row">
-        <div className={`nb-prompt ${isCode ? 'in' : 'kind'}`}>{prompt}</div>
-        <div className="nb-main">
-          {showEditor && (
-            <div className="nb-input">
-              <CellEditor key={type} nb={nb} cell={cell} />
-            </div>
-          )}
-          {type === 'markdown' && !cell.editing && <MarkdownView source={cell.source} baseDir={baseDir} onEdit={edit} />}
-          {type === 'latex' && (!cell.editing || !!cell.source.trim()) && (
-            <LatexView source={cell.source} preview={cell.editing} onEdit={edit} />
-          )}
+  /** Buttons keep the focus where it is (mousedown is not allowed to move it). */
+  const keep = (e: MouseEvent) => e.preventDefault()
+
+  let body = null
+  switch (type) {
+    case 'code':
+      body = (
+        <>
+          <div className="nb-input">
+            <CellEditor key={type} nb={nb} cell={cell} lineNumbers={lineNumbers} />
+          </div>
           {cell.note && (
             <div className="nb-note">
               <LoaderCircle size={13} className="k-spin" />
               <span>{cell.note}</span>
             </div>
           )}
+          {cell.outputs.length > 0 && <OutputArea outputs={cell.outputs} />}
+        </>
+      )
+      break
+    case 'markdown':
+      body = showEditor ? (
+        <div className="nb-input">
+          <CellEditor key={type} nb={nb} cell={cell} lineNumbers={false} />
+        </div>
+      ) : (
+        <MarkdownView source={cell.source} baseDir={baseDir} onEdit={edit} />
+      )
+      break
+    case 'latex':
+      body = (
+        <>
+          {showEditor && (
+            <div className="nb-input">
+              <CellEditor key={type} nb={nb} cell={cell} lineNumbers={false} />
+            </div>
+          )}
+          {(!showEditor || !!cell.source.trim()) && <LatexView source={cell.source} preview={showEditor} onEdit={edit} />}
+        </>
+      )
+      break
+    case 'svg':
+      body = showEditor ? (
+        <div className="nb-input">
+          <CellEditor key={type} nb={nb} cell={cell} lineNumbers={false} />
+        </div>
+      ) : (
+        <SvgView nb={nb} id={id} source={cell.source} onEdit={edit} />
+      )
+      break
+    case 'js':
+      body = (
+        <>
+          <div className="nb-input">
+            <CellEditor key={type} nb={nb} cell={cell} lineNumbers={false} />
+          </div>
+          {cell.runs > 0 && <JsView source={cell.source} runs={cell.runs} />}
+        </>
+      )
+      break
+    case 'sheet':
+      body = <SheetView nb={nb} id={id} source={cell.source} result={cell.sheet} height={cell.height} onMenu={openMenu} />
+      break
+    case 'other':
+      body = <OtherView cell={cell} />
+      break
+  }
+
+  // The sheet's own grid takes the height from the grip; other cells cap their body.
+  const capBody = type !== 'sheet' && cell.height ? { maxHeight: cell.height } : undefined
+
+  return (
+    <div
+      ref={ref}
+      className={cls.join(' ')}
+      tabIndex={-1}
+      style={cell.width ? { width: cell.width, flex: 'none' } : undefined}
+      onMouseDown={() => nb.select(id)}
+      onContextMenu={onContextMenu}
+    >
+      <div className="nb-gutter">
+        <div className="nb-gutter-run" onMouseDown={keep}>
+          <button className="nb-g-btn run" title="Run this cell" aria-label="Run this cell" disabled={type === 'other'} onClick={() => nb.run(id, 'stay')}>
+            <CirclePlay size={20} />
+          </button>
+          {looping && (
+            <button className="nb-g-btn stop" title="Stop the continuous run" aria-label="Stop the continuous run" onClick={() => nb.stopLoop()}>
+              <CircleStop size={20} />
+            </button>
+          )}
+        </div>
+        {type === 'code' && (
+          <button
+            className="nb-g-btn reset"
+            title="Restart this cell — reset its variables and re-run"
+            aria-label="Restart this cell"
+            onMouseDown={keep}
+            onClick={() => nb.restartCell(id)}
+          >
+            <RotateCcw size={16} />
+          </button>
+        )}
+        <button
+          className="nb-g-btn fold"
+          title="Collapse / expand this cell"
+          aria-label={cell.collapsed ? 'Expand cell' : 'Collapse cell'}
+          onMouseDown={keep}
+          onClick={() => nb.setCollapsed(id, !cell.collapsed)}
+        >
+          {cell.collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+        </button>
+        <div className="nb-label" title={type === 'other' ? `${cell.rawType} cell` : undefined}>
+          {label(cell)}
         </div>
       </div>
 
-      {isCode && cell.outputs.length > 0 && <OutputArea outputs={cell.outputs} />}
+      <div className="nb-content">
+        {cell.title && <div className="nb-title">{cell.title}</div>}
+        {cell.collapsed ? (
+          !cell.title && (
+            <div className="nb-summary" title="Click to expand" onClick={() => nb.setCollapsed(id, false)}>
+              {summary(type === 'sheet' ? 'sheet' : cell.source)}
+            </div>
+          )
+        ) : (
+          <>
+            <div ref={bodyRef} className={`nb-body${capBody ? ' capped' : ''}`} style={capBody}>
+              {body}
+            </div>
+            <div
+              className="nb-grip"
+              title="Drag to resize height; double-click to auto-fit"
+              onPointerDown={(e) => {
+                const start = type === 'sheet' ? (rootRef.current?.querySelector<HTMLElement>('.nb-grid')?.offsetHeight ?? 160) : (bodyRef.current?.offsetHeight ?? 100)
+                dragGrip(e, 'y', start, (v) => nb.setSize(id, { height: v }))
+              }}
+              onDoubleClick={() => nb.setSize(id, { height: null })}
+            />
+          </>
+        )}
+      </div>
+      <div
+        className="nb-wgrip"
+        title="Drag to resize width; double-click to auto"
+        onPointerDown={(e) => dragGrip(e, 'x', rootRef.current?.offsetWidth ?? 600, (v) => nb.setSize(id, { width: v }))}
+        onDoubleClick={() => nb.setSize(id, { width: null })}
+      />
     </div>
   )
 })

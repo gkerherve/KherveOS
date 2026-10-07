@@ -162,12 +162,17 @@ export function TopBar() {
         { label: 'Ktools website', onClick: () => wm.open('browser', { url: 'https://khervetools.com' }) },
       ],
     }
+    // macOS order: the app's menus, then Window, then Help (the app's own Help if it has one).
+    const ownMenus = own.filter((m) => m.label !== 'Help')
+    const ownHelp = own.find((m) => m.label === 'Help')
     return [
       system,
       appMenu,
-      ...own.map((m) => ({ key: `m-${m.label}`, label: m.label, items: m.items })),
+      ...ownMenus.map((m) => ({ key: `m-${m.label}`, label: m.label, items: m.items })),
       ...(hasWindowMenu ? [] : [{ key: 'window', label: 'Window', items: windowMenu.items }]),
-      ...(hasHelpMenu ? [] : [{ key: 'help', label: 'Help', items: helpMenu.items }]),
+      ...(ownHelp
+        ? [{ key: 'm-Help', label: 'Help', items: ownHelp.items }]
+        : hasHelpMenu ? [] : [{ key: 'help', label: 'Help', items: helpMenu.items }]),
     ]
   }, [app, appMenus, focused, focusedId, windows, user, logout, wm, fullscreen])
 

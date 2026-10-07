@@ -1,42 +1,73 @@
-// KherveBook: Jupyter-style notebooks with Python (Pyodide, in a worker),
-// Markdown and LaTeX cells. The web version of the desktop KherveBook; it
-// reads and writes the same .kbook files and imports Jupyter .ipynb.
+// KherveBook: the web edition of the desktop KherveBook (Python in a
+// Pyodide worker; Markdown, LaTeX, sheet, SVG and JavaScript cells). It
+// reads and writes the same .kbook files, imports and exports Jupyter
+// .ipynb, and has the desktop's layout: two toolbar rows, the Files and AI
+// Chat panels on the left, the cell column, and a status bar.
 
 import './khervebook.css'
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import { useStore } from 'zustand'
-import { redo, selectAll, undo } from '@codemirror/commands'
-import type { LucideIcon } from 'lucide-react'
-import {
-  ArrowDown, ArrowUp, Code, Eraser, FastForward, FileDown, FilePlus, FolderOpen, Keyboard, ListRestart, LoaderCircle,
-  Pilcrow, Play, Plus, Power, RotateCcw, Save, Sigma, Square, Trash2, Undo2,
-} from 'lucide-react'
+import { openSearchPanel } from '@codemirror/search'
+import { LoaderCircle, X } from 'lucide-react'
 import { os, type AppProps, type MenuBarMenu, type MenuItem } from '@/os'
-import { basename, pretty } from '@/os/path'
+import { basename, dirname, pretty } from '@/os/path'
+import { DRAG_MIME } from '@/os/fileActions'
 import type { KernelStatus } from '@/os/python/kernel'
 import { CellView } from './CellView'
-import type { CellType } from './format'
-import { Notebook, STARTING_NOTE, displayName } from './notebook'
+import { CELL_TYPES, type Cell, type CellType } from './format'
+import { Notebook, STARTING_NOTE, displayName, type After } from './notebook'
+import { Explorer } from './Explorer'
+import { AiChat, createChatSession } from './AiChat'
+import { ToolRow, cellRow, mainRow } from './Toolbar'
+import { loadExampleIndex, type ExampleIndex } from './examples'
+import { clearRecent, loadUiPrefs, recentFiles, saveUiPrefs, type UiPrefs } from './prefs'
+
+/** The desktop KherveBook release this web edition follows. */
+export const KHERVEBOOK_VERSION = '0.1.137'
+const ISSUES_URL = 'https://github.com/gkerherve/KherveBook/issues'
 
 // ---------------------------------------------------------------- shortcuts
 
 const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent)
 
 function keyLabel(k: string, m: { mod?: boolean; shift?: boolean; alt?: boolean } = {}): string {
-  if (MAC) return `${m.alt ? '⌥' : ''}${m.shift ? '⇧' : ''}${m.mod ? '⌘' : ''}${k === 'Enter' ? '↵' : k}`
-  return [m.mod && 'Ctrl', m.alt && 'Alt', m.shift && 'Shift', k].filter(Boolean).join('+')
+  const name = k === 'Enter' ? (MAC ? '↵' : 'Enter') : k === 'ArrowUp' ? '↑' : k === 'ArrowDown' ? '↓' : k
+  if (MAC) return `${m.alt ? '⌥' : ''}${m.shift ? '⇧' : ''}${m.mod ? '⌘' : ''}${name}`
+  return [m.mod && 'Ctrl', m.alt && 'Alt', m.shift && 'Shift', name].filter(Boolean).join('+')
 }
 
 const KEYS = {
+  new: keyLabel('N', { mod: true }),
+  newWindow: keyLabel('N', { mod: true, shift: true }),
   open: keyLabel('O', { mod: true }),
   save: keyLabel('S', { mod: true }),
   saveAs: keyLabel('S', { mod: true, shift: true }),
+  undo: keyLabel('Z', { mod: true }),
+  redo: keyLabel('Z', { mod: true, shift: true }),
   run: keyLabel('Enter', { mod: true }),
   runNext: keyLabel('Enter', { shift: true }),
   runInsert: keyLabel('Enter', { alt: true }),
-  undo: keyLabel('Z', { mod: true }),
-  redo: keyLabel('Z', { mod: true, shift: true }),
-  selectAll: keyLabel('A', { mod: true }),
+  runAll: keyLabel('Enter', { mod: true, shift: true }),
+  addCode: keyLabel('C', { mod: true, shift: true }),
+  addMd: keyLabel('M', { mod: true, shift: true }),
+  addTex: keyLabel('L', { mod: true, shift: true }),
+  addSheet: keyLabel('T', { mod: true, shift: true }),
+  cutCell: keyLabel('X', { mod: true, shift: true }),
+  copyCell: keyLabel('O', { mod: true, shift: true }),
+  pasteCell: keyLabel('V', { mod: true, shift: true }),
+  moveUp: keyLabel('ArrowUp', { mod: true, shift: true }),
+  moveDown: keyLabel('ArrowDown', { mod: true, shift: true }),
+  deleteCell: keyLabel('D', { mod: true, shift: true }),
+  explorer: keyLabel('B', { mod: true }),
+  ai: keyLabel('A', { mod: true, shift: true }),
+  pageMode: keyLabel('P', { mod: true, shift: true }),
+  comment: keyLabel('/', { mod: true }),
+  find: keyLabel('F', { mod: true }),
+  guide: 'F1',
+}
+
+function Kbd({ k }: { k: string }) {
+  return <kbd>{k}</kbd>
 }
 
 function Shortcuts() {
@@ -45,8 +76,22 @@ function Shortcuts() {
       'Running',
       [
         [KEYS.runNext, 'Run the cell and go to the next one'],
-        [KEYS.run, 'Run the cell'],
+        [KEYS.run, 'Run the cell in place'],
         [KEYS.runInsert, 'Run the cell and add a new one below'],
+        [KEYS.runAll, 'Restart and run all'],
+      ],
+    ],
+    [
+      'Cells',
+      [
+        [`${KEYS.addCode} / ${KEYS.addMd}`, 'Add a code / Markdown cell'],
+        [`${KEYS.addTex} / ${KEYS.addSheet}`, 'Add a LaTeX / sheet cell'],
+        [`${KEYS.cutCell} / ${KEYS.copyCell} / ${KEYS.pasteCell}`, 'Cut / copy / paste the cell'],
+        [`${KEYS.moveUp} / ${KEYS.moveDown}`, 'Move the cell'],
+        [KEYS.deleteCell, 'Delete the cell'],
+        [`${KEYS.undo} / ${KEYS.redo}`, 'Undo / redo (text in the editor first, then cells)'],
+        [KEYS.comment, 'Toggle a comment'],
+        [KEYS.find, 'Find in the cell'],
       ],
     ],
     [
@@ -56,16 +101,20 @@ function Shortcuts() {
         ['↑  ↓', 'Select the cell above / below'],
         ['A  B', 'Add a code cell above / below'],
         ['Y  M  L', 'Make the cell Code / Markdown / LaTeX'],
+        ['X  C  V', 'Cut / copy / paste the cell'],
         ['D D', 'Delete the cell'],
-        ['Z', 'Bring back the deleted cell'],
+        ['Z', 'Undo'],
       ],
     ],
     [
-      'File',
+      'Window',
       [
-        [KEYS.save, 'Save'],
-        [KEYS.saveAs, 'Save as'],
+        [`${KEYS.save} / ${KEYS.saveAs}`, 'Save / save as'],
         [KEYS.open, 'Open'],
+        [KEYS.explorer, 'File explorer'],
+        [KEYS.ai, 'AI assistant'],
+        [KEYS.pageMode, 'Page mode'],
+        [KEYS.guide, 'User guide'],
       ],
     ],
   ]
@@ -77,9 +126,9 @@ function Shortcuts() {
           <table>
             <tbody>
               {rows.map(([k, what]) => (
-                <tr key={k}>
+                <tr key={k + what}>
                   <td>
-                    <kbd>{k}</kbd>
+                    <Kbd k={k} />
                   </td>
                   <td>{what}</td>
                 </tr>
@@ -88,31 +137,144 @@ function Shortcuts() {
           </table>
         </div>
       ))}
-      <p className="nb-keys-note">
-        Install pure-Python packages from PyPI with <code>%pip install name</code> in a cell. numpy, scipy, pandas and matplotlib load by
-        themselves when you import them.
-      </p>
+      <p className="nb-keys-note">Some shortcuts are kept by the browser itself (a new browser window, for example); the menus always work.</p>
     </div>
   )
 }
 
-// ----------------------------------------------------------------- toolbar
-
-function TbButton(props: { icon: LucideIcon; label?: string; optionalLabel?: boolean; title: string; onClick: () => void; disabled?: boolean; primary?: boolean }) {
-  const { icon: Icon, label, title, onClick, disabled, primary, optionalLabel } = props
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <button
-      className={`nb-tb-btn${label ? ' labeled' : ''}${primary ? ' primary' : ''}`}
-      title={title}
-      aria-label={label ?? title}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      <Icon size={15} />
-      {label && <span className={`nb-tb-label${optionalLabel ? ' optional' : ''}`}>{label}</span>}
-    </button>
+    <section>
+      <h3>{title}</h3>
+      {children}
+    </section>
   )
 }
+
+/** Help > User Guide (desktop userguide.py, for the web edition). */
+function UserGuide() {
+  return (
+    <div className="nb-guide">
+      <p>
+        KherveBook is a computational notebook: one scrolling document that mixes runnable <b>Python</b>, formatted <b>Markdown</b>, typeset{' '}
+        <b>LaTeX</b>, live <b>spreadsheets</b>, <b>drawings</b> and <b>JavaScript</b> pages. This is its web edition: Python runs in your browser, and
+        notebooks are <code>.kbook</code> files on your KherveOS drive, shared with the desktop app.
+      </p>
+      <Section title="1. Cells — the building blocks">
+        <p>A notebook is a column of cells. Each cell has a type, shown in its left gutter:</p>
+        <ul>
+          <li>
+            <b>Code</b> (<code>In [n]:</code>) — runs Python.
+          </li>
+          <li>
+            <b>Markdown</b> (<code>md</code>) — formatted notes; renders on run.
+          </li>
+          <li>
+            <b>LaTeX</b> (<code>tex</code>) — an equation or a whole document.
+          </li>
+          <li>
+            <b>Sheet</b> — an embedded spreadsheet with Python formulas.
+          </li>
+          <li>
+            <b>SVG</b> — a vector drawing. <b>JavaScript</b> — an interactive page (D3, Plotly, canvas…).
+          </li>
+        </ul>
+        <p>
+          Change a cell's type with the toolbar drop-down or right-click → <b>Convert To</b>. Double-click a rendered cell to edit its source again.
+          Note, File, KFit, KherveTeX and Molecule cells made in the desktop app are shown and kept unchanged when you save.
+        </p>
+      </Section>
+      <Section title="2. Running cells">
+        <ul>
+          <li>
+            <Kbd k={KEYS.runNext} /> runs the cell and moves to the next (a new code cell is added at the end). <Kbd k={KEYS.run} /> runs it in place.
+          </li>
+          <li>The green ▶ in a cell's gutter, or the toolbar's Run button, runs it.</li>
+          <li>
+            <b>Run All</b> restarts the kernel and runs every cell. <b>Run Continuously</b> (the ⟳ button, or right-click) re-runs a cell for live
+            animations and simulations; the red ■ stops it. The orange ↺ restarts just that cell.
+          </li>
+        </ul>
+        <p>
+          Code cells share one kernel with <code>numpy</code> (<code>np</code>), <code>matplotlib</code> (<code>plt</code>) and <code>pandas</code> (
+          <code>pd</code>) preloaded; <code>scipy</code>, <code>sympy</code> and <code>lmfit</code> load the first time a cell uses them. The first start
+          downloads Python (about 10 MB, then cached). Install pure-Python packages with <code>%pip install name</code>.
+        </p>
+      </Section>
+      <Section title="3. Markdown & LaTeX">
+        <p>
+          Markdown cells take standard Markdown with <code>$math$</code>; the second toolbar row has formatting buttons. A LaTeX cell holding a formula
+          renders it; a document (<code>\section</code>, <code>\textbf</code>, lists, equations…) is laid out by a built-in renderer — the browser has no
+          TeX engine, so complex packages are not typeset.
+        </p>
+      </Section>
+      <Section title="4. Sheet cells & the Python ↔ sheet bridge">
+        <ul>
+          <li>
+            Type a value, or an <code>=</code> formula in Python with A1 references and <code>A1:B5</code> ranges, e.g. <code>=np.pi * A2**2</code> or{' '}
+            <code>=sum(B2:B4)</code>. Formulas see everything the kernel knows.
+          </li>
+          <li>Each grid is published to code cells as sheet1, sheet2, … — a list of rows, header first.</li>
+          <li>
+            <code>ks("A1")</code> reads a cell or range; <code>ks("A1", value)</code> writes a value back into the live sheet.
+          </li>
+          <li>Right-click → Create Plot charts the selection; several sheets per cell with the View menu. Paste tab-separated data from a spreadsheet.</li>
+        </ul>
+      </Section>
+      <Section title="5. Files & drag-and-drop">
+        <p>
+          Drag a file from the Files panel (or from your computer) onto the notebook: <code>.py</code>, <code>.md</code>, <code>.tex</code>,{' '}
+          <code>.csv</code>/<code>.tsv</code>, <code>.svg</code> and pictures become cells, a <code>.ipynb</code> adds its cells, a <code>.kbook</code>{' '}
+          opens.
+        </p>
+      </Section>
+      <Section title="6. Layout">
+        <p>
+          Right-click a cell to set a <b>title</b>, <b>collapse</b> it, or place it <b>beside the cell above</b>. Drag the grip under a cell to cap its
+          height, or its right edge to set its width (double-click to reset). <b>Page Mode</b> hides the cell borders.
+        </p>
+      </Section>
+      <Section title="7. Examples & the AI assistant">
+        <p>
+          The <b>Examples</b> menu has the desktop app's notebooks — opening one makes an untitled copy and runs it. The <b>AI Assistant</b> chats with
+          Claude, ChatGPT, Mistral, Ollama or a local model; set the provider and key with the gear icon (keys stay in this browser).
+        </p>
+      </Section>
+      <Section title="8. Saving & undo">
+        <p>
+          Notebooks save as <b>.kbook</b> (plain JSON, compatible with the desktop app); File → Export writes Jupyter/Colab <b>.ipynb</b>. Undo covers
+          cell structure (add, delete, move, convert, cut, paste, sheet edits, AI edits); while typing in a cell, Undo first undoes the text.
+        </p>
+      </Section>
+      <Section title="9. Keyboard shortcuts">
+        <Shortcuts />
+      </Section>
+    </div>
+  )
+}
+
+function About() {
+  return (
+    <div className="nb-about">
+      <h2>
+        <span className="nb-brand-k">Kherve</span>
+        <span className="nb-brand-b">Book</span>
+      </h2>
+      <p className="k-muted">Web edition for KherveOS · follows the desktop KherveBook v{KHERVEBOOK_VERSION}</p>
+      <p>
+        A Jupyter-inspired computational notebook — runnable Python, Markdown, LaTeX, live spreadsheets, drawings and JavaScript pages in one document.
+      </p>
+      <p>
+        <b>Created by Gwilherm Kerherve</b>
+        <br />
+        Part of the Kherve family of scientific apps. Python runs in your browser with Pyodide.
+      </p>
+      <p className="k-muted">Licensed under the GNU GPL v3.0.</p>
+    </div>
+  )
+}
+
+// -------------------------------------------------------------- the kernel
 
 const STATUS_LABEL: Record<KernelStatus, string> = { off: 'off', starting: 'starting…', idle: 'idle', busy: 'busy', dead: 'stopped' }
 
@@ -129,43 +291,94 @@ function KernelPill({ status, version, pyodide, onStart }: { status: KernelStatu
   return (
     <button className={`nb-kernel ${status}${startable ? ' startable' : ''}`} title={title} onClick={startable ? onStart : undefined}>
       <span className="nb-kernel-dot" />
-      <span className="nb-kernel-name">Python{version ? ` ${version}` : ''}</span>
+      <span>Python{version ? ` ${version}` : ''}</span>
       <span className="nb-kernel-state">{STATUS_LABEL[status]}</span>
     </button>
   )
 }
 
 /** Toolbar and menu buttons must not take the focus away from the cell being edited. */
-function keepFocus(e: MouseEvent) {
+function keepFocus(e: { target: EventTarget; preventDefault: () => void }) {
   if ((e.target as HTMLElement).closest('button')) e.preventDefault()
+}
+
+/** Drag to resize: `apply` gets the start value plus the distance moved. */
+function drag(e: PointerEvent<HTMLDivElement>, axis: 'x' | 'y', apply: (delta: number) => void) {
+  if (e.button !== 0) return
+  e.preventDefault()
+  const el = e.currentTarget
+  const p0 = axis === 'x' ? e.clientX : e.clientY
+  el.setPointerCapture(e.pointerId)
+  el.classList.add('dragging')
+  document.body.classList.add('k-dragging')
+  const move = (ev: globalThis.PointerEvent) => apply((axis === 'x' ? ev.clientX : ev.clientY) - p0)
+  const end = () => {
+    el.removeEventListener('pointermove', move)
+    el.removeEventListener('pointerup', end)
+    el.removeEventListener('pointercancel', end)
+    el.classList.remove('dragging')
+    document.body.classList.remove('k-dragging')
+  }
+  el.addEventListener('pointermove', move)
+  el.addEventListener('pointerup', end)
+  el.addEventListener('pointercancel', end)
 }
 
 // --------------------------------------------------------------------- app
 
 export default function KherveBook({ win, args }: AppProps) {
-  const [nb] = useState(() => new Notebook(`nb-${win.id}`, !!args.path))
+  const example = typeof args.example === 'string' ? args.example : null
+  const [nb] = useState(() => new Notebook(`nb-${win.id}`, !!args.path || !!example || !args.blank))
+  const [chat] = useState(createChatSession)
+  const [ui, setUi] = useState<UiPrefs>(loadUiPrefs)
+  const updateUi = (p: Partial<UiPrefs>) =>
+    setUi((u) => {
+      const next = { ...u, ...p }
+      saveUiPrefs(next)
+      return next
+    })
+
   const cells = useStore(nb.store, (s) => s.cells)
   const selectedId = useStore(nb.store, (s) => s.selectedId)
   const loading = useStore(nb.store, (s) => s.loading)
   const dirty = useStore(nb.store, (s) => s.dirty)
   const path = useStore(nb.store, (s) => s.path)
   const origin = useStore(nb.store, (s) => s.origin)
+  const untitled = useStore(nb.store, (s) => s.untitled)
   const status = useStore(nb.store, (s) => s.status)
   const pyVersion = useStore(nb.store, (s) => s.pyVersion)
   const pyodideVersion = useStore(nb.store, (s) => s.pyodideVersion)
   const progress = useStore(nb.store, (s) => s.progress)
   const flash = useStore(nb.store, (s) => s.flash)
   const pending = useStore(nb.store, (s) => s.pending)
-  const canUndoDelete = useStore(nb.store, (s) => s.canUndoDelete)
+  const canUndo = useStore(nb.store, (s) => s.canUndo)
+  const canRedo = useStore(nb.store, (s) => s.canRedo)
+  const loopId = useStore(nb.store, (s) => s.loopId)
+  const svgTools = useStore(nb.svg)
 
   const selIndex = cells.findIndex((c) => c.id === selectedId)
-  const selType: CellType | null = selIndex >= 0 ? cells[selIndex].type : null
+  const sel: Cell | undefined = selIndex >= 0 ? cells[selIndex] : undefined
+  // What the menus depend on (not the cells themselves, which change with every keystroke).
+  const selType = sel?.type ?? null
+  const selEditing = !!sel?.editing
+  const allCollapsed = cells.length > 0 && cells.every((c) => c.collapsed)
   const count = cells.length
   const busy = pending > 0
   const kernelOn = status === 'idle' || status === 'busy' || status === 'starting'
-  const name = loading && args.path ? basename(args.path) : displayName({ path, origin })
+  const name = loading && args.path ? basename(args.path) : displayName({ path, origin, untitled })
   // Recomputed when the notebook moves (path / origin change).
   const baseDir = useMemo(() => nb.baseDir(), [nb, path, origin])
+
+  // The explorer shows the notebook's folder (desktop show_file), or the one picked.
+  const [explorerRoot, setExplorerRoot] = useState(() => (ui.explorerRoot && os.fs.isDir(ui.explorerRoot) ? ui.explorerRoot : nb.baseDir()))
+  useEffect(() => {
+    const f = path ?? origin
+    if (f) setExplorerRoot(dirname(f))
+  }, [path, origin])
+  const chooseRoot = (dir: string) => {
+    setExplorerRoot(dir)
+    updateUi({ explorerRoot: dir })
+  }
 
   // Python lives as long as the window.
   useEffect(() => {
@@ -177,9 +390,11 @@ export default function KherveBook({ win, args }: AppProps) {
   useEffect(() => {
     if (started.current) return
     started.current = true
-    if (args.path) void nb.openPath(args.path)
-    else nb.refocus()
-  }, [nb, args.path])
+    if (args.path) void nb.openPath(args.path, false)
+    else if (example) void nb.openExample(example, typeof args.title === 'string' ? args.title : basename(example), false)
+    else if (args.blank) nb.refocus()
+    else void nb.openWelcome(false) // like the desktop: a new window opens on the pre-run welcome notebook
+  }, [nb, args, example])
 
   useEffect(() => {
     win.setTitle(`${dirty ? '• ' : ''}${name} — KherveBook`)
@@ -192,8 +407,21 @@ export default function KherveBook({ win, args }: AppProps) {
     return () => win.setCloseGuard(null)
   }, [win, nb])
 
+  // The Examples menu, from public/examples/khervebook/index.json.
+  const [examples, setExamples] = useState<ExampleIndex | 'loading' | 'error'>('loading')
+  const loadExamples = () => {
+    setExamples('loading')
+    loadExampleIndex().then(setExamples, () => setExamples('error'))
+  }
+  useEffect(loadExamples, [])
+
   /** Run something that opens a dialog, then give the focus back to the notebook. */
   const withDialog = (fn: () => Promise<unknown>) => () => void fn().finally(() => nb.refocusSoon())
+  const soon = (what: string) => nb.showFlash(`${what.replace(/\s*\(.*\)$/, '')} — coming to the web edition soon.`)
+  const toggleExplorer = () => updateUi({ explorer: !ui.explorer })
+  const toggleAi = () => updateUi({ ai: !ui.ai })
+  const togglePageMode = () => updateUi({ pageMode: !ui.pageMode })
+  const showGuide = () => void os.dialog.alert(<UserGuide />, { title: 'KherveBook — User Guide' }).finally(() => nb.refocusSoon())
 
   // ------------------------------------------------------------ menus
 
@@ -204,17 +432,49 @@ export default function KherveBook({ win, args }: AppProps) {
       nb.refocusSoon()
     }
     const after = (fn: () => Promise<unknown>) => () => void fn().finally(() => nb.refocusSoon())
+    const recent = recentFiles()
+    const recentItems: MenuItem[] = recent.length
+      ? [
+          ...recent.map((p): MenuItem => ({
+            label: `${basename(p)}   ${pretty(dirname(p))}`,
+            disabled: !os.fs.isFile(p),
+            onClick: after(() => nb.openPath(p)),
+          })),
+          '-',
+          { label: 'Clear Recent Files', onClick: () => clearRecent() },
+        ]
+      : [{ label: '(no recent files)', disabled: true }]
     const typeItem = (t: CellType, label: string): MenuItem => ({ label, checked: selType === t, disabled: !selType, onClick: act(() => nb.setType(t)) })
+    const soonItem = (label: string): MenuItem => ({ label: `${label} (coming soon)`, disabled: true })
+
+    const exampleItems: MenuItem[] = [{ label: 'Welcome to KherveBook', onClick: after(() => nb.openWelcome()) }, '-']
+    if (examples === 'loading') exampleItems.push({ label: 'Loading examples…', disabled: true })
+    else if (examples === 'error') exampleItems.push({ label: 'The examples could not be loaded — try again', onClick: loadExamples })
+    else
+      for (const cat of examples.categories) {
+        exampleItems.push({
+          label: cat.name,
+          submenu: cat.notebooks.length
+            ? cat.notebooks.map((n) => ({ label: n.title, onClick: after(() => nb.openExample(n.file, n.title)) }))
+            : [{ label: 'No examples installed yet', disabled: true }],
+        })
+      }
+
     return [
       {
         label: 'File',
         items: [
-          { label: 'New Notebook', icon: FilePlus, onClick: () => os.open('khervebook') },
-          { label: 'Open…', icon: FolderOpen, shortcut: KEYS.open, onClick: () => void nb.open() },
-          '-',
-          { label: 'Save', icon: Save, shortcut: KEYS.save, onClick: after(() => nb.save()) },
+          { label: 'New', shortcut: KEYS.new, onClick: after(() => nb.newNotebook()) },
+          { label: 'New Window', shortcut: KEYS.newWindow, onClick: () => os.open('khervebook') },
+          { label: 'Open…', shortcut: KEYS.open, onClick: after(() => nb.open()) },
+          { label: 'Save', shortcut: KEYS.save, onClick: after(() => nb.save()) },
           { label: 'Save As…', shortcut: KEYS.saveAs, onClick: after(() => nb.saveAs()) },
-          { label: 'Export as Jupyter Notebook…', icon: FileDown, onClick: after(() => nb.exportIpynb()) },
+          { label: 'Open Recent', submenu: recentItems },
+          '-',
+          { label: 'Insert Image…', onClick: after(() => nb.insertFromDrive('image')) },
+          { label: 'Import Spreadsheet (.csv, .tsv)…', onClick: after(() => nb.insertFromDrive('sheet')) },
+          { label: 'Import Jupyter/Colab (.ipynb)…', onClick: after(() => nb.importIpynb()) },
+          { label: 'Export as Jupyter/Colab (.ipynb)…', onClick: after(() => nb.exportIpynb()) },
           '-',
           { label: 'Close Window', onClick: () => win.close() },
         ],
@@ -222,52 +482,93 @@ export default function KherveBook({ win, args }: AppProps) {
       {
         label: 'Edit',
         items: [
-          { label: 'Undo Typing', shortcut: KEYS.undo, disabled: !selType, onClick: () => nb.editorCommand(undo) },
-          { label: 'Redo Typing', shortcut: KEYS.redo, disabled: !selType, onClick: () => nb.editorCommand(redo) },
-          { label: 'Select All in Cell', shortcut: KEYS.selectAll, disabled: !selType, onClick: () => nb.editorCommand(selectAll) },
+          { label: 'Undo', shortcut: KEYS.undo, onClick: () => nb.smartUndo() },
+          { label: 'Redo', shortcut: KEYS.redo, onClick: () => nb.smartRedo() },
           '-',
-          { label: 'Move Cell Up', icon: ArrowUp, disabled: selIndex <= 0, onClick: act(() => nb.move(-1)) },
-          { label: 'Move Cell Down', icon: ArrowDown, disabled: selIndex < 0 || selIndex >= count - 1, onClick: act(() => nb.move(1)) },
-          '-',
-          { label: 'Delete Cell', icon: Trash2, shortcut: 'D D', disabled: !selType, onClick: act(() => nb.remove()) },
-          { label: 'Undo Delete Cell', icon: Undo2, shortcut: 'Z', disabled: !canUndoDelete, onClick: act(() => nb.undoDelete()) },
+          { label: 'Find in Cell…', shortcut: KEYS.find, disabled: !selType || (selType !== 'code' && selType !== 'js' && !selEditing), onClick: () => nb.editorCommand(openSearchPanel) },
           '-',
           { label: 'Clear Output', disabled: selType !== 'code', onClick: act(() => nb.clearOutputs(nb.state.selectedId ?? undefined)) },
-          { label: 'Clear All Outputs', icon: Eraser, onClick: act(() => nb.clearOutputs()) },
+          { label: 'Clear All Outputs', onClick: act(() => nb.clearOutputs()) },
         ],
       },
       {
         label: 'Cell',
         items: [
-          { label: 'Run Cell', icon: Play, shortcut: KEYS.run, disabled: !selType, onClick: act(() => nb.run(undefined, 'stay')) },
-          { label: 'Run Cell and Select Next', shortcut: KEYS.runNext, disabled: !selType, onClick: act(() => nb.run(undefined, 'advance')) },
-          { label: 'Run Cell and Insert Below', shortcut: KEYS.runInsert, disabled: !selType, onClick: act(() => nb.run(undefined, 'insert')) },
-          { label: 'Run All', icon: FastForward, onClick: act(() => nb.runAll()) },
+          { label: 'Add Code Cell', shortcut: KEYS.addCode, onClick: act(() => nb.insert('code')) },
+          { label: 'Add Markdown Cell', shortcut: KEYS.addMd, onClick: act(() => nb.insert('markdown')) },
+          { label: 'Add LaTeX Cell', shortcut: KEYS.addTex, onClick: act(() => nb.insert('latex')) },
+          { label: 'Add Sheet Cell', shortcut: KEYS.addSheet, onClick: act(() => nb.insert('sheet')) },
+          { label: 'Add SVG Cell', onClick: act(() => nb.insert('svg')) },
+          { label: 'Add JavaScript Cell', onClick: act(() => nb.insert('js')) },
           '-',
-          { label: 'Add Code Cell Below', icon: Code, shortcut: 'B', onClick: act(() => nb.insert('code')) },
-          { label: 'Add Code Cell Above', shortcut: 'A', onClick: act(() => nb.insert('code', 'above')) },
-          { label: 'Add Markdown Cell Below', icon: Pilcrow, onClick: act(() => nb.insert('markdown')) },
-          { label: 'Add LaTeX Cell Below', icon: Sigma, onClick: act(() => nb.insert('latex')) },
+          { label: 'Run Cell', shortcut: KEYS.run, disabled: !selType, onClick: act(() => nb.run(undefined, 'stay')) },
+          { label: 'Run All', shortcut: KEYS.runAll, onClick: act(() => nb.runAll()) },
+          loopId
+            ? { label: 'Stop Continuous Run', onClick: act(() => nb.stopLoop()) }
+            : { label: 'Run Continuously', disabled: selType !== 'code', onClick: act(() => nb.startLoop()) },
           '-',
-          { label: 'Cell Type', submenu: [typeItem('code', 'Code'), typeItem('markdown', 'Markdown'), typeItem('latex', 'LaTeX')] },
+          { label: 'Cut Cell', shortcut: KEYS.cutCell, disabled: !selType, onClick: act(() => nb.cutCell()) },
+          { label: 'Copy Cell', shortcut: KEYS.copyCell, disabled: !selType, onClick: act(() => nb.copyCell()) },
+          { label: 'Paste Cell Below', shortcut: KEYS.pasteCell, onClick: act(() => nb.pasteCell('below')) },
+          '-',
+          { label: 'Move Cell Up', shortcut: KEYS.moveUp, disabled: selIndex <= 0, onClick: act(() => nb.move(-1)) },
+          { label: 'Move Cell Down', shortcut: KEYS.moveDown, disabled: selIndex < 0 || selIndex >= count - 1, onClick: act(() => nb.move(1)) },
+          { label: 'Delete Cell', shortcut: KEYS.deleteCell, disabled: !selType, onClick: act(() => nb.remove()) },
+          '-',
+          { label: 'Cell Type', submenu: CELL_TYPES.map((t) => typeItem(t.type, t.label)) },
         ],
       },
       {
         label: 'Kernel',
         items: [
-          { label: 'Start Python', icon: Power, disabled: kernelOn, onClick: act(() => nb.startKernel()) },
-          { label: 'Interrupt', icon: Square, disabled: !busy, onClick: after(() => nb.interrupt()) },
+          { label: 'Restart Kernel', onClick: after(() => nb.restartKernel()) },
+          { label: 'Restart Python (stops a running cell)', disabled: status === 'off', onClick: after(() => nb.restartPython()) },
+          { label: 'Start Python', disabled: kernelOn, onClick: act(() => nb.startKernel()) },
           '-',
-          { label: 'Restart…', icon: RotateCcw, disabled: status === 'off', onClick: after(() => nb.restart()) },
-          { label: 'Restart and Run All…', icon: ListRestart, onClick: after(() => nb.restart(true, true)) },
+          {
+            label: pyVersion ? `Python ${pyVersion}${pyodideVersion ? ` · Pyodide ${pyodideVersion}` : ''}` : 'Python not started',
+            disabled: true,
+          },
         ],
       },
       {
+        label: 'Git',
+        items: [
+          soonItem('Save Snapshot & Upload'),
+          soonItem('Download Latest from Cloud'),
+          '-',
+          soonItem('Connect to GitHub / GitLab…'),
+          '-',
+          soonItem('View Version History…'),
+          soonItem('Branches…'),
+        ],
+      },
+      {
+        label: 'View',
+        items: [
+          { label: 'File Explorer', shortcut: KEYS.explorer, checked: ui.explorer, onClick: act(toggleExplorer) },
+          { label: 'AI Assistant', shortcut: KEYS.ai, checked: ui.ai, onClick: act(toggleAi) },
+          '-',
+          { label: 'Page Mode (continuous)', shortcut: KEYS.pageMode, checked: ui.pageMode, onClick: act(togglePageMode) },
+          { label: 'Line Numbers', checked: ui.lineNumbers, onClick: act(() => updateUi({ lineNumbers: !ui.lineNumbers })) },
+          '-',
+          { label: allCollapsed ? 'Expand All Cells' : 'Collapse All Cells', onClick: act(() => nb.toggleCollapseAll()) },
+        ],
+      },
+      { label: 'Examples', items: exampleItems },
+      {
         label: 'Help',
-        items: [{ label: 'KherveBook Shortcuts', icon: Keyboard, onClick: after(() => os.dialog.alert(<Shortcuts />, { title: 'KherveBook shortcuts' })) }],
+        items: [
+          { label: 'User Guide', shortcut: KEYS.guide, onClick: showGuide },
+          { label: 'Keyboard Shortcuts', onClick: after(() => os.dialog.alert(<Shortcuts />, { title: 'KherveBook shortcuts' })) },
+          '-',
+          { label: 'Report an Issue / Feedback…', onClick: () => os.open('browser', { url: ISSUES_URL }) },
+          { label: 'About KherveBook', onClick: after(() => os.dialog.alert(<About />, { title: 'About KherveBook' })) },
+        ],
       },
     ]
-  }, [nb, win, selType, selIndex, count, canUndoDelete, busy, kernelOn, status])
+    // `path` refreshes Open Recent after a save or an open.
+  }, [nb, win, selType, selEditing, selIndex, count, allCollapsed, status, kernelOn, pyVersion, pyodideVersion, loopId, ui, examples, path])
 
   useEffect(() => {
     win.setMenus(menus)
@@ -278,39 +579,73 @@ export default function KherveBook({ win, args }: AppProps) {
 
   const lastD = useRef(0)
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.defaultPrevented) return // an editor or the grid used it
     const mod = e.metaKey || e.ctrlKey
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key
-    if (mod && !e.altKey && k === 's') {
+    const run = (fn: () => void) => {
       e.preventDefault()
-      withDialog(() => (e.shiftKey ? nb.saveAs() : nb.save()))()
-      return
+      fn()
     }
-    if (mod && !e.altKey && !e.shiftKey && k === 'o') {
-      e.preventDefault()
-      void nb.open()
-      return
+    if (k === 'F1') return run(showGuide)
+    if (mod && !e.altKey) {
+      if (e.shiftKey) {
+        const shifted: Record<string, () => void> = {
+          s: withDialog(() => nb.saveAs()),
+          n: () => os.open('khervebook'),
+          z: () => nb.redo(),
+          Enter: () => nb.runAll(),
+          c: () => nb.insert('code'),
+          m: () => nb.insert('markdown'),
+          l: () => nb.insert('latex'),
+          t: () => nb.insert('sheet'),
+          x: () => nb.cutCell(),
+          o: () => nb.copyCell(),
+          v: () => nb.pasteCell('below'),
+          ArrowUp: () => nb.move(-1),
+          ArrowDown: () => nb.move(1),
+          d: () => nb.remove(),
+          a: toggleAi,
+          p: togglePageMode,
+        }
+        if (shifted[k]) return run(shifted[k])
+      } else {
+        const plain: Record<string, () => void> = {
+          s: withDialog(() => nb.save()),
+          o: withDialog(() => nb.open()),
+          n: withDialog(() => nb.newNotebook()),
+          z: () => nb.undo(), // the editor undid its own text first, if it had any
+          y: () => nb.redo(),
+          b: toggleExplorer,
+        }
+        if (plain[k]) return run(plain[k])
+      }
     }
-    // Command mode: a cell itself has the focus (not its editor).
+    // Command mode: a cell itself has the focus (not its editor or grid).
     const t = e.target as HTMLElement
     if (!t.classList.contains('nb-cell')) return
     const id = nb.state.selectedId
     if (!id) return
     let handled = true
     if (k === 'Enter') {
-      if (e.shiftKey) nb.run(id, 'advance')
-      else if (mod) nb.run(id, 'stay')
-      else if (e.altKey) nb.run(id, 'insert')
+      const how: After = e.shiftKey ? 'advance' : e.altKey ? 'insert' : 'stay'
+      if (e.shiftKey || mod || e.altKey) nb.run(id, how)
       else nb.focus(id, 'edit')
     } else if (mod || e.altKey) handled = false
     else if (k === 'ArrowUp' || (k === 'k' && !e.shiftKey)) nb.focusSibling(id, -1, 'command')
     else if (k === 'ArrowDown' || (k === 'j' && !e.shiftKey)) nb.focusSibling(id, 1, 'command')
-    else if (e.shiftKey) handled = false
+    else if (e.shiftKey) {
+      if (k === 'z') nb.redo()
+      else handled = false
+    }
     else if (k === 'a') nb.insert('code', 'above', 'command')
     else if (k === 'b') nb.insert('code', 'below', 'command')
     else if (k === 'y') nb.setType('code')
     else if (k === 'm') nb.setType('markdown')
     else if (k === 'l') nb.setType('latex')
-    else if (k === 'z') nb.undoDelete()
+    else if (k === 'x') nb.cutCell(id)
+    else if (k === 'c') nb.copyCell(id)
+    else if (k === 'v') nb.pasteCell('below')
+    else if (k === 'z') nb.undo()
     else if (k === 'd') {
       const now = Date.now()
       if (now - lastD.current < 700) {
@@ -321,84 +656,158 @@ export default function KherveBook({ win, args }: AppProps) {
     if (handled) e.preventDefault()
   }
 
+  // ---------------------------------------------------------- dropping
+
+  const accepts = (e: DragEvent) => e.dataTransfer.types.includes(DRAG_MIME) || e.dataTransfer.types.includes('Files')
+  const onDragOver = (e: DragEvent<HTMLDivElement>) => {
+    if (!accepts(e)) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+  }
+  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+    if (!accepts(e)) return
+    e.preventDefault()
+    const target = (e.target as HTMLElement).closest<HTMLElement>('.nb-cell')?.dataset.cellId ?? nb.state.cells[nb.state.cells.length - 1]?.id ?? null
+    const internal = e.dataTransfer.getData(DRAG_MIME)
+    const importAll = async (paths: string[]) => {
+      let ref: string | null = target
+      for (const p of paths) {
+        const ok = await nb.importFile(p, ref)
+        if (ok) ref = nb.state.selectedId
+      }
+    }
+    if (internal) {
+      try {
+        void importAll(JSON.parse(internal) as string[])
+      } catch {
+        /* not a list of paths */
+      }
+    } else if (e.dataTransfer.files.length) {
+      void os.importFiles(nb.baseDir(), e.dataTransfer.files).then(importAll)
+    }
+  }
+
   // ------------------------------------------------------------- view
 
-  const location = path ? pretty(path) : origin ? `${pretty(origin)} · Jupyter notebook, Save makes a .kbook copy` : 'Not saved yet'
+  const location = path ? pretty(path) : origin ? `${pretty(origin)} · Jupyter notebook, Save makes a .kbook copy` : untitled ? `${untitled} · example, not saved` : 'Not saved yet'
   const message =
-    progress ?? (status === 'starting' ? STARTING_NOTE : null) ?? flash ?? (pending > 1 ? `Running · ${pending - 1} more waiting` : pending === 1 ? 'Running…' : null)
+    progress ?? (status === 'starting' ? STARTING_NOTE : null) ?? flash ?? (loopId ? 'Running continuously — the red ■ stops it' : null) ??
+    (pending > 1 ? `Running · ${pending - 1} more waiting` : pending === 1 ? 'Running…' : null)
   const spinning = !!progress || status === 'starting' || (busy && message !== flash)
 
+  // Cells marked "column" sit beside the previous one, in the same row.
+  const rows = useMemo(() => {
+    const out: Cell[][] = []
+    for (const c of cells) {
+      if (c.column && out.length) out[out.length - 1].push(c)
+      else out.push([c])
+    }
+    return out
+  }, [cells])
+
+  const side = ui.explorer || ui.ai
+  const sideRef = useRef<HTMLElement>(null)
+
   return (
-    <div className="k-app nb-app" onKeyDown={onKeyDown}>
-      <div className="k-toolbar nb-toolbar" onMouseDown={keepFocus}>
-        <TbButton icon={FilePlus} title="New notebook (opens a new window)" onClick={() => os.open('khervebook')} />
-        <TbButton icon={FolderOpen} title={`Open… (${KEYS.open})`} onClick={() => void nb.open()} />
-        <TbButton icon={Save} title={`Save (${KEYS.save})`} onClick={withDialog(() => nb.save())} />
-        <span className="k-sep" />
-        <TbButton icon={Plus} label="Code" title="Add a code cell below" onClick={() => nb.insert('code')} />
-        <TbButton icon={Plus} label="Markdown" title="Add a Markdown cell below" onClick={() => nb.insert('markdown')} />
-        <TbButton icon={Plus} label="LaTeX" title="Add a LaTeX cell below" onClick={() => nb.insert('latex')} />
-        <span className="k-sep" />
-        <select
-          className="k-input nb-type-select"
-          value={selType ?? 'code'}
-          disabled={!selType}
-          title="Cell type"
-          aria-label="Cell type"
-          onChange={(e) => nb.setType(e.target.value as CellType)}
-        >
-          <option value="code">Code</option>
-          <option value="markdown">Markdown</option>
-          <option value="latex">LaTeX</option>
-        </select>
-        <TbButton icon={ArrowUp} title="Move the cell up" disabled={selIndex <= 0} onClick={() => nb.move(-1)} />
-        <TbButton icon={ArrowDown} title="Move the cell down" disabled={selIndex < 0 || selIndex >= count - 1} onClick={() => nb.move(1)} />
-        <TbButton icon={Trash2} title="Delete the cell" disabled={!selType} onClick={() => nb.remove()} />
-        <span className="k-sep" />
-        <TbButton
-          icon={Play}
-          label="Run"
-          optionalLabel
-          primary
-          title={`Run the cell (${KEYS.run}). ${KEYS.runNext} runs it and moves on.`}
-          disabled={!selType}
-          onClick={() => nb.run(undefined, 'stay')}
+    <div className={`k-app nb-app${ui.pageMode ? ' page-mode' : ''}`} onKeyDown={onKeyDown}>
+      <div className="nb-toolbars" onMouseDown={keepFocus}>
+        <ToolRow
+          items={mainRow(
+            nb,
+            { sel, selIndex, count, busy, looping: !!loopId, canUndo, canRedo, explorer: ui.explorer, ai: ui.ai, pageMode: ui.pageMode },
+            { toggleExplorer, toggleAi, togglePageMode },
+            KEYS,
+          )}
+          onSoon={soon}
         />
-        <TbButton icon={FastForward} label="Run all" optionalLabel title="Run all cells, starting from fresh variables" onClick={() => nb.runAll()} />
-        <TbButton icon={Square} title="Interrupt: cancel the cells waiting to run (a running cell can only be stopped by restarting Python)" disabled={!busy} onClick={withDialog(() => nb.interrupt())} />
-        <TbButton icon={RotateCcw} title="Restart Python…" disabled={status === 'off'} onClick={withDialog(() => nb.restart())} />
-        <TbButton icon={Eraser} title="Clear all outputs" onClick={() => nb.clearOutputs()} />
-        <span className="k-spacer" />
-        <KernelPill status={status} version={pyVersion} pyodide={pyodideVersion} onStart={() => nb.startKernel()} />
+        <ToolRow items={cellRow(nb, sel, KEYS, svgTools)} className="nb-cellbar" onSoon={soon}>
+          {sel?.type === 'other' && <span className="nb-cellbar-note">This {sel.rawType} cell comes from the desktop app and is kept as it is.</span>}
+        </ToolRow>
       </div>
 
-      <div className="nb-scroll">
-        {loading ? (
-          <div className="nb-loading">
-            <LoaderCircle size={18} className="k-spin" />
-            Opening {name}…
-          </div>
-        ) : (
-          <div className="nb-page">
-            {cells.map((c) => (
-              <CellView key={c.id} cell={c} selected={c.id === selectedId} nb={nb} baseDir={baseDir} />
-            ))}
-            <div className="nb-add-row" onMouseDown={keepFocus}>
-              <button className="nb-add-btn" onClick={() => nb.insert('code', 'end')}>
-                <Plus size={14} /> Code
-              </button>
-              <button className="nb-add-btn" onClick={() => nb.insert('markdown', 'end')}>
-                <Plus size={14} /> Markdown
-              </button>
-              <button className="nb-add-btn" onClick={() => nb.insert('latex', 'end')}>
-                <Plus size={14} /> LaTeX
-              </button>
-            </div>
-          </div>
+      <div className="nb-body">
+        {side && (
+          <aside className="nb-side" ref={sideRef} style={{ width: ui.sideWidth }}>
+            {ui.explorer && (
+              <section className="nb-side-section" style={ui.ai ? { flex: `0 0 ${Math.round(ui.split * 100)}%` } : { flex: 1 }}>
+                <header className="nb-side-title">
+                  <span>Files</span>
+                  <button className="nb-side-btn" title={`Hide the file explorer (${KEYS.explorer})`} aria-label="Hide the file explorer" onClick={toggleExplorer}>
+                    <X size={13} />
+                  </button>
+                </header>
+                <Explorer nb={nb} root={explorerRoot} current={path} onRoot={chooseRoot} />
+              </section>
+            )}
+            {ui.explorer && ui.ai && (
+              <div
+                className="nb-hsplit"
+                role="separator"
+                aria-orientation="horizontal"
+                aria-label="Resize the file explorer and the AI chat"
+                onPointerDown={(e) => {
+                  const h = sideRef.current?.clientHeight ?? 600
+                  const start = ui.split
+                  drag(e, 'y', (d) => updateUi({ split: Math.min(0.85, Math.max(0.15, start + d / h)) }))
+                }}
+              />
+            )}
+            {ui.ai && (
+              <section className="nb-side-section" style={{ flex: 1 }}>
+                <header className="nb-side-title">
+                  <span>AI Chat</span>
+                  <button className="nb-side-btn" title={`Hide the AI assistant (${KEYS.ai})`} aria-label="Hide the AI assistant" onClick={toggleAi}>
+                    <X size={13} />
+                  </button>
+                </header>
+                <AiChat nb={nb} session={chat} />
+              </section>
+            )}
+          </aside>
         )}
+        {side && (
+          <div
+            className="nb-vsplit"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize the side panel"
+            onPointerDown={(e) => {
+              const start = ui.sideWidth
+              drag(e, 'x', (d) => updateUi({ sideWidth: Math.min(640, Math.max(180, start + d)) }))
+            }}
+          />
+        )}
+
+        <div className="nb-scroll" onDragOver={onDragOver} onDrop={onDrop}>
+          {loading ? (
+            <div className="nb-loading">
+              <LoaderCircle size={18} className="k-spin" />
+              Opening {name}…
+            </div>
+          ) : (
+            <div className="nb-page">
+              {rows.map((row) => (
+                <div key={row[0].id} className={`nb-cellrow${row.length === 1 && row[0].width ? ' fixed' : ''}`}>
+                  {row.map((c) => (
+                    <CellView
+                      key={c.id}
+                      cell={c}
+                      selected={c.id === selectedId}
+                      looping={c.id === loopId}
+                      nb={nb}
+                      baseDir={baseDir}
+                      lineNumbers={ui.lineNumbers}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="k-statusbar nb-statusbar">
+        <span className="nb-sb-app">KherveBook v{KHERVEBOOK_VERSION}</span>
         <span className="nb-sb-file" title={path ?? origin ?? undefined}>
           {location}
         </span>
@@ -406,8 +815,10 @@ export default function KherveBook({ win, args }: AppProps) {
           {message && spinning && <LoaderCircle size={12} className="k-spin" />}
           {message}
         </span>
+        <KernelPill status={status} version={pyVersion} pyodide={pyodideVersion} onStart={() => nb.startKernel()} />
         <span>{selIndex >= 0 ? `Cell ${selIndex + 1} of ${count}` : `${count} cells`}</span>
       </div>
     </div>
   )
 }
+
