@@ -9,6 +9,8 @@ import type { Message, OllamaModel, ProviderId, StreamEvent, Usage } from './typ
 import { callId } from './util'
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1'
+/** The KherveOS server's relay: Claude with the server's key, same request and stream. */
+const SERVER_CLAUDE_URL = '/api/ai/anthropic/messages'
 const OPENAI_URL = 'https://api.openai.com/v1'
 const CLAUDE_MAX_TOKENS = 16_000
 
@@ -143,6 +145,9 @@ async function post(req: StreamRequest, url: string, headers: Record<string, str
   }
   if (!res.ok) {
     const text = await res.text().catch(() => '')
+    if (url === SERVER_CLAUDE_URL && res.status === 401) {
+      throw new ProviderError("Sign in to KherveOS (Settings › Server & account) to use the server's Claude, or add your own Claude key.", 401)
+    }
     throw friendlyError(req.provider, res.status, errorMessage(text) || res.statusText, req.model)
   }
   return res
@@ -202,12 +207,15 @@ async function streamAnthropic(req: StreamRequest): Promise<StreamResult> {
     messages: toAnthropic(req.history, !!req.tools),
   }
   if (req.tools) body.tools = req.tools.map((t) => ({ name: t.wire, description: t.description, input_schema: t.schema }))
-  const res = await post(
-    req,
-    `${ANTHROPIC_URL}/messages`,
-    { 'x-api-key': req.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body,
-  )
+  // No key of one's own: the KherveOS server makes the call with its key.
+  const res = req.key
+    ? await post(
+        req,
+        `${ANTHROPIC_URL}/messages`,
+        { 'x-api-key': req.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body,
+      )
+    : await post(req, SERVER_CLAUDE_URL, {}, body)
   const out: StreamResult = { usage: {} }
   const blocks = new Map<number, { kind: string; id: string; name: string; json: string }>()
   for await (const line of readLines(res)) {

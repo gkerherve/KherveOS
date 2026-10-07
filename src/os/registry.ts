@@ -2,7 +2,7 @@
 // downloaded the first time a window of theirs opens.
 
 import {
-  BookMarked, BookOpen, Bot, Castle, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
+  BookMarked, BookOpen, Castle, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sigma, Sparkles, SquareTerminal,
 } from 'lucide-react'
 import type { AppManifest } from './types'
@@ -200,21 +200,6 @@ export const APPS: AppManifest[] = [
     defaultSize: { w: 860, h: 580 },
     minSize: { w: 420, h: 360 },
     singleton: true,
-    desktop: true,
-  },
-  {
-    id: 'assistant',
-    name: 'Assistant',
-    icon: Bot,
-    color: '#d97757',
-    brand: { label: 'KAI', from: '#f0a07c', to: '#b8532e' },
-    category: 'internet',
-    group: 'Tools',
-    description: 'Chat with Claude, or with a local AI model through Ollama',
-    load: () => import('@/apps/assistant/Assistant'),
-    defaultSize: { w: 860, h: 620 },
-    minSize: { w: 400, h: 360 },
-    fileTypes: ['.kchat'],
     desktop: true,
   },
   {

@@ -65,6 +65,7 @@ function KeyField({
   autoFocus: boolean
 }) {
   const [show, setShow] = useState(false)
+  const serverClaude = useAi((s) => s.serverClaude)
   const meta = PROVIDERS[p]
   return (
     <section className="kai-set-section">
@@ -104,6 +105,7 @@ function KeyField({
           {meta.keyUrl?.replace(/^https:\/\//, '').replace(/\/.*$/, '')} <ExternalLink size={11} />
         </a>
         . Usage is billed to your {meta.name === 'Claude' ? 'Anthropic' : 'OpenAI'} account.
+        {p === 'anthropic' && serverClaude && " Or leave it empty: the KherveOS server has a Claude key and makes the calls (its key never reaches this browser)."}
       </div>
       <CheckResult check={check} />
     </section>

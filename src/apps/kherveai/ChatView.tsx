@@ -10,6 +10,7 @@ import { AssistantBlock, UserBubble } from './MessageView'
 import { CodeContext } from './Markdown'
 import { PROVIDER_IDS, PROVIDERS } from './settings'
 import {
+  hasAccess,
   modelChoices,
   modelSupportsTools,
   openDialog,
@@ -90,7 +91,8 @@ function ModelSelect({ chat, disabled }: { chat: Chat; disabled: boolean }) {
 
 function StatusDot({ chat }: { chat: Chat }) {
   const status = useAi((s) => s.ollama.status)
-  const hasKey = useAi((s) => (chat.provider === 'ollama' ? true : !!s.keys[chat.provider]))
+  const hasKey = useAi((s) => hasAccess(chat.provider, s))
+  const viaServer = useAi((s) => chat.provider === 'anthropic' && !s.keys.anthropic && s.serverClaude)
   if (chat.provider === 'ollama') {
     if (status === 'checking' || status === 'unknown') return <LoaderCircle size={13} className="k-spin kai-dot-spin" aria-label="Checking Ollama" />
     return (
@@ -105,7 +107,7 @@ function StatusDot({ chat }: { chat: Chat }) {
   return (
     <span
       className={`kai-dot ${hasKey ? 'ok' : 'warn'}`}
-      title={hasKey ? 'API key set' : 'No API key yet'}
+      title={viaServer ? "Claude through the KherveOS server (its key stays on the server)" : hasKey ? 'API key set' : 'No API key yet'}
       role="img"
       aria-label={hasKey ? 'API key set' : 'No API key'}
     />
@@ -187,7 +189,7 @@ function Toolbar({ chat, compact, onToggleSidebar }: { chat: Chat; compact: bool
 function Banner({ chat }: { chat: Chat }) {
   const ollama = useAi((s) => s.ollama)
   const url = useAi((s) => s.settings.ollamaUrl)
-  const hasKey = useAi((s) => (chat.provider === 'ollama' ? true : !!s.keys[chat.provider]))
+  const hasKey = useAi((s) => hasAccess(chat.provider, s))
   if (chat.provider === 'ollama') {
     if (ollama.status === 'down') {
       const remotePage = !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname)
@@ -236,6 +238,7 @@ function Banner({ chat }: { chat: Chat }) {
       <div className="kai-banner warn" role="status">
         <div className="kai-banner-text">
           <strong>{meta.name} needs an API key.</strong> It is stored only in this browser and sent only to {meta.host}.
+          {chat.provider === 'anthropic' && ' Or start the KherveOS server with ANTHROPIC_API_KEY set and sign in: its key stays on the server.'}
         </div>
         <div className="kai-banner-actions">
           <button className="k-btn small primary" onClick={() => openDialog('settings', chat.provider === 'ollama' ? 'ollama' : chat.provider)}>
@@ -263,10 +266,13 @@ const SUGGEST_CHAT = [
 
 function Welcome({ chat }: { chat: Chat }) {
   const tools = useAi((s) => (s.settings.act && modelSupportsTools(chat.provider, chat.model, s) ? availableTools().length : 0))
+  const viaServer = useAi((s) => chat.provider === 'anthropic' && !s.keys.anthropic && s.serverClaude)
   const where =
     chat.provider === 'ollama'
       ? `${chat.model || 'a local model'} runs on this computer with Ollama: nothing leaves your machine.`
-      : `${chat.model} answers through ${PROVIDERS[chat.provider].host}, with your own API key.`
+      : viaServer
+        ? `${chat.model} answers through the KherveOS server, with its Claude key (the key stays on the server).`
+        : `${chat.model} answers through ${PROVIDERS[chat.provider].host}, with your own API key.`
   const ideas = tools ? [...SUGGEST_ACT, SUGGEST_CHAT[0]] : SUGGEST_CHAT
   return (
     <div className="kai-welcome">

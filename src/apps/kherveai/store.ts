@@ -4,6 +4,7 @@
 
 import { create } from 'zustand'
 import { HOME, fs, os, path as vpath } from '@/os'
+import { aiStatus } from '@/os/ai'
 import { fetchOllamaCaps, fetchOllamaModels, fetchRemoteModels } from './providers'
 import {
   PROVIDERS,
@@ -36,6 +37,8 @@ export type SettingsFocus = 'ollama' | KeyedProvider
 export interface AiState {
   settings: AiSettings
   keys: Record<KeyedProvider, string>
+  /** The KherveOS server makes Claude calls with its own key (which stays on the server). */
+  serverClaude: boolean
   /** Chats in memory (the open one, busy ones, ones opened earlier). */
   chats: Record<string, Chat>
   /** Where each saved chat lives on the drive. New chats have none until their first message. */
@@ -55,6 +58,7 @@ export interface AiState {
 export const useAi = create<AiState>(() => ({
   settings: loadSettings(),
   keys: { anthropic: loadKey('anthropic'), openai: loadKey('openai') },
+  serverClaude: false,
   chats: {},
   paths: {},
   activeId: null,
@@ -78,6 +82,21 @@ export function updateSettings(patch: Partial<AiSettings>) {
   const settings = { ...get().settings, ...patch }
   saveSettings(settings)
   set({ settings })
+}
+
+/** Can this provider answer now? Ollama always; Claude with a key or the server's; ChatGPT with a key. */
+export function hasAccess(p: ProviderId, s: AiState = get()): boolean {
+  if (p === 'ollama') return true
+  return !!s.keys[p] || (p === 'anthropic' && s.serverClaude)
+}
+
+/** Ask the KherveOS server whether it has Claude (it must be running and signed in). */
+export async function refreshServerClaude(): Promise<void> {
+  try {
+    set({ serverClaude: (await aiStatus()).claude })
+  } catch {
+    set({ serverClaude: false })
+  }
 }
 
 export function setApiKey(p: KeyedProvider, key: string) {

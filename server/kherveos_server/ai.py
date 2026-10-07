@@ -1,8 +1,11 @@
-"""The Assistant: chat with Claude, or with a local Ollama model when Claude is not set up.
+"""The AI service: chat with Claude, or with a local Ollama model when Claude is not set up.
 
 Claude needs ANTHROPIC_API_KEY (or ANTHROPIC_AUTH_TOKEN) in the server's environment;
 the key never reaches the browser. Ollama is reached at OLLAMA_URL (default
 http://localhost:11434), model OLLAMA_MODEL or the first one installed.
+
+POST /api/ai/anthropic/messages relays KherveAI's own Claude requests (tool use
+included) with the server's key; see anthropic_messages.
 
 POST /api/ai/chat streams newline-delimited JSON:
   {"provider": "claude"|"ollama", "model": ...}   once, first
@@ -18,8 +21,8 @@ import os
 from typing import AsyncIterator, Literal
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from .auth import User, current_user
@@ -28,7 +31,7 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 
 CLAUDE_MODEL = os.environ.get("KHERVEOS_CLAUDE_MODEL", "claude-opus-5-5")
 SYSTEM = (
-    "You are the Assistant in KherveOS, a free, open-source browser operating system "
+    "You are KherveAI in KherveOS, a free, open-source browser operating system "
     "made for the people. Be helpful, clear and friendly. Format answers in Markdown."
 )
 
@@ -183,3 +186,76 @@ async def chat(req: ChatRequest, _user: User = Depends(current_user)):
         yield _line({"done": True})
 
     return StreamingResponse(run(), media_type="application/x-ndjson")
+
+
+# ------------------------------------------- Claude for KherveAI, tools included
+
+ANTHROPIC_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com").rstrip("/")
+# The parts of a Messages request that are passed on; anything else is dropped.
+_MESSAGE_FIELDS = ("model", "max_tokens", "messages", "system", "tools", "tool_choice", "temperature", "thinking", "stop_sequences")
+_MAX_REQUEST = 4_000_000  # bytes
+_MAX_TOKENS = 64_000
+
+
+def _relay_error(status: int, message: str) -> JSONResponse:
+    # Anthropic's error shape, which KherveAI already reads.
+    return JSONResponse({"type": "error", "error": {"type": "kherveos_error", "message": message}}, status_code=status)
+
+
+@router.post("/anthropic/messages")
+async def anthropic_messages(request: Request, _user: User = Depends(current_user)):
+    """KherveAI's Claude calls made with this server's key, which never reaches the browser.
+
+    The body is an Anthropic Messages request and the answer is Anthropic's own
+    event stream, passed through unchanged, so tool use works exactly as with a
+    key of one's own. Only the known request fields are forwarded.
+    """
+    if not claude_configured():
+        return _relay_error(503, "Claude is not set up on this KherveOS server: start it with ANTHROPIC_API_KEY set.")
+    raw = await request.body()
+    if len(raw) > _MAX_REQUEST:
+        return _relay_error(413, "This conversation is too long to send.")
+    try:
+        body = json.loads(raw)
+    except ValueError:
+        return _relay_error(400, "The request is not JSON.")
+    if not isinstance(body, dict) or not isinstance(body.get("model"), str) or not isinstance(body.get("messages"), list):
+        return _relay_error(400, "A Messages request needs a model and messages.")
+    payload = {k: body[k] for k in _MESSAGE_FIELDS if k in body}
+    payload["stream"] = True
+    asked = payload.get("max_tokens")
+    payload["max_tokens"] = min(asked, _MAX_TOKENS) if isinstance(asked, int) and asked > 0 else 16_000
+
+    headers = {"anthropic-version": "2023-06-01", "content-type": "application/json"}
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        headers["x-api-key"] = os.environ["ANTHROPIC_API_KEY"]
+    else:
+        headers["authorization"] = f"Bearer {os.environ['ANTHROPIC_AUTH_TOKEN']}"
+
+    client = httpx.AsyncClient(timeout=httpx.Timeout(15, read=600))
+    try:
+        upstream = await client.send(
+            client.build_request("POST", f"{ANTHROPIC_URL}/v1/messages", json=payload, headers=headers), stream=True
+        )
+    except httpx.HTTPError:
+        await client.aclose()
+        return _relay_error(502, "Claude could not be reached from the KherveOS server.")
+    if upstream.status_code != 200:
+        text = await upstream.aread()
+        await upstream.aclose()
+        await client.aclose()
+        if upstream.status_code in (401, 403):
+            # Not the person's key: say whose it is.
+            return _relay_error(502, f"The KherveOS server's Claude key was refused ({upstream.status_code}).")
+        return Response(text, status_code=upstream.status_code, media_type=upstream.headers.get("content-type", "application/json"))
+
+    async def relay() -> AsyncIterator[bytes]:
+        try:
+            # Decoded bytes: the upstream may be compressed, and its encoding header isn't passed on.
+            async for chunk in upstream.aiter_bytes():
+                yield chunk
+        finally:
+            await upstream.aclose()
+            await client.aclose()
+
+    return StreamingResponse(relay(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})

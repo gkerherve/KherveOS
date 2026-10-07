@@ -26,6 +26,7 @@ import {
   promptCustomModel,
   promptRename,
   refreshOllama,
+  refreshServerClaude,
   refreshRemoteModels,
   setChatModel,
   stopAll,
@@ -84,6 +85,7 @@ export default function KherveAI({ win, args }: AppProps) {
     const unwatch = watchChatFiles()
     if (!useAi.getState().activeId || !activeChat()) newChat()
     void refreshOllama()
+    void refreshServerClaude()
     return () => {
       unwatch()
       stopAll()

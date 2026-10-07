@@ -6,6 +6,7 @@ import { defaultSystemPrompt } from './prompt'
 import { ProviderError, streamChat } from './providers'
 import {
   controllers,
+  hasAccess,
   markNoTools,
   openDialog,
   saveChat,
@@ -54,7 +55,7 @@ function setRunning(chatId: string, on: boolean) {
 export function missingKey(chatId: string): boolean {
   const chat = get().chats[chatId]
   if (!chat || chat.provider === 'ollama') return false
-  if (get().keys[chat.provider]) return false
+  if (hasAccess(chat.provider)) return false
   openDialog('settings', chat.provider)
   return true
 }

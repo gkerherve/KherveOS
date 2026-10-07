@@ -1,5 +1,5 @@
 // The AI service: chat with Claude (through the server, which holds the API key)
-// or with a local Ollama model. Any app can use it; the Assistant app is the main one.
+// or with a local Ollama model. Any app can use it; KherveAI uses the server's Claude.
 
 import { api, ApiError, useServer } from '@/os/server'
 
