@@ -72,13 +72,13 @@ export const useSettings = create<SettingsState>()(
       dock: DEFAULT_DOCK,
       dockZoom: 128,
       showHidden: false,
-      browserHome: 'kherve:start',
+      browserHome: 'https://khervetools.com',
       set: (patch) => set(patch),
     }),
     {
       name: 'kherveos.settings',
       storage: safeStorage,
-      version: 11,
+      version: 12,
       migrate: (old, version) => {
         let s = { ...((old ?? {}) as Partial<SettingsState>) }
         // Version 1 had a blue/Auto look: move early installs to the dark look.
@@ -119,6 +119,8 @@ export const useSettings = create<SettingsState>()(
           s.uiScale = 1
           s.wallpaperFit = 'fill'
         }
+        // Version 12: the Browser opens on khervetools.com (unless another home page was chosen).
+        if (version < 12 && (!s.browserHome || s.browserHome === 'kherve:start')) s.browserHome = 'https://khervetools.com'
         return s as SettingsState
       },
     },
