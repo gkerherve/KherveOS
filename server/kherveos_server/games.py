@@ -70,6 +70,7 @@ GAMES: dict[str, Game] = {
     for g in (
         Game("planetcraft", "PlanetCraft", "KhervePlanet", "serve.py", 8123),
         Game("simai", "SimAI", "SimAI", "serve.py", 8137),
+        Game("madsci", "Mad Scientist SIM", "MadScientistSIM", "serve.py", 8147),
         Game("facecraft", "FaceCraft", "KherveSkins", "serve.py", 8140),
     )
 }

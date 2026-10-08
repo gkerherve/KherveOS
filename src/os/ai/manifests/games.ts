@@ -157,5 +157,6 @@ export const GAME_TOOL_SETS: AppToolSet[] = [
   ),
   webGame('planetcraft', 'PlanetCraft', 'the voxel planet game (runs on its own game server).', ['planetcraft', 'planet craft', 'voxel']),
   webGame('simai', 'SimAI', 'the village simulation that lives by itself (runs on its own game server).', ['simai', 'sim ai', 'village sim']),
+  webGame('madsci', 'Mad Scientist SIM', 'the university department simulation: groups compete for grants, papers and fame (runs on its own game server).', ['mad scientist', 'madsci', 'department sim', 'lab sim']),
   webGame('facecraft', 'FaceCraft', 'turns a photo into a Minecraft skin (runs on its own server).', ['facecraft', 'face craft', 'minecraft skin', 'skin maker']),
 ]
