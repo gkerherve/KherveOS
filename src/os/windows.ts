@@ -80,6 +80,7 @@ export const useWindows = create<WMState>((set, get) => ({
     const existing = windows.find(
       (w) =>
         w.appId === appId &&
+        !args.newWindow &&
         (app.singleton || (args.path !== undefined && (w.docPath !== undefined ? w.docPath : w.args.path) === args.path)),
     )
     if (existing) {

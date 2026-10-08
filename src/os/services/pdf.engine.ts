@@ -18,7 +18,7 @@
 import type * as MuPDF from 'mupdf'
 import type {
   PdfAnnot, PdfAnnotKind, PdfExportImagesOptions, PdfFieldType, PdfLink, PdfMetadata, PdfOutlineItem, PdfPageInfo, PdfPoint,
-  PdfRect, PdfSaveOptions, PdfSearchHit, PdfStampTextOptions, PdfWidget, PdfWord,
+  PdfRect, PdfSaveOptions, PdfSearchHit, PdfStampTextOptions, PdfTextEdit, PdfWidget, PdfWord,
 } from './pdf'
 
 type Mu = typeof MuPDF
@@ -171,6 +171,43 @@ function pdfLiteral(text: string): string {
 }
 
 const fmtMatrix = (m: readonly number[]) => m.map((v) => (Math.abs(v) < 1e-9 ? 0 : +v.toFixed(5))).join(' ')
+
+/** '#rrggbb' of a structured-text colour (RGB 0–1 components, or a packed integer). */
+function colorHex(c: unknown): string {
+  if (typeof c === 'number') return '#' + (c & 0xffffff).toString(16).padStart(6, '0')
+  if (Array.isArray(c) && c.length >= 3) return '#' + c.slice(0, 3).map((v: number) => Math.round(clamp01(v) * 255).toString(16).padStart(2, '0')).join('')
+  if (Array.isArray(c) && c.length === 1) return '#' + Array(3).fill(Math.round(clamp01(c[0]) * 255).toString(16).padStart(2, '0')).join('')
+  return '#000000'
+}
+
+/** The base-14 font for a short name ('Helv', 'TiRo', 'Cour') and a style. */
+export function base14Name(font: string | undefined, bold = false, italic = false): string {
+  if (font === 'TiRo') return bold && italic ? 'Times-BoldItalic' : bold ? 'Times-Bold' : italic ? 'Times-Italic' : 'Times-Roman'
+  if (font === 'Cour') return bold && italic ? 'Courier-BoldOblique' : bold ? 'Courier-Bold' : italic ? 'Courier-Oblique' : 'Courier'
+  return bold && italic ? 'Helvetica-BoldOblique' : bold ? 'Helvetica-Bold' : italic ? 'Helvetica-Oblique' : 'Helvetica'
+}
+
+/** Break text into lines no wider than `width` (paragraphs on '\n'; a word longer than a line stays whole). */
+export function wrapText(text: string, width: number, measure: (s: string) => number): string[] {
+  const out: string[] = []
+  for (const para of text.replace(/\r\n?/g, '\n').split('\n')) {
+    const words = para.split(/[ \t]+/).filter(Boolean)
+    if (!words.length) {
+      out.push('')
+      continue
+    }
+    let line = ''
+    for (const w of words) {
+      const next = line ? `${line} ${w}` : w
+      if (line && measure(next) > width) {
+        out.push(line)
+        line = w
+      } else line = next
+    }
+    out.push(line)
+  }
+  return out
+}
 
 // ------------------------------------------------------------------- engine
 
@@ -409,9 +446,13 @@ export class PdfEngine {
     const st = this.page(this.get(id), index).toStructuredText('preserve-whitespace')
     const words: PdfWord[] = []
     let line = -1
+    let block = -1
     let cur: PdfWord | null = null
     try {
       st.walk({
+        beginTextBlock() {
+          block++
+        },
         beginLine() {
           line++
           cur = null
@@ -419,14 +460,14 @@ export class PdfEngine {
         endLine() {
           cur = null
         },
-        onChar(c, _origin, _font, _size, q) {
+        onChar(c, _origin, font, size, q, color) {
           if (!c.trim()) {
             cur = null
             return
           }
           const [x0, y0, x1, y1] = quadBox(q)
           if (!cur) {
-            cur = { text: c, rect: [x0, y0, x1, y1], line }
+            cur = { text: c, rect: [x0, y0, x1, y1], line, block, size, font: safe(() => font.getName(), ''), color: colorHex(color) }
             words.push(cur)
           } else {
             cur.text += c
@@ -1345,6 +1386,73 @@ export class PdfEngine {
       }
     })
     return this.pagesInfo(d)
+  }
+
+  /**
+   * Replace text on pages (KhervePDF's Edit Text / Move Text / Delete Selected
+   * Text): the text under `erase` is removed (nothing else, no black boxes),
+   * then `text` is written into `rect`, wrapped to its width. One undoable step.
+   */
+  rewriteText(id: number, edits: PdfTextEdit[]): PdfPageInfo[] {
+    const d = this.get(id)
+    this.op(d, 'Edit text', () => {
+      for (const e of edits) {
+        const page = d.doc.loadPage(e.page)
+        try {
+          if (e.erase.length) {
+            for (const r of e.erase) {
+              const annot = page.createAnnotation('Redact')
+              annot.setRect(normRect(r))
+              annot.update()
+            }
+            page.applyRedactions(false, this.mu.PDFPage.REDACT_IMAGE_NONE, this.mu.PDFPage.REDACT_LINE_ART_NONE, this.mu.PDFPage.REDACT_TEXT_REMOVE)
+          }
+          if (e.text && e.rect) this.writeText(d, page, e)
+        } finally {
+          page.destroy()
+        }
+      }
+    })
+    return this.pagesInfo(d)
+  }
+
+  private writeText(d: DocState, page: MuPDF.PDFPage, e: PdfTextEdit) {
+    const font = new this.mu.Font(base14Name(e.font, e.bold, e.italic))
+    try {
+      const fontRef = d.doc.addSimpleFont(font, 'Latin')
+      const size = Math.max(1, e.size ?? 11)
+      const [r, g, b] = hexToRgb(e.color, [0, 0, 0])
+      const [x0, y0, x1] = normRect(e.rect!)
+      const measure = (s: string) => {
+        let w = 0
+        for (const ch of s) w += safe(() => font.advanceGlyph(font.encodeCharacter(ch), 0), 0.5) * size
+        return w
+      }
+      const width = Math.max(size, x1 - x0)
+      const lines = wrapText(e.text!, width, measure)
+      const pageObj = page.getObject()
+      const res = this.ownResources(d.doc, pageObj)
+      const fonts = this.subDict(d.doc, res, 'Font')
+      const fname = this.freeName(fonts, 'KhvF')
+      fonts.put(fname, fontRef)
+      const inv = this.mu.Matrix.invert(page.getTransform())
+      const leading = (e.leading ?? 1.2) * size
+      let ops = `q ${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg BT /${fname} ${size} Tf\n`
+      lines.forEach((ln, i) => {
+        if (!ln) return
+        const w = measure(ln)
+        let x = x0
+        if (e.align === 'center') x = x0 + (width - w) / 2
+        else if (e.align === 'right') x = x0 + width - w
+        const y = y0 + size * 0.85 + i * leading
+        const m = this.mu.Matrix.concat([1, 0, 0, -1, x, y], inv)
+        ops += `${fmtMatrix(m)} Tm ${pdfLiteral(ln)} Tj\n`
+      })
+      ops += 'ET Q\n'
+      this.appendContent(d.doc, pageObj, ops)
+    } finally {
+      font.destroy()
+    }
   }
 
   // --------------------------------------------------------------- history

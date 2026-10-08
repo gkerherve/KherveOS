@@ -1,16 +1,20 @@
-// The side panel: page thumbnails (click to jump, drag to reorder, right-click
-// for page operations) and the table of contents (bookmarks; when the PDF has
-// none, headings detected from the text, as in the desktop app).
+// The "Document" dock (MainWindow: a QDockWidget holding a QTabWidget): the
+// "Pages (drag to reorder)" thumbnails (thumbnails.ThumbnailPanel — click to
+// jump, drag to reorder; right-click for page operations is a web extra) and
+// "Contents" (outline.OutlinePanel — the bookmarks, or headings detected from
+// the text when there are none), with the chevron that hides the panel.
 
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { BookmarkPlus, ChevronDown, ChevronRight, PanelLeftClose } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { os } from '@/os'
 import type { PdfDocument, PdfOutlineItem, PdfPageInfo } from '@/os/services/pdf'
+import { Icon } from './icons'
 import { useTab, type PdfTab } from './model'
 
-const THUMB_W = 132
-const ITEM_PAD = 10
-const LABEL_H = 18
+/** thumbnails.THUMB_WIDTH */
+const THUMB_W = 140
+const ITEM_PAD = 5
+const LABEL_H = 0
 
 const Thumb = memo(function Thumb({ pdf, index, info, renderKey }: { pdf: PdfDocument; index: number; info: PdfPageInfo; renderKey: number }) {
   const ref = useRef<HTMLCanvasElement>(null)
@@ -99,7 +103,7 @@ function Thumbnails({ tab, onMovePage, onPageMenu }: {
               className={`kp-thumb${i === current ? ' current' : ''}${drop === i ? ' drop-before' : ''}${drop === i + 1 && i === pages.length - 1 ? ' drop-after' : ''}`}
               style={{ top, height: (THUMB_W * info.height) / info.width + LABEL_H + ITEM_PAD * 2 }}
               draggable
-              title="Click to go to this page — drag to move it"
+              title={'Click to jump to a page.\nDrag a thumbnail up or down to reorder pages.'}
               onClick={() => tab.goto(i)}
               onContextMenu={(e) => {
                 e.preventDefault()
@@ -133,7 +137,7 @@ function Thumbnails({ tab, onMovePage, onPageMenu }: {
               <div className="kp-thumb-frame">
                 <Thumb pdf={tab.pdf} index={i} info={info} renderKey={tab.docVersion} />
               </div>
-              <div className="kp-thumb-label">{info.label !== String(i + 1) ? `${info.label} (${i + 1})` : i + 1}</div>
+              <div className="kp-thumb-label">{i + 1}</div>
             </div>
           )
         })}
@@ -150,7 +154,8 @@ function OutlineNode({ item, depth, path, current, onGo, onMenu }: {
   onGo: (page: number) => void
   onMenu: (e: React.MouseEvent, path: number[]) => void
 }) {
-  const [open, setOpen] = useState(item.open ?? depth < 1)
+  // expandToDepth(1): chapters and their sections open, deeper levels closed.
+  const [open, setOpen] = useState(depth < 2)
   const kids = item.children ?? []
   return (
     <div>
@@ -227,7 +232,10 @@ function Outline({ tab, onEdit }: { tab: PdfTab; onEdit: (items: PdfOutlineItem[
 
   const onMenu = (e: React.MouseEvent, path: number[]) => {
     if (cache?.detected) {
-      os.contextMenu(e, [{ label: 'Keep These Headings as Bookmarks', onClick: () => onEdit(items) }])
+      os.contextMenu(e, [
+        { label: 'Keep These Headings as Bookmarks', onClick: () => onEdit(items) },
+        { label: 'Add Bookmark for This Page…', onClick: () => void add() },
+      ])
       return
     }
     const it = itemAt(real, path)
@@ -241,6 +249,8 @@ function Outline({ tab, onEdit }: { tab: PdfTab; onEdit: (items: PdfOutlineItem[
         },
       },
       { label: 'Delete Bookmark', danger: true, onClick: () => onEdit(without(real, path)) },
+      '-',
+      { label: 'Add Bookmark for This Page…', onClick: () => void add() },
     ])
   }
 
@@ -255,15 +265,16 @@ function Outline({ tab, onEdit }: { tab: PdfTab; onEdit: (items: PdfOutlineItem[
 
   return (
     <div className="kp-outline">
-      <div className="kp-outline-bar">
-        <span className="k-muted">{cache?.detected && items.length ? 'Detected headings' : 'Bookmarks'}</span>
-        <button className="k-icon-btn" title="Add a bookmark for this page" onClick={() => void add()}>
-          <BookmarkPlus size={15} />
-        </button>
-      </div>
-      <div className="kp-outline-tree">
-        {loading && !cache && <div className="k-empty">Reading…</div>}
-        {cache && !items.length && <div className="k-empty">No table of contents</div>}
+      <div
+        className="kp-outline-tree"
+        onContextMenu={(e) => {
+          if (e.defaultPrevented) return
+          e.preventDefault()
+          os.contextMenu(e, [{ label: 'Add Bookmark for This Page…', onClick: () => void add() }])
+        }}
+      >
+        {loading && !cache && <div className="kp-outline-empty">Reading…</div>}
+        {cache && !items.length && <div className="kp-outline-empty">(no table of contents)</div>}
         {items.map((it, i) => (
           <OutlineNode key={i} item={it} depth={0} path={[i]} current={tab.view.page} onGo={(p) => tab.goto(p)} onMenu={onMenu} />
         ))}
@@ -272,9 +283,12 @@ function Outline({ tab, onEdit }: { tab: PdfTab; onEdit: (items: PdfOutlineItem[
   )
 }
 
-export function Sidebar({ tab, onClose, onMovePage, onPageMenu, onEditOutline }: {
+export function Sidebar({ tab, right, onClose, onMoveSide, onMovePage, onPageMenu, onEditOutline }: {
   tab: PdfTab
+  /** Docked on the right of the window (Qt.RightDockWidgetArea). */
+  right: boolean
   onClose: () => void
+  onMoveSide: () => void
   onMovePage: (from: number, to: number) => void
   onPageMenu: (e: React.MouseEvent, page: number) => void
   onEditOutline: (items: PdfOutlineItem[]) => void
@@ -282,13 +296,26 @@ export function Sidebar({ tab, onClose, onMovePage, onPageMenu, onEditOutline }:
   useTab(tab)
   const [mode, setMode] = useState<'pages' | 'outline'>('pages')
   return (
-    <div className="kp-sidebar">
-      <div className="kp-side-tabs">
-        <button className={mode === 'pages' ? 'active' : ''} onClick={() => setMode('pages')}>Pages</button>
+    <div className={`kp-sidebar${right ? ' right' : ''}`}>
+      <div
+        className="kp-dock-title"
+        title="Double-click to dock on the other side"
+        onDoubleClick={onMoveSide}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          os.contextMenu(e, [{ label: right ? 'Dock on the Left' : 'Dock on the Right', onClick: onMoveSide }, { label: 'Close', onClick: onClose }])
+        }}
+      >
+        <span>Document</span>
+        <span className="k-spacer" />
+        <button className="kp-dock-btn" title="Close" onClick={onClose}><Icon name="close" size={13} /></button>
+      </div>
+      <div className="kp-side-tabs" role="tablist">
+        <button className={mode === 'pages' ? 'active' : ''} title="Drag a thumbnail up or down to reorder pages." onClick={() => setMode('pages')}>Pages (drag to reorder)</button>
         <button className={mode === 'outline' ? 'active' : ''} onClick={() => setMode('outline')}>Contents</button>
         <span className="k-spacer" />
-        <button className="k-icon-btn" title="Hide the side panel" onClick={onClose}>
-          <PanelLeftClose size={15} />
+        <button className="kp-dock-btn" title="Hide side panel (re-open from the toolbar or View → Show Page Thumbnails)" onClick={onClose}>
+          <Icon name="hide_panel" size={16} />
         </button>
       </div>
       {mode === 'pages' ? (

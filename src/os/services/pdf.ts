@@ -53,6 +53,31 @@ export interface PdfWord {
   rect: PdfRect
   /** Words with the same number are on the same line (counted from the top of the page, in reading order). */
   line: number
+  /** Text block (paragraph) the word is in, counted like `line`. */
+  block?: number
+  /** Font size (points), font name and '#rrggbb' colour of the word's first character. */
+  size?: number
+  font?: string
+  color?: string
+}
+
+/** A change to the page text itself (see PdfDocument.rewriteText). */
+export interface PdfTextEdit {
+  page: number
+  /** Areas whose text is removed (only the text: no black boxes, pictures and lines stay). */
+  erase: PdfRect[]
+  /** New text, wrapped to the width of `rect` (its top-left is where the first line starts). */
+  text?: string
+  rect?: PdfRect
+  size?: number
+  color?: string
+  /** 'Helv' (default), 'TiRo' or 'Cour'. */
+  font?: string
+  bold?: boolean
+  italic?: boolean
+  align?: 'left' | 'center' | 'right' | 'justify'
+  /** Line spacing as a multiple of the size (default 1.2). */
+  leading?: number
 }
 
 export interface PdfLink {
@@ -230,6 +255,8 @@ export interface PdfDocument {
 
   /** Permanently black out areas (text, images and drawings underneath are removed). */
   applyRedactions(areas: { page: number; rect: PdfRect }[]): Promise<void>
+  /** Remove and / or write page text (one undoable step). */
+  rewriteText(edits: PdfTextEdit[]): Promise<void>
 
   /** Undo / redo the document changes made through this API (pages, forms, redaction, outline…). */
   undo(): Promise<void>
@@ -605,6 +632,10 @@ class WorkerPdf implements PdfDocument {
 
   async applyRedactions(areas: { page: number; rect: PdfRect }[]) {
     this.setPages(await this.call('redact', [areas], { barrier: true }))
+  }
+
+  async rewriteText(edits: PdfTextEdit[]) {
+    this.setPages(await this.call('rewriteText', [edits], { barrier: true }))
   }
 
   async undo() {

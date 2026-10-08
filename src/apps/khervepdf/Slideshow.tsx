@@ -3,7 +3,7 @@
 // Ported from the desktop KhervePDF's SlideshowView.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Maximize2, Minimize2, Pause, Play, Repeat, SkipBack, SkipForward, X } from 'lucide-react'
+import { Icon } from './icons'
 import type { PdfAnnot } from '@/os/services/pdf'
 import { AnnotSvg } from './AnnotSvg'
 import type { PdfTab } from './model'
@@ -231,15 +231,15 @@ export function Slideshow({ tab, start, fullscreen, settings, onSettings, onPage
       )}
       {settings.continuous && <div className="kp-stage-progress" style={{ width: `${progress * 100}%` }} />}
       <div className="kp-stage-bar" onPointerDown={(e) => e.stopPropagation()}>
-        <button title="Previous page (←)" onClick={prev}><SkipBack size={18} /></button>
+        <button title="Previous page (←)" onClick={prev}><Icon name="prev_page" size={22} /></button>
         <button
           className={settings.continuous ? 'on' : ''}
-          title={settings.continuous ? 'Pause (P)' : 'Advance automatically (P)'}
+          title={settings.continuous ? 'Pause automatic advance (P)' : 'Advance automatically (P)'}
           onClick={() => onSettings({ ...settings, continuous: !settings.continuous })}
         >
-          {settings.continuous ? <Pause size={18} /> : <Play size={18} />}
+          <Icon name={settings.continuous ? 'pause' : 'play'} size={22} />
         </button>
-        <button title="Next page (→ / Space)" onClick={next}><SkipForward size={18} /></button>
+        <button title="Next page (→ / Space)" onClick={next}><Icon name="next_page" size={22} /></button>
         <span className="kp-stage-label">{page + 1} / {n}</span>
         <label className="kp-stage-secs" title="Seconds each page stays on screen">
           <input
@@ -256,12 +256,12 @@ export function Slideshow({ tab, start, fullscreen, settings, onSettings, onPage
           s
         </label>
         <button className={settings.loop ? 'on' : ''} title="Loop back to the first page after the last" onClick={() => onSettings({ ...settings, loop: !settings.loop })}>
-          <Repeat size={18} />
+          <Icon name="loop" size={22} />
         </button>
-        <button title={fullscreen ? 'Show in the window instead (F)' : 'Show full screen (F)'} onClick={onToggleFullscreen}>
-          {fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+        <button title={fullscreen ? 'Show in this window instead (F)' : 'Show full screen (F)'} onClick={onToggleFullscreen}>
+          <Icon name={fullscreen ? 'exit_full' : 'fullscreen'} size={22} />
         </button>
-        <button title="End the slideshow (Esc)" onClick={() => onExit(page)}><X size={18} /></button>
+        <button title="End slideshow (Esc)" onClick={() => onExit(page)}><Icon name="close_x" size={22} /></button>
       </div>
     </div>
   )

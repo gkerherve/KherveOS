@@ -1,7 +1,8 @@
-// Find (⌘F): searches every page as you type and steps through the matches.
+// find_bar.FindBar: the floating "Find:" bar at the top of the page view —
+// searches every page as you type, Enter / Next / Prev step through the
+// matches (with wrap-around), Esc or ✕ closes it.
 
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import { unionRect } from './geometry'
 import { useTab, type PdfTab } from './model'
 import type { PdfRect } from '@/os/services/pdf'
@@ -42,10 +43,10 @@ export function FindBar({ tab, focusKey, onClose }: { tab: PdfTab; focusKey: num
       try {
         const hits = await tab.pdf.search(query)
         if (!alive || tab.search?.query !== query) return
-        const start = Math.max(0, hits.findIndex((h) => h.page >= tab.view.page))
-        tab.search = { query, hits, index: hits.length ? start : -1, busy: false }
+        // Like the desktop: the first match of the document is current.
+        tab.search = { query, hits, index: hits.length ? 0 : -1, busy: false }
         tab.emit()
-        if (hits.length) go(start)
+        if (hits.length) go(0)
       } catch {
         if (alive) {
           tab.search = { query, hits: [], index: -1, busy: false }
@@ -61,15 +62,14 @@ export function FindBar({ tab, focusKey, onClose }: { tab: PdfTab; focusKey: num
   }, [q, tab, tab.docVersion])
 
   const s = tab.search
-  const status = !q.trim() ? '' : s?.busy ? 'Searching…' : s && s.hits.length ? `${s.index + 1} of ${s.hits.length}` : 'No matches'
+  const status = !q.trim() ? '' : s?.busy ? '…' : s && s.hits.length ? `${s.index + 1} / ${s.hits.length}` : '0 matches'
 
   return (
     <div className="kp-find" onPointerDown={(e) => e.stopPropagation()}>
-      <Search size={14} className="k-muted" />
+      <span>Find:</span>
       <input
         ref={input}
         value={q}
-        placeholder="Find in document"
         spellCheck={false}
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => {
@@ -83,15 +83,9 @@ export function FindBar({ tab, focusKey, onClose }: { tab: PdfTab; focusKey: num
         }}
       />
       <span className="kp-find-count">{status}</span>
-      <button className="k-icon-btn" title="Previous match (⇧↩)" disabled={!s?.hits.length} onClick={() => go((s?.index ?? 0) - 1)}>
-        <ChevronUp size={15} />
-      </button>
-      <button className="k-icon-btn" title="Next match (↩)" disabled={!s?.hits.length} onClick={() => go((s?.index ?? -1) + 1)}>
-        <ChevronDown size={15} />
-      </button>
-      <button className="k-icon-btn" title="Close (Esc)" onClick={onClose}>
-        <X size={15} />
-      </button>
+      <button className="kp-find-btn" onClick={() => go((s?.index ?? 0) - 1)}>Prev</button>
+      <button className="kp-find-btn" onClick={() => go((s?.index ?? -1) + 1)}>Next</button>
+      <button className="kp-find-x" title="Close (Esc)" onClick={onClose}>✕</button>
     </div>
   )
 }

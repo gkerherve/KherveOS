@@ -1,50 +1,59 @@
-// The KhervePDF tools, their per-tool settings (colour, width, opacity, fill,
-// text size — the desktop app's defaults) and the colour palette.
+// The KhervePDF tools in the desktop's toolbar order (MainWindow._build_toolbar),
+// their tooltips, per-tool settings (pdftab.TOOL_DEFAULTS) and the colour grid
+// of the options popup (_PALETTE_GRID).
 
-import {
-  Circle, Eraser, EyeOff, Hand, Highlighter, Minus, MousePointer2, MoveUpRight, Pen, Scan, Signature, Square, StickyNote,
-  Strikethrough, TextCursor, Type, Underline,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import type { Glyph } from './icons'
 
 export type ToolId =
-  | 'hand' | 'select' | 'select_text' | 'pen' | 'highlight' | 'underline' | 'strikeout' | 'text' | 'line' | 'arrow' | 'rect'
-  | 'ellipse' | 'note' | 'signature' | 'redact' | 'erase' | 'snapshot'
+  | 'hand' | 'select' | 'select_text' | 'snapshot' | 'pen' | 'highlight' | 'underline' | 'strikeout' | 'text' | 'edit_text'
+  | 'move_text' | 'line' | 'arrow' | 'rect' | 'ellipse' | 'note' | 'signature' | 'erase' | 'redact'
 
 export interface ToolDef {
   id: ToolId
+  /** Name in the Tools menu. */
   label: string
-  icon: LucideIcon
+  icon: Glyph
   tip: string
-  /** Which settings the options popover shows. */
-  options?: { width?: boolean; opacity?: boolean; fill?: boolean; size?: boolean; color?: boolean }
+  /** On the toolbar (Redact is only in the Tools menu, as on the desktop). */
+  toolbar: boolean
 }
 
 export const TOOLS: ToolDef[] = [
-  { id: 'hand', label: 'Hand', icon: Hand, tip: 'Hand — drag to move around; drag over text to select it' },
-  { id: 'select', label: 'Select', icon: MousePointer2, tip: 'Select — click an annotation to select, move or delete it' },
-  { id: 'select_text', label: 'Select Text', icon: TextCursor, tip: 'Select Text — drag over text, then copy it (⌘C)' },
-  { id: 'pen', label: 'Pen', icon: Pen, tip: 'Pen', options: { color: true, width: true, opacity: true } },
-  { id: 'highlight', label: 'Highlight', icon: Highlighter, tip: 'Highlight — swipe over text', options: { color: true, opacity: true } },
-  { id: 'underline', label: 'Underline', icon: Underline, tip: 'Underline — swipe over text', options: { color: true, opacity: true } },
-  { id: 'strikeout', label: 'Strikethrough', icon: Strikethrough, tip: 'Strikethrough — swipe over text', options: { color: true, opacity: true } },
-  { id: 'text', label: 'Text', icon: Type, tip: 'Text — click to type on the page', options: { color: true, size: true } },
-  { id: 'line', label: 'Line', icon: Minus, tip: 'Line', options: { color: true, width: true, opacity: true } },
-  { id: 'arrow', label: 'Arrow', icon: MoveUpRight, tip: 'Arrow', options: { color: true, width: true, opacity: true } },
-  { id: 'rect', label: 'Rectangle', icon: Square, tip: 'Rectangle', options: { color: true, width: true, opacity: true, fill: true } },
-  { id: 'ellipse', label: 'Ellipse', icon: Circle, tip: 'Ellipse', options: { color: true, width: true, opacity: true, fill: true } },
-  { id: 'note', label: 'Sticky Note', icon: StickyNote, tip: 'Sticky note — click to add a note', options: { color: true } },
-  { id: 'signature', label: 'Signature', icon: Signature, tip: 'Signature — drag a box, then sign with the mouse', options: { color: true } },
-  { id: 'redact', label: 'Redact', icon: EyeOff, tip: 'Redact — mark areas to black out (Tools › Apply Redactions)' },
-  { id: 'erase', label: 'Eraser', icon: Eraser, tip: 'Eraser — click or swipe over annotations to delete them' },
-  { id: 'snapshot', label: 'Snapshot', icon: Scan, tip: 'Snapshot — drag a box to copy that area as a picture' },
+  { id: 'hand', label: 'Hand', icon: 'hand', toolbar: true, tip: 'Hand — pan the document; drag over text to select it (Ctrl+C copies, right-click to edit / delete / highlight)' },
+  { id: 'select', label: 'Select', icon: 'select', toolbar: true, tip: 'Select — click an annotation (Delete removes it), or drag over text to select it (Ctrl+C copies, right-click to edit / delete / highlight)' },
+  { id: 'select_text', label: 'Select Text', icon: 'select_text', toolbar: true, tip: 'Select Text — drag over text, then Ctrl+C (or right-click) to copy it' },
+  { id: 'snapshot', label: 'Snapshot', icon: 'snapshot', toolbar: true, tip: 'Snapshot — drag a box to copy that page area to the clipboard as an image' },
+  { id: 'pen', label: 'Pen', icon: 'pen', toolbar: true, tip: 'Pen' },
+  { id: 'highlight', label: 'Highlight', icon: 'highlight', toolbar: true, tip: 'Highlight — swipe over text' },
+  { id: 'underline', label: 'Underline', icon: 'underline', toolbar: true, tip: 'Underline — swipe over text to underline it' },
+  { id: 'strikeout', label: 'Strikethrough', icon: 'strikeout', toolbar: true, tip: 'Strikethrough — swipe over text to strike it through' },
+  { id: 'text', label: 'Text', icon: 'text', toolbar: true, tip: 'Text (add new)' },
+  { id: 'edit_text', label: 'Edit Text', icon: 'edit_text', toolbar: true, tip: 'Edit existing text' },
+  { id: 'move_text', label: 'Move Text', icon: 'move_text', toolbar: true, tip: 'Move a paragraph — drag to reposition' },
+  { id: 'line', label: 'Line', icon: 'line', toolbar: true, tip: 'Line' },
+  { id: 'arrow', label: 'Arrow', icon: 'arrow', toolbar: true, tip: 'Arrow' },
+  { id: 'rect', label: 'Rectangle', icon: 'rect', toolbar: true, tip: 'Rectangle' },
+  { id: 'ellipse', label: 'Ellipse', icon: 'ellipse', toolbar: true, tip: 'Ellipse' },
+  { id: 'note', label: 'Sticky Note', icon: 'note', toolbar: true, tip: 'Sticky Note' },
+  { id: 'signature', label: 'Signature', icon: 'signature', toolbar: true, tip: 'Signature' },
+  { id: 'erase', label: 'Eraser', icon: 'erase', toolbar: true, tip: 'Eraser — click an annotation to delete it' },
+  { id: 'redact', label: 'Redact', icon: 'redact', toolbar: false, tip: 'Redact — mark areas to black out, then Apply Redactions' },
 ]
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<ToolId, ToolDef>
 
+/** MainWindow.OPTIONS_TOOLS: the tools with a dropdown arrow (the options popup). */
+export const OPTIONS_TOOLS = new Set<ToolId>(['pen', 'highlight', 'underline', 'strikeout', 'line', 'arrow', 'rect', 'ellipse', 'text', 'edit_text'])
+
+/** The status-bar name of a tool: name.replace("_", " ").capitalize(). */
+export function toolStatusName(id: string): string {
+  const s = id.replace('_', ' ')
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+}
+
 export interface ToolSetting {
   color: string
-  /** Stroke width in points (font size for the Text tool). */
+  /** Stroke width in points (font size for the text tools). */
   width: number
   /** 0–100 */
   opacity: number
@@ -56,22 +65,24 @@ export type ToolSettings = Record<ToolId, ToolSetting>
 
 const DEFAULTS: ToolSettings = {
   hand: { color: '#000000', width: 1, opacity: 100 },
-  select: { color: '#000000', width: 1, opacity: 100 },
-  select_text: { color: '#000000', width: 1, opacity: 100 },
   pen: { color: '#1976d2', width: 2, opacity: 100 },
   highlight: { color: '#fbc02d', width: 14, opacity: 35 },
   underline: { color: '#1976d2', width: 1, opacity: 100 },
   strikeout: { color: '#c62828', width: 1, opacity: 100 },
-  text: { color: '#000000', width: 11, opacity: 100 },
-  line: { color: '#212121', width: 2, opacity: 100 },
-  arrow: { color: '#212121', width: 2, opacity: 100 },
+  snapshot: { color: '#1976d2', width: 1, opacity: 100 },
   rect: { color: '#388e3c', width: 2, opacity: 100, filled: false, fill: null },
   ellipse: { color: '#7b1fa2', width: 2, opacity: 100, filled: false, fill: null },
+  line: { color: '#212121', width: 2, opacity: 100 },
+  arrow: { color: '#212121', width: 2, opacity: 100 },
+  text: { color: '#000000', width: 11, opacity: 100 },
+  erase: { color: '#000000', width: 1, opacity: 100 },
+  select: { color: '#000000', width: 1, opacity: 100 },
+  select_text: { color: '#000000', width: 1, opacity: 100 },
+  edit_text: { color: '#000000', width: 11, opacity: 100 },
+  move_text: { color: '#000000', width: 1, opacity: 100 },
   note: { color: '#fbc02d', width: 1, opacity: 100 },
   signature: { color: '#0d47a1', width: 1, opacity: 100 },
   redact: { color: '#000000', width: 1, opacity: 100 },
-  erase: { color: '#000000', width: 1, opacity: 100 },
-  snapshot: { color: '#1976d2', width: 1, opacity: 100 },
 }
 
 const KEY = 'khervepdf.tools'
@@ -105,5 +116,5 @@ export const PALETTE: string[][] = [
 
 /** Tools that draw by dragging across the page. */
 export const DRAW_TOOLS = new Set<ToolId>(['pen', 'line', 'arrow', 'rect', 'ellipse', 'highlight', 'underline', 'strikeout', 'signature', 'redact', 'snapshot'])
-/** Tools under which the page shows a text cursor. */
-export const TEXT_TOOLS = new Set<ToolId>(['select_text', 'highlight', 'underline', 'strikeout', 'text'])
+/** Tools under which the page shows a text cursor (pdftab._apply_drag_mode: I-beam). */
+export const TEXT_TOOLS = new Set<ToolId>(['text', 'edit_text', 'select_text', 'underline', 'strikeout'])

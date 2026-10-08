@@ -3,7 +3,6 @@
 // and all the tools' mouse handling.
 
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Trash2 } from 'lucide-react'
 import { os } from '@/os'
 import type { MenuItem } from '@/os'
 import type { PdfAnnot, PdfDocument, PdfLink, PdfPageInfo, PdfRect, PdfWidget, PdfWord } from '@/os/services/pdf'
@@ -12,6 +11,8 @@ import {
   annotBBox, fitTextRect, fontFamilyFor, hitAnnot, inRect, inflate, layoutText, moveAnnot, noteRect, normRect, rectsIntersect,
   TEXT_LEADING, textWidth, type Pt,
 } from './geometry'
+import { Icon, type Glyph } from './icons'
+import { fontStyleOf, paragraphAt, type Paragraph } from './logic'
 import { newAnnotId, useTab, type PdfTab, type WordRef } from './model'
 import { SignaturePad } from './SignaturePad'
 import { TEXT_TOOLS, TOOL_BY_ID, type ToolId, type ToolSettings } from './tools'
@@ -42,11 +43,13 @@ type Drag =
   | { kind: 'move'; page: number; start: Pt; dx: number; dy: number; ids: Set<string> }
   | { kind: 'marquee'; page: number; start: Pt; end: Pt; base: Set<string> }
   | { kind: 'erase'; hits: Set<string>; trail: { page: number; pts: Pt[] } }
+  | { kind: 'movetext'; par: Paragraph; start: Pt; dx: number; dy: number }
 
 type Editor =
   | { kind: 'text'; page: number; x: number; y: number; id: string | null; value: string; size: number; color: string; font?: string; boxWidth?: number }
   | { kind: 'note'; page: number; x: number; y: number; id: string | null; value: string; color: string }
   | { kind: 'field'; widget: PdfWidget; value: string }
+  | { kind: 'replace'; page: number; rects: PdfRect[]; value: string; size: number; font: string; bold: boolean; italic: boolean; color: string }
 
 // ------------------------------------------------------------------ helpers
 
@@ -158,11 +161,45 @@ const PageCanvas = memo(function PageCanvas({ pdf, index, info, zoom, renderKey 
 
 // ------------------------------------------------------------------ editors
 
+const FONT_SIZES = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48]
+const PDF_FONTS: [string, string][] = [['Helv', 'Helvetica'], ['TiRo', 'Times'], ['Cour', 'Courier']]
+const NOT_YET = 'Not in the web edition yet (PDF text boxes keep one font and size)'
+
+/** pdftab._TextFormatBar: the floating bar beside the on-page text editor. */
+function TextFormatBar({ font, size, onFont, onSize }: { font?: string; size: number; onFont: (f: string) => void; onSize: (s: number) => void }) {
+  const toggle = (g: Glyph) => (
+    <button key={g} className="kp-fmt-btn" disabled title={NOT_YET} onMouseDown={(e) => e.preventDefault()}>
+      <Icon name={g} size={16} />
+    </button>
+  )
+  return (
+    <div className="kp-fmt-bar" onPointerDown={(e) => e.stopPropagation()}>
+      <select className="kp-fmt-font" value={font ?? 'Helv'} onChange={(e) => onFont(e.target.value)} title="Font">
+        {PDF_FONTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+      </select>
+      <input
+        className="kp-fmt-size"
+        list="kp-font-sizes"
+        value={String(size)}
+        title="Size"
+        onChange={(e) => {
+          const v = Number(e.target.value)
+          if (v >= 4 && v <= 200) onSize(v)
+        }}
+      />
+      <datalist id="kp-font-sizes">{FONT_SIZES.map((n) => <option key={n} value={n} />)}</datalist>
+      {(['bold', 'italic', 'underline', 'superscript', 'subscript', 'align_left', 'align_center', 'align_right', 'align_justify'] as Glyph[]).map(toggle)}
+      <span className="kp-fmt-label">Rot:</span>
+      <select disabled title={NOT_YET} className="kp-fmt-rot"><option>0°</option></select>
+    </div>
+  )
+}
+
 function TextEditor({ ed, info, zoom, onChange, onDone }: {
   ed: Extract<Editor, { kind: 'text' }>
   info: PdfPageInfo
   zoom: number
-  onChange: (value: string) => void
+  onChange: (patch: Partial<Extract<Editor, { kind: 'text' }>>) => void
   onDone: (commit: boolean) => void
 }) {
   const ref = useRef<HTMLTextAreaElement>(null)
@@ -179,30 +216,87 @@ function TextEditor({ ed, info, zoom, onChange, onDone }: {
   }, [])
   const lines = ed.boxWidth ? layoutText(ed.value, ed.size, ed.font, ed.boxWidth) : ed.value.split('\n')
   const widest = Math.max(ed.boxWidth ?? 0, ...lines.map((l) => textWidth(l, ed.size, ed.font)))
+  const left = (ed.x - info.x) * zoom
+  const top = (ed.y - info.y) * zoom
+  return (
+    <div
+      className="kp-editor kp-text-wrap"
+      style={{ left, top }}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) onDone(true)
+      }}
+    >
+      <TextFormatBar font={ed.font} size={ed.size} onFont={(font) => onChange({ font })} onSize={(size) => onChange({ size })} />
+      <textarea
+        ref={ref}
+        className="kp-text-editor"
+        value={ed.value}
+        spellCheck={false}
+        style={{
+          width: (widest + ed.size * 2) * zoom + 8,
+          height: (Math.max(1, lines.length) * TEXT_LEADING + 0.4) * ed.size * zoom + 6,
+          fontSize: ed.size * zoom,
+          fontFamily: fontFamilyFor(ed.font),
+          color: ed.color,
+        }}
+        onChange={(e) => onChange({ value: e.target.value })}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            e.stopPropagation()
+            onDone(false)
+          } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.stopPropagation()
+            onDone(true)
+          }
+        }}
+      />
+    </div>
+  )
+}
+
+/** pdftab._InlineReplaceItem: "Edit Selected Text" on the page, over the selected words. */
+function ReplaceEditor({ ed, info, zoom, onChange, onDone }: {
+  ed: Extract<Editor, { kind: 'replace' }>
+  info: PdfPageInfo
+  zoom: number
+  onChange: (value: string) => void
+  onDone: (commit: boolean) => void
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      ref.current?.focus()
+      ref.current?.select()
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [])
+  const r = ed.rects.reduce((a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])] as PdfRect)
+  const rows = Math.max(1, ed.value.split('\n').length)
   return (
     <textarea
       ref={ref}
-      className="kp-editor kp-text-editor"
+      className="kp-editor kp-replace-editor"
       value={ed.value}
       spellCheck={false}
-      placeholder="Type here"
       style={{
-        left: (ed.x - info.x) * zoom,
-        top: (ed.y - info.y) * zoom,
-        width: (widest + ed.size * 2) * zoom + 8,
-        height: (Math.max(1, lines.length) * TEXT_LEADING + 0.4) * ed.size * zoom + 6,
+        left: (r[0] - info.x) * zoom - 2,
+        top: (r[1] - info.y) * zoom - 2,
+        minWidth: (r[2] - r[0]) * zoom + 8,
+        width: Math.max((r[2] - r[0]) * zoom + 8, textWidth(ed.value.split('\n').reduce((a, b) => (a.length > b.length ? a : b), ''), ed.size, ed.font) * zoom + 12),
+        height: rows * ed.size * 1.25 * zoom + 6,
         fontSize: ed.size * zoom,
         fontFamily: fontFamilyFor(ed.font),
+        fontWeight: ed.bold ? 700 : 400,
+        fontStyle: ed.italic ? 'italic' : 'normal',
         color: ed.color,
       }}
       onChange={(e) => onChange(e.target.value)}
       onBlur={() => onDone(true)}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          e.stopPropagation()
-          onDone(false)
-        } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-          e.stopPropagation()
+        e.stopPropagation()
+        if (e.key === 'Escape') onDone(false)
+        else if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault()
           onDone(true)
         }
       }}
@@ -210,13 +304,13 @@ function TextEditor({ ed, info, zoom, onChange, onDone }: {
   )
 }
 
-function NoteEditor({ ed, info, zoom, onChange, onDone, onDelete }: {
+/** pdftab._StickyNotePopup: the yellow Post-it that edits a note. */
+function NoteEditor({ ed, info, zoom, onChange, onDone }: {
   ed: Extract<Editor, { kind: 'note' }>
   info: PdfPageInfo
   zoom: number
   onChange: (value: string) => void
   onDone: () => void
-  onDelete: () => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -238,13 +332,39 @@ function NoteEditor({ ed, info, zoom, onChange, onDone, onDelete }: {
         }
       }}
     >
-      <div className="kp-note-head">
-        <span>Sticky note</span>
-        <button className="k-icon-btn" title="Delete note" onMouseDown={(e) => e.preventDefault()} onClick={onDelete}>
-          <Trash2 size={13} />
-        </button>
-      </div>
-      <textarea value={ed.value} spellCheck onChange={(e) => onChange(e.target.value)} placeholder="Write a note…" />
+      <div className="kp-note-head">Sticky note</div>
+      <textarea value={ed.value} spellCheck onChange={(e) => onChange(e.target.value)} />
+    </div>
+  )
+}
+
+/** The "New sticky note" dialog (QInputDialog.getMultiLineText). */
+function NewNoteDialog({ onDone }: { onDone: (text: string | null) => void }) {
+  const [value, setValue] = useState('')
+  return (
+    <div className="kp-modal-backdrop" onPointerDown={(e) => e.target === e.currentTarget && onDone(null)}>
+      <form
+        className="kp-modal kp-form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          onDone(value)
+        }}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Escape') onDone(null)
+        }}
+      >
+        <div className="kp-modal-title">New sticky note</div>
+        <label className="kp-form-col">
+          <span>Note text:</span>
+          <textarea className="k-input kp-note-input" autoFocus value={value} onChange={(e) => setValue(e.target.value)} />
+        </label>
+        <div className="kp-modal-buttons">
+          <span className="k-spacer" />
+          <button type="submit" className="k-btn primary">OK</button>
+          <button type="button" className="k-btn" onClick={() => onDone(null)}>Cancel</button>
+        </div>
+      </form>
     </div>
   )
 }
@@ -287,15 +407,32 @@ function FieldEditor({ ed, info, zoom, onChange, onDone }: {
 
 // ------------------------------------------------------------------- view
 
+/** What the page view asks the window to do (actions shared with the menus). */
+export interface PageActions {
+  copyText: () => void
+  copyImage: () => void
+  deleteSelection: () => void
+  pasteTextAt: (page: number, x: number, y: number) => void
+  /** Edit Text tool: a click on a paragraph. */
+  editParagraph: (p: Paragraph) => void
+  /** Move Text tool: a paragraph dragged by (dx, dy) points. */
+  moveParagraph: (p: Paragraph, dx: number, dy: number) => void
+  /** Edit Selected Text: replace the words under `rects` by `text`. */
+  replaceText: (page: number, rects: PdfRect[], text: string, style: { size: number; font: string; bold: boolean; italic: boolean; color: string }) => void
+}
+
 export interface PageViewProps {
   tab: PdfTab
   tool: ToolId
   settings: ToolSettings
   /** Show a short message in the status bar. */
   onStatus: (msg: string) => void
+  actions: PageActions
+  /** A dashed box over a paragraph being edited (Edit Text). */
+  marker?: { page: number; rect: PdfRect } | null
 }
 
-export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
+export function PageView({ tab, tool, settings, onStatus, actions, marker }: PageViewProps) {
   useTab(tab)
   const pdf = tab.pdf
   const pages = pdf.pages
@@ -307,6 +444,7 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
   const [editor, setEditorState] = useState<Editor | null>(null)
   const editorRef = useRef<Editor | null>(null)
   const [sigBox, setSigBox] = useState<{ page: number; rect: PdfRect } | null>(null)
+  const [newNote, setNewNote] = useState<{ page: number; x: number; y: number } | null>(null)
   const anchorRef = useRef<{ x: number; y: number } | null>(null)
 
   const setDrag = (d: Drag | null) => {
@@ -333,8 +471,17 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
     return { boxes, width, height: y - GAP + PAD }
   }, [pages, zoom, vp.width])
 
-  const live = useRef({ tab, tool, settings, layout, pages, zoom })
-  live.current = { tab, tool, settings, layout, pages, zoom }
+  const live = useRef({ tab, tool, settings, layout, pages, zoom, actions })
+  live.current = { tab, tool, settings, layout, pages, zoom, actions }
+
+  // Edit ▸ Edit Selected Text… opens the on-page editor over the selection.
+  useEffect(() => {
+    tab.ui.editSelection = () => startReplace()
+    return () => {
+      tab.ui.editSelection = undefined
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab])
 
   /** First page whose bottom is below `y` (sheet coordinates). */
   const pageAtY = (y: number, boxes = layout.boxes) => {
@@ -475,16 +622,20 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
     }
   }, [tab, visible, tab.docVersion])
 
-  // ---- ctrl/⌘ + wheel (and trackpad pinch) zooms around the pointer
+  // ---- Ctrl/⌘ + wheel zooms in or out one step (×1.25, pdftab.wheelEvent), around the pointer.
+  // Trackpads send many small deltas: they add up to one notch before a step.
   useEffect(() => {
     const el = scrollRef.current!
+    let acc = 0
     const onWheel = (e: WheelEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return
       e.preventDefault()
+      acc += e.deltaY * (e.deltaMode === 1 ? 33 : 1)
+      if (Math.abs(acc) < 40) return
       const r = el.getBoundingClientRect()
       anchorRef.current = { x: e.clientX - r.left, y: e.clientY - r.top }
-      const k = Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0025))
-      tab.setZoom(tab.view.zoom * k, null)
+      tab.setZoom(acc < 0 ? tab.view.zoom * 1.25 : tab.view.zoom / 1.25, null)
+      acc = 0
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
@@ -616,7 +767,30 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
       }
     } else if (ed.kind === 'field') {
       if (commit && ed.value !== ed.widget.value) void t.setField(ed.widget, ed.value).catch(fail)
+    } else if (ed.kind === 'replace') {
+      if (commit) live.current.actions.replaceText(ed.page, ed.rects, ed.value, { size: ed.size, font: ed.font, bold: ed.bold, italic: ed.italic, color: ed.color })
     }
+  }
+
+  /** Open the Edit Selected Text editor (single-page selections, as on the desktop). */
+  function startReplace() {
+    const t = live.current.tab
+    const spans = t.selSpans()
+    if (spans.length !== 1) {
+      onStatus(spans.length ? 'Select text on one page to edit it' : 'Select some text first')
+      return
+    }
+    const [page, from, to] = spans[0]
+    const words = (t.wordsOf(page) ?? []).slice(from, to + 1)
+    if (!words.length) return
+    const st = fontStyleOf(words[0].font)
+    const rects = t.selLineRects(page)
+    void t.selectedText().then((value) => {
+      setEditor({
+        kind: 'replace', page, rects, value, size: words[0].size ?? (words[0].rect[3] - words[0].rect[1]) / 1.2,
+        font: st.font, bold: st.bold, italic: st.italic, color: words[0].color ?? '#000000',
+      })
+    })
   }
 
   async function snapshot(page: number, rect: PdfRect) {
@@ -664,6 +838,11 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
         t.setAnnots(t.annots.filter((a) => !d.hits.has(a.id)), 'Erase')
         return
       }
+      case 'movetext':
+        // Under a point in both directions is a stray click, not a move.
+        if (Math.abs(d.dx) < 1 && Math.abs(d.dy) < 1) return
+        live.current.actions.moveParagraph(d.par, d.dx, d.dy)
+        return
       case 'shape': {
         const s = S(d.tool)
         const r = normRect(d.start, d.end)
@@ -730,7 +909,8 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
     if (tl === 'hand' || tl === 'select') {
       if (loc) {
         const hit = hitAnnot(t.annots, loc.page, loc.x, loc.y, tol())
-        if (hit?.kind === 'note' && tl === 'hand') {
+        // A click on a sticky-note marker opens it, in Hand and Select alike.
+        if (hit?.kind === 'note') {
           openNote(hit)
           return
         }
@@ -793,7 +973,17 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
       const hit = hitAnnot(t.annots, loc.page, loc.x, loc.y, tol())
       if (hit?.kind === 'note') return openNote(hit)
       e.preventDefault()
-      setEditor({ kind: 'note', page: loc.page, x: loc.x - 2, y: loc.y - 2, id: null, value: '', color: S('note').color })
+      setNewNote({ page: loc.page, x: loc.x, y: loc.y })
+      return
+    }
+    if (tl === 'edit_text' || tl === 'move_text') {
+      const words = t.wordsOf(loc.page)
+      const par = words ? paragraphAt(words, loc.page, loc.x, loc.y) : null
+      if (!par) return onStatus(words ? 'No text there — click a paragraph' : 'Reading the page text…')
+      e.preventDefault()
+      if (tl === 'edit_text') return live.current.actions.editParagraph(par)
+      setDrag({ kind: 'movetext', par, start: [loc.x, loc.y], dx: 0, dy: 0 })
+      capture()
       return
     }
     if (tl === 'erase') {
@@ -824,8 +1014,8 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
         else if ((t.linksOf(loc.page) ?? []).some((l) => inRect(l.rect, loc.x, loc.y))) cursor = 'pointer'
         else if (wordAt(t.wordsOf(loc.page) ?? [], loc.x, loc.y) !== null) cursor = 'text'
       }
-    } else if (TEXT_TOOLS.has(tl)) cursor = 'text'
-    else if (tl === 'note') cursor = 'copy'
+    } else if (tl === 'move_text') cursor = 'move'
+    else if (TEXT_TOOLS.has(tl)) cursor = 'text'
     else cursor = 'crosshair'
     if (el.style.cursor !== cursor) el.style.cursor = cursor
   }
@@ -882,6 +1072,11 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
         setDrag({ ...d, dx: x - d.start[0], dy: y - d.start[1] })
         return
       }
+      case 'movetext': {
+        const [x, y] = pagePoint(d.par.page, e.clientX, e.clientY)
+        setDrag({ ...d, dx: x - d.start[0], dy: y - d.start[1] })
+        return
+      }
       case 'erase': {
         const loc = locate(e.clientX, e.clientY)
         if (!loc) return
@@ -922,27 +1117,42 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
     }
   }
 
+  /** pdftab.contextMenuEvent (+ the web edition's annotation items). */
   function onContextMenu(e: React.MouseEvent) {
     if ((e.target as HTMLElement).closest('.kp-editor')) return
     e.preventDefault()
-    const t = live.current.tab
+    const { tab: t, actions: act } = live.current
     const loc = locate(e.clientX, e.clientY)
     const items: MenuItem[] = []
+    const icon = (g: Glyph) => <Icon name={g} size={15} />
     if (t.textSel) {
+      const single = t.selSpans().length === 1
       items.push(
-        { label: 'Copy', shortcut: '⌘C', onClick: () => void t.selectedText().then((s) => navigator.clipboard.writeText(s)) },
-        { label: 'Highlight', onClick: () => markSelection(t, 'highlight', live.current.settings) },
-        { label: 'Underline', onClick: () => markSelection(t, 'underline', live.current.settings) },
+        { label: 'Copy', image: icon('copy'), shortcut: '⌘C', onClick: act.copyText },
+        { label: 'Copy as Image', disabled: !single, onClick: act.copyImage },
+        '-',
+        { label: 'Edit Selected Text…', image: icon('edit_text'), disabled: !single, onClick: startReplace },
+        { label: 'Delete Selected Text', shortcut: 'Del', disabled: !single, onClick: act.deleteSelection },
+        { label: 'Highlight', image: icon('highlight'), onClick: () => markSelection(t, 'highlight', live.current.settings) },
+        { label: 'Underline', image: icon('underline'), onClick: () => markSelection(t, 'underline', live.current.settings) },
         { label: 'Strike Out', onClick: () => markSelection(t, 'strikeout', live.current.settings) },
         '-',
       )
     }
     if (loc) {
+      const s = live.current.settings
+      items.push(
+        { label: 'Paste Text Here', image: icon('paste'), onClick: () => act.pasteTextAt(loc.page, loc.x, loc.y) },
+        { label: 'Add Text Here', image: icon('text'), onClick: () => setEditor({ kind: 'text', page: loc.page, x: loc.x, y: loc.y, id: null, value: '', size: s.text.width, color: s.text.color, font: 'Helv' }) },
+        { label: 'Select All Text on Page', shortcut: '⌘A', onClick: () => selectAllOnPage(t, loc.page) },
+      )
+      // Web edition: the annotation under the pointer.
       const hit = hitAnnot(t.annots, loc.page, loc.x, loc.y, tol())
       if (hit) {
         const ids = t.selected.has(hit.id) ? new Set(t.selected) : new Set([hit.id])
         if (!t.selected.has(hit.id)) t.select(ids)
-        if (hit.kind === 'text') items.push({ label: 'Edit Text', onClick: () => openTextEditor(hit) })
+        items.push('-')
+        if (hit.kind === 'text') items.push({ label: 'Edit Text Box', onClick: () => openTextEditor(hit) })
         if (hit.kind === 'note') items.push({ label: 'Open Note', onClick: () => openNote(hit) })
         if (hit.kind !== 'image' && hit.kind !== 'redact') {
           items.push({
@@ -957,14 +1167,8 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
         items.push({
           label: ids.size > 1 ? `Delete ${ids.size} Annotations` : 'Delete Annotation', danger: true,
           onClick: () => t.setAnnots(t.annots.filter((a) => !ids.has(a.id)), ids.size > 1 ? 'Delete annotations' : 'Delete annotation'),
-        }, '-')
+        })
       }
-      const s = live.current.settings
-      items.push(
-        { label: 'Add Text Here', onClick: () => setEditor({ kind: 'text', page: loc.page, x: loc.x, y: loc.y, id: null, value: '', size: s.text.width, color: s.text.color, font: 'Helv' }) },
-        { label: 'Add Sticky Note Here', onClick: () => setEditor({ kind: 'note', page: loc.page, x: loc.x, y: loc.y, id: null, value: '', color: s.note.color }) },
-        { label: 'Select All Text on Page', shortcut: '⌘A', onClick: () => selectAllOnPage(t, loc.page) },
-      )
     }
     if (items.length) os.contextMenu(e, items)
   }
@@ -993,7 +1197,7 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
     return m
   }, [search])
 
-  const hiddenId = editor && editor.kind !== 'field' ? (editor.id ?? null) : null
+  const hiddenId = editor && (editor.kind === 'text' || editor.kind === 'note') ? (editor.id ?? null) : null
   const showFields = pdf.hasForms && (tool === 'hand' || tool === 'select')
   const sw = 1.5 / zoom
 
@@ -1008,8 +1212,12 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
       const r = normRect(d.start, d.end)
       return <rect className="kp-marquee" x={r[0]} y={r[1]} width={r[2] - r[0]} height={r[3] - r[1]} strokeWidth={sw} />
     }
+    if (d.kind === 'movetext' && d.par.page === i) {
+      const r = d.par.rect
+      return <rect className="kp-block-marker" x={r[0] + d.dx - 2} y={r[1] + d.dy - 2} width={r[2] - r[0] + 4} height={r[3] - r[1] + 4} strokeWidth={sw} />
+    }
     if (d.kind === 'erase' && d.trail.page === i) {
-      return <polyline className="kp-erase-trail" points={d.trail.pts.map((p) => p.join(',')).join(' ')} strokeWidth={6 / zoom} />
+      return <polyline className="kp-erase-trail" points={d.trail.pts.map((p) => p.join(',')).join(' ')} strokeWidth={4 / zoom} />
     }
     if (d.kind !== 'shape' || d.page !== i) return null
     const s = S(d.tool)
@@ -1086,6 +1294,12 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
                 )}
                 {selBoxes}
                 {previewFor(i)}
+                {marker && marker.page === i && (
+                  <rect className="kp-block-marker" x={marker.rect[0] - 2} y={marker.rect[1] - 2} width={marker.rect[2] - marker.rect[0] + 4} height={marker.rect[3] - marker.rect[1] + 4} strokeWidth={sw} />
+                )}
+                {editor?.kind === 'replace' && editor.page === i && editor.rects.map((r, k) => (
+                  <rect key={`r${k}`} fill="#ffffff" x={r[0]} y={r[1]} width={r[2] - r[0]} height={r[3] - r[1]} />
+                ))}
               </AnnotSvg>
               {widgets?.map((w) => (
                 <button
@@ -1101,7 +1315,10 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
                 />
               ))}
               {editor?.kind === 'text' && editor.page === i && (
-                <TextEditor ed={editor} info={info} zoom={zoom} onChange={(value) => setEditor({ ...editor, value })} onDone={finishEditor} />
+                <TextEditor ed={editor} info={info} zoom={zoom} onChange={(patch) => setEditor({ ...editor, ...patch })} onDone={finishEditor} />
+              )}
+              {editor?.kind === 'replace' && editor.page === i && (
+                <ReplaceEditor ed={editor} info={info} zoom={zoom} onChange={(value) => setEditor({ ...editor, value })} onDone={finishEditor} />
               )}
               {editor?.kind === 'note' && editor.page === i && (
                 <>
@@ -1116,10 +1333,6 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
                     zoom={zoom}
                     onChange={(value) => setEditor({ ...editor, value })}
                     onDone={() => finishEditor(true)}
-                    onDelete={() => {
-                      setEditor(null)
-                      if (editor.id) tab.setAnnots(tab.annots.filter((a) => a.id !== editor.id), 'Delete note')
-                    }}
                   />
                 </>
               )}
@@ -1131,10 +1344,22 @@ export function PageView({ tab, tool, settings, onStatus }: PageViewProps) {
         })}
       </div>
     </div>
+      {newNote && (
+        <NewNoteDialog
+          onDone={(text) => {
+            const at = newNote
+            setNewNote(null)
+            if (text && text.trim()) {
+              addAnnots([{ kind: 'note', page: at.page, color: '#fff59d', opacity: 1, width: 1, rect: [at.x, at.y, at.x + 20, at.y + 20], text }], 'Add note')
+            }
+            scrollRef.current?.focus({ preventScroll: true })
+          }}
+        />
+      )}
       {sigBox && (
         <SignaturePad
           aspect={(sigBox.rect[2] - sigBox.rect[0]) / (sigBox.rect[3] - sigBox.rect[1])}
-          color={settings.signature.color}
+          color="#1a1a1a"
           onCancel={() => setSigBox(null)}
           onDone={(png) => {
             const box = sigBox

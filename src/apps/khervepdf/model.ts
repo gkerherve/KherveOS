@@ -66,6 +66,10 @@ export class PdfTab {
   version = 0
   /** Where the user last clicked on a page (pasted text goes there). */
   lastClick: { page: number; x: number; y: number } | null = null
+  /** Hooks the page view registers for the menus (Edit ▸ Edit Selected Text…). */
+  ui: { editSelection?: () => void } = {}
+  /** Git branch of the folder the file is in (status bar), null when not in a repository. */
+  branch: string | null = null
   /** A long operation is running (shown in the status bar). */
   busy: string | null = null
   /** The outline (or detected headings) for the page layout `pages` it was read with. */
