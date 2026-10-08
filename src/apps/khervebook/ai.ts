@@ -3,7 +3,8 @@
 // keys live in this browser's localStorage and go only to the chosen
 // provider.
 
-import type { Cell, CellType } from './format'
+import { molMarkdown, type Cell, type CellType } from './format'
+import { noteText, parseFiles, parseKfit, parseKtex } from './cellfiles'
 import { describeWorkbook } from './sheet'
 import { readJson, writeJson } from './prefs'
 
@@ -345,6 +346,11 @@ function listing(cells: Cell[]): string {
     let body: string
     if (c.type === 'svg') body = '(an SVG drawing — you cannot read or edit this cell)'
     else if (c.type === 'other') body = otherSummary(c)
+    else if (c.type === 'note') body = noteText(c.source) || '(an empty rich-text note)'
+    else if (c.type === 'file') body = `(attached files: ${parseFiles(c.source).map((f) => f.name).join(', ') || 'none'} — code reads them with kf("name"))`
+    else if (c.type === 'kfit') body = `(a KherveFitting project: ${parseKfit(c.source).file?.name ?? 'none loaded'} — code reads it with kfit("sheet"))`
+    else if (c.type === 'ktex') body = `(a KherveTeX document: ${parseKtex(c.source).file?.name ?? 'none'})`
+    else if (c.type === 'mol') body = molMarkdown(c.source).replace(/\*\*/g, '')
     else if (c.type === 'sheet') {
       const d = describeWorkbook(c.source, sheetN)
       sheetN += d.count

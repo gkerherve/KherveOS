@@ -4,10 +4,12 @@
 // optional title, the body for its type, and resize grips (bottom: height,
 // right edge: width).
 
-import { memo, useCallback, useEffect, useMemo, useRef, type MouseEvent, type PointerEvent } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
+import { EditorSelection } from '@codemirror/state'
 import type { EditorView, KeyBinding } from '@codemirror/view'
-import { searchPanelOpen } from '@codemirror/search'
-import { ChevronDown, ChevronRight, CirclePlay, CircleStop, LoaderCircle, RotateCcw } from 'lucide-react'
+import { SearchQuery, findNext, findPrevious, searchPanelOpen, setSearchQuery } from '@codemirror/search'
+import { redo as cmRedo, selectAll, undo as cmUndo } from '@codemirror/commands'
+import { LoaderCircle } from 'lucide-react'
 import { os, type MenuItem } from '@/os'
 import { CodeEditor, type EditorLanguage } from '@/os/ui/CodeEditor'
 import { CELL_TYPES, type Cell, type CellKind } from './format'
@@ -15,6 +17,10 @@ import { hasEditor, type After, type Notebook } from './notebook'
 import { toggleComment } from './edit'
 import { JsView, LatexView, MarkdownView, OtherView, OutputArea, SvgView } from './CellBodies'
 import { SheetView } from './SheetView'
+import { FileView, KfitView, KtexView, MolView, NoteView } from './RichCells'
+import { Mdi } from './mdi'
+import { RUN_GREEN, STOP_RED } from './Toolbar'
+import { themeNames, themeVars, useHlTheme } from './hltheme'
 
 // ------------------------------------------------------------------ editor
 
@@ -36,7 +42,7 @@ function onLastLine(v: EditorView): boolean {
   return !here || !end || end.bottom - here.bottom < 4
 }
 
-function cellKeys(nb: Notebook, id: string, type: CellKind): KeyBinding[] {
+function cellKeys(nb: Notebook, id: string, type: CellKind, openFind: () => void): KeyBinding[] {
   const run = (after: After) => () => {
     nb.run(id, after)
     return true
@@ -50,6 +56,13 @@ function cellKeys(nb: Notebook, id: string, type: CellKind): KeyBinding[] {
       key: 'Mod-/',
       run: (v) => {
         toggleComment(v, type)
+        return true
+      },
+    },
+    {
+      key: 'Mod-f',
+      run: () => {
+        openFind()
         return true
       },
     },
@@ -83,10 +96,12 @@ const LANGUAGE: Partial<Record<CellKind, EditorLanguage>> = {
   js: 'javascript',
 }
 
-function CellEditor({ nb, cell, lineNumbers }: { nb: Notebook; cell: Cell; lineNumbers: boolean }) {
+function CellEditor({ nb, cell, lineNumbers, onFind }: { nb: Notebook; cell: Cell; lineNumbers: boolean; onFind: () => void }) {
   const { id, type } = cell
   const viewRef = useRef<EditorView | null>(null)
-  const keys = useMemo(() => cellKeys(nb, id, type), [nb, id, type])
+  const findRef = useRef(onFind)
+  findRef.current = onFind
+  const keys = useMemo(() => cellKeys(nb, id, type, () => findRef.current()), [nb, id, type])
   useEffect(
     () => () => {
       if (viewRef.current) nb.unregisterEditor(id, viewRef.current)
@@ -112,6 +127,169 @@ function CellEditor({ nb, cell, lineNumbers }: { nb: Notebook; cell: Cell; lineN
   )
 }
 
+// ------------------------------------------------------------ find in cell
+
+/** desktop _FindBar: "Find in cell…", ▲ ▼ ✕, wrap-around, case-insensitive, incremental. */
+function FindBar({ getView, onClose }: { getView: () => EditorView | undefined; onClose: () => void }) {
+  const input = useRef<HTMLInputElement>(null)
+  const [text, setText] = useState(() => {
+    const view = getView()
+    const sel = view?.state.selection.main
+    return view && sel && !sel.empty ? view.state.sliceDoc(sel.from, sel.to) : ''
+  })
+  const [missing, setMissing] = useState(false)
+  useEffect(() => {
+    input.current?.focus()
+    input.current?.select()
+  }, [])
+  const find = (forward: boolean, from?: 'start') => {
+    const view = getView()
+    if (!view) return
+    if (!text) return setMissing(false)
+    const q = new SearchQuery({ search: text, caseSensitive: false, literal: true })
+    view.dispatch({ effects: setSearchQuery.of(q) })
+    if (from === 'start') {
+      const sel = view.state.selection.main
+      view.dispatch({ selection: EditorSelection.cursor(sel.from) })
+    }
+    const found = !q.getCursor(view.state).next().done
+    setMissing(!found)
+    if (found) (forward ? findNext : findPrevious)(view)
+  }
+  useEffect(() => {
+    find(true, 'start')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text])
+  const close = () => {
+    onClose()
+    getView()?.focus()
+  }
+  return (
+    <div className="nb-findbar" onMouseDown={(e) => e.stopPropagation()}>
+      <input
+        ref={input}
+        className={`k-input${missing ? ' missing' : ''}`}
+        placeholder="Find in cell…"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            find(!e.shiftKey)
+          } else if (e.key === 'Escape') {
+            e.preventDefault()
+            close()
+          }
+        }}
+      />
+      <button title="Previous" onMouseDown={(e) => e.preventDefault()} onClick={() => find(false)}>
+        ▲
+      </button>
+      <button title="Next" onMouseDown={(e) => e.preventDefault()} onClick={() => find(true)}>
+        ▼
+      </button>
+      <button title="Close (Esc)" onMouseDown={(e) => e.preventDefault()} onClick={close}>
+        ✕
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------- editor right-click
+
+const synonymCache = new Map<string, string[]>()
+
+/** desktop thesaurus.synonyms: up to 12 from the free Datamuse API ([] if none / offline). */
+async function synonyms(word: string): Promise<string[]> {
+  const hit = synonymCache.get(word)
+  if (hit) return hit
+  const ctl = new AbortController()
+  const t = setTimeout(() => ctl.abort(), 4000)
+  try {
+    const r = await fetch(`https://api.datamuse.com/words?rel_syn=${encodeURIComponent(word)}&max=12`, { signal: ctl.signal })
+    const data = (await r.json()) as { word?: string }[]
+    const out = data.map((d) => d.word ?? '').filter(Boolean)
+    synonymCache.set(word, out)
+    return out
+  } catch {
+    return []
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+/** The word under the pointer in an editor (desktop cursorForPosition + WordUnderCursor). */
+function wordAt(view: EditorView, x: number, y: number): { from: number; to: number; word: string } | null {
+  const pos = view.posAtCoords({ x, y })
+  if (pos === null) return null
+  const w = view.state.wordAt(pos)
+  if (!w) return null
+  const word = view.state.sliceDoc(w.from, w.to)
+  return /^[\p{L}'-]+$/u.test(word) ? { from: w.from, to: w.to, word } : null
+}
+
+/** desktop _GrowingEdit.contextMenuEvent: Run Cell, the standard edit menu, Find…, Synonyms / Highlight Theme. */
+async function editorMenu(nb: Notebook, cell: Cell, view: EditorView, e: { clientX: number; clientY: number }, openFind: () => void): Promise<MenuItem[]> {
+  const sel = view.state.selection.main
+  const text = sel.empty ? '' : view.state.sliceDoc(sel.from, sel.to)
+  const ro = view.state.readOnly
+  const items: MenuItem[] = [
+    { label: 'Run Cell', onClick: () => nb.run(cell.id, 'stay') },
+    '-',
+    { label: 'Undo', shortcut: 'Ctrl+Z', disabled: ro, onClick: () => cmUndo(view) },
+    { label: 'Redo', shortcut: 'Ctrl+Shift+Z', disabled: ro, onClick: () => cmRedo(view) },
+    '-',
+    {
+      label: 'Cut',
+      shortcut: 'Ctrl+X',
+      disabled: !text || ro,
+      onClick: () => {
+        void navigator.clipboard?.writeText(text)
+        view.dispatch({ changes: { from: sel.from, to: sel.to, insert: '' }, userEvent: 'delete.cut' })
+      },
+    },
+    { label: 'Copy', shortcut: 'Ctrl+C', disabled: !text, onClick: () => void navigator.clipboard?.writeText(text) },
+    {
+      label: 'Paste',
+      shortcut: 'Ctrl+V',
+      disabled: ro,
+      onClick: () =>
+        void navigator.clipboard?.readText().then((t) => {
+          const s = view.state.selection.main
+          view.dispatch({ changes: { from: s.from, to: s.to, insert: t }, selection: { anchor: s.from + t.length }, userEvent: 'input.paste' })
+          view.focus()
+        }),
+    },
+    { label: 'Delete', disabled: !text || ro, onClick: () => view.dispatch({ changes: { from: sel.from, to: sel.to, insert: '' }, userEvent: 'delete' }) },
+    '-',
+    { label: 'Select All', shortcut: 'Ctrl+A', onClick: () => selectAll(view) },
+    '-',
+    { label: 'Find…', shortcut: 'Ctrl+F', onClick: openFind },
+  ]
+  if (cell.type === 'markdown' || cell.type === 'latex') {
+    const w = wordAt(view, e.clientX, e.clientY)
+    if (w) {
+      // desktop: the submenu fills in when it opens; here the menu waits briefly for the answer.
+      const words = await Promise.race([synonyms(w.word), new Promise<null>((r) => setTimeout(() => r(null), 900))])
+      items.push({
+        label: `Synonyms for “${w.word}”`,
+        submenu:
+          words === null
+            ? [{ label: 'Looking up…', disabled: true }]
+            : words.length
+              ? words.map((syn) => ({ label: syn, onClick: () => view.dispatch({ changes: { from: w.from, to: w.to, insert: syn }, userEvent: 'input' }) }))
+              : [{ label: '(no synonyms found / offline)', disabled: true }],
+      })
+    }
+  }
+  if (cell.type === 'code') {
+    const cur = useHlTheme.getState().name
+    items.push({ label: 'Highlight Theme', submenu: themeNames().map((n) => ({ label: n, checked: n === cur, onClick: () => useHlTheme.getState().set(n) })) })
+  }
+  return items
+}
+
 // -------------------------------------------------------------- the menu
 
 /** The desktop's right-click menu for a cell (plus a sheet's View / Create Plot items). */
@@ -120,13 +298,9 @@ export function cellMenu(nb: Notebook, cell: Cell, looping: boolean, extra: Menu
   const i = nb.state.cells.findIndex((c) => c.id === id)
   const isCode = cell.type === 'code'
   const items: MenuItem[] = [
-    { label: 'Run Cell', disabled: cell.type === 'other', onClick: () => nb.run(id, 'stay') },
-    ...(isCode
-      ? ([
-          looping ? { label: 'Stop Continuous Run', onClick: () => nb.stopLoop() } : { label: 'Run Continuously', onClick: () => nb.startLoop(id) },
-          { label: 'Restart This Cell', onClick: () => nb.restartCell(id) },
-        ] as MenuItem[])
-      : []),
+    { label: 'Run Cell', onClick: () => nb.run(id, 'stay') },
+    looping ? { label: 'Stop Continuous Run', onClick: () => nb.stopLoop() } : { label: 'Run Continuously', onClick: () => nb.startLoop(id) },
+    ...(isCode ? ([{ label: 'Restart This Cell', onClick: () => nb.restartCell(id) }] as MenuItem[]) : []),
     { label: cell.collapsed ? 'Expand Cell' : 'Collapse Cell', onClick: () => nb.setCollapsed(id, !cell.collapsed) },
     {
       label: cell.title ? 'Edit Title…' : 'Set Title…',
@@ -143,7 +317,7 @@ export function cellMenu(nb: Notebook, cell: Cell, looping: boolean, extra: Menu
     { label: 'Paste Cell Below', disabled: !nb.canPaste, onClick: () => nb.pasteCell('below') },
     {
       label: 'Convert To',
-      submenu: CELL_TYPES.filter((t) => t.type !== cell.type).map((t) => ({ label: t.label, onClick: () => nb.setType(t.type, id) })),
+      submenu: CELL_TYPES.filter((t) => t.type !== cell.type).map((t) => ({ label: t.convert, onClick: () => nb.setType(t.type, id) })),
     },
     '-',
     { label: 'Move Up', disabled: i <= 0, onClick: () => nb.move(-1, id) },
@@ -213,9 +387,11 @@ interface CellViewProps {
   /** Folder that relative links and images resolve against. */
   baseDir: string
   lineNumbers: boolean
+  /** View > Theme (re-reads light or dark for the code colours). */
+  theme: string
 }
 
-export const CellView = memo(function CellView({ cell, selected, looping, nb, baseDir, lineNumbers }: CellViewProps) {
+export const CellView = memo(function CellView({ cell, selected, looping, nb, baseDir, lineNumbers, theme }: CellViewProps) {
   const { id, type } = cell
   const rootRef = useRef<HTMLDivElement | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -229,6 +405,25 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
   const edit = useCallback(() => nb.focus(id, 'edit'), [nb, id])
   const busy = cell.state !== 'idle'
   const showEditor = hasEditor(cell)
+  const [finding, setFinding] = useState(false)
+  const openFind = useCallback(() => {
+    const c = nb.cell(id)
+    if (c && !hasEditor(c) && (c.type === 'markdown' || c.type === 'latex' || c.type === 'svg')) nb.focus(id, 'edit')
+    setFinding(true)
+  }, [nb, id])
+  useEffect(() => {
+    if (cell.type === 'code' || cell.type === 'js' || cell.type === 'markdown' || cell.type === 'latex' || cell.type === 'svg') {
+      return nb.registerHandle(id, { find: openFind })
+    }
+  }, [nb, id, cell.type, openFind])
+  const hl = useHlTheme((s) => s.name)
+  const [dark, setDark] = useState(true)
+  useLayoutEffect(() => {
+    setDark(rootRef.current?.closest('[data-dark]')?.getAttribute('data-dark') !== '0')
+  }, [theme])
+  const editorVars = useMemo(() => (cell.type === 'code' ? (themeVars(hl, dark) as CSSProperties) : undefined), [cell.type, hl, dark])
+  const editorEl = <CellEditor key={type} nb={nb} cell={cell} lineNumbers={type === 'code' && lineNumbers} onFind={openFind} />
+  const findBar = finding && showEditor ? <FindBar getView={() => nb.editorView(id)} onClose={() => setFinding(false)} /> : null
 
   const cls = ['nb-cell', `nb-cell-${type}`]
   if (selected) cls.push('selected')
@@ -242,8 +437,18 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
   }
 
   const onContextMenu = (e: MouseEvent<HTMLDivElement>) => {
-    // Inside a text editor the browser's own menu (copy, paste…) is more useful.
-    if ((e.target as HTMLElement).closest('.cm-content, input, textarea, iframe')) return
+    const t = e.target as HTMLElement
+    // The cell's editor has the desktop's editor menu; form fields, notes and pages keep the browser's.
+    if (t.closest('.cm-content')) {
+      const view = nb.editorView(id)
+      if (!view) return
+      e.preventDefault()
+      const at = { clientX: e.clientX, clientY: e.clientY }
+      nb.select(id)
+      void editorMenu(nb, cell, view, at, openFind).then((items) => os.contextMenu(at, items))
+      return
+    }
+    if (t.closest('input, textarea, iframe, select, [contenteditable="true"]')) return
     e.preventDefault()
     openMenu(e)
   }
@@ -256,9 +461,10 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
     case 'code':
       body = (
         <>
-          <div className="nb-input">
-            <CellEditor key={type} nb={nb} cell={cell} lineNumbers={lineNumbers} />
+          <div className="nb-input" style={editorVars}>
+            {editorEl}
           </div>
+          {findBar}
           {cell.note && (
             <div className="nb-note">
               <LoaderCircle size={13} className="k-spin" />
@@ -271,9 +477,10 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
       break
     case 'markdown':
       body = showEditor ? (
-        <div className="nb-input">
-          <CellEditor key={type} nb={nb} cell={cell} lineNumbers={false} />
-        </div>
+        <>
+          <div className="nb-input">{editorEl}</div>
+          {findBar}
+        </>
       ) : (
         <MarkdownView source={cell.source} baseDir={baseDir} onEdit={edit} />
       )
@@ -281,20 +488,18 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
     case 'latex':
       body = (
         <>
-          {showEditor && (
-            <div className="nb-input">
-              <CellEditor key={type} nb={nb} cell={cell} lineNumbers={false} />
-            </div>
-          )}
+          {showEditor && <div className="nb-input">{editorEl}</div>}
+          {findBar}
           {(!showEditor || !!cell.source.trim()) && <LatexView source={cell.source} preview={showEditor} onEdit={edit} />}
         </>
       )
       break
     case 'svg':
       body = showEditor ? (
-        <div className="nb-input">
-          <CellEditor key={type} nb={nb} cell={cell} lineNumbers={false} />
-        </div>
+        <>
+          <div className="nb-input">{editorEl}</div>
+          {findBar}
+        </>
       ) : (
         <SvgView nb={nb} id={id} source={cell.source} onEdit={edit} />
       )
@@ -302,15 +507,29 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
     case 'js':
       body = (
         <>
-          <div className="nb-input">
-            <CellEditor key={type} nb={nb} cell={cell} lineNumbers={false} />
-          </div>
+          <div className="nb-input">{editorEl}</div>
+          {findBar}
           {cell.runs > 0 && <JsView source={cell.source} runs={cell.runs} />}
         </>
       )
       break
     case 'sheet':
       body = <SheetView nb={nb} id={id} source={cell.source} result={cell.sheet} height={cell.height} onMenu={openMenu} />
+      break
+    case 'note':
+      body = <NoteView nb={nb} cell={cell} onFocus={() => nb.select(id)} />
+      break
+    case 'file':
+      body = <FileView nb={nb} cell={cell} />
+      break
+    case 'kfit':
+      body = <KfitView nb={nb} cell={cell} />
+      break
+    case 'ktex':
+      body = <KtexView nb={nb} cell={cell} />
+      break
+    case 'mol':
+      body = <MolView nb={nb} cell={cell} />
       break
     case 'other':
       body = <OtherView cell={cell} />
@@ -331,12 +550,12 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
     >
       <div className="nb-gutter">
         <div className="nb-gutter-run" onMouseDown={keep}>
-          <button className="nb-g-btn run" title="Run this cell" aria-label="Run this cell" disabled={type === 'other'} onClick={() => nb.run(id, 'stay')}>
-            <CirclePlay size={20} />
+          <button className="nb-g-btn run" title="Run this cell" aria-label="Run this cell" onClick={() => nb.run(id, 'stay')}>
+            <Mdi name="mdi.play-circle-outline" size={24} color={RUN_GREEN} />
           </button>
           {looping && (
             <button className="nb-g-btn stop" title="Stop the continuous run" aria-label="Stop the continuous run" onClick={() => nb.stopLoop()}>
-              <CircleStop size={20} />
+              <Mdi name="mdi.stop-circle-outline" size={24} color={STOP_RED} />
             </button>
           )}
         </div>
@@ -348,7 +567,7 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
             onMouseDown={keep}
             onClick={() => nb.restartCell(id)}
           >
-            <RotateCcw size={16} />
+            <Mdi name="mdi.restart" size={20} color="#e07b39" />
           </button>
         )}
         <button
@@ -358,7 +577,7 @@ export const CellView = memo(function CellView({ cell, selected, looping, nb, ba
           onMouseDown={keep}
           onClick={() => nb.setCollapsed(id, !cell.collapsed)}
         >
-          {cell.collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+          <Mdi name={cell.collapsed ? 'mdi.chevron-right' : 'mdi.chevron-down'} size={18} />
         </button>
         <div className="nb-label" title={type === 'other' ? `${cell.rawType} cell` : undefined}>
           {label(cell)}

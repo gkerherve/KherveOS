@@ -4,25 +4,34 @@
 //   .kbook = {"format": "kbook", "version": 7, "cells": [{"type", "source",
 //             optional "title", "collapsed", "column", "height", "width"}]}
 //
-// Cell types this version shows: code, markdown, latex, sheet, svg, js. Any
-// other type (note, file, kfit, ktex, mol… from the desktop) is kept as an
+// Cell types: the desktop's eleven (code, markdown, note, latex, sheet, svg,
+// js, file, kfit, ktex, mol). A type this version doesn't know is kept as an
 // "other" cell and written back exactly as read. Unknown keys (top level and
 // per cell) are kept too, so a desktop file survives a round trip.
 
 import { workbookMarkdown } from './sheet'
 
-export type CellType = 'code' | 'markdown' | 'latex' | 'sheet' | 'svg' | 'js'
+export type CellType = 'code' | 'markdown' | 'note' | 'latex' | 'sheet' | 'svg' | 'js' | 'file' | 'kfit' | 'ktex' | 'mol'
 /** 'other': a cell type from the desktop app this version cannot show yet. */
 export type CellKind = CellType | 'other'
 
-export const CELL_TYPES: readonly { type: CellType; label: string }[] = [
-  { type: 'code', label: 'Code' },
-  { type: 'markdown', label: 'Markdown' },
-  { type: 'latex', label: 'LaTeX' },
-  { type: 'sheet', label: 'Sheet' },
-  { type: 'svg', label: 'SVG' },
-  { type: 'js', label: 'JavaScript' },
+/** The toolbar's cell-type selector (desktop MainWindow.CELL_TYPES), in its order. */
+export const CELL_TYPES: readonly { type: CellType; label: string; convert: string }[] = [
+  { type: 'code', label: 'Code', convert: 'Code' },
+  { type: 'markdown', label: 'Markdown', convert: 'Markdown' },
+  { type: 'note', label: 'Note', convert: 'Note' },
+  { type: 'latex', label: 'LaTeX', convert: 'LaTeX' },
+  { type: 'sheet', label: 'Sheet', convert: 'Sheet' },
+  { type: 'svg', label: 'SVG', convert: 'SVG' },
+  { type: 'js', label: 'JavaScript', convert: 'JavaScript' },
+  { type: 'file', label: 'File', convert: 'File' },
+  { type: 'kfit', label: 'KFit', convert: 'KFit' },
+  { type: 'ktex', label: 'KherveTeX Doc', convert: 'KherveTeX Document' },
+  { type: 'mol', label: 'Molecule', convert: 'Molecule' },
 ]
+
+/** Cells whose source is a JSON document edited through their own view, not as text. */
+export const isJsonCell = (t: CellKind) => t === 'note' || t === 'file' || t === 'kfit' || t === 'ktex' || t === 'mol'
 
 export const isCellType = (v: unknown): v is CellType => CELL_TYPES.some((t) => t.type === v)
 
@@ -370,6 +379,58 @@ export function isLatexDocument(tex: string): boolean {
   ].some((s) => tex.includes(s))
 }
 
+function jsonOf(src: string): Obj | null {
+  try {
+    const v = JSON.parse(src) as unknown
+    return isObj(v) ? v : null
+  } catch {
+    return null
+  }
+}
+
+/** A Note cell's HTML (desktop ipynb._note_markdown). */
+function noteMarkdown(src: string): string {
+  const d = jsonOf(src)
+  return d && 'html' in d ? String(d.html ?? '') : src
+}
+
+/** desktop ipynb._file_markdown */
+function fileMarkdown(src: string): string {
+  const d = jsonOf(src)
+  let names: string[] = []
+  if (d && Array.isArray(d.files)) names = d.files.filter(isObj).map((f) => String(f.name ?? '')).filter(Boolean)
+  else if (d && typeof d.name === 'string' && d.name) names = [d.name]
+  return names.length ? `📎 **Attached files:** ${names.map((n) => `\`${n}\``).join(', ')}` : '📎 Attached files'
+}
+
+/** desktop ipynb._ktex_markdown */
+function ktexMarkdown(src: string): string {
+  const d = jsonOf(src)
+  const name = d && isObj(d.file) ? String(d.file.name ?? '') : ''
+  return name ? `📄 **KherveTeX document:** \`${name}\`` : '📄 KherveTeX document'
+}
+
+/** desktop ipynb._mol_markdown: "⚛ **Molecule:** label (formula)", C and H first. */
+export function molMarkdown(src: string): string {
+  const d = jsonOf(src)
+  const mol = d && isObj(d.kmol) && isObj(d.kmol.mol3d) ? d.kmol.mol3d : null
+  if (!mol) return '⚛ Molecule'
+  const counts = new Map<string, number>()
+  for (const a of Array.isArray(mol.atoms) ? mol.atoms : []) {
+    const e = Array.isArray(a) ? String(a[0]) : ''
+    if (e) counts.set(e, (counts.get(e) ?? 0) + 1)
+  }
+  const rank = (e: string): [number, number, string] => [e !== 'C' ? 1 : 0, e !== 'H' ? 1 : 0, e]
+  const order = [...counts.keys()].sort((a, b) => {
+    const ra = rank(a)
+    const rb = rank(b)
+    return ra[0] - rb[0] || ra[1] - rb[1] || (ra[2] < rb[2] ? -1 : ra[2] > rb[2] ? 1 : 0)
+  })
+  const formula = order.map((e) => e + ((counts.get(e) ?? 0) > 1 ? String(counts.get(e)) : '')).join('')
+  const label = String(mol.label || mol.name || 'Molecule')
+  return `⚛ **Molecule:** ${label} (${formula})`
+}
+
 /** What Jupyter shows for a cell type it doesn't have (the desktop's _display_body). */
 function displayBody(type: string, src: string): string {
   switch (type) {
@@ -377,8 +438,16 @@ function displayBody(type: string, src: string): string {
       return isLatexDocument(src) ? '```latex\n' + src + '\n```' : '$$\n' + src.trim() + '\n$$'
     case 'sheet':
       return workbookMarkdown(src)
+    case 'note':
+      return noteMarkdown(src)
+    case 'file':
+      return fileMarkdown(src)
     case 'js':
       return '```javascript\n' + src + '\n```'
+    case 'ktex':
+      return ktexMarkdown(src)
+    case 'mol':
+      return molMarkdown(src)
     case 'svg':
       return src.trimStart().startsWith('<svg') ? src : '```\n' + src + '\n```'
     default:

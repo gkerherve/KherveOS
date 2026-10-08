@@ -5,11 +5,10 @@
 // Chat panels on the left, the cell column, and a status bar.
 
 import './khervebook.css'
-import { useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import { useStore } from 'zustand'
-import { openSearchPanel } from '@codemirror/search'
 import { LoaderCircle, X } from 'lucide-react'
-import { os, type AppProps, type MenuBarMenu, type MenuItem } from '@/os'
+import { os, HOME, type AppProps, type MenuBarMenu, type MenuItem } from '@/os'
 import { basename, dirname, pretty } from '@/os/path'
 import { DRAG_MIME } from '@/os/fileActions'
 import type { KernelStatus } from '@/os/python/kernel'
@@ -20,7 +19,10 @@ import { Explorer } from './Explorer'
 import { AiChat, createChatSession } from './AiChat'
 import { ToolRow, cellRow, mainRow } from './Toolbar'
 import { loadExampleIndex, type ExampleIndex } from './examples'
-import { clearRecent, loadUiPrefs, recentFiles, saveUiPrefs, type UiPrefs } from './prefs'
+import { DESKTOP_THEMES, clearRecent, desktopThemeVars, loadUiPrefs, recentFiles, saveUiPrefs, type UiPrefs } from './prefs'
+import { DROPS_INTO } from './RichCells'
+import { Mdi } from './mdi'
+import { downloadLatest, showHistory, snapshotAndUpload } from './gitops'
 import { useAppTools } from '@/os/ai/appTools'
 import { bookAiTools } from './aiTools'
 
@@ -52,6 +54,9 @@ const KEYS = {
   runAll: keyLabel('Enter', { mod: true, shift: true }),
   addCode: keyLabel('C', { mod: true, shift: true }),
   addMd: keyLabel('M', { mod: true, shift: true }),
+  addNote: keyLabel('E', { mod: true, shift: true }),
+  restart: keyLabel('R', { mod: true, shift: true }),
+  exit: keyLabel('Q', { mod: true }),
   addTex: keyLabel('L', { mod: true, shift: true }),
   addSheet: keyLabel('T', { mod: true, shift: true }),
   cutCell: keyLabel('X', { mod: true, shift: true }),
@@ -86,7 +91,7 @@ function Shortcuts() {
     [
       'Cells',
       [
-        [`${KEYS.addCode} / ${KEYS.addMd}`, 'Add a code / Markdown cell'],
+        [`${KEYS.addCode} / ${KEYS.addMd} / ${KEYS.addNote}`, 'Add a code / Markdown / Note cell'],
         [`${KEYS.addTex} / ${KEYS.addSheet}`, 'Add a LaTeX / sheet cell'],
         [`${KEYS.cutCell} / ${KEYS.copyCell} / ${KEYS.pasteCell}`, 'Cut / copy / paste the cell'],
         [`${KEYS.moveUp} / ${KEYS.moveDown}`, 'Move the cell'],
@@ -94,10 +99,11 @@ function Shortcuts() {
         [`${KEYS.undo} / ${KEYS.redo}`, 'Undo / redo (text in the editor first, then cells)'],
         [KEYS.comment, 'Toggle a comment'],
         [KEYS.find, 'Find in the cell'],
+        [KEYS.restart, 'Restart the kernel'],
       ],
     ],
     [
-      'Command mode (press Esc in a cell)',
+      'Command mode (press Esc in a cell) — web edition only',
       [
         ['Enter', 'Edit the selected cell'],
         ['↑  ↓', 'Select the cell above / below'],
@@ -183,7 +189,9 @@ function UserGuide() {
         </ul>
         <p>
           Change a cell's type with the toolbar drop-down or right-click → <b>Convert To</b>. Double-click a rendered cell to edit its source again.
-          Note, File, KFit, KherveTeX and Molecule cells made in the desktop app are shown and kept unchanged when you save.
+          <b>Note</b> cells are a word-processor page with a pen; <b>File</b> cells hold attached files (<code>kf("name")</code> gives a code cell their
+          path); <b>KFit</b> cells show a KherveFitting project (<code>kfit("C1s")</code>); <b>KherveTeX Doc</b> and <b>Molecule</b> cells show a KherveTeX
+          document and a KherveMol molecule, edited in their own apps.
         </p>
       </Section>
       <Section title="2. Running cells">
@@ -258,6 +266,7 @@ function UserGuide() {
 function About() {
   return (
     <div className="nb-about">
+      <img className="nb-about-icon" src="/icons/apps/khervebook.png" alt="" width={64} height={64} onError={(e) => (e.currentTarget.style.display = 'none')} />
       <h2>
         <span className="nb-brand-k">Kherve</span>
         <span className="nb-brand-b">Book</span>
@@ -354,10 +363,9 @@ export default function KherveBook({ win, args }: AppProps) {
   const progress = useStore(nb.store, (s) => s.progress)
   const flash = useStore(nb.store, (s) => s.flash)
   const pending = useStore(nb.store, (s) => s.pending)
-  const canUndo = useStore(nb.store, (s) => s.canUndo)
-  const canRedo = useStore(nb.store, (s) => s.canRedo)
   const loopId = useStore(nb.store, (s) => s.loopId)
   const svgTools = useStore(nb.svg)
+  const noteTools = useStore(nb.note)
 
   const selIndex = cells.findIndex((c) => c.id === selectedId)
   const sel: Cell | undefined = selIndex >= 0 ? cells[selIndex] : undefined
@@ -400,7 +408,7 @@ export default function KherveBook({ win, args }: AppProps) {
   }, [nb, args, example])
 
   useEffect(() => {
-    win.setTitle(`${dirty ? '• ' : ''}${name} — KherveBook`)
+    win.setTitle(`${dirty ? '*' : ''}${name} — KherveBook v${KHERVEBOOK_VERSION}`)
   }, [win, dirty, name])
   // So opening this file again (e.g. after Save As) focuses this window.
   useEffect(() => win.setDocumentPath(path ?? origin), [win, path, origin])
@@ -424,6 +432,23 @@ export default function KherveBook({ win, args }: AppProps) {
   const toggleExplorer = () => updateUi({ explorer: !ui.explorer })
   const toggleAi = () => updateUi({ ai: !ui.ai })
   const togglePageMode = () => updateUi({ pageMode: !ui.pageMode })
+  const reload = () => nb.reload()
+  const gitSnapshot = () => void snapshotAndUpload(nb.state.path, (m) => nb.saveSnapshot(m), () => nb.saveAs()).finally(() => nb.refocusSoon())
+  const gitHistory = (branches = false) => void showHistory(nb.state.path, reload, branches).finally(() => nb.refocusSoon())
+  const paintLibrary = (): [string, string][] => {
+    const dir = `${HOME}/Documents/KhervePaint Library`
+    if (!os.fs.isDir(dir)) return []
+    return os.fs
+      .walk(dir)
+      .filter((f) => f.type === 'file' && f.name.toLowerCase().endsWith('.svg'))
+      .map((f): [string, string] => [f.path.slice(dir.length + 1).replace(/\.svg$/i, ''), f.path])
+      .sort((a, b) => a[0].localeCompare(b[0]))
+  }
+  const addCell = (t: 'note' | 'file') => () => {
+    const id = nb.insert(t)
+    // desktop _add_file_cell: a new File cell asks for its file at once
+    if (t === 'file') setTimeout(() => nb.callCell(id, 'chooseFile'), 0)
+  }
   const showGuide = () => void os.dialog.alert(<UserGuide />, { title: 'KherveBook — User Guide' }).finally(() => nb.refocusSoon())
 
   // ------------------------------------------------------------ menus
@@ -448,7 +473,6 @@ export default function KherveBook({ win, args }: AppProps) {
         ]
       : [{ label: '(no recent files)', disabled: true }]
     const typeItem = (t: CellType, label: string): MenuItem => ({ label, checked: selType === t, disabled: !selType, onClick: act(() => nb.setType(t)) })
-    const soonItem = (label: string): MenuItem => ({ label: `${label} (coming soon)`, disabled: true })
 
     const exampleItems: MenuItem[] = [{ label: 'Welcome to KherveBook', onClick: after(() => nb.openWelcome()) }, '-']
     if (examples === 'loading') exampleItems.push({ label: 'Loading examples…', disabled: true })
@@ -474,21 +498,26 @@ export default function KherveBook({ win, args }: AppProps) {
           { label: 'Save As…', shortcut: KEYS.saveAs, onClick: after(() => nb.saveAs()) },
           { label: 'Open Recent', submenu: recentItems },
           '-',
-          { label: 'Insert Image…', onClick: after(() => nb.insertFromDrive('image')) },
-          { label: 'Import Spreadsheet (.csv, .tsv)…', onClick: after(() => nb.insertFromDrive('sheet')) },
+          { label: 'Insert Image / PDF…', onClick: after(() => nb.insertFromDrive('image')) },
+          { label: 'Import Spreadsheet (.xlsx)…', onClick: after(() => nb.insertFromDrive('sheet')) },
           { label: 'Import Jupyter/Colab (.ipynb)…', onClick: after(() => nb.importIpynb()) },
           { label: 'Export as Jupyter/Colab (.ipynb)…', onClick: after(() => nb.exportIpynb()) },
           '-',
-          { label: 'Close Window', onClick: () => win.close() },
+          { label: 'Exit', shortcut: KEYS.exit, onClick: () => win.close() },
         ],
       },
       {
         label: 'Edit',
         items: [
-          { label: 'Undo', shortcut: KEYS.undo, onClick: () => nb.smartUndo() },
-          { label: 'Redo', shortcut: KEYS.redo, onClick: () => nb.smartRedo() },
+          { label: 'Undo', shortcut: KEYS.undo, image: <Mdi name="mdi.undo" size={16} />, onClick: () => nb.smartUndo() },
+          { label: 'Redo', shortcut: KEYS.redo, image: <Mdi name="mdi.redo" size={16} />, onClick: () => nb.smartRedo() },
           '-',
-          { label: 'Find in Cell…', shortcut: KEYS.find, disabled: !selType || (selType !== 'code' && selType !== 'js' && !selEditing), onClick: () => nb.editorCommand(openSearchPanel) },
+          {
+            label: 'Find in Cell…',
+            shortcut: KEYS.find,
+            disabled: !selType || !['code', 'js', 'markdown', 'latex', 'svg'].includes(selType),
+            onClick: () => nb.state.selectedId && nb.callCell(nb.state.selectedId, 'find'),
+          },
           '-',
           { label: 'Clear Output', disabled: selType !== 'code', onClick: act(() => nb.clearOutputs(nb.state.selectedId ?? undefined)) },
           { label: 'Clear All Outputs', onClick: act(() => nb.clearOutputs()) },
@@ -499,16 +528,15 @@ export default function KherveBook({ win, args }: AppProps) {
         items: [
           { label: 'Add Code Cell', shortcut: KEYS.addCode, onClick: act(() => nb.insert('code')) },
           { label: 'Add Markdown Cell', shortcut: KEYS.addMd, onClick: act(() => nb.insert('markdown')) },
+          { label: 'Add Note Cell', shortcut: KEYS.addNote, onClick: act(addCell('note')) },
           { label: 'Add LaTeX Cell', shortcut: KEYS.addTex, onClick: act(() => nb.insert('latex')) },
           { label: 'Add Sheet Cell', shortcut: KEYS.addSheet, onClick: act(() => nb.insert('sheet')) },
           { label: 'Add SVG Cell', onClick: act(() => nb.insert('svg')) },
           { label: 'Add JavaScript Cell', onClick: act(() => nb.insert('js')) },
+          { label: 'Attach File Cell…', onClick: addCell('file') },
           '-',
-          { label: 'Run Cell', shortcut: KEYS.run, disabled: !selType, onClick: act(() => nb.run(undefined, 'stay')) },
+          { label: 'Run Cell', shortcut: KEYS.run, onClick: act(() => nb.run(undefined, 'stay')) },
           { label: 'Run All', shortcut: KEYS.runAll, onClick: act(() => nb.runAll()) },
-          loopId
-            ? { label: 'Stop Continuous Run', onClick: act(() => nb.stopLoop()) }
-            : { label: 'Run Continuously', disabled: selType !== 'code', onClick: act(() => nb.startLoop()) },
           '-',
           { label: 'Cut Cell', shortcut: KEYS.cutCell, disabled: !selType, onClick: act(() => nb.cutCell()) },
           { label: 'Copy Cell', shortcut: KEYS.copyCell, disabled: !selType, onClick: act(() => nb.copyCell()) },
@@ -518,13 +546,16 @@ export default function KherveBook({ win, args }: AppProps) {
           { label: 'Move Cell Down', shortcut: KEYS.moveDown, disabled: selIndex < 0 || selIndex >= count - 1, onClick: act(() => nb.move(1)) },
           { label: 'Delete Cell', shortcut: KEYS.deleteCell, disabled: !selType, onClick: act(() => nb.remove()) },
           '-',
+          loopId
+            ? { label: 'Stop Continuous Run', onClick: act(() => nb.stopLoop()) }
+            : { label: 'Run Continuously', disabled: !selType, onClick: act(() => nb.startLoop()) },
           { label: 'Cell Type', submenu: CELL_TYPES.map((t) => typeItem(t.type, t.label)) },
         ],
       },
       {
         label: 'Kernel',
         items: [
-          { label: 'Restart Kernel', onClick: after(() => nb.restartKernel()) },
+          { label: 'Restart Kernel', shortcut: KEYS.restart, onClick: after(() => nb.restartKernel()) },
           { label: 'Restart Python (stops a running cell)', disabled: status === 'off', onClick: after(() => nb.restartPython()) },
           { label: 'Start Python', disabled: kernelOn, onClick: act(() => nb.startKernel()) },
           '-',
@@ -537,13 +568,18 @@ export default function KherveBook({ win, args }: AppProps) {
       {
         label: 'Git',
         items: [
-          soonItem('Save Snapshot & Upload'),
-          soonItem('Download Latest from Cloud'),
+          { label: 'Save Snapshot & Upload', image: <Mdi name="mdi.cloud-upload-outline" size={16} />, onClick: gitSnapshot },
+          {
+            label: 'Download Latest from Cloud',
+            image: <Mdi name="mdi.cloud-download-outline" size={16} />,
+            onClick: after(() => downloadLatest(nb.state.path, reload, (t) => nb.showFlash(t))),
+          },
           '-',
-          soonItem('Connect to GitHub / GitLab…'),
+          // Creates a repository: not in the web edition (Git is secondary in KherveOS).
+          { label: 'Connect to GitHub / GitLab… (not in the web edition)', image: <Mdi name="mdi.github" size={16} />, disabled: true },
           '-',
-          soonItem('View Version History…'),
-          soonItem('Branches…'),
+          { label: 'View Version History…', image: <Mdi name="mdi.history" size={16} />, onClick: () => gitHistory(false) },
+          { label: 'Branches…', image: <Mdi name="mdi.source-branch" size={16} />, onClick: () => gitHistory(true) },
         ],
       },
       {
@@ -551,10 +587,27 @@ export default function KherveBook({ win, args }: AppProps) {
         items: [
           { label: 'File Explorer', shortcut: KEYS.explorer, checked: ui.explorer, onClick: act(toggleExplorer) },
           { label: 'AI Assistant', shortcut: KEYS.ai, checked: ui.ai, onClick: act(toggleAi) },
+          {
+            label: 'File Explorer Position',
+            submenu: [
+              { label: 'Left', checked: ui.side === 'left', onClick: act(() => updateUi({ side: 'left', explorer: true })) },
+              { label: 'Right', checked: ui.side === 'right', onClick: act(() => updateUi({ side: 'right', explorer: true })) },
+              { label: 'Floating (not in the web edition)', disabled: true },
+            ],
+          },
           '-',
           { label: 'Page Mode (continuous)', shortcut: KEYS.pageMode, checked: ui.pageMode, onClick: act(togglePageMode) },
-          { label: 'Line Numbers', checked: ui.lineNumbers, onClick: act(() => updateUi({ lineNumbers: !ui.lineNumbers })) },
+          { label: 'Interactive Plots (zoom/pan) — not in the web edition', checked: false, disabled: true },
+          {
+            label: 'Theme',
+            submenu: [
+              { label: 'Kherve Green (KherveOS)', checked: !ui.theme, onClick: act(() => updateUi({ theme: '' })) },
+              '-',
+              ...Object.keys(DESKTOP_THEMES).map((t): MenuItem => ({ label: t, checked: ui.theme === t, onClick: act(() => updateUi({ theme: t })) })),
+            ],
+          },
           '-',
+          { label: 'Line Numbers', checked: ui.lineNumbers, onClick: act(() => updateUi({ lineNumbers: !ui.lineNumbers })) },
           { label: allCollapsed ? 'Expand All Cells' : 'Collapse All Cells', onClick: act(() => nb.toggleCollapseAll()) },
         ],
       },
@@ -563,10 +616,20 @@ export default function KherveBook({ win, args }: AppProps) {
         label: 'Help',
         items: [
           { label: 'User Guide', shortcut: KEYS.guide, onClick: showGuide },
-          { label: 'Keyboard Shortcuts', onClick: after(() => os.dialog.alert(<Shortcuts />, { title: 'KherveBook shortcuts' })) },
           '-',
-          { label: 'Report an Issue / Feedback…', onClick: () => os.openUrl(ISSUES_URL) },
-          { label: 'About KherveBook', onClick: after(() => os.dialog.alert(<About />, { title: 'About KherveBook' })) },
+          {
+            label: 'Check for Updates…',
+            image: <Mdi name="mdi.cloud-download-outline" size={16} />,
+            onClick: after(() =>
+              os.dialog.alert('The web edition of KherveBook is part of KherveOS and is updated with it: you always have the latest version.', { title: 'Check for Updates' }),
+            ),
+          },
+          { label: 'Check for Updates on Startup', checked: true, disabled: true },
+          '-',
+          { label: 'Report an Issue / Feedback…', image: <Mdi name="mdi.bug-outline" size={16} />, onClick: () => os.openUrl(ISSUES_URL) },
+          { label: 'About', onClick: after(() => os.dialog.alert(<About />, { title: 'About KherveBook' })) },
+          '-',
+          { label: 'Keyboard Shortcuts', onClick: after(() => os.dialog.alert(<Shortcuts />, { title: 'KherveBook shortcuts' })) },
         ],
       },
     ]
@@ -595,7 +658,9 @@ export default function KherveBook({ win, args }: AppProps) {
         const shifted: Record<string, () => void> = {
           s: withDialog(() => nb.saveAs()),
           n: () => os.open('khervebook'),
-          z: () => nb.redo(),
+          z: () => nb.smartRedo(),
+          e: addCell('note'),
+          r: () => void nb.restartKernel(),
           Enter: () => nb.runAll(),
           c: () => nb.insert('code'),
           m: () => nb.insert('markdown'),
@@ -619,6 +684,8 @@ export default function KherveBook({ win, args }: AppProps) {
           z: () => nb.undo(), // the editor undid its own text first, if it had any
           y: () => nb.redo(),
           b: toggleExplorer,
+          q: () => win.close(),
+          f: () => nb.state.selectedId && nb.callCell(nb.state.selectedId, 'find'),
         }
         if (plain[k]) return run(plain[k])
       }
@@ -632,6 +699,7 @@ export default function KherveBook({ win, args }: AppProps) {
     if (k === 'Enter') {
       const how: After = e.shiftKey ? 'advance' : e.altKey ? 'insert' : 'stay'
       if (e.shiftKey || mod || e.altKey) nb.run(id, how)
+      else if (nb.cell(id)?.type === 'note') nb.focus(id, 'command')
       else nb.focus(id, 'edit')
     } else if (mod || e.altKey) handled = false
     else if (k === 'ArrowUp' || (k === 'k' && !e.shiftKey)) nb.focusSibling(id, -1, 'command')
@@ -670,11 +738,18 @@ export default function KherveBook({ win, args }: AppProps) {
   const onDrop = (e: DragEvent<HTMLDivElement>) => {
     if (!accepts(e)) return
     e.preventDefault()
-    const target = (e.target as HTMLElement).closest<HTMLElement>('.nb-cell')?.dataset.cellId ?? nb.state.cells[nb.state.cells.length - 1]?.id ?? null
+    const onCell = (e.target as HTMLElement).closest<HTMLElement>('.nb-cell')?.dataset.cellId ?? null
+    const target = onCell ?? nb.state.cells[nb.state.cells.length - 1]?.id ?? null
     const internal = e.dataTransfer.getData(DRAG_MIME)
     const importAll = async (paths: string[]) => {
       let ref: string | null = target
       for (const p of paths) {
+        // desktop: a File cell takes any file; KFit / KherveTeX / Molecule cells take theirs.
+        const into = onCell ? nb.cell(onCell) : undefined
+        if (into && DROPS_INTO[into.type]?.(p)) {
+          nb.select(into.id)
+          if (await nb.callCell(into.id, 'attach', p)) continue
+        }
         const ok = await nb.importFile(p, ref)
         if (ok) ref = nb.state.selectedId
       }
@@ -709,21 +784,27 @@ export default function KherveBook({ win, args }: AppProps) {
   }, [cells])
 
   const side = ui.explorer || ui.ai
+  const themeStyle = useMemo(() => (ui.theme ? (desktopThemeVars(ui.theme) as CSSProperties | null) ?? undefined : undefined), [ui.theme])
   const sideRef = useRef<HTMLElement>(null)
 
   return (
-    <div className={`k-app nb-app${ui.pageMode ? ' page-mode' : ''}`} onKeyDown={onKeyDown}>
+    <div
+      className={`k-app nb-app${ui.pageMode ? ' page-mode' : ''}${ui.side === 'right' ? ' side-right' : ''}${ui.theme ? ' desktop-theme' : ''}`}
+      style={themeStyle}
+      data-dark={ui.theme ? (DESKTOP_THEMES[ui.theme]?.dark ? '1' : '0') : undefined}
+      onKeyDown={onKeyDown}
+    >
       <div className="nb-toolbars" onMouseDown={keepFocus}>
         <ToolRow
           items={mainRow(
             nb,
-            { sel, selIndex, count, busy, looping: !!loopId, canUndo, canRedo, explorer: ui.explorer, ai: ui.ai, pageMode: ui.pageMode },
-            { toggleExplorer, toggleAi, togglePageMode },
+            { sel, selIndex, count, busy, looping: !!loopId, explorer: ui.explorer, ai: ui.ai, pageMode: ui.pageMode },
+            { toggleExplorer, toggleAi, togglePageMode, snapshot: gitSnapshot, history: () => gitHistory(false) },
             KEYS,
           )}
           onSoon={soon}
         />
-        <ToolRow items={cellRow(nb, sel, KEYS, svgTools)} className="nb-cellbar" onSoon={soon}>
+        <ToolRow items={cellRow(nb, sel, KEYS, { svg: svgTools, note: noteTools, paintLibrary })} className="nb-cellbar" onSoon={soon}>
           {sel?.type === 'other' && <span className="nb-cellbar-note">This {sel.rawType} cell comes from the desktop app and is kept as it is.</span>}
         </ToolRow>
       </div>
@@ -776,7 +857,7 @@ export default function KherveBook({ win, args }: AppProps) {
             aria-label="Resize the side panel"
             onPointerDown={(e) => {
               const start = ui.sideWidth
-              drag(e, 'x', (d) => updateUi({ sideWidth: Math.min(640, Math.max(180, start + d)) }))
+              drag(e, 'x', (d) => updateUi({ sideWidth: Math.min(640, Math.max(180, start + (ui.side === 'right' ? -d : d))) }))
             }}
           />
         )}
@@ -800,6 +881,7 @@ export default function KherveBook({ win, args }: AppProps) {
                       nb={nb}
                       baseDir={baseDir}
                       lineNumbers={ui.lineNumbers}
+                      theme={ui.theme}
                     />
                   ))}
                 </div>

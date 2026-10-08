@@ -5,7 +5,8 @@
 
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent } from 'react'
 import { createStore, useStore, type StoreApi } from 'zustand'
-import { CirclePlay, HelpCircle, ImagePlus, LoaderCircle, RefreshCw, SendHorizontal, Settings, Square, Trash2, X } from 'lucide-react'
+import { ImagePlus, LoaderCircle, RefreshCw, Square, X } from 'lucide-react'
+import { Mdi } from './mdi'
 import { os } from '@/os'
 import type { Notebook } from './notebook'
 import { renderMarkdown } from './render'
@@ -303,10 +304,10 @@ export function AiChat({ nb, session }: { nb: Notebook; session: ChatSession }) 
           Auto
         </button>
         <button className="nb-ai-tool" title="Example prompts" onClick={() => setShowPrompts((v) => !v)}>
-          <HelpCircle size={15} />
+          <Mdi name="mdi.help-circle-outline" size={18} />
         </button>
         <button className="nb-ai-tool" title="AI Chat settings" onClick={() => setShowSettings(true)}>
-          <Settings size={15} />
+          <Mdi name="mdi.cog" size={18} />
         </button>
         <button
           className="nb-ai-tool"
@@ -316,7 +317,7 @@ export function AiChat({ nb, session }: { nb: Notebook; session: ChatSession }) 
             set({ history: [], pending: [], status: '' })
           }}
         >
-          <Trash2 size={15} />
+          <Mdi name="mdi.delete-sweep" size={18} />
         </button>
       </div>
 
@@ -362,7 +363,7 @@ export function AiChat({ nb, session }: { nb: Notebook; session: ChatSession }) 
           </div>
           {pending.length > 0 && (
             <button className="k-btn small nb-ai-apply" onClick={() => apply(pending)}>
-              <CirclePlay size={14} /> Apply &amp; run ({[adds ? `add ${adds}` : '', edits ? `replace ${edits}` : ''].filter(Boolean).join(', ')})
+              <Mdi name="mdi.play-circle-outline" size={16} /> Apply &amp; run ({[adds ? `add ${adds}` : '', edits ? `replace ${edits}` : ''].filter(Boolean).join(', ')})
             </button>
           )}
           {!s.busy && s.status && <div className={`nb-ai-status${s.status.startsWith('⚠') ? ' error' : ''}`}>{s.status}</div>}
@@ -398,7 +399,7 @@ export function AiChat({ nb, session }: { nb: Notebook; session: ChatSession }) 
                 </button>
               ) : (
                 <button className="nb-ai-send" title="Send (Enter)" disabled={!s.draft.trim() && !s.images.length} onClick={() => void send()}>
-                  <SendHorizontal size={18} />
+                  <Mdi name="mdi.send" size={20} color="#27ae60" />
                 </button>
               )}
             </div>

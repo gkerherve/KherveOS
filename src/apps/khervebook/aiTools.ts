@@ -8,7 +8,7 @@ import { os } from '@/os'
 import { appToolRegistry, clipText, waitUntil, type AppTools } from '@/os/ai/appTools'
 import { pretty } from '@/os/path'
 import { loadExampleIndex } from './examples'
-import { typeLabel, type Cell } from './format'
+import { isJsonCell, typeLabel, type Cell } from './format'
 import { displayName, type Notebook } from './notebook'
 
 type Args = Record<string, unknown>
@@ -133,6 +133,7 @@ export function bookAiTools(nb: Notebook): AppTools {
       const cell = nth(nb, a.cell)
       if (typeof a.source !== 'string') throw new Error('"source" must be text.')
       if (cell.type === 'other') throw new Error(`Cell ${String(a.cell)} is a ${typeLabel(cell)} cell made by the desktop app; it cannot be edited here.`)
+      if (isJsonCell(cell.type)) throw new Error(`Cell ${String(a.cell)} is a ${typeLabel(cell)} cell: it is edited in its own view (or its app), not as text.`)
       nb.replaceSource(cell.id, a.source)
       return { edited: numberOf(nb, cell.id), type: typeLabel(cell).toLowerCase(), note: 'Not run: khervebook_run runs it.' }
     },

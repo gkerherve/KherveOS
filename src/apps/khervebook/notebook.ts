@@ -13,9 +13,14 @@ import { os, HOME, type FsEvent } from '@/os'
 import { basename, dirname, extname, isInside, join, pretty } from '@/os/path'
 import { PythonKernel, type CellResult, type KernelStatus, type RunHandlers } from '@/os/python/kernel'
 import {
-  FORMAT_VERSION, cellData, cellFromData, makeCell, parseNotebook, serializeKbook, toIpynb,
+  FORMAT_VERSION, cellData, cellFromData, isJsonCell, makeCell, parseNotebook, serializeKbook, toIpynb,
   type Cell, type CellData, type CellKind, type CellType, type NotebookDoc, type Output, type SheetResult, type StreamName,
 } from './format'
+import {
+  NOTE_STARTER, b64ToBytes, bytesToB64, cellAttachments, kfCode, claimPath, filesSource, kfitSource, ktexSource, molSource, noteSource, parseFiles,
+  parseKfit, parseKtex, parseMol, parseNote, withAttachments, type Attachment,
+} from './cellfiles'
+import { gitAfterSave } from './gitops'
 import { MAGIC_HINT, prepareCode } from './magics'
 import {
   PRELOAD_CODE, computeCode, drainCode, forgetCode, lazyImportCode, lazyNeeds, plotRangeCode, setupCode,
@@ -68,7 +73,7 @@ type Job =
   | { kind: 'reset' }
   | { kind: 'boot' }
   | { kind: 'forget'; names: string[] }
-  | { kind: 'task'; run: (k: PythonKernel, gen: number) => Promise<void> }
+  | { kind: 'task'; run: (k: PythonKernel, gen: number) => Promise<void>; cancel?: () => void }
 
 interface Snapshot {
   cells: Cell[]
@@ -96,6 +101,22 @@ export interface SvgTools {
   snap: boolean
   gridSize: number
 }
+
+/** The Note cell tools of the second toolbar row (desktop celltoolbar._build_note). */
+export interface NoteTools {
+  /** The Note cell whose pen is on (one at a time), or null. */
+  pen: string | null
+  inkColor: string
+  inkWidth: number
+  font: string
+  size: number
+}
+
+/** What a cell's own view offers to the toolbar and the notebook (desktop cell methods: choose_file, refresh…). */
+export type CellHandle = Record<string, ((...args: never[]) => unknown) | undefined>
+
+/** Where the web edition keeps files Python and the other apps need to see (home folder, hidden). */
+export const CACHE_DIR = `${HOME}/.cache/khervebook`
 
 export const STARTING_NOTE = 'Starting Python… the first start downloads about 10 MB'
 const PRELOAD_NOTE = 'Loading numpy, matplotlib and pandas…'
@@ -176,6 +197,16 @@ export class Notebook {
   readonly svg: StoreApi<SvgTools> = createStore<SvgTools>(() => ({ tool: 'select', color: '#2176c7', width: 3, grid: false, snap: false, gridSize: 20 }))
   /** Elements drawn into each SVG cell, newest last (Undo shape). */
   private drawn = new Map<string, string[]>()
+  /** Note cell tools: pen, ink colour and width, font (shared by the toolbar and the cells). */
+  readonly note: StoreApi<NoteTools> = createStore<NoteTools>(() => ({ pen: null, inkColor: '#c0392b', inkWidth: 3, font: 'Arial', size: 11 }))
+  private handles = new Map<string, CellHandle>()
+  /** Files handed to another app (Open in KhervePY…): path → the cell and how to take the file back. */
+  private bridges = new Map<string, { id: string; text: boolean; written: string; reload: (data: Uint8Array) => void }>()
+  /** Embedded attachments written out for Python: path → the base64 written. */
+  private exported = new Map<string, string>()
+  /** The kf() / kfit() definitions Python has (null: send them again). */
+  private filesSynced: string | null = null
+  private kfitInstalled = false
   private readonly ns: string
   private kernel: PythonKernel | null = null
   private unsubs: (() => void)[] = []
@@ -284,6 +315,8 @@ export class Notebook {
           this.seeded = false
           this.lazyLoaded.clear()
           this.introduced.clear()
+          this.filesSynced = null
+          this.kfitInstalled = false
           this.sheetsStale = true
         }
         this.set({ status: s })
@@ -312,6 +345,10 @@ export class Notebook {
 
   /** Follow the file when it (or a folder above it) is renamed or moved in Files. */
   private onFsEvent(ev: FsEvent) {
+    if ((ev.type === 'change' || ev.type === 'create') && this.bridges.has(ev.path)) {
+      void this.bridgeChanged(ev.path)
+      return
+    }
     if (ev.type !== 'rename') return
     const move = (p: string | null) => (p && isInside(p, ev.oldPath) ? ev.path + p.slice(ev.oldPath.length) : p)
     const { path, origin } = this.state
@@ -360,7 +397,16 @@ export class Notebook {
 
   /** A new cell's content: the desktop's starters for drawings and JavaScript. */
   private starter(type: CellKind): string {
-    return type === 'svg' ? STARTER_SVG : type === 'js' ? JS_STARTER : ''
+    switch (type) {
+      case 'svg':
+        return STARTER_SVG
+      case 'js':
+        return JS_STARTER
+      case 'note':
+        return NOTE_STARTER
+      default:
+        return isJsonCell(type) ? normalJson(type, '') : ''
+    }
   }
 
   /** Add a cell next to `ref` (the selected cell by default) and focus it. Undoable. */
@@ -428,6 +474,8 @@ export class Notebook {
     this.patch(c.id, {
       type,
       rawType: undefined,
+      // Like the desktop's new widget reading the old text: JSON cells keep what they understand.
+      ...(isJsonCell(type) ? { source: normalJson(type, c.source) } : {}),
       editing: type === 'markdown' || type === 'latex',
       outputs: type === 'code' ? c.outputs : [],
       count: type === 'code' ? c.count : null,
@@ -659,6 +707,11 @@ export class Notebook {
     }
   }
 
+  /** The live source editor of a cell, if it shows one. */
+  editorView(id: string): EditorView | undefined {
+    return this.editors.get(id)
+  }
+
   unregisterEditor(id: string, view: EditorView) {
     if (this.editors.get(id) === view) this.editors.delete(id)
   }
@@ -820,6 +873,14 @@ export class Notebook {
           this.patch(c.id, { editing: false, source: c.type === 'svg' && !c.source.trim() ? BLANK_SVG : c.source })
         }
         break
+      case 'note':
+      case 'file':
+      case 'kfit':
+      case 'mol':
+        break
+      case 'ktex':
+        this.handles.get(c.id)?.refresh?.() // desktop KTexCell.execute: show the pages again
+        break
       case 'other':
         break
     }
@@ -980,6 +1041,7 @@ export class Notebook {
   }
 
   private cancelQueued() {
+    for (const j of this.jobs) if (j.kind === 'task') j.cancel?.()
     const ids = new Set(this.jobs.flatMap((j) => (j.kind === 'cell' ? [j.id] : [])))
     this.jobs = []
     if (ids.size) {
@@ -1070,6 +1132,7 @@ export class Notebook {
   }
 
   private async resetNamespace() {
+    this.filesSynced = null
     this.counter = 0
     this.seeded = false
     this.lazyLoaded.clear()
@@ -1122,6 +1185,9 @@ export class Notebook {
     this.lastFailure = 'code'
     try {
       await this.prepare(gen, id)
+      if (!live()) return false
+      // kf("name") and kfit(): the File and KFit cells' files, where Python can read them.
+      await this.syncFiles(gen)
       if (!live()) return false
       // Code reads sheet1, sheet2…: make sure they are current.
       if (this.sheetsStale && this.hasSheets()) {
@@ -1439,6 +1505,327 @@ export class Notebook {
     return { added: appends.length, replaced }
   }
 
+  // -------------------------------------------- the cells' own views
+
+  /** A cell view registers what it can do (choose_file, refresh, toggle_bold…). */
+  registerHandle(id: string, h: CellHandle): () => void {
+    this.handles.set(id, h)
+    return () => {
+      if (this.handles.get(id) === h) this.handles.delete(id)
+    }
+  }
+
+  /** The toolbar's tools for a cell (desktop CellToolBar calling the focused cell's methods). */
+  callCell(id: string, method: string, ...args: unknown[]) {
+    const fn = this.handles.get(id)?.[method] as ((...a: unknown[]) => unknown) | undefined
+    if (fn) return fn(...args)
+    if (method === 'openInApp' && typeof args[0] === 'string') return this.openInApp(id, args[0])
+  }
+
+  /** The Note tools changed: font and size apply to the selection of the Note cell `id`. */
+  setNoteTools(p: Partial<NoteTools>, id?: string | null, apply?: 'fontFamily' | 'fontSize') {
+    this.note.setState(p)
+    if (id && apply === 'fontFamily' && p.font) this.callCell(id, 'setFontFamily', p.font)
+    if (id && apply === 'fontSize' && p.size) this.callCell(id, 'setFontSize', p.size)
+  }
+
+  /** A view changed its cell's JSON document (typing in a note, a new attachment…). */
+  updateCell(id: string, source: string, undoable = false) {
+    const c = this.cell(id)
+    if (!c || c.source === source) return
+    if (undoable) this.record()
+    this.patch(id, { source })
+    this.changed()
+  }
+
+  /** The folder of the notebook's file and its name without extension (the sidecar is "<stem>_files"). */
+  docPlace(): { dir: string | null; stem: string } {
+    const p = this.state.path
+    if (!p) return { dir: null, stem: 'notebook' }
+    const name = basename(p)
+    const e = extname(name)
+    return { dir: dirname(p), stem: e ? name.slice(0, -e.length) : name }
+  }
+
+  /** The bytes of an attachment: embedded, or from the sidecar folder. Null when missing. */
+  async attachmentBytes(a: Attachment): Promise<Uint8Array | null> {
+    if (a.path) {
+      const { dir } = this.docPlace()
+      const full = dir ? join(dir, a.path) : null
+      if (full && os.fs.isFile(full)) return os.fs.readBytes(full)
+    }
+    if (a.embed !== undefined) {
+      try {
+        return b64ToBytes(a.embed)
+      } catch {
+        return null
+      }
+    }
+    return null
+  }
+
+  /**
+   * An attachment as a file on the drive (desktop _Attachment.resolved_path): its sidecar file,
+   * or — before the notebook is saved — a copy in the hidden cache folder. Null when missing.
+   */
+  async attachmentPath(id: string, a: Attachment): Promise<string | null> {
+    if (a.path) {
+      const { dir } = this.docPlace()
+      const full = dir ? join(dir, a.path) : null
+      if (full && os.fs.isFile(full)) return full
+    }
+    if (a.embed === undefined) return null
+    const target = join(CACHE_DIR, this.ns, id, a.name)
+    if (this.exported.get(target) !== a.embed || !os.fs.isFile(target)) {
+      const bytes = await this.attachmentBytes(a)
+      if (!bytes) return null
+      await os.fs.writeBytes(target, bytes, { mkdirs: true })
+      this.exported.set(target, a.embed)
+    }
+    return target
+  }
+
+  /** On save: every attachment goes to "<stem>_files/" beside the notebook, the .kbook keeps its path (desktop prepare_save). */
+  private async materialize(target: string) {
+    const dir = dirname(target)
+    const name = basename(target)
+    const stem = extname(name) ? name.slice(0, -extname(name).length) : name
+    const claimed = new Set<string>()
+    for (const c of this.state.cells) {
+      const files = cellAttachments(c.type, c.source)
+      if (!files.length) continue
+      let moved = false
+      const out: Attachment[] = []
+      for (const a of files) {
+        const rel = claimPath(stem, a.name, claimed)
+        const full = join(dir, rel)
+        if (a.embed === undefined && a.path === rel && os.fs.isFile(full)) {
+          out.push(a)
+          continue
+        }
+        const bytes = await this.attachmentBytes(a)
+        if (!bytes) {
+          out.push(a) // missing: keep the reference as it was
+          continue
+        }
+        await os.fs.writeBytes(full, bytes, { mkdirs: true })
+        out.push({ name: a.name, size: bytes.length, path: rel })
+        moved = true
+      }
+      if (moved) this.patch(c.id, { source: withAttachments(c.type, c.source, out) })
+    }
+  }
+
+  /** Before code runs: kf("name") and kfit(…) know the notebook's attached files (desktop Kernel._make_kf / _make_kfit). */
+  private async syncFiles(gen: number) {
+    const k = this.kernel
+    if (!k) return
+    const files: Record<string, string> = {}
+    const kfits: { path: string | null; name: string; title: string }[] = []
+    for (const c of this.state.cells) {
+      if (c.type === 'file') {
+        for (const a of parseFiles(c.source)) {
+          if (files[a.name]) continue
+          const p = await this.attachmentPath(c.id, a)
+          if (p) files[a.name] = p
+        }
+      } else if (c.type === 'kfit') {
+        const f = parseKfit(c.source).file
+        kfits.push({ path: f ? await this.attachmentPath(c.id, f) : null, name: f?.name ?? '', title: c.title })
+      }
+    }
+    const { dir } = this.docPlace()
+    const nbDir = dir && isInside(dir, HOME) ? dir : null
+    if (kfits.length) await this.installKfit(k)
+    const code = kfCode(files, nbDir, kfits)
+    if (code === this.filesSynced || gen !== this.generation) return
+    const r = await k.runCell(code)
+    if (gen === this.generation && r.ok) this.filesSynced = code
+  }
+
+  /** The desktop's kfitio / kfitmodels (unchanged) and the cell's view, installed in Python once. */
+  private async installKfit(k: PythonKernel) {
+    if (this.kfitInstalled) return
+    const base = `${import.meta.env.BASE_URL}apps/khervebook/py/kbook_kfit/`
+    const files: Record<string, string> = {}
+    for (const f of ['__init__.py', 'kfitio.py', 'kfitmodels.py', 'view.py']) {
+      const res = await fetch(base + f)
+      if (!res.ok) throw new Error(`Could not load ${f} for the KFit cell.`)
+      files[f] = await res.text()
+    }
+    const r = await k.runCell(
+      'def _kb_install(files):\n' +
+        '    import importlib, os, sys\n' +
+        "    os.makedirs('/kherveos/kbook_kfit', exist_ok=True)\n" +
+        '    for n, t in files.items():\n' +
+        "        open('/kherveos/kbook_kfit/' + n, 'w', encoding='utf-8').write(t)\n" +
+        "    '/kherveos' in sys.path or sys.path.insert(0, '/kherveos')\n" +
+        "    [sys.modules.pop(m) for m in list(sys.modules) if m.split('.')[0] == 'kbook_kfit']\n" +
+        '    importlib.invalidate_caches()\n' +
+        `_kb_install(${JSON.stringify(files)})\n` +
+        'del _kb_install',
+    )
+    if (!r.ok) throw new Error(r.error?.message ?? 'The KFit cell could not start.')
+    this.kfitInstalled = true
+  }
+
+  /** Run something in this notebook's Python, after the cells queued before it. */
+  pythonTask<T>(fn: (k: PythonKernel) => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.enqueue([
+        {
+          kind: 'task',
+          run: async (k) => {
+            try {
+              resolve(await fn(k))
+            } catch (e) {
+              reject(e instanceof Error ? e : new Error(String(e)))
+            }
+          },
+          cancel: () => reject(new Error('Cancelled')),
+        },
+      ])
+    })
+  }
+
+  /** The KFit cell's plot or table, drawn by the desktop's code in Python (JSON from kbook_kfit.view.render). */
+  async kfitView(path: string, sheet: string, view: 'plot' | 'data', fileName: string): Promise<Record<string, unknown>> {
+    return this.pythonTask(async (k) => {
+      await this.installKfit(k)
+      let out = ''
+      const START = '\x02KB-JSON\x03'
+      const r = await k.runCell(
+        `print(${JSON.stringify(START)} + __import__('kbook_kfit.view', fromlist=['view']).render(${JSON.stringify(path)}, ${JSON.stringify(sheet)}, ${JSON.stringify(view)}, ${JSON.stringify(fileName)}))`,
+        { onStdout: (t) => (out += t) },
+      )
+      if (!r.ok) throw new Error(r.error?.message ?? 'The project could not be read.')
+      const at = out.lastIndexOf(START)
+      return JSON.parse(out.slice(at + START.length)) as Record<string, unknown>
+    })
+  }
+
+  // ---------------------------------------------- Open in another app
+
+  /**
+   * Hand a cell to another Kherve app on a file, and take it back when that app saves it
+   * (desktop appbridge.AppBridge: KhervePY, KherveSheet, KhervePaint, KherveFitting, KherveTeX, KherveMol).
+   */
+  async openInApp(id: string, app: string) {
+    const c = this.cell(id)
+    if (!c) return
+    const spec = await this.bridgeSpec(c, app)
+    if (!spec) return
+    const dir = join(CACHE_DIR, 'open', this.ns)
+    const target = join(dir, spec.name)
+    try {
+      if (typeof spec.data === 'string') await os.fs.writeText(target, spec.data, { mkdirs: true })
+      else await os.fs.writeBytes(target, spec.data, { mkdirs: true })
+    } catch (e) {
+      await os.dialog.alert(`Could not hand the cell to ${spec.label}.\n\n${errorText(e)}`, { title: 'KherveBook' })
+      return
+    }
+    const written = typeof spec.data === 'string' ? spec.data : bytesToB64(spec.data)
+    this.bridges.set(target, { id, text: typeof spec.data === 'string', written, reload: spec.reload })
+    os.open(app, { path: target })
+    this.showFlash(`Opened in ${spec.label} — saving there updates this cell`)
+  }
+
+  private async bridgeChanged(path: string) {
+    const b = this.bridges.get(path)
+    if (!b || !this.cell(b.id)) return
+    try {
+      const bytes = await os.fs.readBytes(path)
+      const now = b.text ? new TextDecoder().decode(bytes) : bytesToB64(bytes)
+      if (now === b.written) return
+      b.written = now
+      b.reload(bytes)
+    } catch {
+      /* the other app is still writing: the next change event brings it */
+    }
+  }
+
+  private async bridgeSpec(
+    c: Cell,
+    app: string,
+  ): Promise<{ label: string; name: string; data: string | Uint8Array; reload: (data: Uint8Array) => void } | null> {
+    const n = this.indexOf(c.id) + 1
+    const stem = `${this.docPlace().stem === 'notebook' ? 'Untitled' : this.docPlace().stem}-cell${n}`
+    const text = (data: Uint8Array) => new TextDecoder().decode(data)
+    const id = c.id
+    switch (app) {
+      case 'khervepy':
+        return { label: 'KhervePY', name: `${stem}.py`, data: c.source, reload: (d) => this.replaceSource(id, text(d)) }
+      case 'khervepaint':
+        return { label: 'KhervePaint', name: `${stem}.svg`, data: c.source.trim() ? c.source : BLANK_SVG, reload: (d) => this.replaceSource(id, text(d)) }
+      case 'khervesheet': {
+        // The web KherveSheet reads CSV: the sheet shown goes over as values (formulas stay here).
+        const book = parseWorkbook(c.source)
+        const i = Math.max(0, book.sheets.findIndex((s) => s.name === book.active))
+        return {
+          label: 'KherveSheet',
+          name: `${stem}.csv`,
+          data: sheetCsv(book, i),
+          reload: (d) => this.editSheet(id, (b) => csvIntoSheet(b, i, text(d))),
+        }
+      }
+      case 'khervemol': {
+        const m = parseMol(c.source)
+        const kmol = Object.keys(m.kmol).length ? m.kmol : { format: 'khervemol', version: 5 }
+        return {
+          label: 'KherveMol',
+          name: `${stem}.kmol`,
+          data: JSON.stringify(kmol, null, 1),
+          reload: (d) => {
+            try {
+              const doc = JSON.parse(text(d)) as Record<string, unknown>
+              const cur = this.cell(id)
+              if (cur) this.replaceSource(id, molSource({ ...parseMol(cur.source), kmol: doc as never }))
+            } catch {
+              /* not JSON yet */
+            }
+          },
+        }
+      }
+      case 'khervefitting':
+      case 'khervetex': {
+        const f = c.type === 'kfit' ? parseKfit(c.source).file : c.type === 'ktex' ? parseKtex(c.source).file : null
+        if (!f) {
+          this.showFlash('This cell holds no document yet.')
+          return null
+        }
+        const bytes = await this.attachmentBytes(f)
+        if (!bytes) {
+          this.showFlash(`${f.name} is missing.`)
+          return null
+        }
+        return {
+          label: app === 'khervefitting' ? 'KherveFitting' : 'KherveTeX',
+          name: f.name,
+          data: bytes,
+          reload: (d) => {
+            const cur = this.cell(id)
+            if (!cur) return
+            const att: Attachment = { name: f.name, size: d.length, embed: bytesToB64(d) }
+            this.replaceSource(id, withAttachments(cur.type, cur.source, [att]))
+          },
+        }
+      }
+    }
+    return null
+  }
+
+  /** Insert a KhervePaint library object into an SVG cell (desktop SvgCell.insert_object). */
+  async insertSvgObject(id: string, path: string) {
+    try {
+      const text = await os.fs.readText(path)
+      const inner = /<svg\b[^>]*>([\s\S]*)<\/svg>/i.exec(text)?.[1]?.trim()
+      if (!inner) throw new Error('The object has no drawing.')
+      this.drawShape(id, `<g transform="translate(40,40)">${inner.replace(/\s*\n\s*/g, ' ')}</g>`)
+    } catch (e) {
+      this.showFlash(`Could not insert ${basename(path)}: ${errorText(e)}`)
+    }
+  }
+
   // ---------------------------------------------------------------- files
 
   /** The folder dialogs start in, and relative links / images resolve against. */
@@ -1597,9 +1984,10 @@ export class Notebook {
     return this.writeTo(target)
   }
 
-  private async writeTo(target: string): Promise<boolean> {
+  private async writeTo(target: string, commitMessage?: string): Promise<boolean> {
     const at = this.edits
     try {
+      await this.materialize(target)
       await os.fs.writeText(target, serializeKbook(this.state.cells.map(cellData), this.docExtra, this.docVersion), { mkdirs: true })
     } catch (e) {
       await os.dialog.alert(`Could not save "${basename(target)}".\n\n${errorText(e)}`, { title: 'KherveBook' })
@@ -1608,7 +1996,27 @@ export class Notebook {
     this.set({ path: target, origin: target, untitled: null, dirty: this.edits !== at })
     addRecent(target)
     this.showFlash(`Saved to ${pretty(target)}`)
+    // Desktop _git_after_save: every save is a snapshot in the notebook folder's Git repository.
+    void gitAfterSave(target, commitMessage).then((msg) => msg && this.showFlash(msg))
     return true
+  }
+
+  /** Git → Save Snapshot & Upload: save with a message of the user's (desktop _commit_and_maybe_push). */
+  async saveSnapshot(message: string): Promise<boolean> {
+    const p = this.state.path
+    return p ? this.writeTo(p, message) : this.saveAs()
+  }
+
+  /** Re-read the notebook from its file (after a download from the cloud or a restored version). */
+  async reload(): Promise<void> {
+    const p = this.state.path
+    if (!p || !os.fs.isFile(p)) return
+    try {
+      const doc = parseNotebook(await os.fs.readText(p))
+      this.applyDoc(doc, { path: p, origin: p, untitled: null })
+    } catch (e) {
+      this.showFlash(`Reload failed: ${errorText(e)}`)
+    }
   }
 
   async exportIpynb(): Promise<void> {
@@ -1647,8 +2055,64 @@ export class Notebook {
 
   /** File > Insert Image… / Import Spreadsheet…: pick a drive file and import it. */
   async insertFromDrive(kind: 'image' | 'sheet') {
-    const extensions = kind === 'image' ? ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg'] : ['.csv', '.tsv', '.txt', '.dat']
-    const target = await os.dialog.openFile({ title: kind === 'image' ? 'Insert image' : 'Import spreadsheet', extensions, startDir: this.baseDir() })
+    const extensions = kind === 'image' ? ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg', '.pdf'] : ['.xlsx', '.xlsm', '.csv', '.tsv']
+    const target = await os.dialog.openFile({ title: kind === 'image' ? 'Insert image or PDF' : 'Import spreadsheet', extensions, startDir: this.baseDir() })
     if (target) await this.importFile(target)
   }
+}
+
+/** A JSON cell's document as the desktop writes it, from whatever text the cell had (desktop set_source + source()). */
+function normalJson(type: CellKind, src: string): string {
+  switch (type) {
+    case 'note':
+      return src.trim() ? noteSource(parseNote(src)) : NOTE_STARTER
+    case 'file':
+      return filesSource(parseFiles(src))
+    case 'kfit':
+      return kfitSource(parseKfit(src))
+    case 'ktex':
+      return ktexSource(parseKtex(src))
+    case 'mol':
+      return molSource(parseMol(src))
+    default:
+      return src
+  }
+}
+
+function csvField(v: string): string {
+  return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
+}
+
+/** One sheet of a workbook cell as CSV (raw values; formulas as their text). */
+function sheetCsv(b: Workbook, i: number): string {
+  const sh = b.sheets[i]
+  if (!sh) return ''
+  const out: string[] = []
+  for (let r = 0; r < sh.rows; r++) {
+    const row: string[] = []
+    for (let c = 0; c < sh.cols; c++) row.push(csvField(sh.data[`${colName(c)}${r + 1}`] ?? ''))
+    out.push(row.join(','))
+  }
+  return out.join('\n') + '\n'
+}
+
+function colName(c: number): string {
+  let s = ''
+  let n = c + 1
+  while (n > 0) {
+    const m = (n - 1) % 26
+    s = String.fromCharCode(65 + m) + s
+    n = Math.floor((n - 1) / 26)
+  }
+  return s
+}
+
+/** A CSV saved by KherveSheet, back into sheet `i` (cells not in the CSV are cleared). */
+function csvIntoSheet(b: Workbook, i: number, csv: string): Workbook {
+  const rows = parseWorkbook(csv).sheets[0]
+  if (!rows) return b
+  const sheets = b.sheets.slice()
+  const old = sheets[i]
+  sheets[i] = { ...old, rows: Math.max(rows.rows, 1), cols: Math.max(rows.cols, 1), data: rows.data }
+  return { ...b, sheets }
 }

@@ -3,7 +3,8 @@
 // their app); drag a file onto the notebook to make it a cell.
 
 import { useState, type DragEvent, type KeyboardEvent, type MouseEvent } from 'react'
-import { ChevronDown, ChevronRight, FolderOpen } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import { Mdi } from './mdi'
 import { os, useFsVersion, type Stat } from '@/os'
 import { basename, dirname, extname, pretty } from '@/os/path'
 import { fileIcon } from '@/os/fileIcons'
@@ -132,7 +133,7 @@ export function Explorer({ nb, root, current, onRoot }: ExplorerProps) {
             })
           }
         >
-          <FolderOpen size={15} />
+          <Mdi name="mdi.folder-open-outline" size={18} />
         </button>
         <span className="nb-explorer-root" title={pretty(root)}>
           {basename(root) || '/'}

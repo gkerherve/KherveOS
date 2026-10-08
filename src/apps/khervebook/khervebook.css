@@ -694,7 +694,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font: 12px/18px var(--k-mono);
-  color: color-mix(in srgb, var(--k-link) 80%, var(--k-muted));
+  color: var(--nb-gutter-text, color-mix(in srgb, var(--k-link) 80%, var(--k-muted)));
 }
 
 /* content */
@@ -1625,4 +1625,504 @@ pre.nb-error {
   .nb-label {
     font-size: 10.5px;
   }
+}
+
+
+/* ===================================================== desktop parity pass */
+
+/* QToolBar with 32 px qtawesome icons: flat buttons, no drop-down arrows */
+.nb-tb-btn {
+  height: 36px;
+  min-width: 36px;
+  padding: 0 4px;
+  border-radius: 6px;
+  color: var(--nb-icon, color-mix(in srgb, var(--k-text) 85%, var(--k-muted)));
+}
+.nb-tb-btn.text {
+  padding: 0 8px;
+}
+.nb-tb-btn:active:not(:disabled) {
+  background: var(--k-selection);
+}
+.nb-toolbar.k-toolbar {
+  min-height: 46px;
+}
+.nb-mdi {
+  display: block;
+}
+.nb-tb-combo.k-input {
+  height: 30px;
+  padding: 0 6px;
+  font-size: 13px;
+  margin: 0 2px;
+}
+.nb-font-combo.k-input {
+  width: 150px;
+}
+.nb-tb-field .k-input {
+  width: 64px;
+}
+
+/* View > File Explorer Position > Right */
+.nb-app.side-right .nb-side {
+  order: 3;
+}
+.nb-app.side-right .nb-vsplit {
+  order: 2;
+}
+.nb-app.side-right .nb-scroll {
+  order: 1;
+}
+
+/* the desktop's find-in-cell bar */
+.nb-findbar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 2px;
+}
+.nb-findbar .k-input {
+  flex: 1;
+  height: 26px;
+  font-size: 12.5px;
+}
+.nb-findbar .k-input.missing {
+  background: color-mix(in srgb, var(--k-danger) 22%, var(--k-bg));
+}
+.nb-findbar button {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--k-text);
+  cursor: pointer;
+}
+.nb-findbar button:hover {
+  background: var(--k-button-hover);
+}
+
+/* Python highlight: the desktop's Auto palette (dark app); named themes come inline */
+.nb-cell-code .nb-input {
+  --k-syn-keyword: #569cd6;
+  --k-syn-string: #ce9178;
+  --k-syn-number: #b5cea8;
+  --k-syn-comment: #6a9955;
+  --k-syn-function: #dcdcaa;
+  --k-syn-def: #dcdcaa;
+  --k-syn-type: #4ec9b0;
+  --k-syn-property: #9cdcfe;
+  color: var(--k-text);
+}
+
+/* ---- Note cell: a white Word-style page with a pen layer (desktop notecell) */
+.nb-note-wrap {
+  position: relative;
+}
+.nb-note-page {
+  min-height: 90px;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: #1a1a1a;
+  font-size: 11pt;
+  line-height: 1.35;
+  border-radius: 4px;
+  outline: none;
+  user-select: text;
+  overflow-wrap: anywhere;
+}
+.nb-note-page:focus {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--k-accent) 45%, transparent);
+}
+.nb-note-page p {
+  margin: 0 0 0.4em;
+}
+.nb-note-page h1,
+.nb-note-page h2,
+.nb-note-page h3 {
+  margin: 0.3em 0;
+}
+.nb-note-page ul,
+.nb-note-page ol {
+  margin: 0.2em 0;
+  padding-left: 1.6em;
+}
+.nb-ink {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.nb-ink.on {
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* ---- File / KFit / KherveTeX / Molecule cards */
+.nb-file,
+.nb-kfit,
+.nb-ktex,
+.nb-mol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 2px 6px;
+  user-select: text;
+}
+.nb-file-head,
+.nb-kfit-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nb-file-head b {
+  flex: 1;
+  font-size: 13px;
+}
+.nb-file-head .k-btn,
+.nb-kfit-head .k-btn,
+.nb-ktex-bar .k-btn,
+.nb-mol .k-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.nb-file-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+}
+.nb-file-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nb-file-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nb-file-meta b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nb-file-meta span {
+  color: var(--k-muted);
+  font-size: 12px;
+}
+.nb-file-tool {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--nb-icon, var(--k-text));
+  cursor: pointer;
+}
+.nb-file-tool:hover:not(:disabled) {
+  background: var(--k-button-hover);
+}
+.nb-file-tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.nb-file-thumb {
+  max-width: 220px;
+  max-height: 140px;
+  object-fit: contain;
+  align-self: flex-start;
+}
+.nb-file-text {
+  margin: 0;
+  padding: 4px;
+  overflow-x: auto;
+  background: var(--nb-editor);
+  font: 12px/1.4 var(--k-mono);
+  white-space: pre;
+}
+.nb-file-note,
+.nb-file-hint {
+  color: var(--k-muted);
+  font-style: italic;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+}
+.nb-kfit-sheet.k-input {
+  min-width: 160px;
+  height: 28px;
+}
+.nb-kfit-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--k-muted);
+  font-size: 12.5px;
+}
+.nb-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  border-bottom: 1px solid var(--k-border);
+}
+.nb-tab {
+  padding: 4px 14px;
+  border: 1px solid var(--k-border);
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  background: var(--k-chrome);
+  color: var(--k-muted);
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.nb-tab.on {
+  background: var(--nb-card);
+  color: var(--k-text);
+  margin-bottom: -1px;
+  padding-bottom: 5px;
+}
+.nb-kfit-busy {
+  margin-left: 8px;
+  color: var(--k-muted);
+  font-size: 12px;
+}
+.nb-kfit-plot {
+  display: block;
+  max-width: 100%;
+  background: #ffffff;
+}
+.nb-kfit-table {
+  max-height: 420px;
+  overflow: auto;
+}
+.nb-kfit-table table {
+  border-collapse: collapse;
+  font: 12px var(--k-mono);
+}
+.nb-kfit-table th,
+.nb-kfit-table td {
+  padding: 2px 8px;
+  border: 1px solid var(--k-border);
+  text-align: right;
+  white-space: nowrap;
+}
+.nb-kfit-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--k-chrome);
+}
+.nb-kfit-table tbody tr:nth-child(even) td {
+  background: var(--k-alt);
+}
+.nb-ktex-bar,
+.nb-mol-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 6px 10px;
+  background: var(--k-chrome);
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+}
+.nb-ktex-bar {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.nb-ktex-names {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nb-ktex-names b {
+  font-size: 15px;
+}
+.nb-ktex-names span {
+  color: var(--k-muted);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nb-ktex-page {
+  min-width: 70px;
+  text-align: center;
+  font-size: 12.5px;
+}
+.nb-ktex-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--k-border);
+}
+.nb-ktex-desk {
+  height: 640px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: #6b6f75;
+  border-radius: 4px;
+}
+.nb-ktex-pg {
+  max-width: 100%;
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+}
+.nb-mol-head,
+.nb-mol-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nb-mol-entry .k-input {
+  flex: 1;
+}
+.nb-mol-mode {
+  min-width: 34px;
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--k-text);
+  cursor: pointer;
+}
+.nb-mol-mode.on {
+  background: color-mix(in srgb, var(--k-accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--k-accent) 55%, transparent);
+  font-weight: 600;
+}
+.nb-mol-stage {
+  height: 440px;
+  display: grid;
+  place-items: center;
+  background: var(--nb-editor);
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.nb-mol-3d,
+.nb-mol-2d {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+.nb-mol-2d {
+  background: #ffffff;
+  cursor: default;
+}
+.nb-mol-empty {
+  color: var(--k-muted);
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
+/* ---- Git dialogs */
+.nb-git-remote,
+.nb-git-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 760px;
+  user-select: text;
+}
+.nb-git-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.nb-git-table th,
+.nb-git-table td {
+  padding: 4px 8px;
+  border: 1px solid var(--k-border);
+  text-align: left;
+}
+.nb-git-buttons,
+.nb-git-branchrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.nb-git-branchrow .k-input {
+  min-width: 120px;
+}
+.nb-git-note {
+  color: var(--k-muted);
+  font-size: 12.5px;
+}
+.nb-git-split {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(260px, 1.2fr);
+  gap: 8px;
+  height: 380px;
+}
+.nb-git-list {
+  overflow: auto;
+  border: 1px solid var(--k-border);
+  border-radius: 5px;
+}
+.nb-git-commit {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  column-gap: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid color-mix(in srgb, var(--k-border) 60%, transparent);
+}
+.nb-git-commit.sel {
+  background: var(--k-selection);
+}
+.nb-git-dot {
+  grid-row: span 2;
+  width: 10px;
+  height: 10px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--k-accent);
+}
+.nb-git-subject {
+  font-weight: 600;
+}
+.nb-git-meta {
+  grid-column: 2;
+  color: var(--k-muted);
+  font-size: 11.5px;
+}
+.nb-git-ref {
+  grid-column: 2;
+  justify-self: start;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--k-accent) 25%, transparent);
+  font-size: 11px;
+}
+.nb-git-diff {
+  margin: 0;
+  padding: 6px;
+  overflow: auto;
+  border: 1px solid var(--k-border);
+  border-radius: 5px;
+  font: 11.5px/1.35 var(--k-mono);
+  white-space: pre;
+}
+.nb-about-icon {
+  float: right;
+  margin: 0 0 6px 10px;
 }
