@@ -3,7 +3,7 @@
 
 import {
   Atom, Bird, Blocks, Box, FlaskConical, Rocket, Spade, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
-  Settings, Sheet, Sigma, Sparkles, SquareTerminal,
+  Settings, Sheet, Sigma, Sparkles, SquareTerminal, StickyNote,
 } from 'lucide-react'
 import type { AppManifest } from './types'
 
@@ -204,6 +204,21 @@ export const APPS: AppManifest[] = [
     minSize: { w: 360, h: 240 },
     fileTypes: ['.txt', '.md', '.py', '.json', '.csv', '.js', '.ts', '.html', '.css', '.tex', '.bib', '.yml', '.yaml', '.xml', '.log', '.ini', '.toml', '.sh', ''],
     desktop: true,
+  },
+  {
+    id: 'notes',
+    name: 'Notes',
+    icon: StickyNote,
+    color: '#e6a817',
+    image: '/icons/apps/notes.png',
+    brand: { label: 'KNotes', from: '#ffd65c', to: '#cd8000' },
+    category: 'system',
+    group: 'Office',
+    description: 'Everyday notes: folders, checklists, #tags, pictures and files, synced when signed in',
+    load: () => import('@/apps/notes/Notes'),
+    defaultSize: { w: 1060, h: 680 },
+    minSize: { w: 560, h: 360 },
+    singleton: true,
   },
   {
     id: 'terminal',

@@ -69,6 +69,7 @@ export function TopBar() {
         '-',
         { label: 'System Settings…', onClick: () => wm.open('settings') },
         { label: 'Launchpad', onClick: openLaunchpad },
+        { label: 'Quick Note', onClick: () => wm.open('notes', { quickNote: Date.now() }) },
         { label: fullscreen ? 'Exit Full Screen' : 'Enter Full Screen', onClick: () => void toggleFullscreen() },
         '-',
         { label: 'Take Screenshot', shortcut: '⇧⌘3', onClick: () => void takeScreenshot('screen') },

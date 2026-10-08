@@ -697,3 +697,7 @@ APP_TOOL_SETS.push(KHERVEMOL_TOOL_SET)
 // KherveCAD (its tools' code: src/apps/khervecad/aiTools.ts)
 import { KHERVECAD_TOOL_SET } from './manifests/khervecad.ts'
 APP_TOOL_SETS.push(KHERVECAD_TOOL_SET)
+
+// Notes (its tools' code: src/apps/notes/aiTools.ts)
+import { NOTES_TOOL_SET } from './manifests/notes.ts'
+APP_TOOL_SETS.push(NOTES_TOOL_SET)

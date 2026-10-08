@@ -1,0 +1,625 @@
+/* Notes: folders | notes | the note. Theme colours only (dark black + green, or Light). */
+
+.nt-app {
+  overflow: hidden;
+  container-type: inline-size;
+}
+.nt-panes {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(150px, 210px) minmax(210px, 300px) minmax(0, 1fr);
+}
+
+/* ------------------------------------------------------------ folders */
+
+.nt-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--k-chrome);
+  border-right: 1px solid var(--k-border);
+}
+.nt-side-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 6px;
+}
+.nt-side-head {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--k-muted);
+  padding: 10px 8px 4px;
+}
+.nt-side-head:first-child {
+  padding-top: 2px;
+}
+.nt-side-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding-right: 8px;
+  border-radius: var(--k-radius-sm);
+  cursor: default;
+  user-select: none;
+  color: var(--k-text);
+}
+.nt-side-row svg {
+  flex: none;
+  color: var(--k-accent);
+}
+.nt-side-row:hover {
+  background: var(--k-button-hover);
+}
+.nt-side-row.active {
+  background: var(--k-selection);
+}
+.nt-side-row.drop {
+  outline: 2px solid var(--k-accent);
+  outline-offset: -2px;
+}
+.nt-side-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nt-count {
+  font-size: 11.5px;
+  color: var(--k-muted);
+  font-variant-numeric: tabular-nums;
+}
+.nt-rename {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 4px;
+  border: 1px solid var(--k-accent);
+  border-radius: 4px;
+  background: var(--k-bg);
+  color: var(--k-text);
+  outline: none;
+}
+.nt-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 2px 6px;
+}
+.nt-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 22px;
+  padding: 0 8px 0 6px;
+  border-radius: 11px;
+  border: 1px solid var(--k-border);
+  background: var(--k-button);
+  color: var(--k-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.nt-tag-chip svg {
+  color: var(--k-accent);
+}
+.nt-tag-chip:hover {
+  background: var(--k-button-hover);
+}
+.nt-tag-chip.active {
+  background: var(--k-accent);
+  color: var(--k-accent-text);
+  border-color: transparent;
+}
+.nt-tag-chip.active svg {
+  color: inherit;
+}
+.nt-side-foot {
+  padding: 8px;
+  border-top: 1px solid var(--k-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.nt-sync {
+  font-size: 11px;
+  color: var(--k-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.nt-sync.error {
+  color: var(--k-danger);
+}
+
+/* ------------------------------------------------------------ note list */
+
+.nt-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--k-border);
+  background: var(--k-surface);
+}
+.nt-list-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 6px 8px;
+  min-height: 40px;
+  border-bottom: 1px solid var(--k-border);
+  background: var(--k-chrome);
+}
+.nt-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 6px 0 8px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+  background: var(--k-bg);
+  color: var(--k-muted);
+}
+.nt-search:focus-within {
+  border-color: var(--k-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-accent) 22%, transparent);
+}
+.nt-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--k-text);
+}
+.nt-search input::placeholder {
+  color: var(--k-placeholder, var(--k-muted));
+}
+.nt-clear {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--k-button-hover);
+  color: var(--k-text);
+  cursor: pointer;
+}
+.nt-list-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px 4px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.nt-list-title > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nt-list-title .k-muted {
+  font-weight: 400;
+  font-size: 11.5px;
+  flex: none;
+}
+.nt-trash-note {
+  margin: 4px 10px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  color: var(--k-muted);
+  background: var(--k-alt);
+  border-radius: var(--k-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.nt-rows {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 2px 6px 10px;
+  outline: none;
+}
+.nt-group {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--k-muted);
+  padding: 10px 8px 4px;
+}
+.nt-row {
+  padding: 8px 10px;
+  border-radius: var(--k-radius-sm);
+  cursor: default;
+  user-select: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--k-border) 60%, transparent);
+}
+.nt-row:hover {
+  background: var(--k-button-hover);
+}
+.nt-row.active {
+  background: var(--k-selection);
+  border-bottom-color: transparent;
+}
+.nt-rows:focus .nt-row.active {
+  background: color-mix(in srgb, var(--k-accent) 32%, var(--k-surface));
+}
+.nt-row-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  min-width: 0;
+}
+.nt-row-title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nt-pin {
+  flex: none;
+  color: var(--k-accent);
+}
+.nt-row-sub {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  margin-top: 2px;
+  min-width: 0;
+}
+.nt-row-date {
+  flex: none;
+  color: var(--k-text);
+  opacity: 0.85;
+}
+.nt-row-preview {
+  color: var(--k-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nt-row-folder {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--k-muted);
+}
+
+/* ------------------------------------------------------------ the note */
+
+.nt-editor {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--k-bg);
+}
+.nt-toolbar {
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nt-style-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--k-radius-sm);
+  background: transparent;
+  color: var(--k-text);
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}
+.nt-style-btn:hover:not(:disabled) {
+  background: var(--k-button-hover);
+}
+.nt-style-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.nt-page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 28px 40px;
+  cursor: text;
+}
+.nt-page.empty {
+  cursor: default;
+  padding: 0;
+}
+.nt-date {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--k-muted);
+  margin: 4px 0 14px;
+}
+.nt-blank {
+  gap: 10px;
+}
+.nt-blank svg {
+  color: var(--k-accent);
+}
+.nt-where {
+  font-size: 11.5px;
+}
+
+.nt-content {
+  max-width: 820px;
+  margin: 0 auto;
+}
+.nt-prose {
+  outline: none;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--k-text);
+  min-height: 200px;
+  caret-color: var(--k-accent);
+  word-wrap: break-word;
+}
+.nt-prose > :first-child {
+  margin-top: 0;
+}
+.nt-prose p {
+  margin: 0 0 0.35em;
+}
+/* The first line is the title: it looks like one. */
+.nt-prose > p:first-child {
+  font-size: 1.6em;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 0.45em;
+}
+.nt-prose h1 {
+  font-size: 1.75em;
+  line-height: 1.2;
+  margin: 0.6em 0 0.35em;
+}
+.nt-prose h2 {
+  font-size: 1.3em;
+  margin: 0.7em 0 0.3em;
+}
+.nt-prose h3 {
+  font-size: 1.08em;
+  margin: 0.7em 0 0.25em;
+}
+.nt-prose a {
+  color: var(--k-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: text;
+}
+.nt-prose code {
+  font-family: var(--k-mono);
+  font-size: 0.88em;
+  background: var(--k-alt);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.nt-prose pre {
+  background: var(--k-alt);
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  padding: 10px 12px;
+  font-family: var(--k-mono);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.nt-prose pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+.nt-prose blockquote {
+  margin: 0.5em 0;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--k-accent);
+  color: color-mix(in srgb, var(--k-text) 80%, var(--k-muted));
+}
+.nt-prose hr {
+  border: none;
+  border-top: 1px solid var(--k-border);
+  margin: 1em 0;
+}
+.nt-prose ul,
+.nt-prose ol {
+  padding-left: 1.5em;
+  margin: 0.2em 0 0.5em;
+}
+.nt-prose li > p {
+  margin: 0.1em 0;
+}
+.nt-prose li::marker {
+  color: var(--k-accent);
+}
+
+/* Checklists: round tick boxes, ticked items greyed. */
+.nt-prose ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.2em;
+}
+.nt-prose ul[data-type='taskList'] ul[data-type='taskList'] {
+  padding-left: 1.6em;
+}
+.nt-prose ul[data-type='taskList'] > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.nt-prose ul[data-type='taskList'] > li > label {
+  flex: none;
+  margin-top: 0.22em;
+  user-select: none;
+}
+.nt-prose ul[data-type='taskList'] > li > div {
+  flex: 1;
+  min-width: 0;
+}
+.nt-prose ul[data-type='taskList'] input[type='checkbox'] {
+  appearance: none;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--k-muted);
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.nt-prose ul[data-type='taskList'] input[type='checkbox']:hover {
+  border-color: var(--k-accent);
+}
+.nt-prose ul[data-type='taskList'] input[type='checkbox']:checked {
+  background: var(--k-accent);
+  border-color: var(--k-accent);
+}
+.nt-prose ul[data-type='taskList'] input[type='checkbox']:checked::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid var(--k-accent-text);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.nt-prose ul[data-type='taskList'] > li[data-checked='true'] > div > p {
+  color: var(--k-muted);
+  text-decoration: line-through;
+}
+
+/* Tables */
+.nt-prose table {
+  border-collapse: collapse;
+  margin: 0.6em 0;
+  table-layout: fixed;
+  width: 100%;
+  overflow: hidden;
+}
+.nt-prose td,
+.nt-prose th {
+  border: 1px solid var(--k-border);
+  padding: 4px 8px;
+  vertical-align: top;
+  min-width: 60px;
+  position: relative;
+}
+.nt-prose th {
+  background: var(--k-alt);
+  font-weight: 600;
+  text-align: left;
+}
+.nt-prose td p,
+.nt-prose th p {
+  margin: 0;
+}
+.nt-prose .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--k-accent) 22%, transparent);
+  pointer-events: none;
+}
+
+/* Pictures and files */
+.nt-prose .nt-figure {
+  margin: 0.6em 0;
+}
+.nt-prose .nt-figure img {
+  display: block;
+  max-width: 100%;
+  max-height: 520px;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-border);
+}
+.nt-prose .nt-figure.loading img,
+.nt-prose .nt-figure.missing img {
+  width: 160px;
+  height: 100px;
+  background: var(--k-alt);
+}
+.nt-prose .nt-figure.missing::after {
+  content: 'Picture not found';
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.nt-prose .ProseMirror-selectednode img,
+.nt-prose .ProseMirror-selectednode.nt-attach {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 2px;
+}
+.nt-prose .nt-attach {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0.4em 0;
+  padding: 6px 12px 6px 10px;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-surface);
+  cursor: default;
+  user-select: none;
+}
+.nt-attach-icon {
+  display: grid;
+  color: var(--k-accent);
+}
+.nt-attach-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nt-attach-hint {
+  font-size: 11px;
+  color: var(--k-muted);
+}
+
+/* #tags */
+.nt-prose .nt-tag {
+  color: var(--k-accent);
+  font-weight: 600;
+}
+
+.nt-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--k-muted);
+  font-weight: 400;
+  font-size: 0.6em;
+  line-height: 2.1;
+}
+
+@container (max-width: 700px) {
+  .nt-panes {
+    grid-template-columns: 0 minmax(180px, 240px) minmax(0, 1fr);
+  }
+  .nt-sidebar {
+    display: none;
+  }
+}
