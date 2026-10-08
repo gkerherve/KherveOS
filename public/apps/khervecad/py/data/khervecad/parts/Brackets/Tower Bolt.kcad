@@ -1,0 +1,792 @@
+{
+ "format": "kcad",
+ "version": 11,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "plate =",
+    "visible": true,
+    "params": {
+     "variable": "plate",
+     "value": 2.5,
+     "description": "Tower bolt: a sliding round bolt in two guides, with its keeper"
+    }
+   },
+   {
+    "type": "assign",
+    "name": "bolt =",
+    "visible": true,
+    "params": {
+     "variable": "bolt",
+     "value": 9.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "long =",
+    "visible": true,
+    "params": {
+     "variable": "long",
+     "value": 110.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "back =",
+    "visible": true,
+    "params": {
+     "variable": "back",
+     "value": 100.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "wide =",
+    "visible": true,
+    "params": {
+     "variable": "wide",
+     "value": 30.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Tower Bolt",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c9a24a",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "kcad_round_plate [Backplate]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "assign",
+          "name": "w =",
+          "visible": true,
+          "params": {
+           "variable": "w",
+           "value": "back"
+          }
+         },
+         {
+          "type": "assign",
+          "name": "d =",
+          "visible": true,
+          "params": {
+           "variable": "d",
+           "value": "wide"
+          }
+         },
+         {
+          "type": "assign",
+          "name": "t =",
+          "visible": true,
+          "params": {
+           "variable": "t",
+           "value": "plate"
+          }
+         },
+         {
+          "type": "assign",
+          "name": "r =",
+          "visible": true,
+          "params": {
+           "variable": "r",
+           "value": "wide / 2"
+          }
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "r, w - r"
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For y",
+              "visible": true,
+              "params": {
+               "variable": "y",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "r, d - r"
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": "x",
+                 "y": "y",
+                 "z": 0.0,
+                 "height": "t",
+                 "radius_bottom": "r",
+                 "radius_top": "r",
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "10, back - 10"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For y",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "9, wide - 9"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": "y",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "kcad_countersink",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "d =",
+                "visible": true,
+                "params": {
+                 "variable": "d",
+                 "value": "4.5"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "head =",
+                "visible": true,
+                "params": {
+                 "variable": "head",
+                 "value": "9"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "t =",
+                "visible": true,
+                "params": {
+                 "variable": "t",
+                 "value": "plate"
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -1.0,
+                 "height": "t + 2",
+                 "radius_bottom": "(d) / 2",
+                 "radius_top": "(d) / 2",
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": "t - (head - d) / 2",
+                 "height": "(head - d) / 2 + 0.01",
+                 "radius_bottom": "(d) / 2",
+                 "radius_top": "(head) / 2",
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For x [Guide]",
+      "visible": true,
+      "params": {
+       "variable": "x",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "18, 56"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "x",
+         "y": "wide / 2",
+         "z": "plate"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -9.0,
+             "z": 0.0,
+             "width": 13.0,
+             "depth": 18.0,
+             "height": 13.0,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -1.0,
+             "y": 0.0,
+             "z": 8.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 15.0,
+                 "radius_bottom": "(bolt + 1) / 2",
+                 "radius_top": "(bolt + 1) / 2",
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 4.0,
+       "y": "wide / 2",
+       "z": "plate + 8"
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Bolt]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": "long",
+           "radius_bottom": "(bolt) / 2",
+           "radius_top": "(bolt) / 2",
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 40.0,
+       "y": "wide / 2",
+       "z": "plate + 8"
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Knob stem]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 22.0,
+           "radius_bottom": 2.5,
+           "radius_top": 2.5,
+           "segments": 48,
+           "center": false
+          }
+         },
+         {
+          "type": "sphere",
+          "name": "Sphere [Knob]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 22.0,
+           "radius": 5.5,
+           "segments": 48
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Keeper",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c9a24a",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 130.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "kcad_round_plate [Keeper plate]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "w =",
+            "visible": true,
+            "params": {
+             "variable": "w",
+             "value": "28"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "wide"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "t =",
+            "visible": true,
+            "params": {
+             "variable": "t",
+             "value": "plate"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "r =",
+            "visible": true,
+            "params": {
+             "variable": "r",
+             "value": "wide / 2"
+            }
+           },
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "r, w - r"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For y",
+                "visible": true,
+                "params": {
+                 "variable": "y",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, d - r"
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": "y",
+                   "z": 0.0,
+                   "height": "t",
+                   "radius_bottom": "r",
+                   "radius_top": "r",
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 144.0,
+         "y": "wide / 2",
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "kcad_countersink",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "4.5"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "head =",
+            "visible": true,
+            "params": {
+             "variable": "head",
+             "value": "9"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "t =",
+            "visible": true,
+            "params": {
+             "variable": "t",
+             "value": "plate"
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": -1.0,
+             "height": "t + 2",
+             "radius_bottom": "(d) / 2",
+             "radius_top": "(d) / 2",
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "t - (head - d) / 2",
+             "height": "(head - d) / 2 + 0.01",
+             "radius_bottom": "(d) / 2",
+             "radius_top": "(head) / 2",
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate [Keeper block]",
+      "visible": true,
+      "params": {
+       "x": 132.0,
+       "y": "wide / 2",
+       "z": "plate"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -9.0,
+           "z": 0.0,
+           "width": 15.0,
+           "depth": 18.0,
+           "height": 13.0,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": 0.0,
+           "z": 8.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 17.0,
+               "radius_bottom": "(bolt + 1.5) / 2",
+               "radius_top": "(bolt + 1.5) / 2",
+               "segments": 48,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

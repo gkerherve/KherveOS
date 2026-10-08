@@ -2,7 +2,7 @@
 // downloaded the first time a window of theirs opens.
 
 import {
-  Atom, Bird, Blocks, FlaskConical, Rocket, Spade, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
+  Atom, Bird, Blocks, Box, FlaskConical, Rocket, Spade, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sheet, Sigma, Sparkles, SquareTerminal,
 } from 'lucide-react'
 import type { AppManifest } from './types'
@@ -292,6 +292,21 @@ export const APPS: AppManifest[] = [
     defaultSize: { w: 1240, h: 820 },
     minSize: { w: 760, h: 520 },
     fileTypes: ['.kmol', '.mol', '.sdf', '.pdb', '.xyz', '.cif'],
+  },
+  {
+    id: 'khervecad',
+    name: 'KherveCAD',
+    icon: Box,
+    color: '#3776ab',
+    image: '/icons/apps/khervecad.png',
+    brand: { label: 'KCAD', from: '#5b9bd5', to: '#3776ab' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'CAD with OpenSCAD as the engine: object tree, 2D sketch, 3D view, ~2,300 library parts',
+    load: () => import('@/apps/khervecad/KherveCAD'),
+    defaultSize: { w: 1400, h: 880 },
+    minSize: { w: 900, h: 560 },
+    fileTypes: ['.kcad', '.scad', '.csg', '.stl', '.obj', '.off', '.3mf', '.amf'],
   },
   {
     id: 'browser',
