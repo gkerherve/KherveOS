@@ -83,6 +83,21 @@ export interface Answer {
   [field: string]: unknown
 }
 
+/**
+ * How a bridge installs its Python and talks to it. KherveFitting's own is the
+ * default; the technique apps (src/apps/khervetech) bring theirs.
+ */
+export interface BridgeConfig {
+  /** The Python cell that installs the engine in a fresh worker. */
+  install: () => Promise<string>
+  /** The Python cell that answers a batch of requests (printing the answers). */
+  run: (requests: { op: string; args: unknown }[]) => string
+  /** The answers in what that cell printed, or null. */
+  parse: (out: string) => Answer[] | null
+  /** Named in the error requests get when the window closes. */
+  name?: string
+}
+
 interface Job {
   op: string
   args: unknown
@@ -141,7 +156,18 @@ export class FitBridge {
   private unsub: () => void
   private disposed = false
 
-  constructor(ns: string) {
+  private readonly config: BridgeConfig
+
+  constructor(ns: string, config?: BridgeConfig) {
+    this.config = config ?? {
+      install: () => this.kfInstall(),
+      run: (requests) => `await __import__('kfweb.bridge', fromlist=['run']).run(${pyStr(JSON.stringify(requests))})`,
+      parse: (out) => {
+        const i = out.lastIndexOf(START)
+        const k = i >= 0 ? out.indexOf(END, i) : -1
+        return i >= 0 && k > i ? (JSON.parse(out.slice(i + START.length, k)) as Answer[]) : null
+      },
+    }
     this.kernel = new PythonKernel(ns)
     this.unsub = this.kernel.onStatus((s: KernelStatus) => {
       if (s === 'off' || s === 'dead') this.installedFor = null
@@ -174,7 +200,7 @@ export class FitBridge {
   dispose() {
     this.disposed = true
     this.unsub()
-    for (const j of this.queue) j.reject(new Error('KherveFitting was closed.'))
+    for (const j of this.queue) j.reject(new Error(`${this.config.name ?? 'KherveFitting'} was closed.`))
     this.queue = []
     this.kernel.dispose()
   }
@@ -214,12 +240,17 @@ export class FitBridge {
     return this.wheels
   }
 
-  private async install() {
+  private async kfInstall(): Promise<string> {
     const [files, wheels] = await Promise.all([this.loadFiles(), this.loadWheels()])
-    await this.kernel.start()
-    const code =
+    return (
       `${INSTALL}_kf_wheels(__import__('json').loads(${pyStr(JSON.stringify(wheels))}), ${pyStr(ROOT)})\n` +
       `_kf_install(__import__('json').loads(${pyStr(JSON.stringify(files))}), ${pyStr(ROOT)})\ndel _kf_install, _kf_wheels`
+    )
+  }
+
+  private async install() {
+    const code = await this.config.install()
+    await this.kernel.start()
     const r = await this.kernel.runCell(code)
     if (!r.ok) throw new Error(r.error?.message ?? 'The fitting engine could not be installed.')
     this.installedFor = this.kernel
@@ -254,7 +285,7 @@ export class FitBridge {
 
   private async runBatch(jobs: Job[]) {
     const requests = jobs.map((j) => ({ op: j.op, args: j.args }))
-    const code = `await __import__('kfweb.bridge', fromlist=['run']).run(${pyStr(JSON.stringify(requests))})`
+    const code = this.config.run(requests)
     let out = ''
     let answers: Answer[] | null = null
     let failure: Error | null = null
@@ -263,10 +294,8 @@ export class FitBridge {
         onStdout: (t) => (out += t),
         onStatus: (t) => this.onProgress(t),
       })
-      const i = out.lastIndexOf(START)
-      const k = i >= 0 ? out.indexOf(END, i) : -1
-      if (i >= 0 && k > i) answers = JSON.parse(out.slice(i + START.length, k)) as Answer[]
-      else failure = new Error(r.error ? `${r.error.type}: ${r.error.message}` : 'Python gave no answer.')
+      answers = this.config.parse(out)
+      if (!answers) failure = new Error(r.error ? `${r.error.type}: ${r.error.message}` : 'Python gave no answer.')
     } catch (e) {
       failure = e instanceof Error ? e : new Error(String(e))
     } finally {

@@ -1,0 +1,432 @@
+/* The technique apps (KherveTGA, KherveBET…): KherveFitting's window
+   (khervefitting.css, .kf-app) plus the desktop's wx tool windows drawn from
+   their sizers (WxUI.tsx) and the recorded matplotlib figures (FigurePlot.tsx).
+   wx's look on Windows: grey panels, framed static boxes, white text boxes,
+   grey push buttons (green where the desktop colours them #4FBE9F). */
+
+.kt-app .kt-mainplot {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  background: #fff;
+}
+.kt-app .kt-figure {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.kt-app .kt-svg {
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+.kt-app .kt-svg.kt-pan {
+  cursor: grab;
+}
+.kt-app .kt-svg.kt-zoom {
+  cursor: zoom-in;
+}
+.kt-app .kt-empty {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #555;
+  text-align: center;
+  line-height: 1.5;
+}
+.kt-app .kt-empty img {
+  opacity: 0.85;
+}
+.kt-app .kt-right {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+.kt-app .kt-right > .kf-notebook {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.kt-app .kt-hint {
+  padding: 16px;
+  color: #444;
+  line-height: 1.5;
+}
+.kt-app .kt-mpltable {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+.kt-app .kt-mpltable table {
+  border-collapse: collapse;
+  width: 96%;
+  font-family: Calibri, Carlito, 'Segoe UI', Arial, sans-serif;
+}
+.kt-app .kt-mpltable td {
+  border: 1px solid #d1d1d1;
+  padding: 1px 3px;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------- toolbar section tiles */
+.kt-app .kt-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #969696;
+  color: #333;
+  font: bold 9px/1 'Segoe UI', Tahoma, Arial, sans-serif;
+  letter-spacing: -0.2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.kt-app .kt-tile.kt-tile-green {
+  background: #4fbe9f;
+}
+
+/* ----------------------------------------------------------- wx windows */
+.kt-app .kt-float {
+  min-width: 300px;
+  min-height: 200px;
+}
+.kt-app .kt-float-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background: rgb(240, 240, 240);
+}
+.kt-app .kt-float-body > .kt-panel {
+  flex: 1 1 auto;
+}
+.kt-app .kt-modal-back {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+}
+.kt-app .kt-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.kt-app .kt-panel.kt-scroll {
+  overflow: auto;
+}
+.kt-app .kt-box {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.kt-app .kt-box.kt-v {
+  flex-direction: column;
+}
+.kt-app .kt-box.kt-h {
+  flex-direction: row;
+}
+.kt-app .kt-box.kt-wrap {
+  flex-wrap: wrap;
+}
+.kt-app .kt-grid {
+  display: grid;
+  align-items: center;
+  min-width: 0;
+}
+.kt-app .kt-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.kt-app .kt-item.kt-fill {
+  align-items: stretch;
+}
+.kt-app .kt-item.kt-fill > * {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+.kt-app .kt-staticbox {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 4px 4px;
+  border: 1px solid #c8c8c8;
+  border-radius: 2px;
+}
+.kt-app .kt-staticbox > legend {
+  padding: 0 3px;
+  font: 12px var(--kf-font);
+  color: #000;
+}
+.kt-app .kt-staticbox > .kt-box,
+.kt-app .kt-staticbox > .kt-grid {
+  flex: 1 1 auto;
+}
+.kt-app .kt-text {
+  white-space: pre-wrap;
+  line-height: 15px;
+  padding-top: 1px;
+}
+.kt-app .kt-hline {
+  height: 1px;
+  background: #c8c8c8;
+  align-self: stretch;
+}
+.kt-app .kt-vline {
+  width: 1px;
+  background: #c8c8c8;
+  align-self: stretch;
+}
+.kt-app .kt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 1px 8px;
+  border: 1px solid #adadad;
+  border-radius: 0;
+  background: #e1e1e1;
+  color: #000;
+  font: 12px var(--kf-font);
+  white-space: nowrap;
+}
+.kt-app .kt-btn:hover:not(:disabled) {
+  border-color: #0078d7;
+  background: #e5f1fb;
+}
+.kt-app .kt-btn.kt-green {
+  background: #4fbe9f;
+}
+.kt-app .kt-btn.kt-green:hover:not(:disabled) {
+  background: #63caad;
+}
+.kt-app .kt-btn.kt-on {
+  background: #cce4f7;
+  border-color: #005499;
+}
+.kt-app .kt-btn:disabled {
+  color: #838383;
+  background: #cccccc;
+  border-color: #bfbfbf;
+}
+.kt-app .kt-input,
+.kt-app .kt-choice {
+  height: 22px;
+  min-width: 40px;
+  padding: 0 3px;
+  border: 1px solid #7a7a7a;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font: 12px var(--kf-font);
+}
+.kt-app .kt-choice {
+  padding: 0 1px;
+}
+.kt-app .kt-input.kt-multi {
+  height: auto;
+  min-height: 70px;
+  padding: 2px 3px;
+  resize: none;
+  user-select: text;
+}
+.kt-app .kt-input.kt-ro {
+  background: #fff;
+}
+.kt-app .kt-input:disabled,
+.kt-app .kt-choice:disabled {
+  background: #f0f0f0;
+  color: #6d6d6d;
+}
+.kt-app .kt-spin {
+  display: inline-flex;
+  height: 22px;
+  border: 1px solid #7a7a7a;
+  background: #fff;
+}
+.kt-app .kt-spin input {
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 28px;
+  border: 0;
+  padding: 0 3px;
+  font: 12px var(--kf-font);
+  background: transparent;
+}
+.kt-app .kt-spin-btns {
+  display: flex;
+  flex-direction: column;
+  width: 15px;
+}
+.kt-app .kt-spin-btns button {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid #adadad;
+  background: #f0f0f0;
+  font-size: 6px;
+  line-height: 1;
+}
+.kt-app .kt-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.kt-app .kt-listbox {
+  min-height: 60px;
+  overflow: auto;
+  border: 1px solid #7a7a7a;
+  background: #fff;
+}
+.kt-app .kt-listitem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 3px;
+  white-space: nowrap;
+}
+.kt-app .kt-listitem.kt-sel {
+  background: #cce8ff;
+}
+.kt-app .kt-wxgrid {
+  min-height: 80px;
+  overflow: auto;
+  border: 1px solid #a0a0a0;
+  background: rgb(250, 250, 250);
+}
+.kt-app .kt-wxgrid table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  font: 12px var(--kf-font);
+}
+.kt-app .kt-wxgrid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 1px 3px;
+  border: 1px solid #c8c8c8;
+  background: #f0f0f0;
+  font-weight: normal;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kt-app .kt-wxgrid th.kt-rowlabel {
+  position: sticky;
+  left: 0;
+  text-align: center;
+  cursor: default;
+}
+.kt-app .kt-wxgrid th.kt-corner {
+  left: 0;
+  z-index: 2;
+}
+.kt-app .kt-wxgrid td {
+  height: 20px;
+  padding: 0 3px;
+  border: 1px solid #d8d8d8;
+  background: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kt-app .kt-wxgrid tr.kt-sel td {
+  background: #cce8ff;
+}
+.kt-app .kt-wxgrid td.kt-cursor {
+  outline: 2px solid #000;
+  outline-offset: -2px;
+}
+.kt-app .kt-wxgrid td.kt-editing {
+  padding: 0;
+}
+.kt-app .kt-wxgrid td.kt-editing input {
+  width: 100%;
+  height: 19px;
+  border: 0;
+  font: 12px var(--kf-font);
+}
+.kt-app .kt-notebook {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.kt-app .kt-notebook > .kf-tabs {
+  flex: none;
+  flex-wrap: wrap;
+}
+.kt-app .kt-pagebody {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  background: rgb(240, 240, 240);
+}
+.kt-app .kt-pagebody > .kt-panel {
+  flex: 1 1 auto;
+}
+.kt-app .kt-canvas {
+  display: flex;
+  min-height: 180px;
+  min-width: 120px;
+}
+.kt-app .kt-gauge {
+  width: 100%;
+}
+
+/* MyFrame.show_popup_message2: wx.adv.RichToolTip, a balloon on the main window */
+.kt-app .kt-tip {
+  position: absolute;
+  z-index: 150;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: min(520px, 90%);
+  padding: 8px 12px;
+  border: 1px solid #9a9a9a;
+  border-radius: 6px;
+  background: linear-gradient(#ffffff, #e8eef4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  color: #000;
+  font: 12px var(--kf-font);
+  white-space: pre-wrap;
+  cursor: default;
+}
+.kt-app .kt-tip b {
+  font-size: 13px;
+}
+.kt-app .kt-tip-error b {
+  color: #b00020;
+}
+
+/* A panel's top sizer fills the panel (wx gives a window's sizer the whole
+   client area); without this a notebook with flex children collapses to 0. */
+.kt-panel > .kt-box {
+  flex: 1 1 auto;
+  min-height: 0;
+}

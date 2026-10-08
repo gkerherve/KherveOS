@@ -62,3 +62,32 @@ free, open source, helping people. Avoid communist imagery (stars, hammer & sick
   `realtime.on(type, fn)` in the browser). Feature modules register their tables with `db.register_schema`.
 - Games run their own servers (PlanetCraft 8123, SimAI 8137, FaceCraft 8140) because their pages use
   absolute `/api/...` paths; `server/kherveos_server/games.py` whitelists and starts them (system `python3`).
+
+## Technique apps (KherveTGA, KherveBET, … from KherveFitting-AI)
+
+Each technique of the desktop KherveFitting-AI (`../KherveFittingPro`, dev-AI) is an app of its own
+on one base, `src/apps/khervetech/`: the desktop main window in that technique's mode (slim toolbar +
+technique button + section tiles, vertical plot toolbar, plot, TechniqueOverview right frame, menus
+from `khervefitting/menus.ts`). The desktop's Python runs **unchanged** in Pyodide:
+`public/apps/khervetech/py/desktop/` (copied by `tools/export_khervetech.py`; never hand-edit),
+under a headless wx (`py/shims/wx`, serialised widget trees drawn by `WxUI.tsx`) and a recording
+matplotlib (`py/shims/matplotlib`, figures drawn by `FigurePlot.tsx`); `py/ktech/` is the stand-in
+MyFrame (`frame.py`), the request bridge (`bridge.py`, KherveFitting's `FitBridge` with a config)
+and the AI driver (`project.py drive`). Modal wx dialogs replay: `ShowModal` raises `NeedModal`,
+the page asks, the request is sent again with `answers`.
+
+To add a technique (FTIR, Raman, UV-Vis, XRD, XAS, EELS…):
+1. `tools/export_khervetech.py` → `TECHNIQUES`: its modules (Import + ToolsMenu files), icon, example
+   folder (or a `make_<tech>_examples` generator); run it (copies the code, makes
+   `public/icons/apps/kherve<tech>.png`, `public/examples/kherve<tech>/`, `py/files.json`).
+2. `py/ktech/techniques.py` → `TECHS`: the File > Import entries (desktop functions), `open_paths`,
+   the analysis window's openers, `window_attr` / `windows`, `extras` (its `draw_<tech>_extras`).
+   If its code needs a wx widget, a matplotlib call or a desktop module the shims lack, add it there
+   (the error names it), not in the desktop copy; NumPy-2 gaps go in `ktech/compat.py`.
+3. `src/apps/khervetech/spec.ts` → `TECH_APPS`; `src/apps/kherve<tech>/Kherve<Tech>.tsx` (3 lines, see
+   khervetga) and `actions.ts` (AI `run` actions: the window's control attributes and handlers).
+4. Registry entry (group Science, `image: '/icons/apps/kherve<tech>.png'`, `fileTypes: ['.kfit', …]`),
+   `src/os/ai/manifests/kherve<tech>.ts` via `techniqueToolSet`, pushed in `appManifest.ts`.
+5. Tests: add the technique to `src/apps/khervetech/tests/engine.test.mjs` (real Pyodide:
+   `KHERVEOS_PYODIDE=…/pyodide/pyodide.mjs node --test src/apps/khervetech/tests/*.mjs`) and its
+   actions to `logic.test.mjs`; checklist `docs/parity/kherve<tech>.md`.

@@ -21,6 +21,11 @@ export interface MenuState {
   kineticEnergy: boolean
   canUndo: boolean
   canRedo: boolean
+  /** The technique apps (src/apps/khervetech): their File > Import and Tools submenus, by label. */
+  techImports?: Record<string, MenuItem[]>
+  techTools?: Record<string, MenuItem[]>
+  /** "Sheet" on a technique sheet (update_core_level_menu_labels), "Core Level" otherwise. */
+  noun?: string
 }
 
 const header = (label: string): MenuItem => ({ label, disabled: true })
@@ -52,7 +57,7 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
     sub('ASCII (.asc) - Surface Science Spectra', [off('File (.asc)'), off('Multiple files (folder)')]),
     sub('CSV (.csv)', [it('File (.csv)', 'importCsv'), off('Multiple files (folder)')]),
   ]
-  const tech = (label: string, items: string[]) => sub(label, items.map(off))
+  const tech = (label: string, items: string[]) => sub(label, s.techImports?.[label] ?? items.map(off))
   const importMenu: MenuItem[] = [
     it('Generic Excel (any layout)…', 'importGeneric'),
     sub('XPS', xpsImport),
@@ -128,6 +133,8 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
     it('Exit', 'exit', { shortcut: ctrl('Q') }),
   ]
 
+  const noun = s.noun ?? 'Core Level'
+  const nouns = `${noun}s`
   const edit: MenuItem[] = [
     { label: 'Undo', shortcut: ctrl('Z'), disabled: !s.canUndo || !h.undo, onClick: h.undo },
     { label: 'Redo', shortcut: ctrl('Y'), disabled: !s.canRedo || !h.redo, onClick: h.redo },
@@ -136,13 +143,13 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
     it('Remove All Lines', 'delAll'),
     it('Remove First Line', 'delFirst'),
     it('Remove Last Line', 'delLast'),
-    header('▬▬▬ Core Level ▬▬▬▬'),
-    it('Copy Core Level', 'copyCore'),
-    it('Paste Core Level', 'pasteCore'),
-    it('Delete Core Level', 'deleteSheet'),
-    it('Join Core Levels', 'joinCores'),
-    it('Crop Core Levels', 'crop'),
-    it('Rename Core Level', 'renameSheet'),
+    header(`▬▬▬ ${noun} ▬▬▬▬`),
+    it(`Copy ${noun}`, 'copyCore'),
+    it(`Paste ${noun}`, 'pasteCore'),
+    it(`Delete ${noun}`, 'deleteSheet'),
+    it(`Join ${nouns}`, 'joinCores'),
+    it(`Crop ${nouns}`, 'crop'),
+    it(`Rename ${noun}`, 'renameSheet'),
     header('▬▬▬▬▬▬▬▬▬▬▬▬▬'),
     it('Preferences', 'settings'),
   ]
@@ -173,7 +180,7 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
     { label: 'Show Kinetic Energy (Beta)', shortcut: ctrl('B'), checked: s.kineticEnergy, onClick: h.kineticEnergy, disabled: !h.kineticEnergy },
   ]
 
-  const techTool = (label: string) => sub(label, [off('Full Window (all tabs)')])
+  const techTool = (label: string) => sub(label, s.techTools?.[label] ?? [off('Full Window (all tabs)')])
   const tools: MenuItem[] = [
     sub('XPS', [
       it('Calculate Area Under Curve', 'measureArea'),

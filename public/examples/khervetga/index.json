@@ -1,0 +1,20 @@
+{
+ "examples": [
+  {
+   "file": "CaC2O4_H2O_STA_10Kmin.csv",
+   "title": "Calcium oxalate - STA (3 mass steps + DSC)"
+  },
+  {
+   "file": "BSCF_redox_cycles_air.csv",
+   "title": "Perovskite - 3 redox cycles (Cycles tab)"
+  },
+  {
+   "file": "PMMA_decomposition_bare.csv",
+   "title": "Polymer decomposition - bare temperature / mass CSV"
+  },
+  {
+   "file": "Ni_oxidation_stepped_isothermal.csv",
+   "title": "Nickel oxidation - stepped isothermal (kinetics)"
+  }
+ ]
+}

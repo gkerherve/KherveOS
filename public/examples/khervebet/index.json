@@ -1,0 +1,16 @@
+{
+ "examples": [
+  {
+   "file": "SBA15_silica_N2_77K.txt",
+   "title": "SBA-15 silica - type IV, H1 hysteresis (BJH)"
+  },
+  {
+   "file": "Activated_carbon_typeI.csv",
+   "title": "Activated carbon - type I microporous (t-plot)"
+  },
+  {
+   "file": "Alumina_nonporous_kPa.dat",
+   "title": "Alumina - type II, absolute pressure + P0 header"
+  }
+ ]
+}

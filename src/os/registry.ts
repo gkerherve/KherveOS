@@ -6,6 +6,7 @@ import {
   Settings, Sheet, Sigma, Sparkles, SquareTerminal, StickyNote,
 } from 'lucide-react'
 import { Calculator } from 'lucide-react'
+import { ChartScatter, Thermometer } from 'lucide-react'
 import type { AppManifest } from './types'
 
 export const APPS: AppManifest[] = [
@@ -105,6 +106,36 @@ export const APPS: AppManifest[] = [
   // Projects are the desktop's .kfit: a KherveTGA window given another technique's project hands it
   // on to that app. Raw .csv/.txt/.dat files stay KherveSheet's / Notepad's: "Open with" or the
   // app's File > Import.
+  {
+    id: 'khervetga',
+    name: 'KherveTGA',
+    icon: Thermometer,
+    color: '#4fbe9f',
+    image: '/icons/apps/khervetga.png',
+    brand: { label: 'TGA', from: '#7fdcc0', to: '#4fbe9f', fg: '#1d3b33' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'TGA / DSC analysis: mass steps, DTG, DSC enthalpies, events, cycles, isothermal kinetics (KherveFitting-AI)',
+    load: () => import('@/apps/khervetga/KherveTGA'),
+    defaultSize: { w: 1485, h: 820 },
+    minSize: { w: 760, h: 520 },
+    fileTypes: ['.kfit', '.tri'],
+  },
+  {
+    id: 'khervebet',
+    name: 'KherveBET',
+    icon: ChartScatter,
+    color: '#4fbe9f',
+    image: '/icons/apps/khervebet.png',
+    brand: { label: 'BET', from: '#7fdcc0', to: '#4fbe9f', fg: '#1d3b33' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'N2 physisorption: BET surface area, t-plot, BJH pore sizes (KherveFitting-AI)',
+    load: () => import('@/apps/khervebet/KherveBET'),
+    defaultSize: { w: 1485, h: 820 },
+    minSize: { w: 760, h: 520 },
+    fileTypes: ['.kfit'],
+  },
   {
     id: 'kherveslide',
     name: 'KherveSlide',
