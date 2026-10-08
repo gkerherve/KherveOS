@@ -104,6 +104,7 @@ export function techAiTools({ doc, spec, actions, open, examples, examplesDir }:
       const high = number(a, 'high')
       const run = { low, high, options }
       const args: Args = { call: typeof def.call === 'function' ? def.call(run) : def.call, read: def.read, set: def.set ? def.set(run) : {} }
+      if (def.args) args.args = def.args(run)
       const sheet = sheetName(doc, a)
       if (sheet) args.sheet = sheet
       if (def.range && low !== undefined && high !== undefined) args.range = [low, high]

@@ -19,12 +19,39 @@ export function installedPath(rel: string): string {
 /** A Python string literal (JSON's escapes are all valid Python). */
 export const pyStr = (s: string) => JSON.stringify(s)
 
-/** Python that writes the files (path → text) under ROOT and makes them importable, fresh. */
-export function installCode(files: Record<string, string>): string {
+/** py/files.json: the files every technique installs, and per technique (TECHS key) its own. */
+export interface FilesIndex {
+  rev: string
+  common: string[]
+  tech: Record<string, { files: string[]; wheels: string[]; packages: string[] }>
+}
+
+/** What one technique's worker installs: the common files and its own (py/-relative paths). */
+export function filesFor(index: FilesIndex, tech: string): { files: string[]; wheels: string[]; packages: string[] } {
+  const own = index.tech[tech.toUpperCase()]
+  if (!own) throw new Error(`No technique ${tech} in files.json`)
+  return { files: [...index.common, ...own.files], wheels: own.wheels, packages: own.packages }
+}
+
+/** KherveFitting's wheels, relative to the site root (shared with KherveFitting). */
+export const WHEELS_DIR = 'apps/khervefitting/py/wheels/'
+
+/**
+ * Python that writes the files (path → text) under ROOT and makes them importable, fresh;
+ * the wheels (name → base64) are unpacked once into ROOT/site.
+ */
+export function installCode(files: Record<string, string>, wheels: Record<string, string> = {}): string {
   const mapped: Record<string, string> = {}
   for (const [rel, text] of Object.entries(files)) mapped[installedPath(rel)] = text
-  return `def _kt_install(files, root):
-    import importlib, os, sys
+  return `def _kt_install(files, wheels, root):
+    import base64, importlib, io, os, sys, zipfile
+    site = root + '/site'
+    os.makedirs(site, exist_ok=True)
+    for name, b64 in wheels.items():
+        mark = site + '/.' + name
+        if not os.path.exists(mark):
+            zipfile.ZipFile(io.BytesIO(base64.b64decode(b64))).extractall(site)
+            open(mark, 'w').close()
     for rel, text in files.items():
         path = root + '/' + rel
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -32,10 +59,12 @@ export function installCode(files: Record<string, string>): string {
             f.write(text)
     if root not in sys.path:
         sys.path.insert(0, root)
-    for name in [m for m in sys.modules if m.split('.')[0] in ('ktech', 'libraries', 'wx', 'matplotlib')]:
+    if site not in sys.path:
+        sys.path.insert(1, site)
+    for name in [m for m in sys.modules if m.split('.')[0] in ('ktech', 'libraries', 'wx', 'matplotlib', 'mpl_toolkits')]:
         del sys.modules[name]
     importlib.invalidate_caches()
-_kt_install(__import__('json').loads(${pyStr(JSON.stringify(mapped))}), ${pyStr(ROOT)})
+_kt_install(__import__('json').loads(${pyStr(JSON.stringify(mapped))}), __import__('json').loads(${pyStr(JSON.stringify(wheels))}), ${pyStr(ROOT)})
 del _kt_install`
 }
 

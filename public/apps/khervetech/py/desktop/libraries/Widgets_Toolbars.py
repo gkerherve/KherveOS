@@ -1,6 +1,14 @@
 # KherveOS: these definitions cut unchanged from KherveFittingPro origin/dev-AI (ca1fe50), libraries/Widgets_Toolbars.py. Regenerate with tools/export_khervetech.py.
 
 
+def on_open_eels_window(window, event):
+    from libraries.ToolsMenu.EELS_Analysis import open_eels_window
+    if not hasattr(window, 'eels_window') or window.eels_window is None:
+        window.eels_window = open_eels_window(window)
+    else:
+        window.eels_window.Raise()
+
+
 def open_tougaard_analysis_window(parent_window):
     """Open the Tougaard Quantitative XPS Depth Analysis window"""
     from libraries.ToolsMenu.TougaardAnalysisWindow import TougaardAnalysisWindow

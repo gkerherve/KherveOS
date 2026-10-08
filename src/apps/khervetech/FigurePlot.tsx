@@ -11,7 +11,7 @@
 // Drag tool pans once; the green line drags anywhere near it; double-click
 // opens Plot Limits; right-click the plot's menu; moving reports the cursor.
 
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { PLOT_STYLE } from '../khervefitting/mpl'
 import { textWidth } from '../khervefitting/Plot'
 import { axesBox, axisTicks, dashArray, legendPlace, limitsOf, mainAxes, makeScale, mathRuns, nearestLine, px, zOf, type Box, type Scale } from './figmath'
@@ -238,8 +238,10 @@ export function FigurePlot(props: FigurePlotProps) {
   const { fig, arrays, still } = props
   const wrapRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
-  const [measured, setMeasured] = useState({ w: 800, h: 600 })
-  const size = props.size ?? measured
+  // The real size of the panel, measured before the first paint and on every resize: the figure is laid
+  // out for exactly that (nothing is drawn until it is known).
+  const [measured, setMeasured] = useState<{ w: number; h: number } | null>(null)
+  const size = props.size ?? measured ?? { w: 0, h: 0 }
   const [drag, setDrag] = useState<
     | { kind: 'vline'; which: number; x: number }
     | { kind: 'green' }
@@ -248,10 +250,17 @@ export function FigurePlot(props: FigurePlotProps) {
     | null
   >(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = wrapRef.current
     if (!el || props.size) return
-    const ro = new ResizeObserver(() => setMeasured({ w: Math.max(120, el.clientWidth), h: Math.max(100, el.clientHeight) }))
+    const measure = () => {
+      const r = el.getBoundingClientRect()
+      const w = Math.floor(r.width)
+      const h = Math.floor(r.height)
+      if (w > 0 && h > 0) setMeasured((m) => (m && m.w === w && m.h === h ? m : { w, h }))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
   }, [props.size])
@@ -262,7 +271,17 @@ export function FigurePlot(props: FigurePlotProps) {
   const main = mainAxes(fig)
   const geos: AxesGeo[] = []
   if (fig) {
+    // inset axes (ax.inset_axes: Label Manager insets) are drawn after their parent, placed in its frame
+    const all: AxesJ[] = []
     for (const ax of fig.axes) {
+      all.push(ax)
+      for (const c of ax.children ?? []) {
+        const [px, py, pw, ph] = ax.pos
+        const [cx, cy, cw, ch] = c.pos
+        all.push({ ...c, pos: [px + cx * pw, py + cy * ph, cw * pw, ch * ph], z: (ax.z ?? 0) + 0.5 })
+      }
+    }
+    for (const ax of all) {
       if (!ax.visible) continue
       const box = axesBox(ax.pos, W, H)
       const lim = limitsOf(ax)
@@ -573,7 +592,7 @@ export function FigurePlot(props: FigurePlotProps) {
 
   return (
     <div className="kt-figure" ref={wrapRef} style={props.size ? { width: W, height: H } : undefined}>
-      <svg
+      {W > 0 && H > 0 && <svg
         ref={svgRef}
         width={W}
         height={H}
@@ -590,7 +609,7 @@ export function FigurePlot(props: FigurePlotProps) {
         <rect x={0} y={0} width={W} height={H} fill={fig?.facecolor && fig.facecolor !== 'none' ? fig.facecolor : 'white'} />
         {nodes}
         {overlays}
-      </svg>
+      </svg>}
     </div>
   )
 }

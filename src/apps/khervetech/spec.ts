@@ -15,12 +15,24 @@ export interface TechAppSpec {
   examples: string
   /** Raw files the app imports (registered file types, besides .kfit projects). */
   exts: string[]
+  /** Sheets of this technique, when the prefix is not enough (TechniqueTool's 'match': Raman). */
+  match?: (sheet: string) => boolean
 }
 
 export const TECH_APPS: TechAppSpec[] = [
   { appId: 'khervetga', name: 'KherveTGA', tech: 'TGA', prefix: 'TGA', examples: 'khervetga', exts: ['.csv', '.txt', '.dat', '.tri'] },
   { appId: 'khervebet', name: 'KherveBET', tech: 'BET', prefix: 'BET', examples: 'khervebet', exts: ['.csv', '.txt', '.dat'] },
+  { appId: 'kherveuvvis', name: 'KherveUVVis', tech: 'UVVIS', prefix: 'UVVIS', examples: 'kherveuvvis', exts: ['.csv', '.txt', '.dat', '.asc'] },
+  { appId: 'kherveftir', name: 'KherveFTIR', tech: 'FTIR', prefix: 'FTIR', examples: 'kherveftir', exts: ['.jdx', '.dx', '.csv', '.txt', '.dat', '.lbd'] },
+  {
+    appId: 'kherveraman', name: 'KherveRaman', tech: 'RAMAN', prefix: 'RAMAN', examples: 'kherveraman', exts: ['.txt'],
+    // TechniqueTool._is_raman_name / Raman_Analysis.is_raman_sheet
+    match: (s) => s.startsWith('RA') || s.toUpperCase().includes('RAMAN') || s.startsWith('Ra_'),
+  },
 ]
+
+/** A sheet of this technique (TechniqueTool.technique_of_sheet). */
+export const isSheetOf = (spec: TechAppSpec, sheet: string) => (spec.match ? spec.match(sheet) : sheet.toUpperCase().startsWith(spec.prefix))
 
 export const techApp = (appId: string): TechAppSpec => {
   const s = TECH_APPS.find((t) => t.appId === appId)
@@ -31,8 +43,7 @@ export const techApp = (appId: string): TechAppSpec => {
 /** The technique app a project belongs to, from its sheet names (first match wins, as TechniqueTool). */
 export function appForSheets(sheets: string[]): TechAppSpec | null {
   for (const sheet of sheets) {
-    const up = sheet.toUpperCase()
-    const spec = TECH_APPS.find((t) => up.startsWith(t.prefix))
+    const spec = TECH_APPS.find((t) => isSheetOf(t, sheet))
     if (spec) return spec
   }
   return null

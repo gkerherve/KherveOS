@@ -1,0 +1,12 @@
+{
+ "examples": [
+  {
+   "file": "Cary_batch_two_samples.csv",
+   "title": "Cary batch two samples"
+  },
+  {
+   "file": "TiO2_anatase_absorbance.csv",
+   "title": "TiO2 anatase absorbance"
+  }
+ ]
+}

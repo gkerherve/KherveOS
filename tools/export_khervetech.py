@@ -80,7 +80,7 @@ PARTIAL = {
     "libraries/Plot_Operations.py": {
         "imports": "import re\n",
         "names": ["_TECHNIQUE_AXES", "plain_axis_label", "is_optical_sheet", "axis_labels_for_sheet", "is_xps_like_sheet",
-                  "sheet_x_is_forward", "is_image_sheet"],
+                  "sheet_x_is_forward", "is_image_sheet", "_plot_ftir_overlays"],
     },
     "libraries/ViewMenu/Labels_Screen.py": {
         "imports": ("import math\nfrom matplotlib.patches import (Rectangle, Circle, FancyArrowPatch, Polygon,\n"
@@ -88,7 +88,7 @@ PARTIAL = {
                     "from matplotlib.transforms import Affine2D\nimport matplotlib.transforms as mtransforms\n"
                     "import numpy as np\n"),
         "names": ["ENDPOINT_TYPES", "SHAPE_TYPES", "MEASURE_TYPES", "DRAWING_TYPES", "_DRAWING_TAG",
-                  "_draw_label_data_on_ax", "_remove_all_drawing_artists"],
+                  "_draw_label_data_on_ax", "_remove_all_drawing_artists", "_draw_inset", "_draw_source_inset"],
     },
     "libraries/PlotConfig.py": {
         "imports": "import numpy as np\nfrom libraries.Plot_Operations import sheet_x_is_forward, is_image_sheet\n",
@@ -96,12 +96,36 @@ PARTIAL = {
         "names": ["x_axis_step", "intensity_step", "PlotConfig.update_plot_limits", "PlotConfig.reset_plot_limits"],
     },
     "libraries/ConfigFile.py": {
-        "imports": "",
-        "names": ["Init_Measurement_Data"],
+        "imports": "import os\nimport sys\nimport json\nimport shutil\nimport wx\n",
+        # the per-user folders (wx.StandardPaths: ~/.config in the worker), the technique
+        # libraries seeded from the app (FTIR Library), and how a sheet is built from a workbook
+        "names": ["_APP_CONFIG_DIRNAME", "_app_root", "get_config_dir", "get_documents_dir", "_ftir_library_seed_dir",
+                  "get_ftir_library_dir", "get_ftir_nicolet_dir", "set_ftir_nicolet_dir", "FTIR_ONLINE_DEFAULT_BASE",
+                  "get_ftir_online_base", "set_ftir_online_base", "get_ftir_online_cache_path", "get_xrd_library_dir",
+                  "get_xrd_instrument_path", "Init_Measurement_Data", "build_core_level_Data", "add_core_level_Data",
+                  "add_peak_to_core_level_Data"],
     },
     "libraries/Widgets_Toolbars.py": {
         "imports": "",
-        "names": ["open_*_analysis_window", "open_bet_analysis_window"],
+        "names": ["open_*_analysis_window", "open_bet_analysis_window", "on_open_eels_window"],
+    },
+    "libraries/FileMenu/Open.py": {
+        "imports": "import os\nimport re\nimport json\nimport wx\n",
+        "names": ["convert_from_serializable", "normalize_sheet_name"],
+        # open_xlsx_file: ktech.project's (the desktop's steps without its console, recent files and backups)
+        "tail": "\n\ndef open_xlsx_file(window, file_path=None):\n    from ktech.project import open_xlsx_file as _open\n"
+                "    return _open(window, file_path)\n\n\ndef import_raman_txt_file(window):\n"
+                "    from libraries.FileMenu.Kal_Import import import_raman_txt_file as _f\n    return _f(window)\n\n\n"
+                "def import_multiple_raman_files(window):\n"
+                "    from libraries.FileMenu.Kal_Import import import_multiple_raman_files as _f\n    return _f(window)\n",
+    },
+    "libraries/PeakFittingGrid.py": {
+        "imports": "import numpy as np\n",
+        "names": ["format_peak_value"],
+    },
+    "libraries/FileMenu/Kal_Import.py": {
+        "imports": "import os\nimport wx\n",
+        "names": ["import_raman_txt_file", "import_multiple_raman_files"],
     },
 }
 
@@ -131,7 +155,55 @@ TECHNIQUES = {
         ],
         "examples": "BET",
     },
+    "uvvis": {
+        "key": "UVVIS",
+        "app": "kherveuvvis",
+        "icon": "Tech-UVVIS-3.png",
+        "modules": [
+            "libraries/ToolsMenu/UVVIS_Plot.py",
+            "libraries/ToolsMenu/UVVIS_Analysis.py",
+        ],
+        "examples": "UV-Vis",
+    },
+    "ftir": {
+        "key": "FTIR",
+        "app": "kherveftir",
+        "icon": "Tech-FTIR-3.png",
+        "modules": [
+            "libraries/FileMenu/FTIR_Import.py",
+            "libraries/FileMenu/JCAMP_Import.py",
+            "libraries/FileMenu/NicoletLibrary_Import.py",
+            "libraries/ToolsMenu/FTIR_Engine.py",
+            "libraries/ToolsMenu/FTIR_Library.py",
+            "libraries/ToolsMenu/FTIR_Assign.py",
+            "libraries/ToolsMenu/FTIR_Analysis.py",
+        ],
+        # the reference spectra the desktop ships (get_ftir_library_dir seeds the user's library from them)
+        "data": ["FTIR Library/*.jdx"],
+        "examples": "FTIR",
+        "packages": ["numpy", "scipy", "pandas"],
+        "example_files": ["FTIR Library/Polystyrene_synthetic.jdx", "FTIR Library/PMMA_synthetic.jdx",
+                          "FTIR Library/Ethanol_synthetic.jdx", "FTIR Library/CaCO3_calcite_synthetic.jdx"],
+    },
+    "raman": {
+        "key": "RAMAN",
+        "app": "kherveraman",
+        "icon": "Tech-RAMAN-3.png",
+        "modules": [
+            "libraries/ToolsMenu/Raman_Library.py",
+            "libraries/ToolsMenu/Raman_Assign.py",
+            "libraries/ToolsMenu/Raman_Analysis.py",
+        ],
+        "examples": "Raman",
+        "packages": ["numpy", "scipy", "pandas"],
+    },
 }
+
+#: KherveFitting's pure-Python wheels (public/apps/khervefitting/py/wheels) every technique worker
+#: unpacks: openpyxl for the workbooks the importers write (FileMenu/Open.open_xlsx_file)
+BASE_WHEELS = ["openpyxl-3.1.2-py2.py3-none-any.whl", "et_xmlfile-1.1.0-py3-none-any.whl"]
+#: Pyodide packages loaded before the first request (h5py for .kfit is loaded on demand)
+BASE_PACKAGES = ["numpy", "scipy"]
 
 HEADER = "# KherveOS: {how} from KherveFittingPro {ref} ({rev}), {path}. Regenerate with tools/export_khervetech.py.\n"
 
@@ -420,11 +492,18 @@ def export_examples(root: Path, tech: str, spec: dict):
     out.mkdir(parents=True)
     folder = root / "Data-Examples" / "zz Other Techniques" / spec["examples"]
     made: list[dict] = []
-    if folder.is_dir() and any(folder.iterdir()):
-        for f in sorted(folder.iterdir()):
-            if f.is_file() and not f.name.startswith("."):
-                shutil.copy2(f, out / f.name)
-                made.append({"file": f.name, "title": f.stem.replace("_", " ")})
+    real = [f for f in folder.iterdir() if f.is_file() and not f.name.startswith(".") and f.suffix != ".py"] \
+        if folder.is_dir() else []
+    if spec.get("example_files"):
+        # files the desktop ships elsewhere in its tree (e.g. the FTIR reference spectra)
+        for rel in spec["example_files"]:
+            f = root / rel
+            shutil.copy2(f, out / f.name)
+            made.append({"file": f.name, "title": f.stem.replace("_", " ")})
+    elif real:
+        for f in sorted(real):
+            shutil.copy2(f, out / f.name)
+            made.append({"file": f.name, "title": f.stem.replace("_", " ")})
     else:
         made = MAKERS[tech](out)
     (out / "index.json").write_text(json.dumps({"examples": made}, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -445,7 +524,13 @@ def main():
             shutil.rmtree(DESKTOP_OUT)
         modules = list(COMMON)
         for spec in TECHNIQUES.values():
-            modules += spec["modules"]
+            modules += [m for m in spec["modules"] if m not in modules]
+        for spec in TECHNIQUES.values():
+            for pattern in spec.get("data", []):
+                for src in sorted(root.glob(pattern)):
+                    dst = DESKTOP_OUT / src.relative_to(root)
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, dst)
         for rel in modules:
             src = root / rel
             dst = DESKTOP_OUT / rel
@@ -470,10 +555,29 @@ def main():
             dock_icon(root / "libraries" / "Icons" / spec["icon"], spec["key"], APP_ICONS / f"{spec['app']}.png")
             export_examples(root, tech, spec)
 
-    files = sorted(str(p.relative_to(PY)) for p in PY.rglob("*.py")
-                   if "__pycache__" not in p.parts)
-    (PY / "files.json").write_text(json.dumps({"rev": rev, "files": files}, indent=1) + "\n", encoding="utf-8")
-    print(f"KherveFittingPro {args.ref} {rev}: {len(modules)} modules, {len(PARTIAL)} partial, {len(files)} files listed")
+    write_files_json(rev)
+    print(f"KherveFittingPro {args.ref} {rev}: {len(modules)} modules, {len(PARTIAL)} partial")
+
+
+def write_files_json(rev: str):
+    """py/files.json: what every technique's worker installs ("common"), and per technique
+    (its TECHS key) its own desktop modules and data, the wheels and Pyodide packages it needs."""
+    own: dict[str, list[str]] = {}
+    for spec in TECHNIQUES.values():
+        rels = [f"desktop/{m}" for m in spec["modules"]]
+        for pattern in spec.get("data", []):
+            rels += [str(p.relative_to(PY)) for p in sorted(DESKTOP_OUT.glob(pattern))]
+        own[spec["key"]] = rels
+    taken = {r for rels in own.values() for r in rels}
+    common = sorted(str(p.relative_to(PY)) for p in PY.rglob("*.py")
+                    if "__pycache__" not in p.parts and str(p.relative_to(PY)) not in taken)
+    tech = {}
+    for spec in TECHNIQUES.values():
+        tech[spec["key"]] = {"files": own[spec["key"]], "wheels": spec.get("wheels", BASE_WHEELS),
+                             "packages": spec.get("packages", BASE_PACKAGES)}
+    (PY / "files.json").write_text(json.dumps({"rev": rev, "common": common, "tech": tech}, indent=1) + "\n",
+                                   encoding="utf-8")
+    print(f"files.json: {len(common)} common files, {', '.join(f'{k} {len(v)}' for k, v in own.items())}")
 
 
 if __name__ == "__main__":

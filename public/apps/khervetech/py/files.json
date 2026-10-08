@@ -1,23 +1,18 @@
 {
  "rev": "ca1fe50",
- "files": [
+ "common": [
   "desktop/libraries/ConfigFile.py",
-  "desktop/libraries/FileMenu/BET_Import.py",
   "desktop/libraries/FileMenu/KFitting_IO.py",
   "desktop/libraries/FileMenu/KFitting_Import.py",
+  "desktop/libraries/FileMenu/Kal_Import.py",
+  "desktop/libraries/FileMenu/Open.py",
   "desktop/libraries/FileMenu/Optical_Import.py",
   "desktop/libraries/FileMenu/Save.py",
-  "desktop/libraries/FileMenu/TGA_Import.py",
-  "desktop/libraries/FileMenu/TRI_Import.py",
   "desktop/libraries/FileMenu/__init__.py",
+  "desktop/libraries/PeakFittingGrid.py",
   "desktop/libraries/PlotConfig.py",
   "desktop/libraries/PlotLabelEdit.py",
   "desktop/libraries/Plot_Operations.py",
-  "desktop/libraries/ToolsMenu/BET_Analysis.py",
-  "desktop/libraries/ToolsMenu/TGA_Analysis.py",
-  "desktop/libraries/ToolsMenu/TGA_Chem.py",
-  "desktop/libraries/ToolsMenu/TGA_Engine.py",
-  "desktop/libraries/ToolsMenu/TGA_Plot.py",
   "desktop/libraries/ToolsMenu/TechniqueTool.py",
   "desktop/libraries/ToolsMenu/__init__.py",
   "desktop/libraries/ViewMenu/Labels_Screen.py",
@@ -52,5 +47,105 @@
   "shims/matplotlib/transforms.py",
   "shims/wx/__init__.py",
   "shims/wx/grid.py"
- ]
+ ],
+ "tech": {
+  "TGA": {
+   "files": [
+    "desktop/libraries/FileMenu/TGA_Import.py",
+    "desktop/libraries/FileMenu/TRI_Import.py",
+    "desktop/libraries/ToolsMenu/TGA_Engine.py",
+    "desktop/libraries/ToolsMenu/TGA_Chem.py",
+    "desktop/libraries/ToolsMenu/TGA_Plot.py",
+    "desktop/libraries/ToolsMenu/TGA_Analysis.py"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy"
+   ]
+  },
+  "BET": {
+   "files": [
+    "desktop/libraries/FileMenu/BET_Import.py",
+    "desktop/libraries/ToolsMenu/BET_Analysis.py"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy"
+   ]
+  },
+  "UVVIS": {
+   "files": [
+    "desktop/libraries/ToolsMenu/UVVIS_Plot.py",
+    "desktop/libraries/ToolsMenu/UVVIS_Analysis.py"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy"
+   ]
+  },
+  "FTIR": {
+   "files": [
+    "desktop/libraries/FileMenu/FTIR_Import.py",
+    "desktop/libraries/FileMenu/JCAMP_Import.py",
+    "desktop/libraries/FileMenu/NicoletLibrary_Import.py",
+    "desktop/libraries/ToolsMenu/FTIR_Engine.py",
+    "desktop/libraries/ToolsMenu/FTIR_Library.py",
+    "desktop/libraries/ToolsMenu/FTIR_Assign.py",
+    "desktop/libraries/ToolsMenu/FTIR_Analysis.py",
+    "desktop/FTIR Library/Acetone_synthetic.jdx",
+    "desktop/FTIR Library/Acetonitrile_synthetic.jdx",
+    "desktop/FTIR Library/BaCO3_witherite_synthetic.jdx",
+    "desktop/FTIR Library/CO2_gas_synthetic.jdx",
+    "desktop/FTIR Library/CaCO3_calcite_synthetic.jdx",
+    "desktop/FTIR Library/DMSO_synthetic.jdx",
+    "desktop/FTIR Library/Ethanol_synthetic.jdx",
+    "desktop/FTIR Library/Ethyl_acetate_synthetic.jdx",
+    "desktop/FTIR Library/Isopropanol_synthetic.jdx",
+    "desktop/FTIR Library/PDMS_synthetic.jdx",
+    "desktop/FTIR Library/PMMA_synthetic.jdx",
+    "desktop/FTIR Library/PTFE_synthetic.jdx",
+    "desktop/FTIR Library/PVDF_synthetic.jdx",
+    "desktop/FTIR Library/Polystyrene_synthetic.jdx",
+    "desktop/FTIR Library/Toluene_synthetic.jdx",
+    "desktop/FTIR Library/Water_liquid_synthetic.jdx"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy",
+    "pandas"
+   ]
+  },
+  "RAMAN": {
+   "files": [
+    "desktop/libraries/ToolsMenu/Raman_Library.py",
+    "desktop/libraries/ToolsMenu/Raman_Assign.py",
+    "desktop/libraries/ToolsMenu/Raman_Analysis.py"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy",
+    "pandas"
+   ]
+  }
+ }
 }

@@ -6,7 +6,7 @@ import {
   Settings, Sheet, Sigma, Sparkles, SquareTerminal, StickyNote,
 } from 'lucide-react'
 import { Calculator } from 'lucide-react'
-import { ChartScatter, Thermometer } from 'lucide-react'
+import { AudioWaveform, ChartScatter, Rainbow, Thermometer, Waves } from 'lucide-react'
 import type { AppManifest } from './types'
 
 export const APPS: AppManifest[] = [
@@ -132,6 +132,51 @@ export const APPS: AppManifest[] = [
     group: 'Science',
     description: 'N2 physisorption: BET surface area, t-plot, BJH pore sizes (KherveFitting-AI)',
     load: () => import('@/apps/khervebet/KherveBET'),
+    defaultSize: { w: 1485, h: 820 },
+    minSize: { w: 760, h: 520 },
+    fileTypes: ['.kfit'],
+  },
+  {
+    id: 'kherveuvvis',
+    name: 'KherveUVVis',
+    icon: Rainbow,
+    color: '#4fbe9f',
+    image: '/icons/apps/kherveuvvis.png',
+    brand: { label: 'UVVIS', from: '#7fdcc0', to: '#4fbe9f', fg: '#1d3b33' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'UV-Vis spectra: absorbance, Tauc band gap, band maxima (KherveFitting-AI)',
+    load: () => import('@/apps/kherveuvvis/KherveUVVis'),
+    defaultSize: { w: 1485, h: 820 },
+    minSize: { w: 760, h: 520 },
+    fileTypes: ['.kfit'],
+  },
+  {
+    id: 'kherveftir',
+    name: 'KherveFTIR',
+    icon: AudioWaveform,
+    color: '#4fbe9f',
+    image: '/icons/apps/kherveftir.png',
+    brand: { label: 'FTIR', from: '#7fdcc0', to: '#4fbe9f', fg: '#1d3b33' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'FTIR spectra: units, auto clean, band assignment, reference spectra (KherveFitting-AI)',
+    load: () => import('@/apps/kherveftir/KherveFTIR'),
+    defaultSize: { w: 1485, h: 820 },
+    minSize: { w: 760, h: 520 },
+    fileTypes: ['.kfit', '.jdx', '.dx'],
+  },
+  {
+    id: 'kherveraman',
+    name: 'KherveRaman',
+    icon: Waves,
+    color: '#4fbe9f',
+    image: '/icons/apps/kherveraman.png',
+    brand: { label: 'RAMAN', from: '#7fdcc0', to: '#4fbe9f', fg: '#1d3b33' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'Raman spectra: peak detection and assignment, band library (KherveFitting-AI)',
+    load: () => import('@/apps/kherveraman/KherveRaman'),
     defaultSize: { w: 1485, h: 820 },
     minSize: { w: 760, h: 520 },
     fileTypes: ['.kfit'],

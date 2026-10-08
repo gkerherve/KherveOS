@@ -17,3 +17,14 @@ if not hasattr(np, 'NaN'):
     np.NaN = np.nan
 if not hasattr(np, 'Inf'):
     np.Inf = np.inf
+
+
+def pandas_openpyxl():
+    """pandas 3 (Pyodide's) asks for openpyxl >= 3.1.5 to read a workbook; the desktop
+    pins 3.1.2 (KherveFitting's wheel, which reads everything the importers write)."""
+    try:
+        from pandas.compat import _optional
+        if 'openpyxl' in getattr(_optional, 'VERSIONS', {}):
+            _optional.VERSIONS['openpyxl'] = '3.1.2'
+    except ImportError:
+        pass

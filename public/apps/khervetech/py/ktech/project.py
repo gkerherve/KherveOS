@@ -42,6 +42,100 @@ def open_kfitting_file(window, file_path=None):
     wx.effect('opened', path=file_path)
 
 
+def open_xlsx_file(window, file_path=None):
+    """FileMenu/Open.open_xlsx_file, the steps a technique import takes.
+
+    The importers (Raman, FTIR, Nicolet, XAS…) write a workbook and open it
+    with this. Same order as the desktop: the sibling .json when there is one
+    (window.Data as saved), else one sheet per valid workbook sheet
+    (ConfigFile.add_core_level_Data); the first sheet selected; an undo step;
+    then, for a fresh import, the desktop's own "Choose Project Format"
+    question (KFitting_IO.prompt_project_format) and its .kfit conversion
+    (convert_to_kfitting_if_preferred, which removes the intermediate .xlsx).
+    Without the console window, recent files and backups.
+    """
+    import json
+    import re
+    from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
+    from libraries.FileMenu.Open import convert_from_serializable
+    from libraries.Plot_Operations import is_xps_like_sheet
+    if file_path is None:
+        with wx.FileDialog(window, "Open KherveFitting file",
+                           wildcard="Excel files (*.xlsx)|*.xlsx|KherveFitting HDF5 files (*.kfit)|*.kfit",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            file_path = dlg.GetPath()
+    if str(file_path).lower().endswith('.kfit'):
+        return open_kfitting_file(window, file_path)
+    import openpyxl
+    window.SetStatusText(f"Selected File: {file_path}", 0)
+    window.history, window.redo_stack = [], []
+    json_file = os.path.splitext(file_path)[0] + '.json'
+    json_data_loaded = os.path.exists(json_file)
+    if json_data_loaded:
+        with open(json_file, 'r') as f:
+            window.Data = convert_from_serializable(json.load(f))
+    else:
+        window.Data = Init_Measurement_Data(window)
+
+    wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+    names = [n for n in wb.sheetnames if n.lower() not in ("results table", "experimental description")]
+    dismissed = [(n, "default Excel name (e.g. Sheet1)") for n in names if re.match(r'^Sheet\d+$', n, re.IGNORECASE)]
+    names = [n for n in names if not re.match(r'^Sheet\d+$', n, re.IGNORECASE)]
+    valid = []
+    for name in names:
+        if name.startswith(('zzProfile', 'zzBook', 'zzMap', 'EDX~', 'EELS~', 'XPS~Map')):
+            valid.append(name)
+            continue
+        ws = wb[name]
+        head = next(ws.iter_rows(min_row=1, max_row=1, values_only=True), None)
+        if not head or len(head) < 2:
+            dismissed.append((name, "fewer than 2 columns or no data"))
+            continue
+        c1, c2 = str(head[0]).strip().upper(), str(head[1]).strip().upper()
+        ok = ((('BE' in c1 or 'B.E.' in c1 or 'BINDING' in c1) and ('RAW DATA' in c2 or 'CORRECTED DATA' in c2 or 'INTENSITY' in c2))
+              or (('WAVENUMBER' in c1 or 'CM-1' in c1) and ('RAW DATA' in c2 or 'INTENSITY' in c2))
+              or (('ENERGY' in c1) and ('INTENSITY' in c2 or 'RAW DATA' in c2))
+              or not is_xps_like_sheet(window, name))
+        if ok:
+            valid.append(name)
+        else:
+            dismissed.append((name, f"unrecognised column headers (Col1='{head[0]}', Col2='{head[1]}')"))
+    wb.close()
+    if not valid:
+        lines = [f"  - {n} : {r}" for n, r in dismissed]
+        wx.MessageBox("Cannot open this file because no valid sheets were found.\n\nAll sheets were dismissed:\n"
+                      + "\n".join(lines), "No Valid Sheets", wx.OK | wx.ICON_WARNING)
+        return
+    window.Data['FilePath'] = file_path
+    if not json_data_loaded and not window.Data.get('Core levels'):
+        window.Data['Number of Core levels'] = 0
+        for name in valid:
+            window.Data = add_core_level_Data(window.Data, window, file_path, name)
+    window.plot_config.forget()
+    first = valid[0]
+    window.sync_sheet_list(first)
+    window.select_sheet(first, from_user=False)
+    window.save_state()
+    if not json_data_loaded and getattr(window, '_kfit_convert_choice', None) is None:
+        from libraries.FileMenu.KFitting_IO import prompt_project_format
+        window._kfit_convert_choice = prompt_project_format(window, len(valid))
+    try:
+        from libraries.FileMenu.KFitting_IO import convert_to_kfitting_if_preferred
+        new_path = convert_to_kfitting_if_preferred(window)
+        if new_path:
+            window.Data['FilePath'] = new_path
+    except wx.NeedModal:
+        raise
+    except Exception as e:
+        print(f'.kfit conversion skipped: {e}')
+    window.refresh_tools()
+    if dismissed:
+        print("Dismissed sheets: " + ", ".join(f"{n} ({r})" for n, r in dismissed))
+    wx.effect('opened', path=window.Data.get('FilePath') or file_path)
+
+
 # ------------------------------------------------------------------ Edit > Sheet
 
 def _unique(name, used):
@@ -154,6 +248,11 @@ def _f(v):
 RESULT_KEYS = ('TGA_Steps', 'TGA_DTG_Peaks', 'TGA_DSC_Peaks', 'TGA_Events', 'TGA_Cycles', 'TGA_Glass_Transitions',
                'TGA_Oxygen_Result', 'TGA_Kinetic_Model', 'TGA_Kinetic_R2', 'TGA_Arrhenius_Ea_kJ', 'TGA_Arrhenius_R2',
                'TGA_Sample_Mass_mg', 'TGA_Label', 'TGA_View', 'TGA_Y_Unit', 'TGA_Smoothing')
+#: the other techniques keep their results under their own prefix (BET_Results, UVVIS_Results, Raman_Peaks…)
+RESULT_PREFIXES = ('BET_', 'UVVIS_', 'Raman_', 'FTIR_', 'XRD_', 'EELS_')
+#: per-point copies and drawing state, not results
+DROP_KEYS = {'FTIR_Raw', 'FTIR_Overlays', 'FTIR_Curves', 'FTIR_History', 'FTIR_Show_Raw', 'FTIR_Show_Curves',
+             'UVVIS_Fit_X', 'UVVIS_Fit_Y', 'Raman_Fit_X', 'Raman_Fit_Y', 'BET_Source_Sheet'}
 DROP = ('t_selected', 'y_selected', 'baseline', 'pre_line', 'post_line', 'fitted', 't_relative')
 
 
@@ -179,11 +278,18 @@ def results(window, sheet_name=None):
     for key in RESULT_KEYS:
         if cl.get(key) not in (None, [], {}):
             out[key] = _slim(cl[key])
-    if cl.get('BET_Results'):
-        try:
-            out['BET_Results'] = _slim(json.loads(cl['BET_Results']))
-        except ValueError:
-            pass
+    for key, value in cl.items():
+        if key in out or key in DROP_KEYS or not key.startswith(RESULT_PREFIXES) or value in (None, '', [], {}):
+            continue
+        if isinstance(value, str) and value[:1] in '[{':
+            try:
+                value = json.loads(value)
+            except ValueError:
+                pass
+        out[key] = _slim(value)
+    if isinstance((cl.get('Fitting') or {}).get('Peaks'), dict) and cl['Fitting']['Peaks']:
+        out['Peaks'] = {name: {k: pk.get(k) for k in ('Position', 'Height', 'FWHM', 'L/G', 'Area', 'Fitting Model')}
+                        for name, pk in cl['Fitting']['Peaks'].items() if isinstance(pk, dict)}
     x = cl.get('B.E.') or []
     out['points'] = len(x)
     if x:
@@ -197,8 +303,10 @@ def results(window, sheet_name=None):
 # ------------------------------------------------------------------ the AI driver
 
 def _set(widget, value):
-    if isinstance(widget, (wx.SpinCtrl,)):
-        widget.SetValue(value)
+    if isinstance(widget, wx.SpinCtrlDouble):
+        widget.SetValue(float(value))
+    elif isinstance(widget, (wx.SpinCtrl, wx.Slider)):
+        widget.SetValue(int(round(float(value))))
     elif isinstance(widget, wx.CheckBox):
         widget.SetValue(bool(value))
     elif isinstance(widget, wx.RadioButton):
@@ -232,6 +340,12 @@ def _set(widget, value):
 
 
 def _read(widget):
+    if isinstance(widget, wx.ListCtrl):
+        cols = [c[0] for c in widget._cols]
+        return [dict(zip(cols, [widget.GetItemText(r, c) for c in range(len(cols))]))
+                for r in range(widget.GetItemCount())]
+    if isinstance(widget, (wx.ListBox, wx.CheckListBox)):
+        return widget.GetStrings()
     if isinstance(widget, wx.grid.Grid if hasattr(wx, 'grid') else ()):
         cols = [widget.GetColLabelValue(c) for c in range(widget.GetNumberCols())]
         return [dict(zip(cols, [widget.GetCellValue(r, c) for c in range(len(cols))]))
@@ -302,7 +416,9 @@ def drive(window, tech, a):
             takes_event = bool(inspect.signature(handler).parameters)
         except (TypeError, ValueError):
             takes_event = True
-        if takes_event:
+        if isinstance(a.get('args'), list):
+            handler(*a['args'])
+        elif takes_event:
             handler(wx.Event(wx.EVT_BUTTON, win))
         else:
             handler()

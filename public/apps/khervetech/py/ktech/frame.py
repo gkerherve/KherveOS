@@ -101,7 +101,7 @@ class PlotManager:
         self.window.clear_and_replot()
 
     def plot_data(self, window=None):
-        self.window.clear_and_replot()
+        self.window.plot_data()
 
     def update_legend(self, window=None):
         pass
@@ -174,8 +174,12 @@ class MainFrame(wx.Frame):
         self.fitting_window = None
         self.labels_window = None
         self.technique_tool_spec = None
+        self.save_file_format = 'kfitting'   # Preferences > project format: KherveOS saves .kfit
+        self.zoom_mode = self.drag_mode = False
+        self.green_vline_active = False
         for attr in ('tga_analysis_window', 'bet_analysis_window', 'squid_analysis_window', 'eis_analysis_window',
-                     'vb_measurements_window', 'ftir_analysis_window', 'xrd_analysis_window', 'uvvis_analysis_window'):
+                     'vb_measurements_window', 'ftir_analysis_window', 'xrd_analysis_window', 'uvvis_analysis_window',
+                     'raman_analysis_window', 'eels_window'):
             setattr(self, attr, None)
 
         # The right frame: the grids notebook the technique overview replaces.
@@ -186,6 +190,67 @@ class MainFrame(wx.Frame):
         for page, title in ((self.peak_params_page, 'Peak Parameters'), (self.results_page, 'Results'),
                             (self.sample_manager_page, 'Sample Manager')):
             self.grid_notebook.AddPage(page, title)
+        self._build_peak_grid()
+
+    # ------------------------------------------------------------ the Peak Parameters grid
+    PEAK_COLUMNS = ["ID", "Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "\u03c3/\u03b3 (%)\nL/G \n",
+                    "Area\n(CPS.eV)", "\u03c3\nW_g", "\u03b3\nW_l", "W_g\nSkew", "Conc.\n(%)", "A/A\u1D00", "Split\n(eV)",
+                    "Fitting Model", "Bkg Type", "Bkg Low\n(eV)", "Bkg High\n(eV)", "Bkg Offset Low\n(CPS)",
+                    "Bkg Offset High\n(CPS)"]
+    PEAK_SIZES = [20, 90, 80, 60, 60, 50, 70, 45, 45, 50, 40, 40, 40, 130, 130, 80, 80, 100, 100]
+
+    def _build_peak_grid(self):
+        """Widgets_Toolbars.create_peak_params_grid: the grid the Raman / XRD / EELS overview keeps."""
+        import wx.grid
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        self.peak_params_grid = wx.grid.Grid(self.peak_params_page)
+        g = self.peak_params_grid
+        g.CreateGrid(0, len(self.PEAK_COLUMNS))
+        for i, label in enumerate(self.PEAK_COLUMNS):
+            g.SetColLabelValue(i, label)
+        g.SetDefaultRowSize(25)
+        g.SetColLabelSize(35)
+        g.SetDefaultColSize(60)
+        g.SetRowLabelSize(17)
+        for i, size in enumerate(self.PEAK_SIZES):
+            g.SetColSize(i, size)
+        # The fitting tools are KherveFitting's: here the grid shows the sheet's peaks.
+        g.EnableEditing(False)
+        sizer.Add(g, 1, wx.EXPAND)
+        self.peak_params_page.SetSizer(sizer)
+
+    def populate_peak_grid(self, sheet_name):
+        """Sheet_Operations.on_sheet_selected: the sheet's fitted peaks, two rows each (values, constraints)."""
+        from libraries.PeakFittingGrid import format_peak_value
+        g = self.peak_params_grid
+        if g.GetNumberRows():
+            g.DeleteRows(0, g.GetNumberRows())
+        cl = self.Data.get('Core levels', {}).get(sheet_name)
+        peaks = ((cl or {}).get('Fitting') or {}).get('Peaks') if isinstance(cl, dict) else None
+        if not peaks:
+            return
+        g.AppendRows(len(peaks) * 2)
+        bg = cl.get('Background', {}) or {}
+        x = cl.get('B.E.') or [0.0]
+        defaults = {'Position': f"{min(x):.2f}:{max(x):.2f}", 'Height': '1:1e7', 'FWHM': '0.3:3.7', 'L/G': '5:80',
+                    'Area': '1:1e7', 'Sigma': '0.3:3', 'Gamma': '0.3:3', 'Skew': '0.01:2'}
+        for i, (label, pk) in enumerate(peaks.items()):
+            row = i * 2
+            g.SetCellValue(row, 0, chr(65 + i))
+            g.SetCellValue(row, 1, str(label))
+            for col, key, default in ((2, 'Position', 0.0), (3, 'Height', 1e4), (4, 'FWHM', 1.6), (5, 'L/G', 20),
+                                      (6, 'Area', 1e4), (7, 'Sigma', 0.6), (8, 'Gamma', 0.4), (9, 'Skew', 0.1)):
+                g.SetCellValue(row, col, format_peak_value(pk.get(key, default)))
+            g.SetCellValue(row, 13, f"{pk.get('Fitting Model', 'GL (Area)')}")
+            for col, key in ((14, 'Bkg Type'), (15, 'Bkg Low'), (16, 'Bkg High'), (17, 'Bkg Offset Low'),
+                             (18, 'Bkg Offset High')):
+                v = bg.get(key, '')
+                if v in ('', None):
+                    v = pk.get(key, '')
+                g.SetCellValue(row, col, '' if v in ('', None) else f"{v}")
+            cons = pk.get('Constraints') or {}
+            for col, key in enumerate(('Position', 'Height', 'FWHM', 'L/G', 'Area', 'Sigma', 'Gamma', 'Skew'), 2):
+                g.SetCellValue(row + 1, col, str(cons.get(key) or defaults[key]))
 
     # ------------------------------------------------------------ messages
     def show_popup_message2(self, title, message):
@@ -277,16 +342,21 @@ class MainFrame(wx.Frame):
         except Exception:
             self.technique_tool_spec = None
         try:
+            self.populate_peak_grid(name)
+        except Exception as e:
+            print(f'Peak grid skipped: {e}')
+        try:
             from libraries.ViewMenu.TechniqueOverview import set_technique_right_frame
             set_technique_right_frame(self, name)
         except Exception as e:  # never blocks selecting a sheet (as the desktop)
             print(f'Technique shell update skipped: {e}')
-        self.clear_and_replot()
+        self.plot_data()
         self.show_hide_vlines()
 
     def refresh_tools(self):
         """Let the open tool windows pick up a new project or an undo."""
-        for attr in ('_tga_windows', '_bet_windows'):
+        from ktech.techniques import WINDOW_LISTS
+        for attr in WINDOW_LISTS:
             for win in list(getattr(self, attr, None) or []):
                 for name in ('refresh_sheet_lists', 'refresh_sheet_list'):
                     fn = getattr(win, name, None)
@@ -304,7 +374,16 @@ class MainFrame(wx.Frame):
 
     # ------------------------------------------------------------ the red lines
     def range_active(self):
-        return any(getattr(self, a, None) is not None for a in RANGE_ATTRS)
+        """MyFrame.show_hide_vlines: the tool windows that own the red lines (UV-Vis: on a Tauc sheet)."""
+        if any(getattr(self, a, None) is not None for a in RANGE_ATTRS):
+            return True
+        if getattr(self, 'uvvis_analysis_window', None) is not None:
+            try:
+                from libraries.ToolsMenu.UVVIS_Analysis import uvvis_range_active
+                return bool(uvvis_range_active(self))
+            except Exception:
+                return False
+        return False
 
     def show_hide_vlines(self):
         visible = self.range_active()
@@ -369,7 +448,11 @@ class MainFrame(wx.Frame):
         return out
 
     # ------------------------------------------------------------ the plot
-    def clear_and_replot(self):
+    def plot_data(self):
+        """PlotManager.plot_data (a sheet just selected): clear_and_replot plus the FTIR overlays."""
+        self.clear_and_replot(initial=True)
+
+    def clear_and_replot(self, initial=False):
         """PlotManager.clear_and_replot, the path a technique sheet takes."""
         from libraries.Plot_Operations import axis_labels_for_sheet, is_optical_sheet
         from libraries.PlotLabelEdit import legend_frame_kwargs
@@ -409,7 +492,10 @@ class MainFrame(wx.Frame):
         x_values = np.asarray(cl.get('B.E.', []), dtype=float)
         y_values = np.asarray(cl.get('Raw Data', []), dtype=float)
         if limits:
-            ax.set_xlim(limits['Xmin'], limits['Xmax'])
+            if is_ftir:   # FTIR is reversed like XPS (high wavenumber on the left)
+                ax.set_xlim(limits['Xmax'], limits['Xmin'])
+            else:
+                ax.set_xlim(limits['Xmin'], limits['Xmax'])
             ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
         bg = cl.get('Background') or {}
@@ -439,6 +525,10 @@ class MainFrame(wx.Frame):
             colour = self.plot_manager.raw_trace_colour(self, sheet_name, self.line_color)
             ax.plot(x_values, y_values, c=colour, linewidth=self.line_width, alpha=self.line_alpha,
                     linestyle=self.raw_data_linestyle, label=label)
+        if is_ftir and initial:
+            # PlotManager.plot_data: the FTIR non-destructive layers (raw trace, baseline…)
+            from libraries.Plot_Operations import _plot_ftir_overlays
+            _plot_ftir_overlays(ax, cl)
         for spine in ax.spines.values():
             spine.set_linewidth(1)
 

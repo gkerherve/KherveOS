@@ -604,7 +604,7 @@ def PostEvent(target, event):
 
 # ---------------------------------------------------------- the event loop
 
-class NeedModal(Exception):
+class NeedModal(BaseException):
     """Raised by ShowModal when the page has not answered this dialog yet."""
 
     def __init__(self, spec):
@@ -3573,3 +3573,35 @@ def _user_default(self, msg):
 
 
 Window._user = _user_default
+
+
+class StandardPaths:
+    """The per-user folders, under the worker's HOME (the KherveOS home, mirrored)."""
+
+    @staticmethod
+    def Get():
+        return StandardPaths()
+
+    def _home(self):
+        import os
+        return os.path.expanduser('~')
+
+    def GetUserConfigDir(self):
+        import os
+        return os.path.join(self._home(), '.config')
+
+    def GetUserDataDir(self):
+        import os
+        return os.path.join(self._home(), '.config', 'KherveFitting')
+
+    GetUserLocalDataDir = GetUserDataDir
+
+    def GetDocumentsDir(self):
+        import os
+        return os.path.join(self._home(), 'Documents')
+
+    def GetTempDir(self):
+        return '/tmp'
+
+    def GetExecutablePath(self):
+        return '/kherveos/khervetech/KherveFitting'

@@ -16,6 +16,8 @@ export interface ActionDef {
   range?: boolean
   /** The window's controls to set first, by attribute name. */
   set?: (a: RunArgs) => Record<string, unknown>
+  /** Arguments the handler takes instead of an event (e.g. on_auto_clean("Standard")). */
+  args?: (a: RunArgs) => unknown[]
   /** Controls to read back (result boxes, tables). */
   read: string[]
 }

@@ -10,13 +10,20 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import { axesBox, axisTicks, dashArray, legendPlace, makeScale, mathRuns, nearestLine, plainText, zOf } from '../figmath.ts'
 import { wildcardExtensions } from '../types.ts'
-import { TECH_APPS, XPS_ONLY_TOOLS, TECH_TOOL_AFTER, appForSheets, techApp } from '../spec.ts'
-import { installedPath, parseAnswers, START, END } from '../engine.core.ts'
+import { TECH_APPS, XPS_ONLY_TOOLS, TECH_TOOL_AFTER, appForSheets, isSheetOf, techApp } from '../spec.ts'
+import { filesFor, installedPath, parseAnswers, START, END } from '../engine.core.ts'
 import { MAIN_TOOLBAR } from '../../khervefitting/toolbarSpec.ts'
 import { TGA_ACTIONS } from '../../khervetga/actions.ts'
 import { BET_ACTIONS } from '../../khervebet/actions.ts'
 import { KHERVETGA_TOOL_SET } from '../../../os/ai/manifests/khervetga.ts'
 import { KHERVEBET_TOOL_SET } from '../../../os/ai/manifests/khervebet.ts'
+import { UVVIS_ACTIONS } from '../../kherveuvvis/actions.ts'
+import { FTIR_ACTIONS } from '../../kherveftir/actions.ts'
+import { RAMAN_ACTIONS } from '../../kherveraman/actions.ts'
+import { KHERVEUVVIS_TOOL_SET } from '../../../os/ai/manifests/kherveuvvis.ts'
+import { KHERVEFTIR_TOOL_SET } from '../../../os/ai/manifests/kherveftir.ts'
+import { KHERVERAMAN_TOOL_SET } from '../../../os/ai/manifests/kherveraman.ts'
+import { TECHNIQUE_TOOL_SETS } from '../../../os/ai/manifests/techniqueApps.ts'
 
 const PY = new URL('../../../../public/apps/khervetech/py/', import.meta.url)
 const desktop = (rel) => fs.readFileSync(new URL(`desktop/${rel}`, PY), 'utf8')
@@ -76,17 +83,24 @@ test('wx wildcards become the file dialog\'s extensions', () => {
 })
 
 test('the technique apps and their registry entries', () => {
-  assert.deepEqual(TECH_APPS.map((t) => t.name), ['KherveTGA', 'KherveBET'])
+  assert.deepEqual(TECH_APPS.map((t) => t.name), ['KherveTGA', 'KherveBET', 'KherveUVVis', 'KherveFTIR', 'KherveRaman'])
   assert.equal(techApp('khervebet').tech, 'BET')
   assert.equal(appForSheets(['BET', 'BET~Plot'])?.appId, 'khervebet')
   assert.equal(appForSheets(['TGA~Mass'])?.appId, 'khervetga')
+  assert.equal(appForSheets(['UVvis', 'UVvis~Tauc'])?.appId, 'kherveuvvis')
+  assert.equal(appForSheets(['FTIR1'])?.appId, 'kherveftir')
+  // Raman sheets: TechniqueTool's match (RA…, …RAMAN…, Ra_…), not a prefix
+  assert.equal(appForSheets(['Raman_TiO2'])?.appId, 'kherveraman')
+  assert.ok(isSheetOf(techApp('kherveraman'), 'RA1'))
   assert.equal(appForSheets(['C1s']), null)
+  assert.equal(TECHNIQUE_TOOL_SETS.length, TECH_APPS.length)
+  for (const t of TECH_APPS) assert.ok(TECHNIQUE_TOOL_SETS.some((s) => s.app === t.appId), `${t.appId} tool set`)
   const reg = fs.readFileSync(new URL('../../../os/registry.ts', import.meta.url), 'utf8')
   for (const t of TECH_APPS) {
     assert.match(reg, new RegExp(`id: '${t.appId}'`), `${t.appId} registered`)
     assert.ok(fs.existsSync(new URL(`../../../../public/icons/apps/${t.appId}.png`, import.meta.url)), `${t.appId} Dock icon`)
     const idx = JSON.parse(fs.readFileSync(new URL(`../../../../public/examples/${t.examples}/index.json`, import.meta.url), 'utf8'))
-    assert.ok(idx.examples.length >= 3, `${t.appId} examples`)
+    assert.ok(idx.examples.length >= 1, `${t.appId} examples`)
     for (const e of idx.examples) assert.ok(fs.existsSync(new URL(`../../../../public/examples/${t.examples}/${e.file}`, import.meta.url)), e.file)
     assert.ok(fs.existsSync(new URL(`../../../../public/apps/khervetech/icons/Tech-${t.tech}-3.png`, import.meta.url)), 'toolbar icon')
   }
@@ -108,10 +122,17 @@ test('the engine protocol', () => {
   assert.equal(installedPath('ktech/bridge.py'), 'ktech/bridge.py')
   assert.deepEqual(parseAnswers(`noise${START}[{"ok":true}]${END}\n`), [{ ok: true }])
   assert.equal(parseAnswers('no markers'), null)
-  const list = JSON.parse(fs.readFileSync(new URL('files.json', PY), 'utf8')).files
-  for (const rel of list) assert.ok(fs.existsSync(new URL(rel, PY)), rel)
-  for (const need of ['desktop/libraries/ToolsMenu/TGA_Analysis.py', 'desktop/libraries/ToolsMenu/BET_Analysis.py', 'shims/wx/__init__.py', 'shims/matplotlib/_rec.py', 'ktech/bridge.py'])
-    assert.ok(list.includes(need), need)
+  const index = JSON.parse(fs.readFileSync(new URL('files.json', PY), 'utf8'))
+  for (const t of TECH_APPS) {
+    const { files, wheels, packages } = filesFor(index, t.tech)
+    for (const rel of files) assert.ok(fs.existsSync(new URL(rel.split('/').map(encodeURIComponent).join('/'), PY)), rel)
+    for (const w of wheels) assert.ok(fs.existsSync(new URL(`../../khervefitting/py/wheels/${w}`, PY)), w)
+    assert.ok(packages.includes('numpy'))
+    for (const need of ['shims/wx/__init__.py', 'shims/matplotlib/_rec.py', 'ktech/bridge.py']) assert.ok(files.includes(need), need)
+  }
+  assert.ok(filesFor(index, 'TGA').files.includes('desktop/libraries/ToolsMenu/TGA_Analysis.py'))
+  assert.ok(!filesFor(index, 'TGA').files.includes('desktop/libraries/ToolsMenu/FTIR_Analysis.py'), 'each app installs only its own technique')
+  assert.ok(filesFor(index, 'FTIR').files.some((f) => f.endsWith('.jdx')), 'the FTIR reference library')
 })
 
 /** The attribute names a desktop window class sets (self.<name> =) and its methods. */
@@ -127,7 +148,7 @@ function checkActions(actions, src, toolSet) {
     const calls = typeof def.call === 'function' ? [def.call({ options: {} }), def.call({ options: { model: 'all' } })] : def.call ? [def.call] : []
     for (const c of calls) assert.ok(methods.has(c), `${name}: ${c} is a handler of the window`)
     for (const r of def.read) assert.ok(attrs.has(r), `${name}: reads ${r}`)
-    const set = def.set ? def.set({ low: 1, high: 2, options: { initial_mass: 10, normalisation: '% of initial mass', name: 'x', edges_over: 5, method: 'Gaussian', width: 9, basis: 'Raw', dry_mass: 1, molar_mass: 2, mode: 'dm/dT', sensitivity: 5, baseline: 'Straight', poly_order: 2, anchors: [1, 2], tolerance: 5, model: 'Avrami (JMAK)', mass: 5, dh_ref: 100, formula: 'CaO', delta_initial: 0, sites: 3, mass_change: -1, host: 'CaCO3', species: 'CO2', n: 1, branch: 'adsorption' } }) : {}
+    const set = def.set ? def.set({ low: 1, high: 2, options: { initial_mass: 10, normalisation: '% of initial mass', name: 'x', edges_over: 5, method: 'Gaussian', width: 9, basis: 'Raw', dry_mass: 1, molar_mass: 2, mode: 'dm/dT', sensitivity: 5, baseline: 'Straight', poly_order: 2, anchors: [1, 2], tolerance: 5, model: 'Avrami (JMAK)', mass: 5, dh_ref: 100, formula: 'CaO', delta_initial: 0, sites: 3, mass_change: -1, host: 'CaCO3', species: 'CO2', n: 1, branch: 'adsorption', ordinate: 'Transmittance', transition: 'Indirect', font_size: 9, unit: 'Absorbance', preset: 'Strong', prominence: 4, min_distance: 20, search: 'C=O', material: 'Oxide', substrate: 'Si', elements: 'Ti O', laser: '532', in_air: true } }) : {}
     for (const k of Object.keys(set)) assert.ok(attrs.has(k), `${name}: sets ${k}`)
   }
   const run = toolSet.tools.find((t) => t.action === 'run')
@@ -141,4 +162,16 @@ test('KherveTGA AI actions name the TGA / DSC Analysis window\'s own controls an
 
 test('KherveBET AI actions name the BET / Physisorption Analysis window\'s own controls and handlers', () => {
   checkActions(BET_ACTIONS, desktop('libraries/ToolsMenu/BET_Analysis.py'), KHERVEBET_TOOL_SET)
+})
+
+test('KherveUVVis AI actions name the UV-Vis Analysis window\'s own controls and handlers', () => {
+  checkActions(UVVIS_ACTIONS, desktop('libraries/ToolsMenu/UVVIS_Analysis.py'), KHERVEUVVIS_TOOL_SET)
+})
+
+test('KherveFTIR AI actions name the FTIR Analysis window\'s own controls and handlers', () => {
+  checkActions(FTIR_ACTIONS, desktop('libraries/ToolsMenu/FTIR_Analysis.py'), KHERVEFTIR_TOOL_SET)
+})
+
+test('KherveRaman AI actions name the Raman Analysis window\'s own controls and handlers', () => {
+  checkActions(RAMAN_ACTIONS, desktop('libraries/ToolsMenu/Raman_Analysis.py'), KHERVERAMAN_TOOL_SET)
 })

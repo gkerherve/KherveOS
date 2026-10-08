@@ -10,8 +10,8 @@
 import { createStore, type StoreApi } from 'zustand'
 import { os } from '@/os'
 import { HOME } from '@/os/path'
-import { FitBridge, type Answer } from '@/apps/khervefitting/bridge'
-import { installCode, parseAnswers, runCode } from './engine.core'
+import { FitBridge, toBase64, type Answer } from '@/apps/khervefitting/bridge'
+import { WHEELS_DIR, filesFor, installCode, parseAnswers, runCode, type FilesIndex } from './engine.core'
 import { WX, wildcardExtensions, type Arrays, type Effect, type Fig, type ModalAnswer, type ModalSpec, type TechInfo, type TechState, type WxFrame, type WxNode } from './types'
 
 const BASE = `${import.meta.env.BASE_URL}apps/khervetech/py/`
@@ -40,27 +40,54 @@ export interface TechDocState {
   loading: string | null
 }
 
-let filesCache: Promise<Record<string, string>> | null = null
+const filesCache = new Map<string, Promise<{ files: Record<string, string>; wheels: Record<string, string> }>>()
+const textCache = new Map<string, Promise<string>>()
+const wheelCache = new Map<string, Promise<string>>()
 
-/** The engine's Python files (py/files.json), fetched once per page. */
-export function engineFiles(): Promise<Record<string, string>> {
-  filesCache ??= (async () => {
-    const r = await fetch(`${BASE}files.json`, { cache: 'no-cache' })
-    if (!r.ok) throw new Error(`files.json: HTTP ${r.status}`)
-    const list = ((await r.json()) as { files: string[] }).files
-    const pairs = await Promise.all(
-      list.map(async (rel) => {
-        const f = await fetch(BASE + rel, { cache: 'no-cache' })
-        if (!f.ok) throw new Error(`${rel}: HTTP ${f.status}`)
-        return [rel, await f.text()] as const
-      }),
-    )
-    return Object.fromEntries(pairs)
-  })().catch((e: unknown) => {
-    filesCache = null
-    throw e
-  })
-  return filesCache
+async function fetchText(rel: string): Promise<string> {
+  let p = textCache.get(rel)
+  if (!p) {
+    p = fetch(BASE + rel.split('/').map(encodeURIComponent).join('/'), { cache: 'no-cache' }).then((f) => {
+      if (!f.ok) throw new Error(`${rel}: HTTP ${f.status}`)
+      return f.text()
+    })
+    textCache.set(rel, p)
+    p.catch(() => textCache.delete(rel))
+  }
+  return p
+}
+
+async function fetchWheel(name: string): Promise<string> {
+  let p = wheelCache.get(name)
+  if (!p) {
+    p = fetch(`${import.meta.env.BASE_URL}${WHEELS_DIR}${name}`).then(async (f) => {
+      if (!f.ok) throw new Error(`wheels/${name}: HTTP ${f.status}`)
+      return toBase64(new Uint8Array(await f.arrayBuffer()))
+    })
+    wheelCache.set(name, p)
+    p.catch(() => wheelCache.delete(name))
+  }
+  return p
+}
+
+/** One technique engine's Python files and wheels (py/files.json), fetched once per page. */
+export function engineFiles(tech: string): Promise<{ files: Record<string, string>; wheels: Record<string, string> }> {
+  let p = filesCache.get(tech)
+  if (!p) {
+    p = (async () => {
+      const r = await fetch(`${BASE}files.json`, { cache: 'no-cache' })
+      if (!r.ok) throw new Error(`files.json: HTTP ${r.status}`)
+      const want = filesFor((await r.json()) as FilesIndex, tech)
+      const [files, wheels] = await Promise.all([
+        Promise.all(want.files.map(async (rel) => [rel, await fetchText(rel)] as const)),
+        Promise.all(want.wheels.map(async (w) => [w, await fetchWheel(w)] as const)),
+      ])
+      return { files: Object.fromEntries(files), wheels: Object.fromEntries(wheels) }
+    })()
+    filesCache.set(tech, p)
+    p.catch(() => filesCache.delete(tech))
+  }
+  return p
 }
 
 export class TechDoc {
@@ -77,7 +104,10 @@ export class TechDoc {
     this.tech = tech
     this.bridge = new FitBridge(ns, {
       name,
-      install: async () => installCode(await engineFiles()),
+      install: async () => {
+        const { files, wheels } = await engineFiles(tech)
+        return installCode(files, wheels)
+      },
       run: runCode,
       parse: (out) => parseAnswers<Answer>(out),
     })

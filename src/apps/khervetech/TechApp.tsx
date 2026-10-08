@@ -31,7 +31,7 @@ import { FigurePlot, type Limits, type PlotMode } from './FigurePlot'
 import { TechDoc } from './doc'
 import { mainAxes } from './figmath'
 import { WxProvider, WxView, type WxMsg } from './WxUI'
-import { TECH_TOOL_AFTER, XPS_ONLY_TOOLS, appForSheets, type TechAppSpec } from './spec'
+import { TECH_TOOL_AFTER, XPS_ONLY_TOOLS, appForSheets, isSheetOf, type TechAppSpec } from './spec'
 import { techAiTools } from './aiTools'
 import type { ActionTable } from './actions'
 import type { Arrays, ModalAnswer, ModalSpec, WxFrame, WxNode } from './types'
@@ -58,7 +58,7 @@ export async function seedExamples(spec: TechAppSpec): Promise<string[]> {
     if (!r.ok) return []
     const index = (await r.json()) as { examples: { file: string; title: string }[] }
     const files = index.examples.map((e) => e.file).filter((f) => !f.includes('/') && !f.includes('..'))
-    if (localStorage.getItem(flag)) return files
+    if (localStorage.getItem(flag) && fs.exists(dir)) return files
     for (const file of files) {
       const target = join(dir, file)
       if (fs.exists(target)) continue
@@ -286,9 +286,9 @@ export function TechApp({ win, args, spec, actions }: AppProps & { spec: TechApp
       }
     }
     let alive = true
+    // Python starts at once, in this window's own worker; the examples are copied meanwhile.
+    void seedExamples(spec).then((files) => alive && setExamples(files))
     void (async () => {
-      const files = await seedExamples(spec)
-      if (alive) setExamples(files)
       const ok = await doc.start()
       if (alive && ok && typeof args.path === 'string') await openPath(args.path, true)
     })()
@@ -321,7 +321,7 @@ export function TechApp({ win, args, spec, actions }: AppProps & { spec: TechApp
     const a = await doc.call('open', { path })
     if (!a.ok) return false
     const sheets = doc.state.sheets
-    const own = sheets.some((s) => s.toUpperCase().startsWith(spec.prefix))
+    const own = sheets.some((s) => isSheetOf(spec, s))
     const other = appForSheets(sheets)
     if (!own && other && other.appId !== spec.appId && extname(path).toLowerCase() === '.kfit') {
       if (startup) {
@@ -489,7 +489,10 @@ export function TechApp({ win, args, spec, actions }: AppProps & { spec: TechApp
     exportKfit: () => void saveAs(),
     saveAs: () => void saveAs(),
     openLocation: st.file ? () => os.open('files', { path: dirname(st.file) }) : undefined,
-    openExamples: () => os.open('files', { path: examplesDir(spec) }),
+    openExamples: () => void seedExamples(spec).then((files) => {
+      setExamples(files)
+      os.open('files', { path: examplesDir(spec) })
+    }),
     exit: () => win.close(),
     undo: () => void doc.call('undo'),
     redo: () => void doc.call('redo'),

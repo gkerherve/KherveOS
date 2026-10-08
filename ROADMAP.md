@@ -77,9 +77,11 @@ tests, browser), finish it and commit. KherveRef comes after the PDF service.
       done 2026-10-07 (`src/os/services/pdf.ts`).
 - [x] Git service: isomorphic-git over the virtual drive; GitHub through a small
       CORS proxy on the KherveOS server (`gitproxy.py`) — done 2026-10-07.
-- [x] KhervePDF (`../KhervePDF`) — done 2026-10-07. Not ported: editing existing
-      PDF text (no MuPDF.js equivalent of the PyMuPDF call), OCR, AI panel, KherveRef
-      link, Git history, digital signatures.
+- [x] KhervePDF (`../KhervePDF`) — done 2026-10-07; desktop parity pass 2026-10-08
+      (docs/parity/khervepdf.md: the desktop's toolbar, menus, MDI icons, dock, tabs,
+      status bar, dialogs; Edit / Move / Delete existing text, Git menu, KherveRef).
+      Not ported: OCR, the docked AI panel (opens KherveAI), digital signatures,
+      rich text (B/I/U per character, rotation) in text boxes.
 - [x] KherveRef (`../KherveRef`) — done 2026-10-07 (not ported: Git sync, RIS/EndNote/Zotero import, full CSL engine) — metadata from Crossref/arXiv/OpenLibrary (proxy
       through the server where CORS blocks), BibLaTeX export
 - [x] KhervePY (`../khervePY`) — CodeMirror editor, Pyodide run, Git panel — done
@@ -220,3 +222,22 @@ desktop source (dev branches) and ../khervefitting-web/public/screenshots/tools/
   server modules latex.py/gitproxy.py. Review, finish (or restart) and commit each.
 - 2026-10-06 — Stage 1 built and pushed; KherveBook examples exported; theme
   settled (black + green).
+
+## Queued (2026-10-07)
+- [x] ~~YouTube, YouTube Music and Spotify apps~~ — dropped by the user (2026-10-08): not if Google/the services don't allow it.
+- [ ] Shut Down… (Ꝃ menu): written by agent, uncommitted; test in browser + KherveOS.app, then commit (src/os/shutdown*.ts, src/shell/ShutdownScreen.tsx, TopBar, Shell, vfs, KherveRef guard, KherveOS.swift).
+- [ ] AI + MCP control of every app (Email, Messages, Terminal, Viewer, Settings, games): agent in progress; verify with Claude Code over /mcp.
+- [ ] KherveCAD port (1:1, OpenSCAD wasm + three.js): written 2026-10-08, UNCOMMITTED, not yet seen in a browser. The desktop MainWindow itself runs headless in Pyodide (public/apps/khervecad/py/kcweb + qtshim) and React draws it (src/apps/khervecad); checklist docs/parity/khervecad.md; re-export with tools/export_khervecad.py; tests in src/apps/khervecad/tests.
+- [ ] KherveMol port (1:1): built 2026-10-08, uncommitted, not yet tested in a browser. Desktop engine (origin/dev d6815d6) unchanged in Pyodide with a PyQt5 stand-in; WebGL 2 with the desktop's own shaders (not three.js); RDKit MinimalLib (npm) for SMILES/2D/descriptors (rdkit is not in Pyodide 314); ase wheel for CIF. Checklist: docs/parity/khervemol.md; data/examples: tools/export_khervemol.py; tests: tools/tests/khervemol.test.ts.
+- [ ] KherveCAD port written by agent (uncommitted: src/apps/khervecad, public/apps/khervecad, manifests/khervecad.ts, appManifest/registry lines). Next: open it in the browser (first open reloads the page once while Vite prepares three/openscad-wasm), run its test list in docs/parity/khervecad.md, commit.
+- [ ] Technique apps from KherveFitting-AI (dev-AI), one app each, 1:1 with the desktop's technique mode: TGA + BET (agent, with the shared base), then FTIR, Raman, UV-Vis, XRD, XAS, EELS.
+- [ ] KherveWord (standard word processor, .docx) and Notes (Apple-Notes-like): agents in progress.
+- [ ] KherveCalc (very scientific calculator): agent in progress.
+- [ ] KherveBook parity pass 2 (1:1 with desktop origin/dev bd728ee): written 2026-10-08, UNCOMMITTED, not yet seen in a browser. Desktop MDI icons, all 11 cell types (Note, File, KFit via the desktop's kfitio/kfitmodels in Pyodide, KherveTeX Doc, Molecule), kf()/kfit(), sidecar <stem>_files, Git menu (existing repositories only, never creates one), desktop themes, find bar, editor menu (synonyms, highlight themes), PDF/xlsx import, Open in KhervePY/Sheet/Paint/Fitting/TeX/Mol. Checklist + browser test list: docs/parity/khervebook.md; tests: tools/tests/khervebook-cells.test.ts.
+- [ ] KherveWord (word processor, Word-like: ribbon, paginated pages, styles, lists, tables, pictures, headers/footers, footnotes, equations, TOC, comments, track changes; .docx read/write by its own OOXML reader/writer in src/apps/kherveword/docx, .odt/.rtf/.md/.html/.txt import, PDF via print or MuPDF): written 2026-10-08, UNCOMMITTED, not yet seen in a browser. Tests: tools/tests/kherveword-docx.test.ts. Next: run the browser test list (pagination, rulers, print), commit.
+- [ ] Technique apps from KherveFitting-AI (user, 2026-10-08: "separate apps per technique"): base `src/apps/khervetech`
+      (the desktop's technique code unchanged in Pyodide under a headless wx + recording matplotlib), KherveTGA and
+      KherveBET written 2026-10-08, UNCOMMITTED, not yet seen in a browser: run the test lists at the end of
+      docs/parity/khervetga.md and docs/parity/kherve-bet.md, then commit. Next: FTIR, Raman, UV-Vis, XRD, XAS, EELS
+      (CLAUDE.md, "Technique apps").
+- [ ] Redesign KherveTGA/KherveBET with KherveOS's own look and icons (not the wx copy); keep only the analysis logic. Then FTIR, Raman, UV-Vis, XRD, XAS, EELS the same way.

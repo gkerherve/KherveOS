@@ -1,0 +1,20 @@
+{
+ "examples": [
+  {
+   "file": "Polystyrene_synthetic.jdx",
+   "title": "Polystyrene synthetic"
+  },
+  {
+   "file": "PMMA_synthetic.jdx",
+   "title": "PMMA synthetic"
+  },
+  {
+   "file": "Ethanol_synthetic.jdx",
+   "title": "Ethanol synthetic"
+  },
+  {
+   "file": "CaCO3_calcite_synthetic.jdx",
+   "title": "CaCO3 calcite synthetic"
+  }
+ ]
+}

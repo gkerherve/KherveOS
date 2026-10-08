@@ -711,6 +711,5 @@ import { KHERVECALC_TOOL_SET } from './manifests/khervecalc.ts'
 APP_TOOL_SETS.push(KHERVECALC_TOOL_SET)
 
 // The technique apps of KherveFitting-AI (their tools' code: src/apps/khervetech/aiTools.ts)
-import { KHERVETGA_TOOL_SET } from './manifests/khervetga.ts'
-import { KHERVEBET_TOOL_SET } from './manifests/khervebet.ts'
-APP_TOOL_SETS.push(KHERVETGA_TOOL_SET, KHERVEBET_TOOL_SET)
+import { TECHNIQUE_TOOL_SETS } from './manifests/techniqueApps.ts'
+APP_TOOL_SETS.push(...TECHNIQUE_TOOL_SETS)

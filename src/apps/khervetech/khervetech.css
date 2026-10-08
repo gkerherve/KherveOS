@@ -19,6 +19,12 @@
   min-height: 0;
   overflow: hidden;
 }
+/* The SVG is placed over its box, so the box's size comes from the panel alone (FigurePlot measures it). */
+.kt-app .kt-figure > .kt-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
 .kt-app .kt-svg {
   display: block;
   touch-action: none;
@@ -388,9 +394,13 @@
   flex: 1 1 auto;
 }
 .kt-app .kt-canvas {
+  position: relative;
   display: flex;
   min-height: 180px;
   min-width: 120px;
+}
+.kt-app .kt-canvas > .kt-figure {
+  flex: 1 1 auto;
 }
 .kt-app .kt-gauge {
   width: 100%;

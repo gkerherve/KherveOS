@@ -65,6 +65,8 @@ def op_init(a):
     import ktech.compat  # noqa: F401
     _patch()
     tech = TECHS[key]
+    if 'pandas' in tech.get('packages', []):
+        ktech.compat.pandas_openpyxl()
     for m in tech['modules']:
         importlib.import_module(m)
     S.tech = tech
@@ -153,16 +155,24 @@ def op_state(a):
 def op_open(a):
     """Open a .kfit project, or import a technique file (the desktop's menu entry, with this path)."""
     from ktech import project
+    import wx
     paths = a.get('paths') or [a['path']]
     first = paths[0]
     if first.lower().endswith('.kfit'):
         project.open_kfitting_file(S.frame, first)
         return {}
+    if first.lower().endswith('.xlsx'):
+        project.open_xlsx_file(S.frame, first)
+        return {}
     ext = os.path.splitext(first)[1].lower()
     for exts, target, combined in S.tech['open_paths']:
         if ext in exts:
             fn = _fn(target)
-            if combined is None:
+            if combined == 'dialog':
+                # the File > Import entry, its file dialog answered with these paths
+                wx._Loop.answers.insert(0, {'id': wx.ID_OK, 'paths': list(paths)})
+                fn(S.frame)
+            elif combined is None:
                 fn(S.frame, paths)
             else:
                 proj = _fn(S.tech.get('project_path', 'libraries.FileMenu.TGA_Import:_project_path_for'))
@@ -283,6 +293,9 @@ OPS = {
     'sheet': op_sheet, 'table': op_table, 'results': op_results, 'drive': op_drive, 'display': op_display,
 }
 
+#: requests that may read or write a project or workbook (the technique's own packages load first)
+DATA_OPS = {'init', 'open', 'menu', 'event', 'drive', 'save', 'tool'}
+
 NEEDS = {'open': ['h5py'], 'save': ['h5py'], 'event': ['h5py'], 'menu': ['h5py'], 'drive': ['h5py'],
          'sheet': ['h5py'], 'undo': ['h5py'], 'redo': ['h5py']}
 
@@ -318,7 +331,12 @@ async def run(requests_json):
         args = req.get('args') or {}
         full = False
         try:
-            await ensure(['numpy', 'scipy'] + NEEDS.get(op, []))
+            tech = S.tech
+            if op == 'init':
+                from ktech.techniques import TECHS
+                tech = TECHS.get(str(args.get('tech', '')).upper())
+            extra = (tech or {}).get('packages', []) if op in DATA_OPS else []
+            await ensure(['numpy', 'scipy'] + NEEDS.get(op, []) + extra)
             fn = OPS.get(op)
             if fn is None:
                 raise ValueError(f"Unknown request: {op}")

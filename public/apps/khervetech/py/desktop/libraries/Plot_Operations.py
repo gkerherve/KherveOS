@@ -185,3 +185,22 @@ def is_image_sheet(window, sheet_name):
     return bool(sheet.get('_EELS_type') in ('map', 'image')
                 or name.startswith('EELS~Map'))
 
+
+def _plot_ftir_overlays(ax, sheet_data):
+    """Draw the FTIR non-destructive layers stored on a sheet.
+
+    ``FTIR_Overlays`` is written by the FTIR Analysis tool and holds the raw
+    spectrum and any diagnostic curve (baseline, atmospheric correction) that
+    the user asked to see alongside the processed trace.
+    """
+    for overlay in (sheet_data.get('FTIR_Overlays') or []):
+        x = overlay.get('x') or []
+        y = overlay.get('y') or []
+        if len(x) != len(y) or not x:
+            continue
+        ax.plot(x, y, color=overlay.get('color', '#999999'),
+                linestyle=overlay.get('style', '--'),
+                linewidth=overlay.get('width', 0.8),
+                alpha=overlay.get('alpha', 0.85),
+                label=overlay.get('label', 'Overlay'))
+

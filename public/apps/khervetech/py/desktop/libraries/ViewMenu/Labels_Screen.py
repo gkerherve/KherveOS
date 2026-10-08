@@ -358,3 +358,209 @@ def _remove_all_drawing_artists(ax):
                 try: child_axes.remove(child_ax)
                 except Exception: pass
 
+
+def _draw_inset(ax, ld, window=None):
+    """Create a small inset axes that mirrors the main plot over a chosen
+    BE/intensity window. The inset is tagged so _remove_all_drawing_artists
+    cleans it up on the next replot.
+
+    An inset with a ``source`` key draws that sheet instead of mirroring this
+    one, which is how a derived plot (the UV-Vis Tauc transform) can sit as an
+    inset on the spectrum it came from.
+    """
+    from matplotlib.collections import PolyCollection
+    x0 = float(ld.get('x', 0.6)); y0 = float(ld.get('y', 0.55))
+    w = max(0.05, min(1.0, float(ld.get('w', 0.35))))
+    h = max(0.05, min(1.0, float(ld.get('h', 0.35))))
+    x0 = max(0.0, min(1.0 - w, x0)); y0 = max(0.0, min(1.0 - h, y0))
+    try:
+        ins = ax.inset_axes([x0, y0, w, h])
+    except Exception:
+        return
+    ins._labels_screen_inset = True
+    ins._labels_screen_drawing = True
+
+    if ld.get('source'):
+        _draw_source_inset(ins, ld, window)
+        return ins
+
+    be_min = ld.get('be_min'); be_max = ld.get('be_max')
+    if be_min is None or be_max is None:
+        xl = ax.get_xlim(); be_min, be_max = min(xl), max(xl)
+    be_lo, be_hi = min(be_min, be_max), max(be_min, be_max)
+
+    raw_x = raw_y = None
+    # Mirror line artists (raw line, background, envelope, peak outlines)
+    for ln in ax.get_lines():
+        if getattr(ln, '_labels_screen_drawing', False):
+            continue
+        try:
+            lx = np.asarray(ln.get_xdata(), dtype=float)
+            ly = np.asarray(ln.get_ydata(), dtype=float)
+        except Exception:
+            continue
+        if ln.get_label() == 'Raw Data':
+            raw_x, raw_y = lx, ly
+        try:
+            ins.plot(lx, ly, color=ln.get_color(), linewidth=ln.get_linewidth(),
+                     linestyle=ln.get_linestyle(),
+                     alpha=(ln.get_alpha() if ln.get_alpha() is not None else 1.0),
+                     marker=ln.get_marker(), markersize=ln.get_markersize())
+        except Exception:
+            pass
+    # Mirror collections: filled peaks (PolyCollection) and raw scatter
+    for coll in list(ax.collections):
+        if getattr(coll, '_labels_screen_drawing', False):
+            continue
+        try:
+            if isinstance(coll, PolyCollection):
+                verts = [p.vertices for p in coll.get_paths() if len(p.vertices)]
+                if not verts:
+                    continue
+                new = PolyCollection(verts, facecolors=coll.get_facecolor(),
+                                     edgecolors=coll.get_edgecolor(),
+                                     linewidths=coll.get_linewidths())
+                a = coll.get_alpha()
+                if a is not None:
+                    new.set_alpha(a)
+                ins.add_collection(new)
+            else:
+                offs = np.asarray(coll.get_offsets())
+                if offs.ndim != 2 or offs.shape[0] == 0:
+                    continue
+                if raw_x is None and coll.get_label() == 'Raw Data':
+                    raw_x, raw_y = offs[:, 0], offs[:, 1]
+                fc = coll.get_facecolor()
+                color = fc[0] if len(fc) else (0, 0, 0, 1)
+                sx, sy = offs[:, 0], offs[:, 1]
+                m = (sx >= be_lo) & (sx <= be_hi)
+                sx, sy = sx[m], sy[m]
+                if sx.size > 1500:                      # downsample for speed
+                    step = int(sx.size // 1500) + 1
+                    sx, sy = sx[::step], sy[::step]
+                if sx.size:
+                    ins.scatter(sx, sy, s=4, c=[color], marker='o')
+        except Exception:
+            pass
+
+    # X range: match the main axis orientation (BE decreases L->R when inverted)
+    if ax.xaxis_inverted():
+        ins.set_xlim(be_hi, be_lo)
+    else:
+        ins.set_xlim(be_lo, be_hi)
+
+    # Y range: explicit if given, else auto-scale to raw data in the BE window
+    int_min = ld.get('int_min'); int_max = ld.get('int_max')
+    if int_min is None or int_max is None:
+        lo_hi = None
+        if raw_x is not None and raw_y is not None:
+            rx = np.asarray(raw_x); ry = np.asarray(raw_y)
+            m = (rx >= be_lo) & (rx <= be_hi)
+            yy = ry[m]
+            if yy.size:
+                lo_hi = (float(np.nanmin(yy)), float(np.nanmax(yy)))
+        if lo_hi is None:
+            lo_hi = ax.get_ylim()
+        pad = (lo_hi[1] - lo_hi[0]) * 0.05 or 1.0
+        y_lo = int_min if int_min is not None else lo_hi[0] - pad
+        y_hi = int_max if int_max is not None else lo_hi[1] + pad
+        ins.set_ylim(y_lo, y_hi)
+    else:
+        ins.set_ylim(int_min, int_max)
+
+    # Border / ticks
+    fontsize = float(ld.get('fontsize', 7))
+    if ld.get('show_border', True):
+        for s in ins.spines.values():
+            s.set_visible(True)
+        ins.tick_params(labelsize=max(fontsize - 1, 4), length=2)
+    else:
+        for s in ins.spines.values():
+            s.set_visible(False)
+        ins.set_xticks([]); ins.set_yticks([])
+
+    name = ld.get('text', '')
+    if name and name != 'Inset':
+        ins.set_title(name, fontsize=fontsize)
+    return ins
+
+
+def _draw_source_inset(ins, ld, window):
+    """Draw another sheet inside the inset axes.
+
+    The whole of the source curve is shown by default - it is a plot in its
+    own right, not a magnified corner of this one - with any stored fit
+    overlay (``*_Fit_X`` / ``*_Fit_Y``) on top. Everything is sized from the
+    label's ``fontsize``, because at inset scale the shared label size is
+    unreadable.
+    """
+    sheet = {}
+    try:
+        sheet = window.Data['Core levels'].get(ld['source'], {}) or {}
+    except (AttributeError, KeyError, TypeError):
+        sheet = {}
+    x = np.asarray(sheet.get('B.E.', []), dtype=float)
+    y = np.asarray(sheet.get('Raw Data', []), dtype=float)
+    if x.size < 2 or x.size != y.size:
+        ins.text(0.5, 0.5, f"{ld.get('source', '')}\nnot found",
+                 transform=ins.transAxes, ha='center', va='center',
+                 fontsize=float(ld.get('fontsize', 8)), color='gray')
+        ins.set_xticks([]); ins.set_yticks([])
+        return
+
+    fontsize = float(ld.get('fontsize', 8))
+    ins.plot(x, y, color=ld.get('color', 'black'),
+             linewidth=float(ld.get('linewidth', 1.0)))
+
+    # A stored fit line, whatever technique prefix it carries.
+    fit_x = fit_y = None
+    for key in sheet:
+        if str(key).endswith('_Fit_X') and sheet.get(str(key)[:-2] + '_Y'):
+            fit_x = sheet[key]; fit_y = sheet[str(key)[:-2] + '_Y']
+            break
+    if fit_x and fit_y and len(fit_x) == len(fit_y):
+        ins.plot(fit_x, fit_y, color=(0.7, 0.13, 0.13), linestyle=':',
+                 linewidth=max(1.0, float(ld.get('linewidth', 1.0)) * 1.4))
+
+    # Axis ranges: the label's own values win, else the whole curve.
+    x_lo = ld.get('be_min'); x_hi = ld.get('be_max')
+    if x_lo is None or x_hi is None:
+        x_lo, x_hi = float(np.nanmin(x)), float(np.nanmax(x))
+    if fit_x:
+        # Never crop the extrapolated intercept out of the picture.
+        x_lo = min(x_lo, float(np.nanmin(fit_x)))
+    ins.set_xlim(min(x_lo, x_hi), max(x_lo, x_hi))
+
+    y_lo = ld.get('int_min'); y_hi = ld.get('int_max')
+    if y_lo is None or y_hi is None:
+        finite = y[np.isfinite(y)]
+        data_hi = float(np.nanmax(finite)) if finite.size else 1.0
+        data_lo = float(np.nanmin(finite)) if finite.size else 0.0
+        y_lo = y_lo if y_lo is not None else min(0.0, data_lo)
+        y_hi = y_hi if y_hi is not None else data_hi * 1.05
+    ins.set_ylim(y_lo, y_hi)
+
+    if ld.get('xlabel'):
+        ins.set_xlabel(ld['xlabel'], fontsize=fontsize)
+    if ld.get('ylabel'):
+        ins.set_ylabel(ld['ylabel'], fontsize=fontsize)
+    ins.tick_params(labelsize=max(fontsize - 1, 4), length=2)
+
+    if ld.get('show_border', True):
+        for s in ins.spines.values():
+            s.set_visible(True)
+    else:
+        for s in ins.spines.values():
+            s.set_visible(False)
+        ins.set_xticks([]); ins.set_yticks([])
+
+    if ld.get('annotation'):
+        ins.text(0.04, 0.96, ld['annotation'], transform=ins.transAxes,
+                 va='top', ha='left', fontsize=fontsize,
+                 color=(0.7, 0.13, 0.13))
+
+    name = ld.get('text', '')
+    if name and name != 'Inset':
+        ins.set_title(name, fontsize=fontsize)
+    ins.patch.set_alpha(float(ld.get('alpha', 0.85)))
+

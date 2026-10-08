@@ -4,7 +4,7 @@
 // desktop's own TGA_Analysis / BET_Analysis windows headless and presses their
 // buttons.
 //
-//   KHERVEOS_PYODIDE=/path/to/node_modules/pyodide/pyodide.mjs node --test src/apps/khervetech/tests/engine.test.mjs
+//   KHERVEOS_PYODIDE=/path/to/node_modules/pyodide/pyodide.mjs node --test src/apps/khervetech/tests/*.test.mjs
 //
 // Without Pyodide 314.0.7 installed (npm i pyodide@314.0.7 somewhere, then
 // KHERVEOS_PYODIDE pointing at its pyodide.mjs, or resolvable as 'pyodide'),
@@ -12,72 +12,10 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { installCode, parseAnswers, runCode } from '../engine.core.ts'
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..')
-const PY = path.join(ROOT, 'public/apps/khervetech/py')
-
-async function loadPyodideModule() {
-  const where = process.env.KHERVEOS_PYODIDE
-  try {
-    return where ? await import(where) : await import('pyodide')
-  } catch {
-    return null
-  }
-}
-
-const mod = await loadPyodideModule()
-const skip = mod ? false : 'Pyodide not installed (set KHERVEOS_PYODIDE)'
-
-async function engine() {
-  const list = JSON.parse(fs.readFileSync(path.join(PY, 'files.json'), 'utf8')).files
-  const files = Object.fromEntries(list.map((rel) => [rel, fs.readFileSync(path.join(PY, rel), 'utf8')]))
-  const py = await mod.loadPyodide({ env: { HOME: '/home/user' } })
-  let out = ''
-  const dec = new TextDecoder()
-  py.setStdout({ write: (b) => { out += dec.decode(b, { stream: true }); return b.length }, isatty: false })
-  py.setStderr({ write: (b) => b.length, isatty: false })
-  py.FS.mkdirTree('/home/user/Documents')
-  py.runPython("import os; os.chdir('/home/user')")
-  await py.loadPackage(['numpy', 'scipy', 'h5py'])
-  await py.runPythonAsync(installCode(files))
-  const call = async (op, args = {}) => {
-    out = ''
-    await py.runPythonAsync(runCode([{ op, args }]))
-    const a = parseAnswers(out)
-    assert.ok(a, `answer to ${op}`)
-    assert.ok(a[0].ok, `${op}: ${a[0].error}\n${a[0].trace ?? ''}`)
-    assert.ok(!a[0].stateError, a[0].stateError)
-    return a[0]
-  }
-  const copyExamples = (app, dir) => {
-    py.FS.mkdirTree(dir)
-    const src = path.join(ROOT, 'public/examples', app)
-    for (const f of fs.readdirSync(src)) py.FS.writeFile(`${dir}/${f}`, fs.readFileSync(path.join(src, f)))
-  }
-  return { py, call, copyExamples }
-}
-
-/** Every node of a serialised wx tree, with the notebook pages it is on. */
-function nodes(frame) {
-  const out = []
-  const walk = (n, pages) => {
-    if (!n || typeof n !== 'object') return
-    if (n.t) out.push({ n, pages })
-    if (n.sizer) walk(n.sizer, pages)
-    for (const it of n.items ?? []) walk(it.n, pages)
-    for (const p of n.pages ?? []) walk(p.n, [...pages, p.title])
-  }
-  walk(frame, [])
-  return out
-}
-const byLabel = (frame, t, label, page) => nodes(frame).find(({ n, pages }) => n.t === t && n.label === label && (!page || pages.includes(page)))?.n
+import { byLabel, engine, nodes, skip } from './harness.mjs'
 
 test('KherveTGA: import a NETZSCH STA run, generate the mass sheet, measure it, undo, save', { skip, timeout: 600_000 }, async () => {
-  const { call, copyExamples, py } = await engine()
+  const { call, copyExamples, py } = await engine('TGA')
   const dir = '/home/user/Documents/KherveTGA Examples'
   copyExamples('khervetga', dir)
   let a = await call('init', { tech: 'TGA' })
@@ -183,7 +121,7 @@ test('KherveTGA: import a NETZSCH STA run, generate the mass sheet, measure it, 
 })
 
 test('KherveBET: import isotherms, fit BET / t-plot / BJH, derived sheets, the overview', { skip, timeout: 600_000 }, async () => {
-  const { call, copyExamples } = await engine()
+  const { call, copyExamples } = await engine('BET')
   const dir = '/home/user/Documents/KherveBET Examples'
   copyExamples('khervebet', dir)
   let a = await call('init', { tech: 'BET' })
