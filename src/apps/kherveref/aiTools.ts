@@ -26,7 +26,7 @@ export interface AiHost {
 
 function needLib(host: AiHost): Library {
   const lib = host.lib()
-  if (!lib) throw new Error('KherveRef has no library open yet. Try again in a moment.')
+  if (!lib) throw new Error('kRef has no library open yet. Try again in a moment.')
   return lib
 }
 

@@ -9,13 +9,13 @@ const STYLE = str('A paragraph style: Normal, Title, Subtitle, Heading1…Headin
 
 export const KHERVEWORD_TOOL_SET: AppToolSet = {
   app: 'kherveword',
-  name: 'KherveWord',
+  name: 'kWord',
   summary: 'the word processor (Word-like: styles, lists, tables, .docx, PDF).',
   keywords: ['kherveword', 'word', 'docx', 'word document', 'word processor', 'letter', 'report', 'cv', 'resume', 'essay'],
   tools: [
     {
       action: 'read_document',
-      description: 'Read the document open in KherveWord: file, pages, words, page setup, and every paragraph (index, style, list level, text; tables as rows).',
+      description: 'Read the document open in kWord: file, pages, words, page setup, and every paragraph (index, style, list level, text; tables as rows).',
       inputSchema: object({ from: int('Start at this paragraph index (default 0).'), max_chars: int('Stop after about this many characters (default 20000).') }),
       readOnly: true,
     },

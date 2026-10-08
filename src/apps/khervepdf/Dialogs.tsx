@@ -361,7 +361,7 @@ const LIBRARIES: [string, string, string][] = [
 export function AboutDialog({ onAuthor, onClose }: { onAuthor: () => void; onClose: () => void }) {
   return (
     <Modal
-      title="About KhervePDF"
+      title="About kPDF"
       wide
       onClose={onClose}
       buttons={
@@ -373,12 +373,12 @@ export function AboutDialog({ onAuthor, onClose }: { onAuthor: () => void; onClo
       }
     >
       <div className="kp-about">
-        <h2>KhervePDF v{VERSION}</h2>
+        <h2>kPDF v{VERSION}</h2>
         <p className="k-muted">WYSIWYG PDF viewer &amp; annotation editor with Git history.</p>
         <hr />
         <p>
           Created by <b>Gwilherm Kerhervé</b>, Department of Materials, Imperial College London — part of a small family of open-source tools
-          (KherveFitting, KherveTeX, KherveSheet, KhervePlot, KherveCAD, …) that share the same themes, the same icon style and, here, the same
+          (KherveFitting, kTeX, kSheet, KhervePlot, KherveCAD, …) that share the same themes, the same icon style and, here, the same
           per-document Git history.
         </p>
         <p>More about the author: <i>Help → Meet the Author…</i></p>
@@ -416,21 +416,21 @@ const AUTHOR_LINKS: [Glyph, string, string][] = [
 const PROJECTS: [string, string][] = [
   ['KherveFitting', 'peak fitting for XPS and Raman spectra'],
   ['spe-xps-reader', 'open reader for PHI Instruments SPE binary files'],
-  ['KherveTeX', 'WYSIWYG LaTeX editor'],
-  ['KherveSheet', 'Origin-style scientific workbook'],
+  ['kTeX', 'WYSIWYG LaTeX editor'],
+  ['kSheet', 'Origin-style scientific workbook'],
   ['KhervePlot', 'scientific plotting and figure preparation'],
-  ['KherveBook', 'Jupyter-inspired computational notebook'],
-  ['KherveSlide', 'WYSIWYG slide designer that writes beamer LaTeX'],
-  ['KhervePaint', 'hybrid raster + vector drawing'],
+  ['kBook', 'Jupyter-inspired computational notebook'],
+  ['kSlide', 'WYSIWYG slide designer that writes beamer LaTeX'],
+  ['kPaint', 'hybrid raster + vector drawing'],
   ['KherveCAD', 'easy CAD with OpenSCAD as the engine'],
   ['KherveHouse', 'houses and buildings in 3D, no modelling tools'],
-  ['KherveMol', 'chemical compounds and crystal structures in 2D / 3D'],
-  ['KherveDB', 'reference database for the Kherve* suite'],
+  ['kMol', 'chemical compounds and crystal structures in 2D / 3D'],
+  ['kDB', 'reference database for the Kherve* suite'],
   ['KherveStats', 'downloads and traffic for every release'],
-  ['KhervePDF', 'this app — PDF viewing and annotation'],
+  ['kPDF', 'this app — PDF viewing and annotation'],
 ]
 
-export const CITATION = `Kerhervé, G. KhervePDF: A PDF viewer and annotation editor with built-in Git version history (v${VERSION}). https://github.com/gkerherve/KhervePDF`
+export const CITATION = `Kerhervé, G. kPDF: A PDF viewer and annotation editor with built-in Git version history (v${VERSION}). https://github.com/gkerherve/KhervePDF`
 
 /** about_author.AuthorDialog. */
 export function AuthorDialog({ onClose }: { onClose: () => void }) {
@@ -444,7 +444,7 @@ export function AuthorDialog({ onClose }: { onClose: () => void }) {
         <>
           <button
             className="k-btn"
-            title="Copy a citation for KhervePDF to the clipboard"
+            title="Copy a citation for kPDF to the clipboard"
             onClick={() => void navigator.clipboard.writeText(CITATION).then(() => setCopied(true))}
           >
             <Icon name="copy" size={15} /> {copied ? 'Copied' : 'Copy citation'}
@@ -486,10 +486,10 @@ export function AuthorDialog({ onClose }: { onClose: () => void }) {
           KherveFitting — open-source XPS peak fitting<br />
           <a href="https://doi.org/10.1002/sia.70032" onClick={(e) => { e.preventDefault(); os.openUrl('https://doi.org/10.1002/sia.70032') }}>doi:10.1002/sia.70032</a>
         </p>
-        <h3>Cite KhervePDF</h3>
+        <h3>Cite kPDF</h3>
         <p className="k-muted">{CITATION}</p>
         <h3>Licence</h3>
-        <p className="k-muted">© 2026 Gwilherm Kerhervé. KhervePDF is free software, released under the GNU General Public License v3.</p>
+        <p className="k-muted">© 2026 Gwilherm Kerhervé. kPDF is free software, released under the GNU General Public License v3.</p>
       </div>
     </Modal>
   )

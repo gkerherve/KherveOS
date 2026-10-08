@@ -108,7 +108,7 @@ test('small models are offered the tools of open and named apps only', () => {
   assert.deepEqual(mentionedApps('Add a cell to my notebook that plots sin(x)', APP_TOOL_SETS).includes('khervebook'), true)
   assert.deepEqual(mentionedApps('Write a haiku in Notepad', APP_TOOL_SETS), ['notepad'])
   assert.deepEqual(mentionedApps('what is the capital of France?', APP_TOOL_SETS), [])
-  assert.deepEqual(mentionedApps('Open KherveSheet', APP_TOOL_SETS), ['khervesheet'])
+  assert.deepEqual(mentionedApps('Open kSheet', APP_TOOL_SETS), ['khervesheet'])
   // "notebook" is not "note"; "spreadsheets" is not "sheet" by accident but listed
   assert.equal(mentionedApps('my notebook', APP_TOOL_SETS).includes('notepad'), false)
   assert.deepEqual(appsToOffer(APP_TOOL_SETS, ['files', 'nosuchapp'], 'hello'), ['files'])
@@ -142,7 +142,7 @@ test('the manifest is well formed and small', () => {
   assert.ok(names.has('khervesheet_set_cells') && names.has('khervebook_run') && names.has('notepad_save') && names.has('files_select'))
   const lines = describeApps(APP_TOOL_SETS)
   assert.equal(lines.length, APP_TOOL_SETS.length)
-  assert.ok(lines.some((l) => /^- KherveSheet: .* Tools: khervesheet_read_range, khervesheet_set_cells/.test(l)))
+  assert.ok(lines.some((l) => /^- kSheet: .* Tools: khervesheet_read_range, khervesheet_set_cells/.test(l)))
 })
 
 test('waitUntil', async () => {

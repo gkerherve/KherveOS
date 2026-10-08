@@ -128,13 +128,13 @@ export default function KhervePaint({ win, args }: AppProps) {
     }
   }
 
-  const fail = (what: string, e: unknown) => void os.dialog.alert(`${what}: ${errText(e)}`, { title: 'KhervePaint' })
+  const fail = (what: string, e: unknown) => void os.dialog.alert(`${what}: ${errText(e)}`, { title: 'kPaint' })
   const say = (m: string) => store.say(m)
 
   // ------------------------------------------------------------ title
 
   useEffect(() => {
-    win.setTitle(`${store.dirty ? '• ' : ''}${name} — KhervePaint`)
+    win.setTitle(`${store.dirty ? '• ' : ''}${name} — kPaint`)
   })
   useEffect(() => win.setDocumentPath(store.path), [win, store.path])
 
@@ -180,7 +180,7 @@ export default function KhervePaint({ win, args }: AppProps) {
         d = newDoc(png.w, png.h, (ext === '.png' && pngDpi(bytes)) || 96)
         d = { ...d, raster: { w: png.w, h: png.h, src: png.b64, key: newRasterKey() } }
         keepPath = null
-      } else throw new Error('KhervePaint opens .svg, .kpaint and pictures.')
+      } else throw new Error('kPaint opens .svg, .kpaint and pictures.')
       store.load(d, keepPath)
       pushRecent(p)
       say(`Opened ${path.pretty(p)}`)
@@ -782,7 +782,7 @@ export default function KhervePaint({ win, args }: AppProps) {
             icon: Download,
             submenu: [
               { label: 'SVG (editable)', onClick: () => void download('svg') },
-              { label: 'KhervePaint .kpaint', onClick: () => void download('kpaint') },
+              { label: 'kPaint .kpaint', onClick: () => void download('kpaint') },
               { label: 'PNG picture', onClick: () => void download('png') },
               { label: 'PDF', onClick: () => void download('pdf') },
             ],
@@ -909,16 +909,16 @@ export default function KhervePaint({ win, args }: AppProps) {
       {
         label: 'Help',
         items: [
-          { label: 'KhervePaint Guide', icon: BookOpen, shortcut: 'F1', onClick: () => setHelp(true) },
+          { label: 'kPaint Guide', icon: BookOpen, shortcut: 'F1', onClick: () => setHelp(true) },
           { label: 'Keyboard Shortcuts', icon: Keyboard, onClick: () => setHelp(true) },
           '-',
           {
-            label: 'About KhervePaint',
+            label: 'About kPaint',
             icon: Info,
             onClick: () =>
               void os.dialog.alert(
-                'KhervePaint — hybrid raster + vector drawing. The KherveOS edition of the desktop KhervePaint: same editable SVG and .kpaint files, same symbol libraries. Free software (GPL-3.0).',
-                { title: 'About KhervePaint' },
+                'kPaint — hybrid raster + vector drawing. The KherveOS edition of the desktop kPaint: same editable SVG and .kpaint files, same symbol libraries. Free software (GPL-3.0).',
+                { title: 'About kPaint' },
               ),
           },
         ],

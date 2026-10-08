@@ -19,7 +19,7 @@ const MAX_READ = 40_000
 
 export function notepadAiTools(doc: NotepadDoc): AppTools {
   const ready = async (signal?: AbortSignal) => {
-    if (!(await waitUntil(() => !doc.get().loading, 30_000, signal))) throw new Error('Notepad is still opening the file. Try again in a moment.')
+    if (!(await waitUntil(() => !doc.get().loading, 30_000, signal))) throw new Error('kText is still opening the file. Try again in a moment.')
   }
   const lineCount = (t: string) => (t ? t.split('\n').length : 0)
 

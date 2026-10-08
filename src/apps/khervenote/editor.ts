@@ -239,7 +239,7 @@ function makeAttachmentNode(env: KnEnv) {
           const label = document.createElement('span')
           label.textContent = String(n.attrs.name || 'Document')
           chip.append(label)
-          chip.title = `${String(n.attrs.name)} — click to open it${/\.pdf$/i.test(String(n.attrs.name)) ? ' in KhervePDF' : ''}; right-click for more`
+          chip.title = `${String(n.attrs.name)} — click to open it${/\.pdf$/i.test(String(n.attrs.name)) ? ' in kPDF' : ''}; right-click for more`
         }
         paint(node)
         chip.addEventListener('click', (e) => {

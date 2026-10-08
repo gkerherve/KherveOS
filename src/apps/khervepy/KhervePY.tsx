@@ -140,7 +140,7 @@ export default function KhervePY({ win, args }: AppProps) {
   }, [])
   const [initial] = useState(() => initialProject(args, prefs))
   const [project, setProject] = useState(initial.root)
-  const [message, setMessage] = useState(`KhervePY ${VERSION} — ready`)
+  const [message, setMessage] = useState(`kPY ${VERSION} — ready`)
   const [sizes, setSizes] = useState(prefs.sizes)
   const [diff, setDiff] = useState<(DiffContent & { file?: string }) | null>(null)
   const [dialog, setDialog] = useState<DialogState | null>(null)
@@ -180,7 +180,7 @@ export default function KhervePY({ win, args }: AppProps) {
   const switchProject = useCallback(
     async (root: string, opts: { openEntry?: boolean } = {}) => {
       if (!fs.isDir(root)) {
-        await os.dialog.alert(`“${root}” isn’t a folder any more.`, { title: 'KhervePY' })
+        await os.dialog.alert(`“${root}” isn’t a folder any more.`, { title: 'kPY' })
         return
       }
       if (root !== projectRef.current) {
@@ -248,7 +248,7 @@ export default function KhervePY({ win, args }: AppProps) {
   const dirtyCount = editors.tabs.filter(isDirty).length
   useEffect(() => {
     const name = active ? `${isDirty(active) ? '• ' : ''}${active.title} — ` : ''
-    win.setTitle(`${name}${path.basename(project) || project} — KhervePY`)
+    win.setTitle(`${name}${path.basename(project) || project} — kPY`)
   }, [win, active, project])
   useEffect(() => win.setDocumentPath(active?.path ?? null), [win, active?.path])
 
@@ -775,7 +775,7 @@ export default function KhervePY({ win, args }: AppProps) {
       {
         label: 'Help',
         items: [
-          { label: 'About KhervePY', icon: Info, onClick: () => void about() },
+          { label: 'About kPY', icon: Info, onClick: () => void about() },
           { label: 'Keyboard Shortcuts', onClick: () => void shortcuts() },
           '-',
           { label: 'Create a GitHub Token…', icon: ExternalLink, onClick: () => os.openUrl(git.CREATE_TOKEN_URL) },
@@ -788,8 +788,8 @@ export default function KhervePY({ win, args }: AppProps) {
 
   const about = () =>
     os.dialog.alert(
-      `KhervePY ${VERSION}\n\nA light, GitHub-first Python IDE — part of the KherveTools family, now in KherveOS.\n\nTabbed editor with auto-save, project explorer, Git & GitHub (status, commit, graph, branches, pull/push, clone/fork), Python in the browser (Pyodide) with micropip packages.\n\nCopyright © 2026 Gwilherm Kerherve — GNU GPL v3 or later.`,
-      { title: 'About KhervePY' },
+      `kPY ${VERSION}\n\nA light, GitHub-first Python IDE — part of the KherveTools family, now in KherveOS.\n\nTabbed editor with auto-save, project explorer, Git & GitHub (status, commit, graph, branches, pull/push, clone/fork), Python in the browser (Pyodide) with micropip packages.\n\nCopyright © 2026 Gwilherm Kerherve — GNU GPL v3 or later.`,
+      { title: 'About kPY' },
     )
 
   const shortcuts = () =>
@@ -1042,7 +1042,7 @@ export default function KhervePY({ win, args }: AppProps) {
               {!editors.tabs.length && (
                 <div className="kpy-welcome">
                   <Code2 size={44} className="kpy-welcome-logo" />
-                  <h2>KhervePY</h2>
+                  <h2>kPY</h2>
                   <p className="kpy-muted">A light, GitHub-first Python IDE</p>
                   <div className="kpy-welcome-actions">
                     <button className="k-btn" onClick={() => void openFolder()}>

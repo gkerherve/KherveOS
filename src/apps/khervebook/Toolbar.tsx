@@ -264,7 +264,7 @@ export function cellRow(nb: Notebook, sel: Cell | undefined, keys: Record<string
         '|',
         { icon: 'mdi.code-braces', title: 'Insert a code snippet', menu: () => PY_SNIPPETS.map(([label, body]) => ({ label, onClick: ed((v) => insertSnippet(v, body)) })) },
         '|',
-        { icon: 'mdi.language-python', title: 'Edit this code in the full KhervePY editor and reload on save', onClick: call('openInApp', 'khervepy') },
+        { icon: 'mdi.language-python', title: 'Edit this code in the full kPY editor and reload on save', onClick: call('openInApp', 'khervepy') },
       ]
     case 'markdown':
       return [
@@ -325,7 +325,7 @@ export function cellRow(nb: Notebook, sel: Cell | undefined, keys: Record<string
         '|',
         { icon: 'mdi.table-plus', title: 'Add another sheet to this workbook cell', onClick: () => id && nb.sheetOp('addSheet', id) },
         '|',
-        { icon: 'mdi.google-spreadsheet', title: 'Edit this workbook in the full KherveSheet app and reload on save', onClick: call('openInApp', 'khervesheet') },
+        { icon: 'mdi.google-spreadsheet', title: 'Edit this workbook in the full kSheet app and reload on save', onClick: call('openInApp', 'khervesheet') },
       ]
     case 'svg': {
       if (!sel) return []
@@ -365,10 +365,10 @@ export function cellRow(nb: Notebook, sel: Cell | undefined, keys: Record<string
         { icon: 'mdi.shape-outline', title: 'Insert a ready-made SVG shape', menu: () => SVG_SHAPES.map(([label, el]) => ({ label, onClick: () => nb.drawShape(sid, el) })) },
         {
           icon: 'mdi.shape-plus',
-          title: "Insert a KhervePaint library object (reads KhervePaint's saved objects)",
+          title: "Insert a kPaint library object (reads kPaint's saved objects)",
           menu: () => {
             const objects = x.paintLibrary()
-            if (!objects.length) return [{ label: '(no KhervePaint objects yet)', disabled: true }, { label: 'Save objects in KhervePaint to see them', disabled: true }]
+            if (!objects.length) return [{ label: '(no kPaint objects yet)', disabled: true }, { label: 'Save objects in kPaint to see them', disabled: true }]
             return objects.map(([label, p]) => ({ label, onClick: () => void nb.insertSvgObject(sid, p) }))
           },
         },
@@ -376,7 +376,7 @@ export function cellRow(nb: Notebook, sel: Cell | undefined, keys: Record<string
         { icon: 'mdi.eye-outline', color: RUN_GREEN, title: `Render / show the drawing (${keys.runNext})`, onClick: () => nb.run(sid, 'stay') },
         '|',
         // mdi.draw-pen is not in qtawesome's MDI 5.9 set, so the desktop shows the text.
-        { icon: 'mdi.draw-pen', text: 'Open in KhervePaint', title: 'Draw in the full KhervePaint app and reload on save', onClick: call('openInApp', 'khervepaint') },
+        { icon: 'mdi.draw-pen', text: 'Open in kPaint', title: 'Draw in the full kPaint app and reload on save', onClick: call('openInApp', 'khervepaint') },
       ]
     }
     case 'note': {
@@ -453,12 +453,12 @@ export function cellRow(nb: Notebook, sel: Cell | undefined, keys: Record<string
       ]
     case 'ktex':
       return [
-        { icon: 'mdi.file-plus-outline', title: 'Create a new KherveTeX document in this cell', onClick: call('newDocument') },
-        { icon: 'mdi.folder-open-outline', title: 'Show an existing KherveTeX document or .tex file in this cell', onClick: call('chooseFile') },
+        { icon: 'mdi.file-plus-outline', title: 'Create a new kTeX document in this cell', onClick: call('newDocument') },
+        { icon: 'mdi.folder-open-outline', title: 'Show an existing kTeX document or .tex file in this cell', onClick: call('chooseFile') },
         { icon: 'mdi.refresh', title: 'Re-read the document and its pages', onClick: call('refresh') },
         '|',
-        { icon: 'mdi.open-in-new', title: 'Open the document in KherveTeX; saving there updates the cell', onClick: call('openInApp', 'khervetex') },
-        { icon: 'mdi.magnify', title: 'Choose which KherveTeX to launch', soon: true },
+        { icon: 'mdi.open-in-new', title: 'Open the document in kTeX; saving there updates the cell', onClick: call('openInApp', 'khervetex') },
+        { icon: 'mdi.magnify', title: 'Choose which kTeX to launch', soon: true },
       ]
     case 'mol':
       return [
@@ -466,7 +466,7 @@ export function cellRow(nb: Notebook, sel: Cell | undefined, keys: Record<string
         { icon: 'mdi.vector-polyline', title: 'Skeletal 2D sketch', onClick: call('showView', '2d') },
         { icon: 'mdi.rotate-3d-variant', title: 'Turn the 2D sketch into a 3D model (needs RDKit)', soon: true },
         '|',
-        { icon: 'mdi.open-in-new', title: 'Edit in KherveMol and reload on save', onClick: call('openInApp', 'khervemol') },
+        { icon: 'mdi.open-in-new', title: 'Edit in kMol and reload on save', onClick: call('openInApp', 'khervemol') },
       ]
   }
 }

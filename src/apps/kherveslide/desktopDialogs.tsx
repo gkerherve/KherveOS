@@ -61,7 +61,7 @@ export const SYMBOL_GROUPS: [string, [string, string][]][] = [
     ['\\hat{a}', 'â'], ['\\bar{a}', 'ā'], ['\\tilde{a}', 'ã'], ['\\vec{a}', '→a'], ['\\dot{a}', 'ȧ'], ['\\ddot{a}', 'ä'], ['\\acute{a}', 'á'],
     ['\\grave{a}', 'à'], ['\\check{a}', 'ǎ'], ['\\breve{a}', 'ă'],
   ]],
-  ['KherveTeX', [['\\Kstroke', 'Ꝁ']]],
+  ['kTeX', [['\\Kstroke', 'Ꝁ']]],
 ]
 
 /** Text-mode macros: inserted as they are, not inside $…$ (symbols.TEXT_MODE_SYMBOLS). */
@@ -372,7 +372,7 @@ export function UserGuideDialog({ onClose }: { onClose: () => void }) {
     fetch(GUIDE_URL)
       .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
       .then(setMd)
-      .catch(() => setMd('# KherveSlide User Guide\n\nThe guide could not be loaded.'))
+      .catch(() => setMd('# kSlide User Guide\n\nThe guide could not be loaded.'))
   }, [])
   const html = useMemo(() => DOMPurify.sanitize(marked.parse(md, { async: false }) as string), [md])
   const heads = useMemo(() => [...md.matchAll(/^(#{2,4})\s+(.+?)\s*$/gm)].map((m) => ({ level: m[1].length, text: m[2] })), [md])
@@ -381,7 +381,7 @@ export function UserGuideDialog({ onClose }: { onClose: () => void }) {
     el?.scrollIntoView({ block: 'start' })
   }
   return (
-    <Modal title="KherveSlide — User Guide" onCancel={onClose} wide>
+    <Modal title="kSlide — User Guide" onCancel={onClose} wide>
       <div className="ks2-guide">
         <div className="ks2-guide-toc">
           <input className="k-input" placeholder="Filter the contents…" value={filter} onChange={(e) => setFilter(e.target.value)} />
@@ -409,13 +409,13 @@ export function UserGuideDialog({ onClose }: { onClose: () => void }) {
 const KHERVE_TOOLS: [string, string][] = [
   ['KherveFitting', 'peak fitting for XPS spectra'],
   ['KhervePlot', 'Origin-style plotting and data analysis'],
-  ['KherveTeX', 'Word-like writing that produces LaTeX'],
-  ['KherveSlide', 'PowerPoint-like slides that produce beamer LaTeX'],
+  ['kTeX', 'Word-like writing that produces LaTeX'],
+  ['kSlide', 'PowerPoint-like slides that produce beamer LaTeX'],
   ['KherveCAD', 'easy CAD with OpenSCAD as the engine'],
-  ['KherveSheet', 'spreadsheets'],
-  ['KherveBook', 'notebooks'],
-  ['KhervePDF', 'reading and annotating PDFs'],
-  ['KhervePaint', 'drawing and scientific sketches'],
+  ['kSheet', 'spreadsheets'],
+  ['kBook', 'notebooks'],
+  ['kPDF', 'reading and annotating PDFs'],
+  ['kPaint', 'drawing and scientific sketches'],
 ]
 
 export function AboutDialog({ onClose, onLink }: { onClose: () => void; onLink: (url: string) => void }) {
@@ -431,12 +431,12 @@ export function AboutDialog({ onClose, onLink }: { onClose: () => void; onLink: 
     </a>
   )
   return (
-    <Modal title="About KherveSlide" onCancel={onClose} wide>
+    <Modal title="About kSlide" onCancel={onClose} wide>
       <div className="ks2-modal-body ks2-about">
         <div className="ks2-about-head">
           <img src="/icons/apps/kherveslide.png" width={72} height={72} alt="" />
           <div>
-            <div className="ks2-about-name">KherveSlide</div>
+            <div className="ks2-about-name">kSlide</div>
             <div className="k-muted">PowerPoint-like slides that produce beamer LaTeX — in KherveOS</div>
           </div>
         </div>
@@ -446,7 +446,7 @@ export function AboutDialog({ onClose, onLink }: { onClose: () => void; onLink: 
         </p>
         <p>
           Works on surface analysis and X-ray Photoelectron Spectroscopy (XPS), with a focus on materials for energy storage and catalysis, and writes free,
-          open-source tools for scientists. KherveSlide grew out of the same everyday need as KherveTeX: talks and lectures in proper LaTeX (beamer) without
+          open-source tools for scientists. kSlide grew out of the same everyday need as kTeX: talks and lectures in proper LaTeX (beamer) without
           leaving the drag-and-drop comfort of PowerPoint.
         </p>
         <h3>{a('https://khervetools.com', 'khervetools.com')}</h3>
@@ -458,7 +458,7 @@ export function AboutDialog({ onClose, onLink }: { onClose: () => void; onLink: 
             </li>
           ))}
         </ul>
-        <h3>KherveSlide</h3>
+        <h3>kSlide</h3>
         <p>
           Design slides like in PowerPoint — drag, resize and stack text, pictures, equations and chemistry freely — and get beamer LaTeX, compiled to PDF
           with tectonic on the KherveOS server. Press F1 for the User Guide. {a('https://github.com/gkerherve/KherveSlide', 'Source on GitHub')}.

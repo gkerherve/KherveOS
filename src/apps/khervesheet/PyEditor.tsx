@@ -128,7 +128,7 @@ export function loopSubmenu(book: Book, sheetId: string, r: number, c: number): 
 
 /** The desktop's "Python in KherveSheet" help (python_engine.PYTHON_HELP_HTML). */
 export const PYTHON_HELP_HTML = `
-<h2>Python in KherveSheet</h2>
+<h2>Python in kSheet</h2>
 <p>A cell can run real Python instead of an Excel formula. Type <code>=PY</code> in a cell (or use <b>Insert &rarr; Python Cell</b>) and the
 formula bar turns into a multi-line code editor. Press <b>Ctrl+Enter</b> to run (plain Enter adds a new line).</p>
 <p>The cell's value is the value of the <b>last line</b>, if that line is an expression &mdash; just like Excel's Python. Assignments,
@@ -187,7 +187,7 @@ import numpy as np
 ks_set("D1:D50", np.cumsum(ks("A1:A50")))
 "written"</pre>
 <h3>Examples &mdash; matplotlib plots</h3>
-<p>Build a figure and return it (or just create one &mdash; KherveSheet captures the current figure automatically).</p>
+<p>Build a figure and return it (or just create one &mdash; kSheet captures the current figure automatically).</p>
 <p><b>Simple line plot of a column</b></p>
 <pre>=PY
 import matplotlib.pyplot as plt
@@ -235,13 +235,13 @@ plt.gcf()</pre>
 <code>scipy</code>. You can <code>import</code> other pure-Python packages; they load the first time.</li>
 <li>Click the pop-out button next to the PY badge for a larger editor with line numbers, autocomplete (Ctrl+Space), comment toggle (Ctrl+/),
 and a <b>Pick cell</b> button to click-insert <code>ks("&hellip;")</code> references.</li>
-<li>KherveAI can also write Python cells for you &mdash; just ask it to "write a Python cell that&hellip;".</li>
+<li>kAI can also write Python cells for you &mdash; just ask it to "write a Python cell that&hellip;".</li>
 </ul>
 `
 
 export function showPythonHelp(book: Book) {
   void os.dialog
-    .alert(<div className="ks-doc kpy-help" dangerouslySetInnerHTML={{ __html: PYTHON_HELP_HTML }} />, { title: 'Python in KherveSheet' })
+    .alert(<div className="ks-doc kpy-help" dangerouslySetInnerHTML={{ __html: PYTHON_HELP_HTML }} />, { title: 'Python in kSheet' })
     .finally(() => book.refocus())
 }
 

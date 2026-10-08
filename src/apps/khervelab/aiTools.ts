@@ -11,7 +11,7 @@ import { addDays, diffMinutes, fmtDuration, money, normaliseStamp, rangeLabel } 
 async function ready() {
   if (!useLab.getState().me) await loadLab()
   const { me, instruments, error } = useLab.getState()
-  if (!me) throw new Error(error ?? 'KherveLAB needs the KherveOS server and a signed-in user.')
+  if (!me) throw new Error(error ?? 'kLab needs the KherveOS server and a signed-in user.')
   return { me, instruments }
 }
 

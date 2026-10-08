@@ -258,7 +258,7 @@ export class MolApp {
     const s = this.get()
     const name = s.path ? vpath.basename(s.path) : 'Untitled'
     const formula = s.mol.formula
-    this.win.setTitle(`KherveMol v${s.version || ''} — ${name}${formula ? ` — ${formula}` : ''}`)
+    this.win.setTitle(`kMol v${s.version || ''} — ${name}${formula ? ` — ${formula}` : ''}`)
   }
 
   // =================================================================== VIEWER
@@ -1296,7 +1296,7 @@ export class MolApp {
   }
 
   async exportSvg() {
-    let p = await os.dialog.saveFile({ title: 'Export SVG (opens in KhervePaint)', defaultName: 'molecule.svg', extensions: ['.svg'] })
+    let p = await os.dialog.saveFile({ title: 'Export SVG (opens in kPaint)', defaultName: 'molecule.svg', extensions: ['.svg'] })
     if (!p) return
     if (!p.toLowerCase().endsWith('.svg')) p += '.svg'
     const err = await this.exportSvgTo(p)
@@ -1312,7 +1312,7 @@ export class MolApp {
         : await this.call('svg', { sketch: s.sketch, labels: s.showLabels2d, mode: s.mode })
     if (!a.ok) return message(a)
     await fs.writeText(p, String(a.text), { mkdirs: true })
-    this.status(`Exported ${vpath.basename(p)} — open it in KhervePaint`)
+    this.status(`Exported ${vpath.basename(p)} — open it in kPaint`)
     return null
   }
 

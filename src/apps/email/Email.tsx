@@ -216,7 +216,7 @@ function MailLayout({ win, args, host }: { win: WindowApi; args: AppArgs; host: 
     }
   }, [store])
 
-  useEffect(() => win.setTitle(unread ? `Email (${unread})` : 'Email'), [win, unread])
+  useEffect(() => win.setTitle(unread ? `Mail (${unread})` : 'Mail'), [win, unread])
 
   useEffect(() => {
     if (layout === 'wide') setDrawer(false)

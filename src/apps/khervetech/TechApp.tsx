@@ -30,12 +30,12 @@ import { AboutView } from '@/apps/khervefitting/dialogs'
 import { FigurePlot, type Limits, type PlotMode } from './FigurePlot'
 import { TechDoc } from './doc'
 import { mainAxes } from './figmath'
+import { TechFloat, ModalFrame } from './frames'
 import { WxProvider, WxView, type WxMsg } from './WxUI'
 import { TECH_TOOL_AFTER, XPS_ONLY_TOOLS, appForSheets, isSheetOf, type TechAppSpec } from './spec'
 import { techAiTools } from './aiTools'
 import type { ActionTable } from './actions'
-import type { Arrays, ModalAnswer, ModalSpec, WxFrame, WxNode } from './types'
-import { WX } from './types'
+import type { ModalAnswer, ModalSpec } from './types'
 
 export const TECH_ICONS = `${import.meta.env.BASE_URL}apps/khervetech/icons/`
 const MAC = /Mac|iPhone|iPad/.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
@@ -133,103 +133,7 @@ function TechToolbar({ info, technique, sheets, sheet, states, onSheet, onTool, 
   return <div className="kf-toolbar">{out}</div>
 }
 
-// ------------------------------------------------------------------ floating wx frames
-
-function TechFloat({ frame, arrays, z, onFront, send, bounds, pending }: { frame: WxFrame; arrays: Arrays; z: number; onFront: () => void; send: (m: WxMsg) => void; bounds: { w: number; h: number }; pending: Map<number, unknown> }) {
-  const w = Math.min(Math.max(frame.size[0] > 0 ? frame.size[0] : 480, 300), Math.max(320, bounds.w - 20))
-  const h = Math.min(Math.max(frame.size[1] > 0 ? frame.size[1] : 560, 240), Math.max(240, bounds.h - 20))
-  const [pos, setPos] = useState(() => ({ x: Math.max(0, Math.round((bounds.w - w) / 2)), y: Math.max(0, Math.round((bounds.h - h) / 3)) }))
-  const drag = useRef<{ dx: number; dy: number } | null>(null)
-  const [, bump] = useState(0)
-  const ctx = {
-    arrays,
-    pending,
-    setPending: (id: number, v: unknown) => {
-      pending.set(id, v)
-      bump((n) => n + 1)
-    },
-    send,
-  }
-  return (
-    <div className="kf-float kt-float" style={{ left: pos.x, top: pos.y, width: w, height: h, zIndex: 20 + z }} onPointerDownCapture={onFront} onKeyDown={(e) => e.stopPropagation()} role="dialog" aria-label={frame.title}>
-      <div
-        className="kf-float-title"
-        onPointerDown={(e) => {
-          if ((e.target as HTMLElement).closest('button')) return
-          e.currentTarget.setPointerCapture(e.pointerId)
-          drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y }
-        }}
-        onPointerMove={(e) => {
-          if (!drag.current) return
-          setPos({ x: Math.max(-w + 80, Math.min(bounds.w - 60, e.clientX - drag.current.dx)), y: Math.max(0, Math.min(bounds.h - 28, e.clientY - drag.current.dy)) })
-        }}
-        onPointerUp={() => (drag.current = null)}
-      >
-        <span>{frame.title}</span>
-        <button type="button" className="kf-float-close" title="Close" onClick={() => send({ id: frame.id!, type: 'close' })}>
-          ✕
-        </button>
-      </div>
-      <div className="kf-float-body kt-float-body">
-        <WxProvider value={ctx}>{frame.sizer ? <WxView node={{ t: 'Panel', id: frame.id, sizer: frame.sizer }} /> : null}</WxProvider>
-      </div>
-    </div>
-  )
-}
-
-/** A custom wx.Dialog reached by ShowModal: its widgets, OK / Cancel answer it. */
-function ModalFrame({ spec, arrays, done }: { spec: ModalSpec; arrays: Arrays; done: (a: ModalAnswer) => void }) {
-  const pending = useRef(new Map<number, unknown>())
-  const [, bump] = useState(0)
-  const ids = spec.ids ?? []
-  const finish = (id: number) => {
-    const values: Record<string, unknown> = {}
-    for (const [uid, v] of pending.current) {
-      const i = ids.indexOf(uid)
-      if (i >= 0) values[String(i)] = v
-    }
-    done({ id, values })
-  }
-  const ctx = {
-    arrays,
-    pending: pending.current,
-    setPending: (id: number, v: unknown) => {
-      pending.current.set(id, v)
-      bump((n) => n + 1)
-    },
-    send: (m: WxMsg) => {
-      if (m.type === 'button') finish(m.id === spec.frame?.id ? WX.ID_CANCEL : buttonId(spec.frame as unknown as WxNode, m.id))
-    },
-  }
-  return (
-    <div className="kt-modal-back">
-      <div className="kf-float kt-float kt-modal" style={{ position: 'relative', width: Math.min(560, Math.max(320, spec.frame?.size[0] ?? 400)) }}>
-        <div className="kf-float-title">
-          <span>{spec.frame?.title ?? 'KherveFitting'}</span>
-          <button type="button" className="kf-float-close" onClick={() => done({ id: WX.ID_CANCEL })}>
-            ✕
-          </button>
-        </div>
-        <div className="kf-float-body kt-float-body">
-          <WxProvider value={ctx}>{spec.frame?.sizer ? <WxView node={{ t: 'Panel', sizer: spec.frame.sizer }} /> : null}</WxProvider>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /** The wx id a dialog button answers with (OK / Cancel / Yes / No by label). */
-function buttonId(frame: WxNode | undefined, uid: number): number {
-  let label = ''
-  const walk = (n: WxNode | null | undefined) => {
-    if (!n) return
-    if (n.id === uid && n.label) label = n.label
-    n.items?.forEach((i) => walk(i.n))
-    if (n.sizer) walk(n.sizer)
-  }
-  walk(frame)
-  return ({ OK: WX.ID_OK, Cancel: WX.ID_CANCEL, Yes: WX.ID_YES, No: WX.ID_NO } as Record<string, number>)[label] ?? WX.ID_OK
-}
 
 // ------------------------------------------------------------------ the app
 
@@ -519,8 +423,8 @@ export function TechApp({ win, args, spec, actions }: AppProps & { spec: TechApp
     const run: Record<string, () => void> = {
       open: () => void openDialog(),
       quickSave: () => void quickSave(),
-      exportExcel: () => notReady('Export to Excel / KherveSheet'),
-      exportAll: () => notReady('Export all sheets to Excel / KherveSheet'),
+      exportExcel: () => notReady('Export to Excel / kSheet'),
+      exportAll: () => notReady('Export all sheets to Excel / kSheet'),
       undo: () => void doc.call('undo'),
       redo: () => void doc.call('redo'),
       sort: () => void doc.call('sheet', { action: 'sort', sheet }),
@@ -695,7 +599,7 @@ export function TechApp({ win, args, spec, actions }: AppProps & { spec: TechApp
           '-',
           { label: 'Export plot data as XLSX', disabled: true },
           { label: 'Export plot data as CSV', onClick: () => void exportTable('csv') },
-          { label: 'Export plot data as KherveSheet', disabled: true },
+          { label: 'Export plot data as kSheet', disabled: true },
         ],
       },
       '-',

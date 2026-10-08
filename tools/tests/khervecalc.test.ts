@@ -172,8 +172,8 @@ test('sessions round-trip and survive bad files', () => {
   assert.equal(odd.settings.digits, 1000)
   assert.equal(odd.settings.angle, DEFAULT_SETTINGS.angle)
   assert.equal(odd.view.xmin, -10)
-  assert.throws(() => parseSession('{"format": "kbook"}'), /not a KherveCalc session/)
-  assert.throws(() => parseSession('nope'), /not a KherveCalc session/)
+  assert.throws(() => parseSession('{"format": "kbook"}'), /not a kCalc session/)
+  assert.throws(() => parseSession('nope'), /not a kCalc session/)
 })
 
 test('ans numbering skips errors; definitions replace older ones', () => {

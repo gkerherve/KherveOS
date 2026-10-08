@@ -13,7 +13,7 @@ import { os } from '@/os'
 import { reportCrash } from '@/os/crash'
 import { HOME, extname } from '@/os/path'
 import type { AppArgs, AppManifest, AppProps, WindowApi } from '@/os/types'
-import { animateMinimize, animateRestore, captureWindow, forgetWindow, tileFor, tileRects } from './minimize'
+import { animateMinimize, animateRestore, forgetWindow, tileFor, tileRects } from './minimize'
 import { SCREENSHOT_DIR, installScreenshotKeys, takeScreenshot } from '@/os/screenshot'
 import './screenshot.css'
 
@@ -116,10 +116,11 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
   )
   useEffect(() => () => setWindowMenus(win.id, null), [win.id])
 
-  // ---- minimising, like macOS: the window flies into its own Dock tile (which shows a
-  // picture of it) and back out. 'hiding' and 'showing' are the flights.
+  // ---- minimising, like macOS: the window flies into its own Dock tile (which shows
+  // the app's icon) and back out. 'hiding' and 'showing' are the flights.
   const [phase, setPhase] = useState<'shown' | 'hiding' | 'hidden' | 'showing'>(win.minimized ? 'hidden' : 'shown')
   const wasMinimized = useRef(win.minimized)
+  const landed = useRef<(() => void) | null>(null) // ends the minimise flight's hold
   useLayoutEffect(() => {
     if (win.minimized === wasMinimized.current) return
     wasMinimized.current = win.minimized
@@ -131,14 +132,20 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
     if (!el) return
     let cancelled = false
     setPhase('hiding')
-    // The picture is taken during the flight; the window stays laid out until then.
-    const { flying, done } = animateMinimize(el, tileFor(win.id))
-    const picture = flying.then(() => captureWindow(win.id, el))
-    void Promise.all([done, picture]).then(() => !cancelled && setPhase('hidden'))
+    // No picture: the Dock tile shows the app's icon.
+    const flight = animateMinimize(el, tileFor(win.id))
+    landed.current = flight.cancel
+    void flight.done.then(() => !cancelled && setPhase('hidden'))
     return () => {
       cancelled = true
     }
   }, [win.minimized, win.id])
+  // The flight's last frame holds until the window is hidden, in the same commit.
+  useLayoutEffect(() => {
+    if (phase !== 'hidden' && phase !== 'showing') return
+    landed.current?.()
+    landed.current = null
+  }, [phase])
   useLayoutEffect(() => {
     const el = ref.current
     if (phase !== 'showing' || !el) return

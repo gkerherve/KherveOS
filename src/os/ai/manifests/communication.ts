@@ -24,7 +24,7 @@ const CONVERSATION = str('Conversation id, or the name / username of a person or
 export const COMMUNICATION_TOOL_SETS: AppToolSet[] = [
   {
     app: 'email',
-    name: 'Email',
+    name: 'Mail',
     summary: 'the user\'s email (IMAP/SMTP accounts): read the inbox, search, write and send mail.',
     keywords: ['email', 'emails', 'e-mail', 'mail', 'mails', 'inbox', 'mailbox', 'gmail', 'kmail'],
     tools: [
@@ -79,7 +79,7 @@ export const COMMUNICATION_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'messages',
-    name: 'Messages',
+    name: 'Chat',
     summary: 'chat with people on this KherveOS server (direct and group conversations).',
     keywords: ['messages', 'chat', 'chats', 'conversation', 'conversations', 'kchat', 'dm'],
     tools: [

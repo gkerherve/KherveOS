@@ -6,14 +6,14 @@ import { bool, int, object, oneOf, str } from './schema.ts'
 
 export const KHERVECALC_TOOL_SET: AppToolSet = {
   app: 'khervecalc',
-  name: 'KherveCalc',
+  name: 'kCalc',
   summary: 'the scientific calculator: exact/decimal maths, calculus, matrices, units, constants (SymPy).',
   keywords: ['khervecalc', 'calculator', 'calculate', 'compute', 'integral', 'derivative', 'solve', 'equation', 'convert', 'unit', 'constant', 'matrix', 'eigen', 'kcalc'],
   tools: [
     {
       action: 'evaluate',
       description:
-        'Calculate in KherveCalc and add it to its history. Calculator syntax: ^ powers, 2x, a = b equations, x := 3 and f(x) := x^2 define, 3_m/_s units, #c constants, expr ▶ _km/_h converts, [[1,2],[3,4]] matrices, integrate(f, x, a, b)…',
+        'Calculate in kCalc and add it to its history. Calculator syntax: ^ powers, 2x, a = b equations, x := 3 and f(x) := x^2 define, 3_m/_s units, #c constants, expr ▶ _km/_h converts, [[1,2],[3,4]] matrices, integrate(f, x, a, b)…',
       inputSchema: object(
         {
           expression: str('What to calculate, e.g. "integrate(exp(-x^2), x, -oo, oo)".'),
@@ -47,13 +47,13 @@ export const KHERVECALC_TOOL_SET: AppToolSet = {
     },
     {
       action: 'get_history',
-      description: 'The latest calculations in KherveCalc: each input with its result as text (and its decimal value), newest last, plus the defined variables.',
+      description: 'The latest calculations in kCalc: each input with its result as text (and its decimal value), newest last, plus the defined variables.',
       inputSchema: object({ limit: int('How many entries (default 20).') }),
       readOnly: true,
     },
     {
       action: 'set_mode',
-      description: 'Change KherveCalc modes: number (exact/decimal/fraction), angle unit, decimal digits, complex form, number format.',
+      description: 'Change kCalc modes: number (exact/decimal/fraction), angle unit, decimal digits, complex form, number format.',
       inputSchema: object({
         number: oneOf(['exact', 'decimal', 'fraction'], 'Number mode.'),
         angle: oneOf(['deg', 'rad', 'grad'], 'Angle unit.'),

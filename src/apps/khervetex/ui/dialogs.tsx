@@ -484,7 +484,7 @@ export function CitationDialog({
       {!entries.length && (
         <p className="ktx-field-hint">
           No bibliography found. Keys come from a .bib file named in a raw <code>\bibliography{'{…}'}</code> block (beside the document), a
-          <code>thebibliography</code> block, or the KherveRef entries a .ktex carries.
+          <code>thebibliography</code> block, or the kRef entries a .ktex carries.
         </p>
       )}
     </Modal>
@@ -693,7 +693,7 @@ export function SettingsDialog({ initial, done }: { initial: DocMeta; done: Done
             <Field label="Front matter (verbatim LaTeX)">
               <textarea className="k-input ktx-textarea mono" rows={3} value={m.frontmatter_extras} onChange={(e) => set('frontmatter_extras', e.target.value)} />
             </Field>
-            <Field label="Bibliography style (KherveRef citations)">
+            <Field label="Bibliography style (kRef citations)">
               <input className="k-input mono" value={m.bib_style} onChange={(e) => set('bib_style', e.target.value)} />
             </Field>
           </>

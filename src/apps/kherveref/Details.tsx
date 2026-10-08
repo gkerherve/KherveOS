@@ -265,7 +265,7 @@ export function Details(props: DetailsProps) {
         {draft.files.length === 0 && <p className="k-muted kr-small">No PDF attached.</p>}
         {draft.files.map((a, i) => (
           <div className="kr-file" key={a.path}>
-            <button className="k-link-btn kr-file-name" title="Open in KhervePDF" onClick={() => props.onOpenFile(entry, i)}>
+            <button className="k-link-btn kr-file-name" title="Open in kPDF" onClick={() => props.onOpenFile(entry, i)}>
               {a.path.split('/').pop()}
             </button>
             <button className="k-icon-btn" title="Remove from this reference" onClick={() => props.onRemoveFile(entry, i)}>

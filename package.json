@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview",
+    "pyodide:fetch": "node tools/fetch_pyodide.mjs",
     "server:setup": "python3 -m venv server/.venv && server/.venv/bin/pip install -q -r server/requirements.txt",
     "server": "cd server && .venv/bin/python -m kherveos_server",
     "dev:all": "concurrently -k -n os,server -c blue,green \"npm:dev\" \"npm:server\""
@@ -54,6 +55,7 @@
     "modern-screenshot": "^4.7.0",
     "mupdf": "^1.28.1",
     "openscad-wasm": "^0.0.4",
+    "plotly.js-dist-min": "^4.1.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "three": "^0.186.1",

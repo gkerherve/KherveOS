@@ -48,7 +48,7 @@ export const SYMBOL_GROUPS: [string, [string, string][]][] = [
     ["\\hat{a}", "â"], ["\\bar{a}", "ā"], ["\\tilde{a}", "ã"], ["\\vec{a}", "→a"], ["\\dot{a}", "ȧ"], ["\\ddot{a}", "ä"],
     ["\\acute{a}", "á"], ["\\grave{a}", "à"], ["\\check{a}", "ǎ"], ["\\breve{a}", "ă"],
   ]],
-  ["KherveTeX", [
+  ["kTeX", [
     ["\\Kstroke", "Ꝁ"],
   ]],
 ]

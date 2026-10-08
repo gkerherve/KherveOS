@@ -5,7 +5,7 @@ import { techniqueToolSet } from './technique.ts'
 
 export const KHERVEBET_TOOL_SET = techniqueToolSet({
   app: 'khervebet',
-  name: 'KherveBET',
+  name: 'kBET',
   summary: 'N2 physisorption: BET surface area, t-plot, BJH pore sizes, report.',
   keywords: ['khervebet', 'bet', 'physisorption', 'isotherm', 'surface area', 'nitrogen adsorption', 'bjh', 't-plot', 'pore size', 'micropore', 'mesopore', 'micromeritics'],
   files: 'isotherm (.csv/.txt/.dat)',

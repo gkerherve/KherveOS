@@ -164,7 +164,7 @@ function UserGuide() {
   return (
     <div className="nb-guide">
       <p>
-        KherveBook is a computational notebook: one scrolling document that mixes runnable <b>Python</b>, formatted <b>Markdown</b>, typeset{' '}
+        kBook is a computational notebook: one scrolling document that mixes runnable <b>Python</b>, formatted <b>Markdown</b>, typeset{' '}
         <b>LaTeX</b>, live <b>spreadsheets</b>, <b>drawings</b> and <b>JavaScript</b> pages. This is its web edition: Python runs in your browser, and
         notebooks are <code>.kbook</code> files on your KherveOS drive, shared with the desktop app.
       </p>
@@ -190,8 +190,8 @@ function UserGuide() {
         <p>
           Change a cell's type with the toolbar drop-down or right-click → <b>Convert To</b>. Double-click a rendered cell to edit its source again.
           <b>Note</b> cells are a word-processor page with a pen; <b>File</b> cells hold attached files (<code>kf("name")</code> gives a code cell their
-          path); <b>KFit</b> cells show a KherveFitting project (<code>kfit("C1s")</code>); <b>KherveTeX Doc</b> and <b>Molecule</b> cells show a KherveTeX
-          document and a KherveMol molecule, edited in their own apps.
+          path); <b>KFit</b> cells show a KherveFitting project (<code>kfit("C1s")</code>); <b>kTeX Doc</b> and <b>Molecule</b> cells show a kTeX
+          document and a kMol molecule, edited in their own apps.
         </p>
       </Section>
       <Section title="2. Running cells">
@@ -271,7 +271,7 @@ function About() {
         <span className="nb-brand-k">Kherve</span>
         <span className="nb-brand-b">Book</span>
       </h2>
-      <p className="k-muted">Web edition for KherveOS · follows the desktop KherveBook v{KHERVEBOOK_VERSION}</p>
+      <p className="k-muted">Web edition for KherveOS · follows the desktop kBook v{KHERVEBOOK_VERSION}</p>
       <p>
         A Jupyter-inspired computational notebook — runnable Python, Markdown, LaTeX, live spreadsheets, drawings and JavaScript pages in one document.
       </p>
@@ -408,7 +408,7 @@ export default function KherveBook({ win, args }: AppProps) {
   }, [nb, args, example])
 
   useEffect(() => {
-    win.setTitle(`${dirty ? '*' : ''}${name} — KherveBook v${KHERVEBOOK_VERSION}`)
+    win.setTitle(`${dirty ? '*' : ''}${name} — kBook v${KHERVEBOOK_VERSION}`)
   }, [win, dirty, name])
   // So opening this file again (e.g. after Save As) focuses this window.
   useEffect(() => win.setDocumentPath(path ?? origin), [win, path, origin])
@@ -449,7 +449,7 @@ export default function KherveBook({ win, args }: AppProps) {
     // desktop _add_file_cell: a new File cell asks for its file at once
     if (t === 'file') setTimeout(() => nb.callCell(id, 'chooseFile'), 0)
   }
-  const showGuide = () => void os.dialog.alert(<UserGuide />, { title: 'KherveBook — User Guide' }).finally(() => nb.refocusSoon())
+  const showGuide = () => void os.dialog.alert(<UserGuide />, { title: 'kBook — User Guide' }).finally(() => nb.refocusSoon())
 
   // ------------------------------------------------------------ menus
 
@@ -474,7 +474,7 @@ export default function KherveBook({ win, args }: AppProps) {
       : [{ label: '(no recent files)', disabled: true }]
     const typeItem = (t: CellType, label: string): MenuItem => ({ label, checked: selType === t, disabled: !selType, onClick: act(() => nb.setType(t)) })
 
-    const exampleItems: MenuItem[] = [{ label: 'Welcome to KherveBook', onClick: after(() => nb.openWelcome()) }, '-']
+    const exampleItems: MenuItem[] = [{ label: 'Welcome to kBook', onClick: after(() => nb.openWelcome()) }, '-']
     if (examples === 'loading') exampleItems.push({ label: 'Loading examples…', disabled: true })
     else if (examples === 'error') exampleItems.push({ label: 'The examples could not be loaded — try again', onClick: loadExamples })
     else
@@ -621,15 +621,15 @@ export default function KherveBook({ win, args }: AppProps) {
             label: 'Check for Updates…',
             image: <Mdi name="mdi.cloud-download-outline" size={16} />,
             onClick: after(() =>
-              os.dialog.alert('The web edition of KherveBook is part of KherveOS and is updated with it: you always have the latest version.', { title: 'Check for Updates' }),
+              os.dialog.alert('The web edition of kBook is part of KherveOS and is updated with it: you always have the latest version.', { title: 'Check for Updates' }),
             ),
           },
           { label: 'Check for Updates on Startup', checked: true, disabled: true },
           '-',
           { label: 'Report an Issue / Feedback…', image: <Mdi name="mdi.bug-outline" size={16} />, onClick: () => os.openUrl(ISSUES_URL) },
-          { label: 'About', onClick: after(() => os.dialog.alert(<About />, { title: 'About KherveBook' })) },
+          { label: 'About', onClick: after(() => os.dialog.alert(<About />, { title: 'About kBook' })) },
           '-',
-          { label: 'Keyboard Shortcuts', onClick: after(() => os.dialog.alert(<Shortcuts />, { title: 'KherveBook shortcuts' })) },
+          { label: 'Keyboard Shortcuts', onClick: after(() => os.dialog.alert(<Shortcuts />, { title: 'kBook shortcuts' })) },
         ],
       },
     ]
@@ -892,7 +892,7 @@ export default function KherveBook({ win, args }: AppProps) {
       </div>
 
       <div className="k-statusbar nb-statusbar">
-        <span className="nb-sb-app">KherveBook v{KHERVEBOOK_VERSION}</span>
+        <span className="nb-sb-app">kBook v{KHERVEBOOK_VERSION}</span>
         <span className="nb-sb-file" title={path ?? origin ?? undefined}>
           {location}
         </span>

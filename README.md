@@ -22,6 +22,8 @@ npm run dev:all            # starts the OS (http://localhost:5173) and the serve
 
 Then open <http://localhost:5173>.
 
+For a group sharing one server, see [docs/INSTALL-GROUP-SERVER.md](docs/INSTALL-GROUP-SERVER.md).
+
 `npm run dev` starts only the OS. Files, Notepad, Terminal, KherveBook, Browser,
 Viewer and Settings work without the server. Messages, Email and the games need it.
 

@@ -110,13 +110,13 @@ export function StatsView({ bridge, settings, lists, setLists, evaluate, addGrap
     const args = m
       ? { expr: m[1], var: m[2], start: Number(m[3]), stop: Number(m[4]), step: m[5] ? Number(m[5]) : 1 }
       : { expr: f }
-    if (m && ![args.start, args.stop, args.step].every((v) => Number.isFinite(v))) return void os.notify({ title: 'KherveCalc', body: 'seq needs numbers for its start, stop and step.' })
+    if (m && ![args.start, args.stop, args.step].every((v) => Number.isFinite(v))) return void os.notify({ title: 'kCalc', body: 'seq needs numbers for its start, stop and step.' })
     try {
       const r = await bridge.call<{ ok: boolean; values?: (number | null)[]; error?: string }>('fill', { ...args, settings: engineSettings(settings) })
-      if (!r.ok || !r.values) return void os.notify({ title: 'KherveCalc', body: r.error ?? 'The formula gave no values.' })
+      if (!r.ok || !r.values) return void os.notify({ title: 'kCalc', body: r.error ?? 'The formula gave no values.' })
       setLists({ ...lists, [n]: r.values })
     } catch (e) {
-      os.notify({ title: 'KherveCalc', body: e instanceof Error ? e.message : String(e) })
+      os.notify({ title: 'kCalc', body: e instanceof Error ? e.message : String(e) })
     }
   }
 

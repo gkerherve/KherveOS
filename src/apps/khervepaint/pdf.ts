@@ -45,7 +45,7 @@ export function pdfFromCanvas(c: HTMLCanvasElement, widthPt: number, heightPt: n
   obj(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`)
   obj(4, `<< /Length ${enc.encode(content).length} >>`, enc.encode(content))
   obj(5, `<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${image.length} >>`, image)
-  obj(6, `<< /Producer (KherveOS KhervePaint) /Creator (KhervePaint) >>`)
+  obj(6, `<< /Producer (KherveOS kPaint) /Creator (kPaint) >>`)
   const xref = length
   let table = `xref\n0 7\n0000000000 65535 f \n`
   for (let n = 1; n <= 6; n++) table += `${String(offsets[n]).padStart(10, '0')} 00000 n \n`

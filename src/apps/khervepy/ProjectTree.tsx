@@ -105,7 +105,7 @@ export const ProjectTree = memo(function ProjectTree({ root, showHidden, activeP
 
   // ---------------------------------------------------------- operations
 
-  const fail = (what: string, e: unknown) => os.dialog.alert(`${what}: ${e instanceof Error ? e.message : String(e)}`, { title: 'KhervePY' })
+  const fail = (what: string, e: unknown) => os.dialog.alert(`${what}: ${e instanceof Error ? e.message : String(e)}`, { title: 'kPY' })
 
   const newFile = async (inDir: string) => {
     const name = (await os.dialog.prompt('File name:', { title: 'New File', defaultValue: 'untitled.py', selectStem: true }))?.trim()

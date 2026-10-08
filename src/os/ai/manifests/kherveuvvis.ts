@@ -5,7 +5,7 @@ import { techniqueToolSet } from './technique.ts'
 
 export const KHERVEUVVIS_TOOL_SET = techniqueToolSet({
   app: 'kherveuvvis',
-  name: 'KherveUVVis',
+  name: 'kUVVis',
   summary: 'UV-Vis spectra: absorbance conversion, Tauc band gap, band maxima.',
   keywords: ['kherveuvvis', 'uv-vis', 'uvvis', 'uv vis', 'absorbance', 'transmittance', 'band gap', 'tauc', 'optical', 'cary', 'spectrophotometer', 'kubelka-munk'],
   files: 'UV-Vis (.csv/.txt/.dat/.asc: Cary, Shimadzu, generic)',

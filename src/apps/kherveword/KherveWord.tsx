@@ -362,7 +362,7 @@ export default function KherveWord({ win, args }: AppProps) {
         bump()
         markSaved()
       } catch (e) {
-        await os.dialog.alert(`Could not open ${path.basename(p)}: ${e instanceof Error ? e.message : e}`, { title: 'KherveWord' })
+        await os.dialog.alert(`Could not open ${path.basename(p)}: ${e instanceof Error ? e.message : e}`, { title: 'kWord' })
       } finally {
         setLoading(false)
       }
@@ -396,7 +396,7 @@ export default function KherveWord({ win, args }: AppProps) {
         const left = leftoverAutosaves(openWindows)
         if (!left.length) return
         const choice = await os.dialog.choose(
-          `KherveWord kept ${left.length === 1 ? 'an unsaved document' : `${left.length} unsaved documents`} from an earlier session. Recover ${left.length === 1 ? 'it' : 'them'}?`,
+          `kWord kept ${left.length === 1 ? 'an unsaved document' : `${left.length} unsaved documents`} from an earlier session. Recover ${left.length === 1 ? 'it' : 'them'}?`,
           [
             { label: 'Discard', value: 'discard', danger: true },
             { label: 'Not now', value: 'later' },
@@ -420,7 +420,7 @@ export default function KherveWord({ win, args }: AppProps) {
 
   // Title, document path.
   const name = filePath ? path.basename(filePath) : settings.title && settings.title !== 'Document' ? `${settings.title}` : 'Untitled'
-  useEffect(() => win.setTitle(`${dirty ? '• ' : ''}${name} — KherveWord`), [win, name, dirty])
+  useEffect(() => win.setTitle(`${dirty ? '• ' : ''}${name} — kWord`), [win, name, dirty])
   useEffect(() => win.setDocumentPath(filePath), [win, filePath])
 
   // Follow renames of the open file.
@@ -1020,7 +1020,7 @@ export default function KherveWord({ win, args }: AppProps) {
       },
       {
         label: 'Help',
-        items: [{ label: 'KherveWord Help and Shortcuts', onClick: () => setDialog({ kind: 'wordCount', data: { help: true } }) }],
+        items: [{ label: 'kWord Help and Shortcuts', onClick: () => setDialog({ kind: 'wordCount', data: { help: true } }) }],
       },
     ])
   })
@@ -1375,9 +1375,9 @@ function HelpDialog({ onClose }: { onClose: () => void }) {
     ['⌥⇧⌘C', 'Format Painter (double-click its button to keep it on)'],
   ]
   return (
-    <Modal title="KherveWord Help" wide onClose={onClose}>
+    <Modal title="kWord Help" wide onClose={onClose}>
       <p className="kw-hint">
-        KherveWord writes Word documents (.docx) and reads .docx, .odt, .rtf, .md, .html and .txt. Styles (Home › Styles) give headings their look and fill the table of contents and the Navigation pane. Double-click a header, footer, picture, equation or footnote to edit it. Unsaved work is kept every 30 seconds and offered back after a crash.
+        kWord writes Word documents (.docx) and reads .docx, .odt, .rtf, .md, .html and .txt. Styles (Home › Styles) give headings their look and fill the table of contents and the Navigation pane. Double-click a header, footer, picture, equation or footnote to edit it. Unsaved work is kept every 30 seconds and offered back after a crash.
       </p>
       <table className="kw-stats">
         <tbody>

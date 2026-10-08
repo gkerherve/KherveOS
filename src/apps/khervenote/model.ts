@@ -337,7 +337,7 @@ export function toDict(note: Note): Obj {
 export function fromDict(raw: unknown): Note {
   const d = isObj(raw) ? raw : {}
   const fmt = num(d.format) ?? 1
-  if (fmt > FORMAT_VERSION) throw new Error(`this note was written by a newer KherveNote (format ${fmt})`)
+  if (fmt > FORMAT_VERSION) throw new Error(`this note was written by a newer kNote (format ${fmt})`)
   const m = isObj(d.meta) ? d.meta : {}
   const meta = makeMeta({
     title: str(m.title),

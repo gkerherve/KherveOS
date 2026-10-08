@@ -89,13 +89,13 @@ export function emailAiTools(getHost: () => MailAiHost | null): AppTools {
     const host = getHost()
     if (!host) {
       if (useServer.getState().status === 'offline') {
-        throw new Error('Email needs the KherveOS server, which is not running: the user has to start it ("npm run server" in the KherveOS folder).')
+        throw new Error('Mail needs the KherveOS server, which is not running: the user has to start it ("npm run server" in the KherveOS folder).')
       }
       if (useAuth.getState().checked && !useAuth.getState().user) throw new Error('The user has to sign in to KherveOS in the Email window first.')
-      throw new Error('Email is not ready yet. Try again in a moment.')
+      throw new Error('Mail is not ready yet. Try again in a moment.')
     }
     const s = host.store.getState()
-    if (s.accounts === null) throw new Error(s.accountsError ? `Email could not load the accounts: ${s.accountsError}` : 'Email is still loading the accounts. Try again in a moment.')
+    if (s.accounts === null) throw new Error(s.accountsError ? `Mail could not load the accounts: ${s.accountsError}` : 'Mail is still loading the accounts. Try again in a moment.')
     if (!s.accounts.length) throw new Error('No email account is set up: the user has to add one in Email first (Mailbox > Add Account…).')
     return { host, accounts: s.accounts }
   }

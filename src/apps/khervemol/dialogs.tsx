@@ -888,7 +888,7 @@ function MeshDialog({ app, style, done }: { app: MolApp; style: string; done: (v
 function GuideDialog({ app, done }: { app: MolApp; done: (v: unknown) => void }) {
   const catalog = useStore(app.store, (s) => s.catalog)
   return (
-    <Frame title="KherveMol — User Guide" minWidth={620} wide onClose={() => done(null)} buttons={<button className="k-btn primary" onClick={() => done(null)}>Close</button>}>
+    <Frame title="kMol — User Guide" minWidth={620} wide onClose={() => done(null)} buttons={<button className="k-btn primary" onClick={() => done(null)}>Close</button>}>
       <div className="km-guide" dangerouslySetInnerHTML={{ __html: catalog?.guide ?? '' }} />
     </Frame>
   )
@@ -897,11 +897,11 @@ function GuideDialog({ app, done }: { app: MolApp; done: (v: unknown) => void })
 function AboutDialog({ app, done }: { app: MolApp; done: (v: unknown) => void }) {
   const version = useStore(app.store, (s) => s.version)
   return (
-    <Frame title="About KherveMol" minWidth={440} onClose={() => done(null)} buttons={<button className="k-btn primary" onClick={() => done(null)}>OK</button>}>
+    <Frame title="About kMol" minWidth={440} onClose={() => done(null)} buttons={<button className="k-btn primary" onClick={() => done(null)}>OK</button>}>
       <div className="km-about">
         <KMolMark size={72} />
         <div>
-          <h2>KherveMol</h2>
+          <h2>kMol</h2>
           <p>Version {version}</p>
           <p>Draw chemical compounds and crystal structures in 2D and 3D — a native app in the Kherve family.</p>
           <p>© 2026 Gwilherm Kerherve — GPL-3.0</p>

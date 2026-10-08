@@ -30,7 +30,7 @@ type AdminTab = 'instruments' | 'people' | 'settings' | 'problems'
 export default function KherveLAB(props: AppProps) {
   return (
     <div className="k-app kl-root">
-      <ServerGate app="KherveLAB" icon={FlaskConical}>
+      <ServerGate app="kLab" icon={FlaskConical}>
         <LabApp {...props} />
       </ServerGate>
     </div>
@@ -135,9 +135,9 @@ function LabApp({ win, args }: AppProps) {
   }
 
   // Window title and menu bar.
-  const labName = me?.settings.lab_name ?? 'KherveLAB'
+  const labName = me?.settings.lab_name ?? 'kLab'
   useEffect(() => {
-    win.setTitle(inst && view === 'schedule' ? `KherveLAB — ${inst.name}` : `KherveLAB — ${labName}`)
+    win.setTitle(inst && view === 'schedule' ? `kLab — ${inst.name}` : `kLab — ${labName}`)
   }, [win, inst, view, labName])
 
   const admin = isAdmin(me)
@@ -199,7 +199,7 @@ function LabApp({ win, args }: AppProps) {
     return status === 'error' ? (
       <div className="k-center">
         <div className="k-gate-card">
-          <h2>KherveLAB could not start</h2>
+          <h2>kLab could not start</h2>
           <p className="k-error">{loadError}</p>
           <button className="k-btn primary" onClick={() => void loadLab()}>
             Try again

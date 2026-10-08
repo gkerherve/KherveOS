@@ -44,7 +44,7 @@ interface Links {
 export const usePdfLinks = create<Links>(() => ({ links: {} }))
 
 const blank = (): PdfLink => ({
-  pdfWinId: null, pdf: null, notice: null, compiling: false, zoom: 100, fit: true, title: 'KherveTeX', menus: null,
+  pdfWinId: null, pdf: null, notice: null, compiling: false, zoom: 100, fit: true, title: 'kTeX', menus: null,
   closing: false, reveal: null, onUserClose: () => {}, onFitZoom: () => {}, showIn: () => {},
 })
 

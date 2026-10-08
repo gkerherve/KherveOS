@@ -262,7 +262,7 @@ export function CalcView(p: Props) {
           {!history.length && (
             <div className="kc-welcome">
               <Sigma size={34} />
-              <div className="kc-welcome-title">KherveCalc</div>
+              <div className="kc-welcome-title">kCalc</div>
               <div className="k-muted">
                 Type and press Enter. Try <code>integrate(sin(x)^2, x)</code>, <code>solve(x^2 = 2, x)</code>,{' '}
                 <code>3_m/_s * 2_h</code>, <code>#h*#c/(500_nm) ▶ _eV</code>, <code>[[1,2],[3,4]]^-1</code>, <code>f(x) := x^2</code>.

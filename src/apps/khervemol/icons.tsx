@@ -114,7 +114,7 @@ export function KMolMark({ size = 64 }: { size?: number }) {
   const c1 = P(0.26, 0.54), c2 = P(0.5, 0.34), o = P(0.74, 0.54), ho = P(0.92, 0.4), h1 = P(0.09, 0.42)
   const hr = Math.min(bw, bh) * 0.24, rh = Math.min(bw, bh) * 0.14
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${s} ${s}`} aria-label="KherveMol">
+    <svg width={size} height={size} viewBox={`0 0 ${s} ${s}`} aria-label="kMol">
       <rect x={x} y={y} width={w} height={h} rx={radius} fill="#ffe27a" stroke="#e6bd44" strokeWidth={Math.max(1, s * 0.02)} />
       <text x={x + w / 2} y={y + h * 0.05 + h * 0.19} textAnchor="middle" dominantBaseline="central" fontFamily='"Segoe UI", system-ui, sans-serif' fontWeight="bold" fontSize={h * 0.3} fill="#2b2b2b">
         KMol

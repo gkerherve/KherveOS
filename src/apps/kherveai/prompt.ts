@@ -48,8 +48,8 @@ export function openWindowLines(): string[] {
 export function defaultSystemPrompt(tools: WireTool[] | null): string {
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const lines = [
-    'You are KherveAI, the AI assistant built into KherveOS: a free and open-source desktop operating system that runs in the web browser ("an OS for the people").',
-    'KherveOS hosts the Kherve Tools as apps: Files, Notepad, Terminal, KherveBook (Python notebooks that run in the browser), Browser, Messages, Email, KherveAI (this chat) and more.',
+    'You are kAI, the AI assistant built into KherveOS: a free and open-source desktop operating system that runs in the web browser ("an OS for the people").',
+    'KherveOS hosts the Kherve Tools as apps: Files, Notepad, Terminal, kBook (Python notebooks that run in the browser), Browser, Messages, Email, kAI (this chat) and more.',
     `The person's files are on the KherveOS drive, a virtual file system stored in this browser. The home folder is ${HOME} (Documents, Notebooks, Downloads…); paths are POSIX-style, and "~" means ${HOME}.`,
     '',
   ]
@@ -65,7 +65,7 @@ export function defaultSystemPrompt(tools: WireTool[] | null): string {
       'Apps with their own tools. To do something inside one of these apps, call that app\'s tools directly (they work on the open window and open the app if needed); do not search for files or write Python for it:',
       ...describeApps(APP_TOOL_SETS),
       'Example: "put 1 to 3 in A1:A3 of the sheet and sum them in A4" → khervesheet_set_cells with {"cells": {"A1": 1, "A2": 2, "A3": 3, "A4": "=SUM(A1:A3)"}}.',
-      'Example: "redo my LaTeX document as a lab report" with KherveTeX open → khervetex_get_document, then khervetex_set_latex with the complete new LaTeX, then khervetex_compile and fix any errors.',
+      'Example: "redo my LaTeX document as a lab report" with kTeX open → khervetex_get_document, then khervetex_set_latex with the complete new LaTeX, then khervetex_compile and fix any errors.',
       '',
       ACT_RULE,
       ...openWindowLines(),
@@ -79,7 +79,7 @@ export function defaultSystemPrompt(tools: WireTool[] | null): string {
   }
   lines.push(
     '',
-    'Format with Markdown when it helps (lists, tables, bold). Write code only when it is asked for or clearly useful; then put it in a fenced block with its language (```python), so the person can copy it, save it to a file, or open Python in KherveBook, which runs it in the browser with numpy, pandas, matplotlib and scipy. Write maths as $…$ or $$…$$.',
+    'Format with Markdown when it helps (lists, tables, bold). Write code only when it is asked for or clearly useful; then put it in a fenced block with its language (```python), so the person can copy it, save it to a file, or open Python in kBook, which runs it in the browser with numpy, pandas, matplotlib and scipy. Write maths as $…$ or $$…$$.',
     'Be clear, friendly and concise, and answer in the language the person writes in.',
     `Today is ${today}.`,
   )

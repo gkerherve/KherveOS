@@ -19,9 +19,10 @@ server in `server/`. See README.md for the layout.
 macOS-flavoured: thin menu bar (`src/shell/TopBar.tsx`) showing the focused app's menus
 (`win.setMenus`), a Dock (`Dock.tsx`), Launchpad, traffic-light window buttons. One theme,
 "Kherve Green" (dark black + green, `src/os/themes.extra.ts`): no theme or style choices.
-One wallpaper, `public/wallpapers/ktools-tech-lab.webp`: the user's "Ktools – Advanced Tech Lab"
-artwork, with a fading floor reflection added below so its caption clears the Dock; Settings
-only sets how strongly it shows. Message to convey: an OS for the people —
+Wallpapers: the list in `src/shell/wallpapers.ts` (files in `public/wallpapers/`): the user's
+"kTools – Advanced Tech Lab" artwork (`ktools-tech-lab.webp`, with a fading floor reflection added
+below so its caption clears the Dock), and the green science pictures drawn by
+`tools/make_wallpapers.py`. Settings › Wallpaper picks one and sets how strongly it shows. Message to convey: an OS for the people —
 free, open source, helping people. Avoid communist imagery (stars, hammer & sickle, propaganda styling). The logo (`src/shell/KLogo.tsx`, `public/kherveos.svg`) is the ringed Ꝃ from that image.
 
 ## Conventions
@@ -54,6 +55,13 @@ free, open source, helping people. Avoid communist imagery (stars, hammer & sick
 
 - Windows are rendered in creation order and stacked with z-index; never re-order them in the DOM
   (moving an iframe reloads it). While dragging, `body.k-dragging` disables iframe pointer events.
+- Vite pre-bundles dependencies in `node_modules/.vite/deps`. Every package an app loads on demand is listed in
+  `optimizeDeps.include` (vite.config.ts), so the dev server never re-optimises (and breaks open tabs with
+  "504 Outdated Optimize Dep") the first time Terminal, KherveWord, Plotly… open. Add a new package there when you
+  add one. Never run `vite build` while `npm run dev` is running (it rewrites that cache); build with
+  `--outDir /tmp/…` and a different `cacheDir`, or stop the dev server first. If apps stop loading: `rm -rf node_modules/.vite`
+  and reload.
+- Plotly (`plotly.js-dist-min`, 4.8 MB) and three.js are only ever imported lazily (`await import(…)`), never at module top level.
 - React StrictMode is deliberately off: it double-starts Python workers and websockets in dev.
 - Python: one Pyodide worker per app window (`new PythonKernel(name)`); dispose it on unmount.
   The VFS home folder is mirrored into the worker before each run and changes come back after.
@@ -85,7 +93,7 @@ To add a technique (FTIR, Raman, UV-Vis, XRD, XAS, EELS…):
    If its code needs a wx widget, a matplotlib call or a desktop module the shims lack, add it there
    (the error names it), not in the desktop copy; NumPy-2 gaps go in `ktech/compat.py`.
 3. `src/apps/khervetech/spec.ts` → `TECH_APPS`; `src/apps/kherve<tech>/Kherve<Tech>.tsx` (3 lines, see
-   khervetga) and `actions.ts` (AI `run` actions: the window's control attributes and handlers).
+   khervebet; kTGA has its own window on the same engine) and `actions.ts` (AI `run` actions: the window's control attributes and handlers).
 4. Registry entry (group Science, `image: '/icons/apps/kherve<tech>.png'`, `fileTypes: ['.kfit', …]`),
    `src/os/ai/manifests/kherve<tech>.ts` via `techniqueToolSet`, pushed in `appManifest.ts`.
 5. Tests: add the technique to `src/apps/khervetech/tests/engine.test.mjs` (real Pyodide:

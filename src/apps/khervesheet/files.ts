@@ -133,7 +133,7 @@ async function load(book: Book, bytes: Uint8Array, name: string, opts: { path: s
     if (book.state.pyPending === 0 && book.state.pyCells > 0) book.startLoops()
     return true
   } catch (e) {
-    await os.dialog.alert(`${basename(name)} could not be opened.\n\n${errorText(e)}`, { title: 'KherveSheet' })
+    await os.dialog.alert(`${basename(name)} could not be opened.\n\n${errorText(e)}`, { title: 'kSheet' })
     return false
   } finally {
     book.set({ loading: null })
@@ -152,7 +152,7 @@ export async function confirmDiscard(book: Book, action = 'closing'): Promise<bo
       { label: "Don't Save", value: 'discard', danger: true },
       { label: 'Save', value: 'save', primary: true },
     ],
-    { title: 'KherveSheet' },
+    { title: 'kSheet' },
   )
   if (choice === 'save') return save(book)
   return choice === 'discard'
@@ -164,7 +164,7 @@ export async function openPath(book: Book, path: string, ask = true): Promise<bo
   try {
     bytes = await os.fs.readBytes(path)
   } catch (e) {
-    await os.dialog.alert(`${basename(path)} could not be read: ${errorText(e)}`, { title: 'KherveSheet' })
+    await os.dialog.alert(`${basename(path)} could not be read: ${errorText(e)}`, { title: 'kSheet' })
     return false
   }
   const ok = await load(book, bytes, path, { path })
@@ -205,7 +205,7 @@ export async function openExample(book: Book, file: string, title: string, ask =
     await load(book, bytes, file, { path: null, untitled: title, trust: true })
   } catch (e) {
     book.set({ loading: null })
-    await os.dialog.alert(`The example could not be opened: ${errorText(e)}`, { title: 'KherveSheet' })
+    await os.dialog.alert(`The example could not be opened: ${errorText(e)}`, { title: 'kSheet' })
   }
 }
 
@@ -299,7 +299,7 @@ async function writeAs(book: Book, path: string): Promise<boolean> {
     else await writeKsheet(book, path)
     return true
   } catch (e) {
-    await os.dialog.alert(`${basename(path)} could not be saved.\n\n${errorText(e)}`, { title: 'KherveSheet' })
+    await os.dialog.alert(`${basename(path)} could not be saved.\n\n${errorText(e)}`, { title: 'kSheet' })
     return false
   } finally {
     book.set({ loading: null })

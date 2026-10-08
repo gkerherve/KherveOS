@@ -334,7 +334,7 @@ function otherSummary(c: Cell): string {
   } catch {
     /* not JSON */
   }
-  return `(a ${t} cell from the desktop KherveBook — you cannot read or edit it)`
+  return `(a ${t} cell from the desktop kBook — you cannot read or edit it)`
 }
 
 function listing(cells: Cell[]): string {
@@ -349,7 +349,7 @@ function listing(cells: Cell[]): string {
     else if (c.type === 'note') body = noteText(c.source) || '(an empty rich-text note)'
     else if (c.type === 'file') body = `(attached files: ${parseFiles(c.source).map((f) => f.name).join(', ') || 'none'} — code reads them with kf("name"))`
     else if (c.type === 'kfit') body = `(a KherveFitting project: ${parseKfit(c.source).file?.name ?? 'none loaded'} — code reads it with kfit("sheet"))`
-    else if (c.type === 'ktex') body = `(a KherveTeX document: ${parseKtex(c.source).file?.name ?? 'none'})`
+    else if (c.type === 'ktex') body = `(a kTeX document: ${parseKtex(c.source).file?.name ?? 'none'})`
     else if (c.type === 'mol') body = molMarkdown(c.source).replace(/\*\*/g, '')
     else if (c.type === 'sheet') {
       const d = describeWorkbook(c.source, sheetN)
@@ -376,7 +376,7 @@ function listing(cells: Cell[]): string {
 
 /** The desktop's build_system_prompt, for the browser kernel. */
 export function systemPrompt(cells: Cell[]): string {
-  return `You are the AI assistant inside KherveBook, a Jupyter-style notebook (the web edition, running in KherveOS in the browser). The editable cell types are: code (Python), markdown, latex (one display equation, no $ delimiters), sheet (a small spreadsheet, JSON {"rows", "cols", "data": {"A1": "value or =python formula"}}) and js (JavaScript/HTML rendered in a sandboxed page). There are also svg "drawing" cells that you must NEVER create or modify.
+  return `You are the AI assistant inside kBook, a Jupyter-style notebook (the web edition, running in KherveOS in the browser). The editable cell types are: code (Python), markdown, latex (one display equation, no $ delimiters), sheet (a small spreadsheet, JSON {"rows", "cols", "data": {"A1": "value or =python formula"}}) and js (JavaScript/HTML rendered in a sandboxed page). There are also svg "drawing" cells that you must NEVER create or modify.
 
 YOUR PRIMARY SKILL is writing excellent, complete, runnable Python for code cells. Key facts about the kernel:
 - Python runs in the browser (Pyodide, CPython compiled to WebAssembly), one persistent namespace shared by all code cells.

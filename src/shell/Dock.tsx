@@ -51,9 +51,9 @@ export function Dock() {
     return () => window.removeEventListener('resize', on)
   }, [])
   const icon = Math.max(28, Math.min(48, Math.floor((vw - 56) / (ids.length + minimized.length + 1)) - 10))
-  // The biggest an icon may grow to: the setting, but no more than a fifth of the
-  // screen's height or a quarter of its width (small screens).
-  const maxIcon = Math.max(icon, Math.min(dockZoom, Math.round(vh * 0.2), Math.round(vw / 4.2)))
+  // The biggest an icon may grow to: the setting, but no more than about a quarter of the
+  // screen's height or a third of its width (small screens).
+  const maxIcon = Math.max(icon, Math.min(dockZoom, Math.round(vh * 0.27), Math.round(vw / 3.4)))
 
   // ---- magnification
   const [pointer, setPointer] = useState<number | null>(null)
@@ -87,7 +87,7 @@ export function Dock() {
   }
   const restWidth = x - GAP + PAD
   const relX = lastPointer.current - (vw - restWidth) / 2
-  const range = 2.6 * (icon + ITEM_EXTRA + GAP)
+  const range = 3 * (icon + ITEM_EXTRA + GAP)
   const growth = maxIcon / icon - 1
   const scale = (s: Slot) => (s.sep || amount === 0 ? 1 : 1 + growth * amount * bell(Math.abs(relX - (s.left + s.width / 2)), range))
 

@@ -36,7 +36,7 @@ export function Welcome({ app }: { app: MolApp }) {
         <div className="km-card-head">
           <KMolMark size={64} />
           <div>
-            <div className="km-card-title">KherveMol</div>
+            <div className="km-card-title">kMol</div>
             <div className="km-card-sub">Molecules and crystals, in 3D and 2D.</div>
           </div>
         </div>

@@ -21,7 +21,7 @@ software (GNU GPL v3) that anyone can use, study, share and improve.
                    Use Upload / Download to move files to and from your computer.
   • Notepad      — plain text, Markdown, Python, JSON…
   • Terminal     — a shell over your drive. Type "help". "python" starts Python.
-  • KherveBook   — notebooks with Python, Markdown and LaTeX cells.
+  • kBook   — notebooks with Python, Markdown and LaTeX cells.
                    numpy, scipy, pandas and matplotlib load on demand.
   • Browser      — browse the web inside KherveOS.
   • Messages     — chat with other people on your KherveOS server.

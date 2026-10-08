@@ -131,7 +131,7 @@ export default function KherveCalc({ win, args }: AppProps) {
           setSession(s)
           if (p) setFilePath(p)
         } catch (e) {
-          if (p) void os.dialog.alert(e instanceof Error ? e.message : String(e), { title: 'KherveCalc' })
+          if (p) void os.dialog.alert(e instanceof Error ? e.message : String(e), { title: 'kCalc' })
         }
       }
       setLoaded(true)
@@ -159,7 +159,7 @@ export default function KherveCalc({ win, args }: AppProps) {
   }, [session.lists, loaded, bridge])
 
   useEffect(() => {
-    win.setTitle(filePath ? `KherveCalc — ${path.basename(filePath)}` : 'KherveCalc')
+    win.setTitle(filePath ? `kCalc — ${path.basename(filePath)}` : 'kCalc')
   }, [filePath, win])
 
   // ---------------------------------------------------------- actions
@@ -202,7 +202,7 @@ export default function KherveCalc({ win, args }: AppProps) {
   }
   const clearHistory = async () => {
     if (!sref.current.history.length) return
-    if (!(await os.dialog.confirm('Clear the whole history? Variables stay defined.', { title: 'KherveCalc', okLabel: 'Clear', danger: true }))) return
+    if (!(await os.dialog.confirm('Clear the whole history? Variables stay defined.', { title: 'kCalc', okLabel: 'Clear', danger: true }))) return
     const ids = sref.current.history.map((h) => h.id)
     setSession((s) => ({ ...s, history: [] }))
     void bridge.call('forget', { ids }).catch(() => {})
@@ -213,7 +213,7 @@ export default function KherveCalc({ win, args }: AppProps) {
     setSession((s) => ({ ...s, defs: s.defs.filter((d) => defName(d) !== name) }))
   }
   const clearVars = async () => {
-    if (!(await os.dialog.confirm('Forget every variable and function?', { title: 'KherveCalc', okLabel: 'Forget', danger: true }))) return
+    if (!(await os.dialog.confirm('Forget every variable and function?', { title: 'kCalc', okLabel: 'Forget', danger: true }))) return
     await bridge.call('clearvars')
     setVars([])
     setSession((s) => ({ ...s, defs: [] }))
@@ -250,16 +250,16 @@ export default function KherveCalc({ win, args }: AppProps) {
   }
 
   const newSessionCmd = async () => {
-    if (sref.current.history.length && !(await os.dialog.confirm('Start a new session? Save this one first if you want to keep it.', { title: 'KherveCalc', okLabel: 'New session' }))) return
+    if (sref.current.history.length && !(await os.dialog.confirm('Start a new session? Save this one first if you want to keep it.', { title: 'kCalc', okLabel: 'New session' }))) return
     await replaceSession(newSession(), null)
   }
   const openCmd = async () => {
-    const p = await os.dialog.openFile({ title: 'Open a KherveCalc session', extensions: ['.kcalc'] })
+    const p = await os.dialog.openFile({ title: 'Open a kCalc session', extensions: ['.kcalc'] })
     if (!p) return
     try {
       await replaceSession(parseSession(await os.fs.readText(p)), p)
     } catch (e) {
-      void os.dialog.alert(e instanceof Error ? e.message : String(e), { title: 'KherveCalc' })
+      void os.dialog.alert(e instanceof Error ? e.message : String(e), { title: 'kCalc' })
     }
   }
   const saveAs = async () => {
@@ -275,7 +275,7 @@ export default function KherveCalc({ win, args }: AppProps) {
     os.notify({ title: 'Session saved', body: filePath })
   }
   const exportText = async () => {
-    const p = await os.dialog.saveFile({ title: 'Export the history', extensions: ['.txt'], defaultName: 'KherveCalc history.txt' })
+    const p = await os.dialog.saveFile({ title: 'Export the history', extensions: ['.txt'], defaultName: 'kCalc history.txt' })
     if (p) await os.fs.writeText(p, historyText(sref.current.history), { mkdirs: true })
   }
   const copyLast = (latex: boolean) => {
@@ -360,7 +360,7 @@ export default function KherveCalc({ win, args }: AppProps) {
       },
       {
         label: 'Help',
-        items: [{ label: 'KherveCalc Syntax', onClick: () => void showHelp() }],
+        items: [{ label: 'kCalc Syntax', onClick: () => void showHelp() }],
       },
     ]
   }, [settings, tab, prefs, busy, filePath])
@@ -518,6 +518,6 @@ function showHelp() {
       <p><b>Complex.</b> <code>3 + 4i</code>, <code>5∠30°</code>, <code>abs</code>, <code>arg</code>, <code>conj</code>. <b>Statistics.</b> lists <code>L1</code>…<code>L6</code> from the Statistics tab: <code>mean(L1)</code>.</p>
       <p><b>Keys.</b> Enter calculates, Ctrl+Enter gives a decimal, ↑/↓ recall, Tab completes, Esc clears, Ctrl+. cancels, Ctrl+1…7 switch tabs.</p>
     </div>,
-    { title: 'KherveCalc syntax' },
+    { title: 'kCalc syntax' },
   )
 }

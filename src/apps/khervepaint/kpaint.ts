@@ -318,7 +318,7 @@ export function parseKpaint(text: string): Doc {
   } catch {
     throw new Error('This file is not valid JSON.')
   }
-  if (!isDict(data) || data.format !== 'kpaint') throw new Error('Not a KhervePaint document.')
+  if (!isDict(data) || data.format !== 'kpaint') throw new Error('Not a kPaint document.')
   let width = Math.max(1, Math.round(num(data.width, 800)))
   let height = Math.max(1, Math.round(num(data.height, 600)))
   const dpi = num(data.dpi, 96) || 96

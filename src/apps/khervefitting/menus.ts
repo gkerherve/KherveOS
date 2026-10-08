@@ -93,7 +93,7 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
     it('Python Plot', 'pythonPlot'),
     it('Export as VAMAS (.vms)', 'exportVamas'),
     it('Export as KherveFitting HDF5 (.kfit)', 'exportKfit'),
-    it('Export as KherveSheet (.ksheet)', 'exportKsheet'),
+    it('Export as kSheet (.ksheet)', 'exportKsheet'),
     '-',
     it('Create Report (.docx)', 'report'),
   ]
@@ -105,7 +105,7 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
       it('Open KherveFitting HDF5 (.kfit)', 'openKfit'),
       it('Open KFitting file (.xlsx)', 'open', { shortcut: ctrl('O') }),
       it('Open Multiple KFitting files (folder)', 'openFolder'),
-      it('Open KherveSheet file (.ksheet)', 'openKsheet'),
+      it('Open kSheet file (.ksheet)', 'openKsheet'),
       '-',
       // KherveOS: the drive is the app's file system; this brings files in from the computer.
       it('Open from This Computer…', 'openComputer'),
@@ -114,8 +114,8 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
     sub('Save', [
       it('Save Data (.json)', 'quickSave', { shortcut: ctrl('S') }),
       it('Export/Save to KherveFitting HDF5 (.kfit)', 'exportKfit'),
-      it('Export this Core Level as KherveSheet (.ksheet)', 'ksheetOne'),
-      it('Export all Core Levels as KherveSheet (.ksheet)', 'exportKsheet'),
+      it('Export this Core Level as kSheet (.ksheet)', 'ksheetOne'),
+      it('Export all Core Levels as kSheet (.ksheet)', 'exportKsheet'),
       it('Export/Save this Core Level to Excel', 'exportExcel'),
       it('Export/Save all Core Levels to Excel', 'exportAll'),
       it('Save Plot Only in Excel', 'plotOnlyExcel'),
@@ -215,7 +215,7 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
   ]
 
   const ai: MenuItem[] = [
-    it('KherveAI', 'kherveAI'),
+    it('kAI', 'kherveAI'),
     '-',
     it('AI Configuration...', 'aiConfig'),
     '-',
@@ -247,7 +247,7 @@ export function buildMenus(h: Handlers, s: MenuState): MenuBarMenu[] {
         it('Fitting Transition Metal Cr/Mn/Fe/Co/Ni', 'paper:tm1'),
         it('Fitting Transition Metal Cu/Ti/V/Sc/Zn', 'paper:tm2'),
       ]),
-      it('KherveDB', 'nist'),
+      it('kDB', 'nist'),
       it('XPSfitting by M. Biesinger', 'link:biesinger'),
       it('HarwellXPS Guru', 'link:harwell'),
       it('Thermo Knowledge', 'link:thermo'),

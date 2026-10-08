@@ -83,7 +83,7 @@ test('wx wildcards become the file dialog\'s extensions', () => {
 })
 
 test('the technique apps and their registry entries', () => {
-  assert.deepEqual(TECH_APPS.map((t) => t.name), ['KherveTGA', 'KherveBET', 'KherveUVVis', 'KherveFTIR', 'KherveRaman'])
+  assert.deepEqual(TECH_APPS.map((t) => t.name), ['kTGA', 'kBET', 'kUVVis', 'kFTIR', 'kRaman'])
   assert.equal(techApp('khervebet').tech, 'BET')
   assert.equal(appForSheets(['BET', 'BET~Plot'])?.appId, 'khervebet')
   assert.equal(appForSheets(['TGA~Mass'])?.appId, 'khervetga')

@@ -162,7 +162,7 @@ export function sheetAiTools(book: Book): AppTools {
       await book.settle()
       // setCells puts the cells back and shows why when Python refuses them.
       const flash = book.state.flash
-      if (flash && cells.some(([r, c, src]) => (book.cell(sh, r, c)?.s ?? '') !== src)) throw new Error(`KherveSheet did not take the cells: ${flash}`)
+      if (flash && cells.some(([r, c, src]) => (book.cell(sh, r, c)?.s ?? '') !== src)) throw new Error(`kSheet did not take the cells: ${flash}`)
       const echo = cells.slice(0, MAX_ECHO).map(([r, c]) => cellInfo(book, sh, r, c))
       const errors = echo.filter((x) => typeof x.value === 'string' && x.value.startsWith('#')).map((x) => x.cell)
       return {
@@ -229,18 +229,18 @@ export function sheetAiTools(book: Book): AppTools {
         if (!current || (book.docKind !== 'ksheet' && book.docKind !== 'csv')) {
           throw new Error('This workbook has no .ksheet file yet: give "path", e.g. "~/Documents/data.ksheet".')
         }
-        if (!(await save(book))) throw new Error(`${basename(current)} could not be saved (KherveSheet showed why).`)
+        if (!(await save(book))) throw new Error(`${basename(current)} could not be saved (kSheet showed why).`)
         return { saved: pretty(current) }
       }
       let p = drivePath(given)
       if (/[\\/]\s*$/.test(given)) throw new Error(`"${given}" is a folder: add the file name.`)
       if (!extname(p)) p += '.ksheet'
-      if (extname(p) !== '.ksheet' && extname(p) !== '.csv') throw new Error('KherveSheet saves .ksheet (or .csv) files.')
+      if (extname(p) !== '.ksheet' && extname(p) !== '.csv') throw new Error('kSheet saves .ksheet (or .csv) files.')
       if (fs.isDir(p)) throw new Error(`${pretty(p)} is a folder.`)
       if (fs.exists(p) && p !== current && !(await ctx.confirm(`replace ${pretty(p)}`, 'What is in it now will be lost.'))) {
         throw new Error(`The user did not allow replacing ${pretty(p)}.`)
       }
-      if (!(await saveTo(book, p))) throw new Error(`${basename(p)} could not be saved (KherveSheet showed why).`)
+      if (!(await saveTo(book, p))) throw new Error(`${basename(p)} could not be saved (kSheet showed why).`)
       return { saved: pretty(p), ...(extname(p) === '.csv' && { note: 'A .csv file keeps only the values of the sheet shown.' }) }
     },
   }

@@ -1,8 +1,7 @@
 // Minimising like macOS: the window shrinks into its own tile on the right of
-// the Dock, which shows a picture of it; restoring plays the move backwards.
+// the Dock, which shows the app's icon; restoring plays the move backwards.
 
 import { create } from 'zustand'
-import { renderToWebp } from '@/os/screenshot'
 
 /** Pictures of the minimised windows, by window id (data URLs). */
 export const useWindowPictures = create<Record<string, string>>(() => ({}))
@@ -10,23 +9,8 @@ export const useWindowPictures = create<Record<string, string>>(() => ({}))
 /** Where each minimised window's Dock tile last sat (restoring starts there). */
 export const tileRects = new Map<string, DOMRect>()
 
-const PICTURE = 320 // px: the picture's longer side (tiles are drawn at up to ~160 px)
 const DURATION = 440
 const EASE = 'cubic-bezier(0.33, 0, 0.2, 1)'
-
-/** Take a picture of a window for its Dock tile. Never throws: without one, the tile shows the app's icon. */
-export async function captureWindow(id: string, frame: HTMLElement): Promise<void> {
-  const w = frame.offsetWidth
-  const h = frame.offsetHeight
-  if (!w || !h) return
-  try {
-    // The frame is being animated meanwhile: the renderer takes it as it stands on screen.
-    const url = await renderToWebp(frame, { scale: Math.min(1, PICTURE / Math.max(w, h)), quality: 0.85, timeout: 4000 })
-    useWindowPictures.setState({ [id]: url })
-  } catch {
-    // cross-origin content or a failed render
-  }
-}
 
 /** Forget a window's picture and tile (restored or closed). */
 export function forgetWindow(id: string) {
@@ -72,20 +56,19 @@ function keyframes(win: DOMRect, tile: DOMRect): Keyframe[] {
 const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
 /**
- * Shrink a window into its Dock tile. `flying` resolves once the flight runs on
- * the compositor — taking the window's picture then blocks the page for a moment
- * without stalling the flight — and `done` once it has landed.
+ * Shrink a window into its Dock tile; resolves once it has landed. The animation
+ * holds the window in the tile until `cancel` — call it only once the window is
+ * hidden, or it springs back to full size for a frame.
  */
-export function animateMinimize(frame: HTMLElement, tile: DOMRect): { flying: Promise<void>; done: Promise<void> } {
-  if (reduced() || !frame.animate) return { flying: Promise.resolve(), done: Promise.resolve() }
+export function animateMinimize(frame: HTMLElement, tile: DOMRect): { done: Promise<void>; cancel: () => void } {
+  if (reduced() || !frame.animate) return { done: Promise.resolve(), cancel: () => {} }
   const anim = frame.animate(keyframes(frame.getBoundingClientRect(), tile), { duration: DURATION, easing: EASE, fill: 'forwards' })
-  const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
   return {
-    flying: anim.ready.then(nextFrame).then(nextFrame, () => {}),
     done: anim.finished.then(
-      () => anim.cancel(),
+      () => {},
       () => {},
     ),
+    cancel: () => anim.cancel(),
   }
 }
 

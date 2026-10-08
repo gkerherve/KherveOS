@@ -280,7 +280,7 @@ export class TerminalSession {
   }
 
   private updateTitle(): void {
-    this.host.setTitle(`Terminal — ${pretty(this.shell.cwd)}`)
+    this.host.setTitle(`Term — ${pretty(this.shell.cwd)}`)
   }
 
   private async loop(): Promise<void> {

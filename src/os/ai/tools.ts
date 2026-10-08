@@ -397,15 +397,15 @@ export const KTOOLS: KTool[] = [
     name: 'open_app',
     description:
       'Open a KherveOS app in a window on the user\'s screen, optionally with a file or folder ("path") or, for the Browser, ' +
-      'a web address ("url"), or, for KherveDB (the XPS binding-energy database), the element to show ("element", e.g. "O" ' +
+      'a web address ("url"), or, for kDB (the XPS binding-energy database), the element to show ("element", e.g. "O" ' +
       'for oxygen). Apps: files, notepad, terminal, khervebook, khervedb, browser, viewer, settings… (list_apps has them all). ' +
       'Returns the window id.',
     inputSchema: object(
       {
-        app: str('The app id or name, e.g. "notepad" or "KherveBook".'),
+        app: str('The app id or name, e.g. "notepad" or "kBook".'),
         path: str(`A file or folder for the app to open. ${PATH_HELP}`),
         url: str('For the Browser: the web address to open.'),
-        element: str('For KherveDB: the chemical symbol of the element to show, e.g. "O", "Fe".'),
+        element: str('For kDB: the chemical symbol of the element to show, e.g. "O", "Fe".'),
       },
       ['app'],
     ),
@@ -442,7 +442,7 @@ export const KTOOLS: KTool[] = [
     name: 'open_file',
     description:
       'Open a file or folder of the KherveOS drive for the user, in the app that handles it: Notepad for text and code, ' +
-      'KherveBook for .kbook notebooks, Viewer for pictures, KhervePDF for PDFs, Files for folders…',
+      'kBook for .kbook notebooks, Viewer for pictures, kPDF for PDFs, Files for folders…',
     inputSchema: object({ path: str(`The file or folder to open. ${PATH_HELP}`) }, ['path']),
     async run(a) {
       const p = drivePath(text(a, 'path'))
@@ -630,7 +630,7 @@ export const KTOOLS: KTool[] = [
   {
     name: 'create_notebook',
     description:
-      'Create a KherveBook notebook (.kbook) from a list of cells (Python code, Markdown or LaTeX) and save it on the ' +
+      'Create a kBook notebook (.kbook) from a list of cells (Python code, Markdown or LaTeX) and save it on the ' +
       'KherveOS drive; ".kbook" is added to the name if missing. It only writes the file: open_file shows it. To work in the ' +
       'notebook on screen (add, run cells and see outputs), use the khervebook_ tools instead. ' +
       'Does not replace an existing notebook unless "overwrite" is true (the user is asked first).',

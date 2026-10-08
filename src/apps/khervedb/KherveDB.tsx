@@ -134,7 +134,7 @@ function KherveDBMain({ win, args }: AppProps) {
   const elName = m ? elementName(element, m) : ''
 
   useEffect(() => {
-    win.setTitle(elName ? `${elName} — KherveDB` : 'KherveDB')
+    win.setTitle(elName ? `${elName} — kDB` : 'kDB')
   }, [win, elName])
 
   // A short message in the results status bar (copied, exported…).
@@ -170,7 +170,7 @@ function KherveDBMain({ win, args }: AppProps) {
       () => ({
         select_element: async (a: Record<string, unknown>) => {
           const d = data ?? loadedData()
-          if (!d) throw new Error('KherveDB is still loading its data: try again in a moment.')
+          if (!d) throw new Error('kDB is still loading its data: try again in a moment.')
           const wanted = String(a.element ?? '').trim().toLowerCase()
           const sym = Object.keys(d.meta.elements).find(
             (s) => s.toLowerCase() === wanted || elementName(s, d.meta.elements[s]).toLowerCase() === wanted,
@@ -266,14 +266,14 @@ function KherveDBMain({ win, args }: AppProps) {
 
   const about = () =>
     void os.dialog.alert(
-      `KherveDB ${VERSION} — XPS Binding Energy Database\n\n` +
+      `kDB ${VERSION} — XPS Binding Energy Database\n\n` +
         `The NIST X-ray Photoelectron Spectroscopy database, recorded in 2019, with a periodic-table browser: ` +
         `${db ? db.n.toLocaleString() : 'about 56,000'} binding energies.\n\n` +
         `Click an element for its NIST entries, right-click it for its electronic structure, XPS peaks and overlaps, ` +
         `double-click it for XPS Fitting (M. Biesinger), Harwell XPS Guru, Thermo Knowledge and Google Scholar, ` +
         `shown inside KherveOS in the Other Databases & Properties window.\n\n` +
         `Developer: Gwilherm Kerherve`,
-      { title: 'About KherveDB' },
+      { title: 'About kDB' },
     )
 
   // ---------------------------------------------------------------- menus
@@ -330,8 +330,8 @@ function KherveDBMain({ win, args }: AppProps) {
       {
         label: 'Help',
         items: [
-          { label: 'Welcome to KherveDB', disabled: !data, onClick: () => setPopup({ kind: 'welcome' }) },
-          { label: 'About KherveDB', icon: Info, onClick: about },
+          { label: 'Welcome to kDB', disabled: !data, onClick: () => setPopup({ kind: 'welcome' }) },
+          { label: 'About kDB', icon: Info, onClick: about },
         ],
       },
     ])

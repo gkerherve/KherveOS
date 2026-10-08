@@ -10,11 +10,11 @@ const ICON = `${import.meta.env.BASE_URL}icons/apps/khervedb.png`
 
 export function SplashScreen({ error, onRetry }: { error: string | null; onRetry: () => void }) {
   return (
-    <div className="kdb-splash" role="status" aria-label="Loading KherveDB">
+    <div className="kdb-splash" role="status" aria-label="Loading kDB">
       <div className="kdb-splash-card">
         <img src={ICON} alt="" width={104} height={104} draggable={false} />
         <div>
-          <div className="kdb-splash-title">KherveDB</div>
+          <div className="kdb-splash-title">kDB</div>
           <div className="kdb-splash-sub">XPS Binding Energy Database</div>
           <div className="kdb-muted">Version {VERSION}</div>
         </div>
@@ -40,12 +40,12 @@ export function Welcome({ onClose }: { onClose: (dontShowAgain: boolean) => void
   const [dontShow, setDontShow] = useState(false)
   const close = () => onClose(dontShow)
   return (
-    <FloatingWindow title="Welcome to KherveDB" onClose={close} wide>
+    <FloatingWindow title="Welcome to kDB" onClose={close} wide>
       <div className="kdb-welcome">
         <div className="kdb-welcome-banner">
           <img src={ICON} alt="" width={64} height={64} draggable={false} />
           <div>
-            <div className="kdb-welcome-title">Welcome to KherveDB</div>
+            <div className="kdb-welcome-title">Welcome to kDB</div>
             <div className="kdb-welcome-sub">XPS binding energies at your fingertips</div>
           </div>
         </div>

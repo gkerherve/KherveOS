@@ -79,7 +79,7 @@ export const ACTIONS = {
   link: { label: 'Hyperlink...', icon: 'link', shortcut: '⌘K' },
   footnote: { label: 'Footnote...', icon: 'footnote' },
   citation: { label: 'Citation...', icon: 'citation' },
-  checkCitations: { label: 'Check citations', tip: 'List cited keys that no KherveRef library or bibliography file defines' },
+  checkCitations: { label: 'Check citations', tip: 'List cited keys that no kRef library or bibliography file defines' },
   crossref: { label: 'Cross-reference...', icon: 'cross-ref' },
   figure: { label: 'Figure...', icon: 'figure' },
   table: { label: 'Table...', icon: 'table' },
@@ -134,7 +134,7 @@ export const ACTIONS = {
   // Help
   helpGuide: { label: 'User guide', shortcut: 'F1' },
   shortcuts: { label: 'Keyboard shortcuts' },
-  about: { label: 'About KherveTeX' },
+  about: { label: 'About kTeX' },
 } satisfies Record<string, ActionDef>
 
 export type ActionId = keyof typeof ACTIONS

@@ -243,7 +243,7 @@ export default function Browser({ win, args }: AppProps) {
   // ------------------------------------------------------ window and args
 
   useEffect(() => {
-    win.setTitle(`Browser — ${info.name}`)
+    win.setTitle(`Web — ${info.name}`)
   }, [win, info.name])
 
   // Opening a file or address again in this window (os.openUrl): show it in a tab.

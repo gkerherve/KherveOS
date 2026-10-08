@@ -240,7 +240,7 @@ export async function runAgent(chatId: string, opts: { resume?: boolean } = {}):
           calls: t.calls.map((c) => ({
             ...c,
             status: 'skipped' as const,
-            result: { ok: false, error: `Not run: KherveAI stops after ${MAX_STEPS} steps per message. The person can press Continue.` },
+            result: { ok: false, error: `Not run: kAI stops after ${MAX_STEPS} steps per message. The person can press Continue.` },
           })),
         }))
         patchMsg(chatId, msgId, (m) => ({ ...m, limited: true }))

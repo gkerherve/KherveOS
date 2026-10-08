@@ -11,7 +11,7 @@
 // Everything the notebook sends to Python is built here, so notebook.ts
 // never has to write Python inline.
 
-const PY_HELPER = String.raw`"""KherveBook helpers for the KherveOS Python worker (see pyhelper.ts)."""
+const PY_HELPER = String.raw`"""kBook helpers for the KherveOS Python worker (see pyhelper.ts)."""
 
 import base64
 import io

@@ -43,14 +43,14 @@ const SHEET_ARG = str('Sheet name (default: the sheet shown).')
 export const APP_TOOL_SETS: AppToolSet[] = [
   {
     app: 'khervedb',
-    name: 'KherveDB',
+    name: 'kDB',
     summary: 'the NIST XPS binding-energy database with a periodic table.',
     keywords: ['khervedb', 'xps', 'binding energ', 'element', 'periodic', 'nist', 'oxygen', 'carbon'],
     tools: [
       {
         action: 'select_element',
         description:
-          'Show an element in KherveDB (e.g. "O" or "oxygen") and get its XPS lines: median binding energy, range and number of NIST entries.',
+          'Show an element in kDB (e.g. "O" or "oxygen") and get its XPS lines: median binding energy, range and number of NIST entries.',
         inputSchema: object({ element: str('Chemical symbol or name, e.g. "O", "Fe", "oxygen".'), line: str('Optional XPS line to filter on, e.g. "1s", "2p3/2".') }, ['element']),
         readOnly: true,
       },
@@ -64,7 +64,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'browser',
-    name: 'Browser',
+    name: 'Web',
     summary: 'the KherveOS web browser.',
     keywords: ['browser', 'web', 'website', 'url', 'http', 'page', 'search the web'],
     tools: [
@@ -78,7 +78,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'khervesheet',
-    name: 'KherveSheet',
+    name: 'kSheet',
     summary: 'the spreadsheet (Excel-like formulas, charts).',
     keywords: ['sheet', 'spreadsheet', 'spreadsheets', 'workbook', 'excel', 'cell', 'cells', 'column', 'columns', 'ksheet', 'chart'],
     tools: [
@@ -133,7 +133,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'khervebook',
-    name: 'KherveBook',
+    name: 'kBook',
     summary: 'Python notebooks (code and Markdown cells).',
     keywords: ['notebook', 'notebooks', 'khervebook', 'kbook', 'jupyter'],
     openArgs: { blank: true },
@@ -141,7 +141,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
     tools: [
       {
         action: 'new_notebook',
-        description: 'Start a new, empty notebook in KherveBook (a new window; open notebooks are kept). Then add cells with khervebook_add_cell.',
+        description: 'Start a new, empty notebook in kBook (a new window; open notebooks are kept). Then add cells with khervebook_add_cell.',
         inputSchema: object({}),
       },
       {
@@ -182,7 +182,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'notepad',
-    name: 'Notepad',
+    name: 'kText',
     summary: 'the text editor.',
     keywords: ['notepad', 'text editor', 'editor', 'note', 'notes'],
     tools: [
@@ -221,7 +221,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'kherveref',
-    name: 'KherveRef',
+    name: 'kRef',
     summary: 'the reference manager (papers, DOIs, BibTeX/BibLaTeX, citations).',
     keywords: ['kherveref', 'reference', 'references', 'citation', 'citations', 'bibtex', 'biblatex', '.bib', 'bibliography', 'doi', 'arxiv', 'isbn', 'paper', 'papers'],
     tools: [
@@ -260,7 +260,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'kherveslide',
-    name: 'KherveSlide',
+    name: 'kSlide',
     summary: 'presentations (slides typeset with LaTeX beamer, .kslide).',
     keywords: ['kherveslide', 'slide', 'slides', 'presentation', 'presentations', 'slideshow', 'deck', 'beamer', 'kslide', 'powerpoint'],
     tools: [
@@ -311,7 +311,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'khervelab',
-    name: 'KherveLAB',
+    name: 'kLab',
     summary: 'lab instrument booking (instruments, free slots, my bookings).',
     keywords: ['khervelab', 'instrument', 'instruments', 'booking', 'bookings', 'book', 'slot', 'slots', 'lab', 'reserve', 'xps', 'tga', 'bet', 'glovebox'],
     tools: [
@@ -362,27 +362,27 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'khervenote',
-    name: 'KherveNote',
+    name: 'kNote',
     summary: 'notes of lectures and talks, with the speech transcript beside them, exported to LaTeX/PDF.',
     keywords: ['khervenote', 'knote', 'lecture', 'lectures', 'talk', 'seminar', 'transcript', 'speech', 'notes'],
     tools: [
       {
         action: 'list_notes',
-        description: 'List the notes in the KherveNote library (~/Documents/KherveNote, in folders): path, title, speaker, date, folder.',
+        description: 'List the notes in the kNote library (~/Documents/KherveNote, in folders): path, title, speaker, date, folder.',
         inputSchema: object({ query: str('Only notes containing these words (title, people, text).') }),
         readOnly: true,
       },
       {
         action: 'read_note',
         description:
-          'Read a note: title, speaker, date, summary, every section (index, title) with its paragraphs (kind, time, text), and what was said (speech transcript, with times). Without "path", the note open in KherveNote.',
+          'Read a note: title, speaker, date, summary, every section (index, title) with its paragraphs (kind, time, text), and what was said (speech transcript, with times). Without "path", the note open in kNote.',
         inputSchema: object({ path: str('A .knote path from khervenote_list_notes (default: the open note).'), max_chars: int('Cut the speech to this many characters (default 12000).') }),
         readOnly: true,
       },
       {
         action: 'add_text',
         description:
-          'Add text to the note open in KherveNote: at the end of a section, or as a new section with "title". Light Markdown: paragraphs, "- " / "1. " items (indent to nest), "## " subheadings, **bold**, maths as $…$ or $$…$$. One undo step.',
+          'Add text to the note open in kNote: at the end of a section, or as a new section with "title". Light Markdown: paragraphs, "- " / "1. " items (indent to nest), "## " subheadings, **bold**, maths as $…$ or $$…$$. One undo step.',
         inputSchema: object(
           {
             text: str('What to add (light Markdown).'),
@@ -471,7 +471,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'khervetex',
-    name: 'KherveTeX',
+    name: 'kTeX',
     summary: 'LaTeX documents (visual editor + Code tab, PDF beside it): articles, reports, letters, theses.',
     keywords: ['khervetex', 'latex', 'tex', 'ktex', 'pdflatex', 'manuscript', 'thesis', 'article', 'document', 'typeset', 'section', 'sections'],
     openArgs: { blank: true },
@@ -479,7 +479,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
       {
         action: 'get_document',
         description:
-          'Read the open KherveTeX document: title, author, class, settings, the outline (every block with its index) and its LaTeX source. Call this first, before changing it.',
+          'Read the open kTeX document: title, author, class, settings, the outline (every block with its index) and its LaTeX source. Call this first, before changing it.',
         inputSchema: object({ max_chars: int('Cut the LaTeX to this many characters (default 30000).'), latex: bool('Include the LaTeX source (default true).') }),
         readOnly: true,
       },
@@ -534,7 +534,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
       {
         action: 'new_document',
         description:
-          'Start a new document in the KherveTeX window: blank, or from a template ("Lab report", "Letter", "CV / résumé", "Two-column article", a journal or one of My templates). An unknown template name lists them.',
+          'Start a new document in the kTeX window: blank, or from a template ("Lab report", "Letter", "CV / résumé", "Two-column article", a journal or one of My templates). An unknown template name lists them.',
         inputSchema: object({ template: str('Template name (part of it is enough; default: blank).'), title: str('Its title.') }),
       },
       {
@@ -551,46 +551,46 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'khervepy',
-    name: 'KhervePY',
+    name: 'kPY',
     summary: 'the Python IDE (project folder, editor tabs, Run in the browser).',
     keywords: ['khervepy', 'python', 'script', 'scripts', '.py', 'code', 'ide', 'program'],
     tools: [
       {
         action: 'read',
-        description: 'Read the file shown in KhervePY (or an open tab by path): path, text, unsaved changes, plus the open tabs and the project folder.',
+        description: 'Read the file shown in kPY (or an open tab by path): path, text, unsaved changes, plus the open tabs and the project folder.',
         inputSchema: object({ path: str('An open file (default: the one shown).') }),
         readOnly: true,
       },
       {
         action: 'set_code',
-        description: 'Replace the whole text of the file shown in KhervePY (or of "path", opened or created first). Saved with khervepy_save or before a run.',
+        description: 'Replace the whole text of the file shown in kPY (or of "path", opened or created first). Saved with khervepy_save or before a run.',
         inputSchema: object({ code: str('The new file text.'), path: str('A file, e.g. "~/Documents/demo.py" (default: the one shown).') }, ['code']),
       },
       {
         action: 'replace',
-        description: 'Find text in the file shown in KhervePY and replace it (exact match).',
+        description: 'Find text in the file shown in kPY and replace it (exact match).',
         inputSchema: object({ find: str('The exact text to find.'), replace: str('What to put instead.'), all: bool('Every match (default: the first).') }, ['find', 'replace']),
       },
       {
         action: 'open_file',
-        description: 'Open a file in a KhervePY tab (create=true makes it, empty, when missing).',
+        description: 'Open a file in a kPY tab (create=true makes it, empty, when missing).',
         inputSchema: object({ path: str('The file, e.g. "~/Documents/main.py".'), create: bool('Create it if missing.') }, ['path']),
       },
       {
         action: 'run',
-        description: 'Save and run the Python file shown in KhervePY (asks the user first). Returns the exit code and what it printed.',
+        description: 'Save and run the Python file shown in kPY (asks the user first). Returns the exit code and what it printed.',
         inputSchema: object({ max_chars: int('Cut the output to this many characters (default 8000).') }),
       },
       {
         action: 'save',
-        description: 'Save the file shown in KhervePY (or every open file).',
+        description: 'Save the file shown in kPY (or every open file).',
         inputSchema: object({ all: bool('Save every open file.') }),
       },
     ],
   },
   {
     app: 'khervepaint',
-    name: 'KhervePaint',
+    name: 'kPaint',
     summary: 'the vector drawing app (shapes, lines, arrows, text; .svg / .kpaint).',
     keywords: ['khervepaint', 'paint', 'drawing', 'draw', 'diagram', 'sketch', 'shape', 'shapes', 'svg', 'kpaint'],
     tools: [
@@ -630,13 +630,13 @@ export const APP_TOOL_SETS: AppToolSet[] = [
   },
   {
     app: 'khervepdf',
-    name: 'KhervePDF',
+    name: 'kPDF',
     summary: 'the PDF reader and editor (tabs, annotations, pages).',
     keywords: ['khervepdf', 'pdf', 'pdfs', 'page', 'pages'],
     tools: [
       {
         action: 'get_info',
-        description: 'The PDFs open in KhervePDF (tabs) and the shown one\'s path, page count, current page, title and outline.',
+        description: 'The PDFs open in kPDF (tabs) and the shown one\'s path, page count, current page, title and outline.',
         inputSchema: object({}),
         readOnly: true,
       },
@@ -648,7 +648,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
       },
       {
         action: 'go_to_page',
-        description: 'Show a page of the PDF in KhervePDF.',
+        description: 'Show a page of the PDF in kPDF.',
         inputSchema: object({ page: int('Page number (1 = first).') }, ['page']),
       },
       {
@@ -658,7 +658,7 @@ export const APP_TOOL_SETS: AppToolSet[] = [
       },
       {
         action: 'open',
-        description: 'Open a PDF file in a new KhervePDF tab.',
+        description: 'Open a PDF file in a new kPDF tab.',
         inputSchema: object({ path: str('The PDF, e.g. "~/Documents/paper.pdf".') }, ['path']),
       },
     ],
@@ -713,3 +713,15 @@ APP_TOOL_SETS.push(KHERVECALC_TOOL_SET)
 // The technique apps of KherveFitting-AI (their tools' code: src/apps/khervetech/aiTools.ts)
 import { TECHNIQUE_TOOL_SETS } from './manifests/techniqueApps.ts'
 APP_TOOL_SETS.push(...TECHNIQUE_TOOL_SETS)
+// The Science and Development apps of KherveOS (their code: src/apps/<app>/aiTools.ts)
+import { KSTATS_TOOL_SET } from './manifests/kstats.ts'
+import { KPLOT_TOOL_SET } from './manifests/kplot.ts'
+import { KCHEM_TOOL_SET } from './manifests/kchem.ts'
+import { KCODE_TOOL_SET } from './manifests/kcode.ts'
+import { KARDUINO_TOOL_SET } from './manifests/karduino.ts'
+import { KCALENDAR_TOOL_SET } from './manifests/kcalendar.ts'
+import { KREACTION_TOOL_SET } from './manifests/kreaction.ts'
+import { KELEC_TOOL_SET } from './manifests/kelec.ts'
+import { KPCB_TOOL_SET } from './manifests/kpcb.ts'
+APP_TOOL_SETS.push(KSTATS_TOOL_SET, KPLOT_TOOL_SET, KCHEM_TOOL_SET, KCODE_TOOL_SET, KARDUINO_TOOL_SET, KCALENDAR_TOOL_SET, KREACTION_TOOL_SET, KELEC_TOOL_SET, KPCB_TOOL_SET)
+

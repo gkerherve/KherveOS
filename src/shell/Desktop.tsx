@@ -56,7 +56,8 @@ export function Desktop() {
   const select = (keys: string[]) => setSelection(keys)
   const selectedFiles = selection.filter((k) => !k.startsWith('app:') && fs.exists(k))
   const wallpaperFit = useSettings((s) => s.wallpaperFit)
-  const background = wallpaperCss(wallpaperFit)
+  const wallpaper = useSettings((s) => s.wallpaper)
+  const background = wallpaperCss(wallpaperFit, undefined, wallpaper)
   const open = useWindows((s) => s.open)
 
   const items: Item[] = useMemo(() => {

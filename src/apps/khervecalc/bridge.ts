@@ -98,7 +98,7 @@ export class CalcBridge {
   dispose() {
     this.disposed = true
     this.unsub()
-    for (const j of this.queue.splice(0)) j.reject(new Error('KherveCalc was closed.'))
+    for (const j of this.queue.splice(0)) j.reject(new Error('kCalc was closed.'))
     this.kernel.dispose()
   }
 

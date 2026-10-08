@@ -113,7 +113,7 @@ export function viewerMenu(app: MolApp, x: number, y: number) {
   items.push(
     { label: 'Flatten to 2D sketch', onClick: () => app.flattenTo2d() },
     { label: 'Export PNG…', onClick: () => void app.exportPng() },
-    { label: 'Export SVG (KhervePaint)…', onClick: () => void app.exportSvg() },
+    { label: 'Export SVG (kPaint)…', onClick: () => void app.exportSvg() },
   )
   os.contextMenu({ clientX: x, clientY: y }, tidy(items))
 }
@@ -131,7 +131,7 @@ export function sketchMenu(app: MolApp, x: number, y: number) {
     { label: 'Clear sketch', onClick: () => app.clearSketch() },
     '-',
     { label: 'Export PNG…', onClick: () => void app.exportPng() },
-    { label: 'Export SVG (KhervePaint)…', onClick: () => void app.exportSvg() },
+    { label: 'Export SVG (kPaint)…', onClick: () => void app.exportSvg() },
   ]
   os.contextMenu({ clientX: x, clientY: y }, items)
 }

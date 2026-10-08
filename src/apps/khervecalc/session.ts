@@ -153,10 +153,10 @@ export function parseSession(text: string): Session {
   try {
     raw = JSON.parse(text)
   } catch {
-    throw new Error('This is not a KherveCalc session (.kcalc) file.')
+    throw new Error('This is not a kCalc session (.kcalc) file.')
   }
-  if (!isObj(raw) || raw.format !== 'kcalc') throw new Error('This is not a KherveCalc session (.kcalc) file.')
-  if (typeof raw.version === 'number' && raw.version > 1) throw new Error('This session was saved by a newer KherveCalc.')
+  if (!isObj(raw) || raw.format !== 'kcalc') throw new Error('This is not a kCalc session (.kcalc) file.')
+  if (typeof raw.version === 'number' && raw.version > 1) throw new Error('This session was saved by a newer kCalc.')
   const base = newSession()
   const st = isObj(raw.settings) ? raw.settings : {}
   const pick = <T>(v: unknown, allowed: readonly T[], d: T): T => (allowed.includes(v as T) ? (v as T) : d)

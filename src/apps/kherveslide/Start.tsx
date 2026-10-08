@@ -64,11 +64,11 @@ export function StartPage(p: Props) {
         <div className="ks2-start-head">
           <img src="/icons/apps/kherveslide.png" width={52} height={52} alt="" />
           <div className="ks2-start-titles">
-            <div className="ks2-start-title">KherveSlide</div>
+            <div className="ks2-start-title">kSlide</div>
             <div className="ks2-start-sub">Design like in PowerPoint, present in LaTeX</div>
           </div>
           <label className="ks2-start-check">
-            <input type="checkbox" checked={p.showAtStart} onChange={(e) => p.onShowAtStart(e.target.checked)} /> Show this page when KherveSlide starts
+            <input type="checkbox" checked={p.showAtStart} onChange={(e) => p.onShowAtStart(e.target.checked)} /> Show this page when kSlide starts
           </label>
         </div>
         <div className="ks2-start-buttons">

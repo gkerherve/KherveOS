@@ -253,7 +253,7 @@ export function describeGitError(err: unknown): string {
     case 'MergeConflictError':
     case 'MergeNotSupportedError': {
       const files = (data.filepaths as string[] | undefined) ?? []
-      return `Both sides changed the same lines${files.length ? ` in ${files.slice(0, 5).join(', ')}` : ''}. KhervePY can't merge that automatically — nothing was changed.`
+      return `Both sides changed the same lines${files.length ? ` in ${files.slice(0, 5).join(', ')}` : ''}. kPY can't merge that automatically — nothing was changed.`
     }
     case 'FastForwardError':
       return 'The branch has diverged from the remote; a fast-forward was not possible.'

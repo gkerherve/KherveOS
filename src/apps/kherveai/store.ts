@@ -251,7 +251,7 @@ const stem = (p: string) => vpath.basename(p).replace(/\.json$/i, '')
 
 function normalizeCall(c: ToolCall): ToolCall {
   if (c.status === 'running' || c.status === 'pending') {
-    return { ...c, status: 'error', result: c.result ?? { ok: false, error: 'Interrupted (KherveAI was closed while it ran).' } }
+    return { ...c, status: 'error', result: c.result ?? { ok: false, error: 'Interrupted (kAI was closed while it ran).' } }
   }
   return c
 }
@@ -265,7 +265,7 @@ function parseChat(text: string, path: string): Chat {
     throw new Error('The file is not valid JSON.')
   }
   const d = raw && typeof raw === 'object' ? (raw as Partial<ChatFile>) : null
-  if (!d || d.format !== 'kherveai-chat' || !Array.isArray(d.messages)) throw new Error('This is not a KherveAI chat.')
+  if (!d || d.format !== 'kherveai-chat' || !Array.isArray(d.messages)) throw new Error('This is not a kAI chat.')
   const provider: ProviderId = d.provider === 'anthropic' || d.provider === 'openai' ? d.provider : 'ollama'
   const messages: Message[] = d.messages
     .filter((m): m is Message => !!m && typeof m === 'object' && (m.role === 'user' || m.role === 'assistant'))
@@ -314,7 +314,7 @@ export async function openChatFile(path: string): Promise<boolean> {
     set({ chats: { ...s.chats, [chat.id]: chat }, paths: { ...s.paths, [chat.id]: path }, activeId: chat.id })
     return true
   } catch (e) {
-    await os.dialog.alert(`Could not open "${vpath.basename(path)}".\n\n${errorText(e)}`, { title: 'KherveAI' })
+    await os.dialog.alert(`Could not open "${vpath.basename(path)}".\n\n${errorText(e)}`, { title: 'kAI' })
     return false
   }
 }
@@ -374,7 +374,7 @@ export function saveChat(id: string): Promise<void> {
     await fs.writeText(p, JSON.stringify(file, null, 1))
   }).catch((e) => {
     console.warn('[KherveAI] could not save the chat', e)
-    os.notify({ title: 'KherveAI could not save a chat', body: errorText(e) })
+    os.notify({ title: 'kAI could not save a chat', body: errorText(e) })
   })
 }
 
@@ -392,7 +392,7 @@ export async function renameChat(id: string, title: string): Promise<void> {
     await fs.rename(p, target)
     set((s) => ({ paths: { ...s.paths, [id]: target } }))
     updateChat(id, (c) => ({ ...c, title: stem(target) }), false)
-  }).catch((e) => os.dialog.alert(`The chat could not be renamed.\n\n${errorText(e)}`, { title: 'KherveAI' }))
+  }).catch((e) => os.dialog.alert(`The chat could not be renamed.\n\n${errorText(e)}`, { title: 'kAI' }))
 }
 
 /** Ask for a new name (chat in memory or just a file in the list). */
@@ -411,7 +411,7 @@ export async function promptRename(target: { id?: string; path?: string }): Prom
     const dir = vpath.dirname(target.path)
     await fs.rename(target.path, vpath.join(dir, fs.uniqueName(dir, fileNameFor(name))))
   } catch (e) {
-    await os.dialog.alert(`The chat could not be renamed.\n\n${errorText(e)}`, { title: 'KherveAI' })
+    await os.dialog.alert(`The chat could not be renamed.\n\n${errorText(e)}`, { title: 'kAI' })
   }
 }
 
@@ -441,7 +441,7 @@ export async function deleteChat(target: { id?: string; path?: string }): Promis
   if (id) forget(id)
   if (p && fs.exists(p)) {
     const job = () => fs.remove(p)
-    await (id ? enqueue(id, job) : job()).catch((e: unknown) => os.dialog.alert(`The chat could not be deleted.\n\n${errorText(e)}`, { title: 'KherveAI' }))
+    await (id ? enqueue(id, job) : job()).catch((e: unknown) => os.dialog.alert(`The chat could not be deleted.\n\n${errorText(e)}`, { title: 'kAI' }))
   }
 }
 

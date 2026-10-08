@@ -31,13 +31,13 @@ export const MAIN_TOOLBAR: ToolSpec[] = [
   "id": "exportExcel",
   "label": "Export to Excel",
   "icon": "Save-excel-3.png",
-  "help": "EXPORT THIS CORE LEVEL\n\nWrites the sheet on screen (data, background, peaks and\nfit) to a spreadsheet you can open outside KherveFitting.\nA dialog asks for the format:\n  - Excel (.xlsx): into the project's workbook (for a\n    .kfit project, into the .xlsx of the same name).\n  - KherveSheet (.ksheet): into the .ksheet of the same\n    name beside the project; existing sheets are kept.\n\nHow to use:\n1. Select the sheet in the sheet selector.\n2. Click, pick Excel or KherveSheet, then OK.\n\nFor everyday saving use Quick Save (Ctrl+S) instead."
+  "help": "EXPORT THIS CORE LEVEL\n\nWrites the sheet on screen (data, background, peaks and\nfit) to a spreadsheet you can open outside KherveFitting.\nA dialog asks for the format:\n  - Excel (.xlsx): into the project's workbook (for a\n    .kfit project, into the .xlsx of the same name).\n  - kSheet (.ksheet): into the .ksheet of the same\n    name beside the project; existing sheets are kept.\n\nHow to use:\n1. Select the sheet in the sheet selector.\n2. Click, pick Excel or kSheet, then OK.\n\nFor everyday saving use Quick Save (Ctrl+S) instead."
  },
  {
   "id": "exportAll",
   "label": "Save All Sheets",
   "icon": "save-Multi-3.png",
-  "help": "EXPORT ALL CORE LEVELS\n\nSame as Export This Core Level, but for every sheet of\nthe project in one go. A dialog asks for the format:\nExcel (.xlsx) or KherveSheet (.ksheet).\n\nUse it before sending the fitted data to someone or\nplotting it in another program.\n\nCan take a long time on big projects: not recommended\nfor 50+ core levels (export them one by one instead)."
+  "help": "EXPORT ALL CORE LEVELS\n\nSame as Export This Core Level, but for every sheet of\nthe project in one go. A dialog asks for the format:\nExcel (.xlsx) or kSheet (.ksheet).\n\nUse it before sending the fitted data to someone or\nplotting it in another program.\n\nCan take a long time on big projects: not recommended\nfor 50+ core levels (export them one by one instead)."
  },
  {
   "id": "undo",
@@ -202,13 +202,13 @@ export const MAIN_TOOLBAR: ToolSpec[] = [
   "id": "nist",
   "label": "NIST Database",
   "icon": "NIST-3.png",
-  "help": "KHERVEDB BINDING ENERGY DATABASE\n\nOpens KherveDB, a searchable library of reference\nbinding energies (NIST-style) in its own window.\nUse it to check which chemical state a peak position\nmatches.\n\nHow to use:\n1. Click an element in the periodic table and choose the\n   XPS line, or search by formula or compound name.\n2. Read the list of compounds and their BE values.\n3. 'Plot Results' shows how the values are distributed.\n\nExample: compare a fitted Ti 2p peak with the TiO2,\nTiN and Ti metal entries."
+  "help": "KHERVEDB BINDING ENERGY DATABASE\n\nOpens kDB, a searchable library of reference\nbinding energies (NIST-style) in its own window.\nUse it to check which chemical state a peak position\nmatches.\n\nHow to use:\n1. Click an element in the periodic table and choose the\n   XPS line, or search by formula or compound name.\n2. Read the list of compounds and their BE values.\n3. 'Plot Results' shows how the values are distributed.\n\nExample: compare a fitted Ti 2p peak with the TiO2,\nTiN and Ti metal entries."
  },
  {
   "id": "kherveAI",
   "label": "NIST Database",
   "icon": "KherveAI-3.png",
-  "help": "KHERVEAI ASSISTANT\n\nOpens KherveAI, a chat assistant that knows XPS and\nKherveFitting. Ask questions in plain language (peak\npositions, fitting advice, how to do something) or ask\nit to carry out actions in the program for you.\n\nHow to use:\n1. Click to open the chat (click again to bring it back\n   if it was minimised).\n2. Type your request and send it.\n\nThe AI provider and key are set in AI > AI\nConfiguration."
+  "help": "KHERVEAI ASSISTANT\n\nOpens kAI, a chat assistant that knows XPS and\nKherveFitting. Ask questions in plain language (peak\npositions, fitting advice, how to do something) or ask\nit to carry out actions in the program for you.\n\nHow to use:\n1. Click to open the chat (click again to bring it back\n   if it was minimised).\n2. Type your request and send it.\n\nThe AI provider and key are set in AI > AI\nConfiguration."
  },
  {
   "stretch": true

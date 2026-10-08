@@ -143,7 +143,7 @@ export const MISSING = [
   'Adv. Fitting (continuous fit, auto-tune of the background offsets), Tougaard / Raman / XAS model window, Mini fitting toolbar',
   'Plot Modifications, Thickness analysis, VB / Fermi / Cut-Off, Spectral denoising, PCA (noise), Multiplet envelope fit, Wagner plot, AR-XPS',
   'Profile Creator, Plot Creator (books), Overview, Labels Manager, Preferences other than the instrument / library',
-  'KherveAI chat and MCP inside the app (KherveOS has its own AI tools for KherveFitting), KherveDB opens as its own app',
+  'kAI chat and MCP inside the app (KherveOS has its own AI tools for KherveFitting), kDB opens as its own app',
   'Imports other than KherveFitting workbooks, VAMAS, CSV and TXT (Avantage, Kratos, PHI, Scienta, VG, MRS, ASC, Igor, other techniques)',
   'The .kfit (HDF5) and .ksheet formats, Word reports, PDF export, Excel plot pictures, auto-backup',
 ]

@@ -36,7 +36,7 @@ export function rdkitAvailable(): boolean {
 /** A V2000 molfile of a built graph — every atom explicit and no coordinates,
  *  as rdkit_io._rwmol_from_structure builds an RWMol (so no stereo is read from geometry). */
 export function molblock(atoms: Graph, bonds: readonly Bond[]): string {
-  const lines = ['', '  KherveMol', '', `${String(atoms.length).padStart(3)}${String(bonds.length).padStart(3)}  0  0  0  0  0  0  0  0999 V2000`]
+  const lines = ['', '  kMol', '', `${String(atoms.length).padStart(3)}${String(bonds.length).padStart(3)}  0  0  0  0  0  0  0  0999 V2000`]
   for (const a of atoms) lines.push(`${'0.0000'.padStart(10)}${'0.0000'.padStart(10)}${'0.0000'.padStart(10)} ${a[0].padEnd(3)} 0  0  0  0  0  0  0  0  0  0  0  0`)
   for (const [i, j, o] of bonds) lines.push(`${String(i + 1).padStart(3)}${String(j + 1).padStart(3)}${String(Math.max(1, Math.min(3, o))).padStart(3)}  0`)
   lines.push('M  END')

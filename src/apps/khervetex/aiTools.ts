@@ -55,7 +55,7 @@ const logTail = (log: string, lines = 40) => clipText(log.split('\n').slice(-lin
 
 export function khervetexAiTools(host: TexAiHost): AppTools {
   const ready = async (signal?: AbortSignal) => {
-    if (!(await waitUntil(() => !host.loading(), 30_000, signal))) throw new Error('KherveTeX is still opening the document. Try again in a moment.')
+    if (!(await waitUntil(() => !host.loading(), 30_000, signal))) throw new Error('kTeX is still opening the document. Try again in a moment.')
   }
 
   /** Apply an edit and say what the user sees. */
@@ -66,7 +66,7 @@ export function khervetexAiTools(host: TexAiHost): AppTools {
       ...extra,
       blocks: doc.children.length,
       saved: false,
-      shown: 'The change is in the KherveTeX editor (Ctrl+Z undoes it).',
+      shown: 'The change is in the kTeX editor (Ctrl+Z undoes it).',
       ...(s.autoCompile && s.pdfShown ? { pdf: 'Recompiling: call khervetex_compile to wait for it and check for errors.' } : { pdf: 'Call khervetex_compile to typeset it.' }),
     }
   }
@@ -165,7 +165,7 @@ export function khervetexAiTools(host: TexAiHost): AppTools {
       }
       if (typeof a.title === 'string' && a.title.trim()) doc = setMetadata(doc, { title: a.title }).doc
       const s = host.status()
-      if (s.dirty && !(await ctx.confirm('replace the unsaved KherveTeX document with a new one', 'Its unsaved changes will be lost (the file on the drive is kept).'))) {
+      if (s.dirty && !(await ctx.confirm('replace the unsaved kTeX document with a new one', 'Its unsaved changes will be lost (the file on the drive is kept).'))) {
         throw new Error('The user kept the current document. Save it first (khervetex_save), or edit it instead.')
       }
       await host.replaceWithNew(doc)

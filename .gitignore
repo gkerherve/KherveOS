@@ -11,3 +11,6 @@ __pycache__/
 .claude/settings.local.json
 .claude/practice-run
 tools/macos/build/
+
+# Pyodide copied for offline use (npm run pyodide:fetch)
+public/pyodide/

@@ -29,14 +29,14 @@ async function ready(signal?: AbortSignal) {
   }, 15_000, signal)
   const s = get()
   if (s.mounted && s.me && s.status !== 'loading') {
-    if (s.status === 'error') throw new Error(`Messages could not load the conversations: ${s.error ?? 'unknown error'}.`)
+    if (s.status === 'error') throw new Error(`Chat could not load the conversations: ${s.error ?? 'unknown error'}.`)
     return s.me
   }
   if (useServer.getState().status === 'offline') {
-    throw new Error('Messages needs the KherveOS server, which is not running: the user has to start it ("npm run server" in the KherveOS folder).')
+    throw new Error('Chat needs the KherveOS server, which is not running: the user has to start it ("npm run server" in the KherveOS folder).')
   }
   if (auth().checked && !auth().user) throw new Error('The user has to sign in to KherveOS in the Messages window first.')
-  throw new Error('Messages is not ready yet. Try again in a moment.')
+  throw new Error('Chat is not ready yet. Try again in a moment.')
 }
 
 const norm = (t: string) => t.trim().replace(/^@/, '').toLowerCase()

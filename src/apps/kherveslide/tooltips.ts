@@ -17,7 +17,7 @@ export const TIPS: Record<string, Tip> = {
   ],
   "open": [
     "Open presentation",
-    "Opens a KherveSlide presentation (.kslide) — or imports a PowerPoint file (.pptx), turning each of its slides into editable boxes.",
+    "Opens a kSlide presentation (.kslide) — or imports a PowerPoint file (.pptx), turning each of its slides into editable boxes.",
     [
       "Click Open and choose the file.",
       "It replaces the presentation on screen (you are asked to save that one first if it changed).",
@@ -359,7 +359,7 @@ export const TIPS: Record<string, Tip> = {
   ],
   "equation": [
     "Equation builder",
-    "Builds an equation by clicking — fractions, sums, integrals, matrices, Greek letters — with a live LaTeX preview, the same builder as KherveTeX.",
+    "Builds an equation by clicking — fractions, sums, integrals, matrices, Greek letters — with a live LaTeX preview, the same builder as kTeX.",
     [
       "Click Equation builder (Ctrl+Shift+E).",
       "Click the parts you need from the categories, or type LaTeX.",

@@ -256,5 +256,5 @@ export function docToHtml(wd: WordDoc, opts: HtmlOptions): string {
   const footer = !pdf && !hfIsEmpty(s.footer) ? `<div class="kw-footer">${hfLine(s.footer, s.title)}</div>` : ''
   const title = esc(s.title || 'Document')
   if (pdf) return `<?xml version="1.0" encoding="UTF-8"?>\n<html xmlns="http://www.w3.org/1999/xhtml"><head><title>${title}</title><style>${css}</style></head><body>${body}${notes}</body></html>`
-  return `<!DOCTYPE html>\n<html lang="${esc(s.lang || 'en')}"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title><meta name="generator" content="KherveWord"/><style>${css}</style></head><body>${header}${body}${notes}${footer}</body></html>\n`
+  return `<!DOCTYPE html>\n<html lang="${esc(s.lang || 'en')}"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title><meta name="generator" content="kWord"/><style>${css}</style></head><body>${header}${body}${notes}${footer}</body></html>\n`
 }

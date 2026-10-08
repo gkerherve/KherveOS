@@ -1,0 +1,293 @@
+/* kTGA: its own window on the OS theme. The root also carries kf-app / kt-app for the
+   layout of the desktop's widgets (WxUI); their colours are set again here (.tg-app.kt-app
+   wins over .kt-app) so the analysis panel matches the rest of the OS. */
+
+.tg-app.kt-app {
+  --kf-font: inherit;
+  background: var(--k-bg);
+  color: var(--k-text);
+  font: 13px system-ui, -apple-system, 'Segoe UI', sans-serif;
+  user-select: none;
+}
+
+/* ------------------------------------------------------------ toolbar */
+.tg-app .tg-toolbar .k-btn { display: inline-flex; align-items: center; gap: 5px; }
+.tg-app .tg-sep { width: 1px; height: 20px; margin: 0 4px; background: var(--k-border); }
+.tg-app .tg-grow { flex: 1; }
+.tg-app .tg-file {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  color: var(--k-muted);
+  font-size: 12px;
+}
+.tg-app .k-icon-btn.tg-on { background: var(--k-selection); color: var(--k-accent); }
+
+/* ------------------------------------------------------------ body */
+.tg-app .tg-body { flex: 1 1 auto; display: flex; min-height: 0; }
+
+.tg-app .tg-side {
+  flex: none;
+  width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  overflow: auto;
+  background: var(--k-chrome);
+  border-right: 1px solid var(--k-border);
+}
+.tg-app .tg-side-title {
+  margin: 8px 6px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--k-muted);
+}
+.tg-app .tg-side-title:first-child { margin-top: 0; }
+.tg-app .tg-side-empty { padding: 4px 6px; color: var(--k-muted); font-size: 12px; }
+.tg-app .tg-sheet {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  column-gap: 7px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--k-text);
+  text-align: left;
+  cursor: pointer;
+}
+.tg-app .tg-sheet svg { grid-row: span 2; color: var(--k-muted); }
+.tg-app .tg-sheet.tg-derived { margin-left: 12px; }
+.tg-app .tg-sheet:hover { background: var(--k-button-hover); }
+.tg-app .tg-sheet.tg-sel { background: var(--k-selection); }
+.tg-app .tg-sheet.tg-sel svg { color: var(--k-accent); }
+.tg-app .tg-sheet-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.tg-app .tg-sheet-kind { font-size: 11px; color: var(--k-muted); }
+.tg-app .tg-steps { display: flex; flex-direction: column; gap: 1px; }
+.tg-app .tg-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--k-text);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.tg-app .tg-step:hover { background: var(--k-button-hover); }
+.tg-app .tg-step-n {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  color: var(--k-muted);
+  font-size: 10px;
+}
+.tg-app .tg-step:hover .tg-step-n { border-color: var(--k-accent); color: var(--k-accent); }
+
+/* ------------------------------------------------------------ plot */
+.tg-app .tg-main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; padding: 12px; gap: 8px; }
+.tg-app .tg-plot-head { display: flex; align-items: center; gap: 8px; }
+.tg-app .tg-plot-title { flex: 1; display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.tg-app .tg-plot-title b { font-size: 15px; }
+.tg-app .tg-plot-title span { color: var(--k-muted); font-size: 12px; }
+.tg-app .tg-plot-tools { display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--k-surface); border: 1px solid var(--k-border); }
+/* The figure is drawn as printed (white paper), in a card. */
+.tg-app .tg-plot {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--k-border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+.tg-app .tg-plot-hint { font-size: 12px; color: var(--k-muted); }
+
+/* ------------------------------------------------------------ welcome */
+.tg-app .tg-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+}
+.tg-app .tg-welcome h2 { margin: 0; font-size: 22px; }
+.tg-app .tg-welcome p { max-width: 460px; margin: 0; color: var(--k-muted); line-height: 1.5; }
+.tg-app .tg-welcome-icon {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  background: var(--k-selection);
+  color: var(--k-accent);
+}
+.tg-app .tg-primary { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; background: var(--k-accent); color: var(--k-accent-text); border-color: transparent; }
+.tg-app .tg-primary:hover:not(:disabled) { background: var(--k-accent); filter: brightness(1.1); }
+.tg-app .tg-formats { font-size: 12px; color: var(--k-muted); display: inline-flex; align-items: center; gap: 6px; }
+.tg-app .tg-examples { display: flex; flex-direction: column; gap: 4px; width: min(420px, 100%); margin-top: 14px; text-align: left; }
+.tg-app .tg-example {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--k-border);
+  background: var(--k-surface);
+  color: var(--k-text);
+  cursor: pointer;
+}
+.tg-app .tg-example svg { color: var(--k-accent); flex: none; }
+.tg-app .tg-example:hover:not(:disabled) { border-color: var(--k-accent); }
+
+/* ------------------------------------------------------------ analysis panel */
+.tg-app .tg-sash { flex: none; width: 5px; margin: 0 -2px; z-index: 2; cursor: col-resize; }
+.tg-app .tg-sash:hover { background: var(--k-accent); }
+.tg-app .tg-panel {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--k-surface);
+  border-left: 1px solid var(--k-border);
+}
+.tg-app .tg-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--k-border);
+  font-weight: 600;
+  color: var(--k-text);
+}
+.tg-app .tg-panel-head svg { color: var(--k-accent); }
+.tg-app .tg-panel-body { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; overflow: auto; }
+.tg-app .tg-panel-body > .kt-panel { flex: 1 1 auto; }
+.tg-app .tg-panel-wait { padding: 16px; color: var(--k-muted); }
+
+/* ------------------------------------------------------------ status */
+.tg-app .tg-status { justify-content: space-between; }
+.tg-app .tg-status > span { display: inline-flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tg-app .tg-error { color: var(--k-danger); }
+.tg-app .tg-cursor { font-variant-numeric: tabular-nums; }
+.tg-app .tg-spin {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--k-border);
+  border-top-color: var(--k-accent);
+  animation: tg-spin 0.8s linear infinite;
+}
+@keyframes tg-spin { to { transform: rotate(360deg); } }
+
+/* ------------------------------------------------------------ the desktop widgets, themed */
+.tg-app.kt-app .kt-panel { background: transparent !important; }
+.tg-app.kt-app .kt-pagebody,
+.tg-app.kt-app .kf-page,
+.tg-app.kt-app .kt-float-body { background: var(--k-surface); color: var(--k-text); border-color: var(--k-border); }
+.tg-app.kt-app .kf-page { border: 0; border-top: 1px solid var(--k-border); padding: 8px; }
+.tg-app.kt-app .kt-notebook > .kf-tabs { gap: 2px; padding: 6px 8px 0; flex-wrap: wrap; }
+.tg-app.kt-app .kf-tabs button {
+  margin: 0;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 7px 7px 0 0;
+  background: transparent;
+  color: var(--k-muted);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.tg-app.kt-app .kf-tabs button:hover { color: var(--k-text); background: var(--k-button-hover); }
+.tg-app.kt-app .kf-tabs button.kf-tab-on { top: 0; padding-bottom: 5px; background: transparent; color: var(--k-accent); box-shadow: inset 0 -2px 0 var(--k-accent); }
+.tg-app.kt-app .kt-staticbox { border: 1px solid var(--k-border); border-radius: 8px; padding: 4px 8px 8px; margin-bottom: 6px; }
+.tg-app.kt-app .kt-staticbox > legend { color: var(--k-text); font: inherit; font-weight: 600; font-size: 12.5px; }
+.tg-app.kt-app .kt-text { line-height: 1.45; }
+.tg-app.kt-app .kt-hline, .tg-app.kt-app .kt-vline { background: var(--k-border); }
+.tg-app.kt-app .kt-btn {
+  min-height: 26px;
+  padding: 2px 10px;
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+  background: var(--k-button);
+  color: var(--k-text);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.tg-app.kt-app .kt-btn:hover:not(:disabled) { background: var(--k-button-hover); border-color: var(--k-accent); }
+.tg-app.kt-app .kt-btn.kt-green { background: var(--k-accent); color: var(--k-accent-text); border-color: transparent; font-weight: 600; }
+.tg-app.kt-app .kt-btn.kt-green:hover:not(:disabled) { background: var(--k-accent); filter: brightness(1.1); }
+.tg-app.kt-app .kt-btn.kt-on { background: var(--k-selection); border-color: var(--k-accent); }
+.tg-app.kt-app .kt-btn:disabled { opacity: 0.45; background: var(--k-button); color: var(--k-text); border-color: var(--k-border); cursor: default; }
+.tg-app.kt-app .kt-input,
+.tg-app.kt-app .kt-choice,
+.tg-app.kt-app .kt-spin,
+.tg-app.kt-app .kt-listbox {
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+  background: var(--k-bg);
+  color: var(--k-text);
+  font: inherit;
+  font-size: 12.5px;
+}
+.tg-app.kt-app .kt-input, .tg-app.kt-app .kt-choice, .tg-app.kt-app .kt-spin { height: 26px; }
+.tg-app.kt-app .kt-input.kt-multi { height: auto; }
+.tg-app.kt-app .kt-input:focus, .tg-app.kt-app .kt-choice:focus, .tg-app.kt-app .kt-spin:focus-within { outline: 2px solid var(--k-accent); outline-offset: -1px; }
+.tg-app.kt-app .kt-input.kt-ro { background: var(--k-surface); }
+.tg-app.kt-app .kt-input:disabled, .tg-app.kt-app .kt-choice:disabled { background: var(--k-surface); color: var(--k-muted); }
+.tg-app.kt-app .kt-spin { overflow: hidden; }
+.tg-app.kt-app .kt-spin input { color: var(--k-text); font: inherit; }
+.tg-app.kt-app .kt-spin-btns button { background: var(--k-button); color: var(--k-text); border-left: 1px solid var(--k-border); }
+.tg-app.kt-app .kt-check input { accent-color: var(--k-accent); }
+.tg-app.kt-app .kt-listitem.kt-sel { background: var(--k-selection); }
+.tg-app.kt-app .kt-wxgrid { border: 1px solid var(--k-border); border-radius: 6px; background: var(--k-bg); }
+.tg-app.kt-app .kt-wxgrid table { font: inherit; font-size: 12px; }
+.tg-app.kt-app .kt-wxgrid th { background: var(--k-chrome); color: var(--k-muted); border-color: var(--k-border); font-weight: 600; }
+.tg-app.kt-app .kt-wxgrid td { background: var(--k-bg); color: var(--k-text); border-color: var(--k-border); }
+.tg-app.kt-app .kt-wxgrid tr:nth-child(even) td { background: var(--k-alt); }
+.tg-app.kt-app .kt-wxgrid tr.kt-sel td { background: var(--k-selection); }
+.tg-app.kt-app .kt-wxgrid td.kt-cursor { outline-color: var(--k-accent); }
+.tg-app.kt-app .kt-wxgrid td.kt-editing input { background: var(--k-bg); color: var(--k-text); }
+.tg-app.kt-app .kt-link { color: var(--k-link); }
+.tg-app.kt-app .kt-canvas { border-radius: 8px; overflow: hidden; background: #fff; }
+
+/* Floating windows the analysis opens (and its dialogs). */
+.tg-app.kt-app .kf-float {
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--k-surface);
+  color: var(--k-text);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  font: inherit;
+}
+.tg-app.kt-app .kf-float-title { background: var(--k-chrome); color: var(--k-text); border-bottom: 1px solid var(--k-border); font-weight: 600; }
+.tg-app.kt-app .kf-float-close { color: var(--k-text); }
+.tg-app.kt-app .kt-float-maxbtn:hover { background: var(--k-button-hover); color: var(--k-text); }
+.tg-app.kt-app .kt-float-max { border-radius: 0; }
+.tg-app.kt-app .kt-modal-back { background: rgba(0, 0, 0, 0.45); }

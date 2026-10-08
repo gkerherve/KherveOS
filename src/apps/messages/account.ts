@@ -5,7 +5,7 @@ import { useAuth } from '@/os/server'
 export async function confirmSignOut(): Promise<void> {
   const me = useAuth.getState().user
   if (!me) return
-  const ok = await os.dialog.confirm('Messages and Email will ask you to sign in again.', {
+  const ok = await os.dialog.confirm('Chat and Mail will ask you to sign in again.', {
     title: `Sign out ${me.display_name}?`,
     okLabel: 'Sign out',
   })

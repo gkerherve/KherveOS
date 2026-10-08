@@ -82,7 +82,7 @@ export function bookAiTools(nb: Notebook): AppTools {
       // This window is already a new, empty notebook (KherveOS may just have opened it for this call).
       if (!path && !origin && !dirty && cells.every((c) => !c.source.trim())) return { window: ctx.windowId, cells: cells.length, new: true }
       const id = os.open('khervebook', { blank: true, _new: Date.now() })
-      if (!id) throw new Error('KherveBook could not open a new window.')
+      if (!id) throw new Error('kBook could not open a new window.')
       // The next khervebook_ call goes to the front window: wait until the new one takes calls.
       if (!(await appToolRegistry.waitFor('khervebook', id, 30_000, ctx.signal))) throw new Error('The new notebook window did not get ready in time.')
       return { window: id, new: true, note: 'The khervebook_ tools now work in this new notebook.' }

@@ -20,12 +20,12 @@ export interface TechAppSpec {
 }
 
 export const TECH_APPS: TechAppSpec[] = [
-  { appId: 'khervetga', name: 'KherveTGA', tech: 'TGA', prefix: 'TGA', examples: 'khervetga', exts: ['.csv', '.txt', '.dat', '.tri'] },
-  { appId: 'khervebet', name: 'KherveBET', tech: 'BET', prefix: 'BET', examples: 'khervebet', exts: ['.csv', '.txt', '.dat'] },
-  { appId: 'kherveuvvis', name: 'KherveUVVis', tech: 'UVVIS', prefix: 'UVVIS', examples: 'kherveuvvis', exts: ['.csv', '.txt', '.dat', '.asc'] },
-  { appId: 'kherveftir', name: 'KherveFTIR', tech: 'FTIR', prefix: 'FTIR', examples: 'kherveftir', exts: ['.jdx', '.dx', '.csv', '.txt', '.dat', '.lbd'] },
+  { appId: 'khervetga', name: 'kTGA', tech: 'TGA', prefix: 'TGA', examples: 'khervetga', exts: ['.csv', '.txt', '.dat', '.tri'] },
+  { appId: 'khervebet', name: 'kBET', tech: 'BET', prefix: 'BET', examples: 'khervebet', exts: ['.csv', '.txt', '.dat'] },
+  { appId: 'kherveuvvis', name: 'kUVVis', tech: 'UVVIS', prefix: 'UVVIS', examples: 'kherveuvvis', exts: ['.csv', '.txt', '.dat', '.asc'] },
+  { appId: 'kherveftir', name: 'kFTIR', tech: 'FTIR', prefix: 'FTIR', examples: 'kherveftir', exts: ['.jdx', '.dx', '.csv', '.txt', '.dat', '.lbd'] },
   {
-    appId: 'kherveraman', name: 'KherveRaman', tech: 'RAMAN', prefix: 'RAMAN', examples: 'kherveraman', exts: ['.txt'],
+    appId: 'kherveraman', name: 'kRaman', tech: 'RAMAN', prefix: 'RAMAN', examples: 'kherveraman', exts: ['.txt'],
     // TechniqueTool._is_raman_name / Raman_Analysis.is_raman_sheet
     match: (s) => s.startsWith('RA') || s.toUpperCase().includes('RAMAN') || s.startsWith('Ra_'),
   },

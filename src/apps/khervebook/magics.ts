@@ -38,7 +38,7 @@ export function prepareCode(source: string): PreparedCode {
     if (pip) {
       const args = splitArgs(pip[1] ?? '')
       if (args[0] !== 'install') {
-        notes.push(`Line ${i + 1}: only "%pip install …" is supported in KherveBook.`)
+        notes.push(`Line ${i + 1}: only "%pip install …" is supported in kBook.`)
         return ''
       }
       let skip = false

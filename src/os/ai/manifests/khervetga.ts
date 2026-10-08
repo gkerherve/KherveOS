@@ -5,7 +5,7 @@ import { techniqueToolSet } from './technique.ts'
 
 export const KHERVETGA_TOOL_SET = techniqueToolSet({
   app: 'khervetga',
-  name: 'KherveTGA',
+  name: 'kTGA',
   summary: 'TGA / DSC analysis: mass steps, DTG, DSC enthalpies, events, cycles, kinetics.',
   keywords: ['khervetga', 'tga', 'thermogravimetric', 'thermogravimetry', 'dsc', 'sta', 'dtg', 'mass loss', 'decomposition', 'enthalpy', 'netzsch', 'trios'],
   files: 'TGA / STA (.csv/.txt/.dat) or TA TRIOS (.tri)',

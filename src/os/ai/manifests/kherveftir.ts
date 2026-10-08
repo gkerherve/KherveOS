@@ -5,7 +5,7 @@ import { techniqueToolSet } from './technique.ts'
 
 export const KHERVEFTIR_TOOL_SET = techniqueToolSet({
   app: 'kherveftir',
-  name: 'KherveFTIR',
+  name: 'kFTIR',
   summary: 'FTIR spectra: ordinate units, auto clean, band detection and assignment, references.',
   keywords: ['kherveftir', 'ftir', 'infrared', 'ir spectrum', 'ir spectroscopy', 'wavenumber', 'transmittance', 'absorbance', 'jcamp', 'band assignment', 'functional group', 'atr'],
   files: 'FTIR (.txt/.csv/.dat), JCAMP-DX (.jdx/.dx) or Nicolet library',

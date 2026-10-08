@@ -6,7 +6,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 export interface SettingsState {
   /** "Auto" follows the system light/dark setting; otherwise a theme name. */
   theme: string
-  /** The wallpaper's id: KherveOS has one, 'ktools-lab'. */
+  /** The wallpaper's id (see src/shell/wallpapers.ts): 'ktools-lab', 'graphene', 'molecules'… */
   wallpaper: string
   /** How strongly the wallpaper shows over the theme's desktop colour (0.1–1). */
   wallpaperOpacity: number
@@ -35,9 +35,9 @@ export interface SettingsState {
 export type WallpaperFit = 'fill' | 'fit' | 'centre'
 
 /** The interface sizes offered in Settings › Appearance › Desktop. */
-export const UI_SCALES = [0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2]
+export const UI_SCALES = [0.6, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2]
 export const clampUiScale = (v: unknown): number =>
-  typeof v === 'number' && Number.isFinite(v) ? Math.min(2, Math.max(0.75, v)) : 1
+  typeof v === 'number' && Number.isFinite(v) ? Math.min(2, Math.max(0.6, v)) : 1
 
 export const DEFAULT_DOCK = ['files', 'browser', 'terminal', 'khervebook', 'kherveai', 'notepad', 'messages', 'email', 'settings']
 
@@ -70,7 +70,7 @@ export const useSettings = create<SettingsState>()(
       lightApps: [],
       lightTheme: 'Kherve Light',
       dock: DEFAULT_DOCK,
-      dockZoom: 128,
+      dockZoom: 160,
       showHidden: false,
       browserHome: 'https://khervetools.com',
       set: (patch) => set(patch),
@@ -78,7 +78,7 @@ export const useSettings = create<SettingsState>()(
     {
       name: 'kherveos.settings',
       storage: safeStorage,
-      version: 12,
+      version: 14,
       migrate: (old, version) => {
         let s = { ...((old ?? {}) as Partial<SettingsState>) }
         // Version 1 had a blue/Auto look: move early installs to the dark look.
@@ -121,6 +121,10 @@ export const useSettings = create<SettingsState>()(
         }
         // Version 12: the Browser opens on khervetools.com (unless another home page was chosen).
         if (version < 12 && (!s.browserHome || s.browserHome === 'kherve:start')) s.browserHome = 'https://khervetools.com'
+        // Version 13: several wallpapers; the chosen one is kept (the lab picture when none was).
+        if (version < 13 && !s.wallpaper) s.wallpaper = 'ktools-lab'
+        // Version 14: the Dock magnifies further (up to 192 px); the old 128 px maximum moves up.
+        if (version < 14 && (s.dockZoom === undefined || s.dockZoom >= 128)) s.dockZoom = 160
         return s as SettingsState
       },
     },

@@ -254,7 +254,7 @@ function inlineSegs(nodes: PMNode[] | undefined, ctx: Ctx): Seg[] {
 }
 
 function changeAttrs(a: Record<string, unknown>, ctx: Ctx): Record<string, string | number> {
-  return { 'w:id': ctx.changeId++, 'w:author': String(a.author || 'KherveWord'), 'w:date': String(a.date || new Date().toISOString()).replace(/\.\d+Z$/, 'Z') }
+  return { 'w:id': ctx.changeId++, 'w:author': String(a.author || 'kWord'), 'w:date': String(a.date || new Date().toISOString()).replace(/\.\d+Z$/, 'Z') }
 }
 
 /** Runs with hyperlinks and tracked changes wrapped around them. */
@@ -658,7 +658,7 @@ function stylesXml(settings: DocSettings): string {
     '<w:style w:type="character" w:default="1" w:styleId="DefaultParagraphFont"><w:name w:val="Default Paragraph Font"/><w:uiPriority w:val="1"/><w:semiHidden/><w:unhideWhenUsed/></w:style>',
     '<w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:uiPriority w:val="99"/><w:semiHidden/><w:unhideWhenUsed/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style>',
     '<w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/><w:basedOn w:val="TableNormal"/><w:uiPriority w:val="39"/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:tblPr><w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/></w:tblBorders></w:tblPr></w:style>',
-    '<w:style w:type="table" w:styleId="KherveTable"><w:name w:val="KherveWord Table"/><w:basedOn w:val="TableGrid"/><w:uiPriority w:val="39"/><w:tblPr/><w:tblStylePr w:type="firstRow"><w:rPr><w:b/><w:bCs/></w:rPr></w:tblStylePr></w:style>',
+    '<w:style w:type="table" w:styleId="KherveTable"><w:name w:val="kWord Table"/><w:basedOn w:val="TableGrid"/><w:uiPriority w:val="39"/><w:tblPr/><w:tblStylePr w:type="firstRow"><w:rPr><w:b/><w:bCs/></w:rPr></w:tblStylePr></w:style>',
     '<w:style w:type="numbering" w:default="1" w:styleId="NoList"><w:name w:val="No List"/><w:uiPriority w:val="99"/><w:semiHidden/><w:unhideWhenUsed/></w:style>',
     '<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:basedOn w:val="DefaultParagraphFont"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:rPr><w:color w:val="0563C1"/><w:u w:val="single"/></w:rPr></w:style>',
     '<w:style w:type="paragraph" w:styleId="FootnoteText"><w:name w:val="footnote text"/><w:basedOn w:val="Normal"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:style>',
@@ -745,12 +745,12 @@ export function writeDocx(wd: WordDoc, opts: WriteOptions = {}): Uint8Array {
 
   if (ctx.commentOrder.length) {
     const items = ctx.commentOrder.map((id) => {
-      const c = settings.comments[id] ?? { author: 'KherveWord', date: new Date().toISOString(), text: '' }
+      const c = settings.comments[id] ?? { author: 'kWord', date: new Date().toISOString(), text: '' }
       const initials = c.author.split(/\s+/).map((w) => w[0] ?? '').join('').slice(0, 3)
       const paras = (c.text || ' ').split('\n').map(
         (line, li) => `<w:p><w:pPr><w:pStyle w:val="CommentText"/></w:pPr>${li === 0 ? '<w:r><w:rPr><w:rStyle w:val="CommentReference"/></w:rPr><w:annotationRef/></w:r>' : ''}${run(line, [])}</w:p>`,
       )
-      return tag('w:comment', { 'w:id': ctx.commentNum(id), 'w:author': c.author || 'KherveWord', 'w:date': c.date.replace(/\.\d+Z$/, 'Z'), 'w:initials': initials }, paras.join(''))
+      return tag('w:comment', { 'w:id': ctx.commentNum(id), 'w:author': c.author || 'kWord', 'w:date': c.date.replace(/\.\d+Z$/, 'Z'), 'w:initials': initials }, paras.join(''))
     })
     files['word/comments.xml'] = strToU8(`${XML_HEAD}<w:comments ${NS_ALL}>${items.join('')}</w:comments>`)
     ctx.rel(`${REL}/comments`, 'comments.xml')
@@ -772,7 +772,7 @@ export function writeDocx(wd: WordDoc, opts: WriteOptions = {}): Uint8Array {
       `<dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`,
   )
   files['docProps/app.xml'] = strToU8(
-    `${XML_HEAD}<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>KherveWord</Application></Properties>`,
+    `${XML_HEAD}<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>kWord</Application></Properties>`,
   )
   files['_rels/.rels'] = strToU8(
     `${XML_HEAD}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +

@@ -69,6 +69,7 @@ function webGame(app: string, name: string, summary: string, keywords: string[])
 export const GAME_TOOL_SETS: AppToolSet[] = [
   miniGame('tetris', 'Tetris', 'the falling-blocks game.', ['tetris', 'tetromino', 'tetrominoes'], 'level, lines, held and next pieces'),
   miniGame('breakout', 'Breakout', 'the brick-breaking paddle game.', ['breakout', 'brick breaker', 'bricks'], 'level, lives, balls in play'),
+  miniGame('pacman', 'Pac-Man', 'the maze game: eat the dots, dodge the ghosts.', ['pacman', 'pac-man', 'pac man', 'ghosts', 'maze'], 'level, lives, dots left, power-pellet seconds, mode, and the tiles of Pac-Man and the four ghosts'),
   miniGame('pinball', 'Pinball', 'the pinball table with flippers and bumpers.', ['pinball', 'flipper', 'flippers'], 'ball number, bonus, multiplier'),
   miniGame('asteroids', 'Meteor Smash', 'the space shooter where you blast meteors (Asteroids-like).', ['asteroids', 'meteor', 'meteors'], 'wave, lives, meteors left'),
   miniGame('flappy', 'Flappy Khervey', 'the Flappy Bird-like game: flap through pipes, shoot birds and bees.', ['flappy', 'flappy bird', 'khervey'], 'stage, difficulty', [

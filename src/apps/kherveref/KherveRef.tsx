@@ -103,7 +103,7 @@ export default function KherveRef({ win, args }: AppProps) {
     setSelected([])
     setPhase('ready')
     setPref(LAST_LIBRARY, l.root)
-    win.setTitle(`${l.name} — KherveRef`)
+    win.setTitle(`${l.name} — kRef`)
     win.setDocumentPath(l.manifest)
     bump()
   }
@@ -114,7 +114,7 @@ export default function KherveRef({ win, args }: AppProps) {
       show(l)
       return l
     } catch (e) {
-      await os.dialog.alert(errText(e), { title: 'KherveRef' })
+      await os.dialog.alert(errText(e), { title: 'kRef' })
       return null
     }
   }
@@ -128,7 +128,7 @@ export default function KherveRef({ win, args }: AppProps) {
         show(l)
         return l
       } catch (e) {
-        await os.dialog.alert(errText(e), { title: 'KherveRef' })
+        await os.dialog.alert(errText(e), { title: 'kRef' })
       }
     }
     setPhase('start')
@@ -150,7 +150,7 @@ export default function KherveRef({ win, args }: AppProps) {
       // A .bib (or PDF) opened with KherveRef, or args.add from another app (a PDF to file).
       const files: string[] = []
       if (p && fs.isFile(p) && [...BIB_EXT, '.pdf'].includes(ext)) {
-        const ok = await os.dialog.confirm(`Add the references in ${path.basename(p)} to the library “${l.name}”?`, { title: 'KherveRef', okLabel: 'Add' })
+        const ok = await os.dialog.confirm(`Add the references in ${path.basename(p)} to the library “${l.name}”?`, { title: 'kRef', okLabel: 'Add' })
         if (ok) files.push(p)
       }
       if (typeof args.add === 'string' && fs.isFile(args.add)) files.push(args.add)
@@ -195,7 +195,7 @@ export default function KherveRef({ win, args }: AppProps) {
     try {
       return await fn(l)
     } catch (e) {
-      await os.dialog.alert(errText(e), { title: 'KherveRef' })
+      await os.dialog.alert(errText(e), { title: 'kRef' })
       return undefined
     } finally {
       writing.current--
@@ -365,7 +365,7 @@ export default function KherveRef({ win, args }: AppProps) {
     }
     const p = l.filePath(a)
     if (!fs.exists(p)) {
-      await os.dialog.alert(`${path.pretty(p)} is missing from the library folder.`, { title: 'KherveRef' })
+      await os.dialog.alert(`${path.pretty(p)} is missing from the library folder.`, { title: 'kRef' })
       return
     }
     if (path.extname(p).toLowerCase() === '.pdf') os.open('khervepdf', { path: p })
@@ -660,7 +660,7 @@ export default function KherveRef({ win, args }: AppProps) {
   // ------------------------------------------------- opening other libraries
 
   const openOther = async () => {
-    const p = await os.dialog.pickFolder({ title: 'Open a KherveRef library (its folder)', startDir: `${HOME}/Documents` })
+    const p = await os.dialog.pickFolder({ title: 'Open a kRef library (its folder)', startDir: `${HOME}/Documents` })
     if (p) await openAt(p)
   }
   const createOther = async () => {
@@ -735,7 +735,7 @@ export default function KherveRef({ win, args }: AppProps) {
       {
         label: 'Reference',
         items: [
-          { label: 'Open PDF in KhervePDF', disabled: !one?.files.length, onClick: () => one && void openFile(one) },
+          { label: 'Open PDF in kPDF', disabled: !one?.files.length, onClick: () => one && void openFile(one) },
           { label: 'Attach PDF…', disabled: !one, onClick: () => one && void attachTo(one) },
           '-',
           { label: 'Look Up Details Online', icon: RefreshCw, disabled: !has, onClick: () => void lookup([...selectedSet]) },
@@ -792,7 +792,7 @@ export default function KherveRef({ win, args }: AppProps) {
     return (
       <div className="k-center kr-app kr-start">
         <BookMarked size={40} className="kr-accent" />
-        <h2>KherveRef</h2>
+        <h2>kRef</h2>
         <p className="k-muted">Open a reference library, or start a new one.</p>
         <div className="kr-row-buttons">
           <button className="k-btn primary" onClick={() => void createOther()}>

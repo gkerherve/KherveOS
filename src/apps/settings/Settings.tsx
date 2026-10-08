@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { Cpu, HardDrive, Info, Palette, Server, Sparkles, type LucideIcon } from 'lucide-react'
 import { os, fs, formatSize, useFsVersion, type AppProps } from '@/os'
 import { UI_SCALES, useSettings } from '@/os/settings'
-import { WALLPAPER, WALLPAPER_FITS, wallpaperCss } from '@/shell/wallpapers'
+import { WALLPAPERS, WALLPAPER_FITS, wallpaperCss, wallpaperOf } from '@/shell/wallpapers'
 import { APPS, GROUPS } from '@/os/registry'
 import { AppIcon } from '@/os/ui/AppIcon'
 import { useAuth, useServer } from '@/os/server'
 import { KHERVEOS_VERSION, PYODIDE_VERSION } from '@/os/version'
+import { AUTHOR, COPYRIGHT } from '@/os/about'
 import { useAppTools } from '@/os/ai/appTools'
 import { McpSection } from './McpSection'
 import { settingsAiTools } from './aiTools'
@@ -66,7 +67,7 @@ export default function Settings({ win, args }: AppProps) {
 }
 
 function Appearance() {
-  const { wallpaperOpacity, wallpaperFit, uiScale, desktopIcons, dockZoom, lightApps, set } = useSettings()
+  const { wallpaperOpacity, wallpaperFit, wallpaper, uiScale, desktopIcons, dockZoom, lightApps, set } = useSettings()
 
   return (
     <>
@@ -75,9 +76,24 @@ function Appearance() {
         <span
           className="st-wallpaper-preview"
           // The preview is a small screen: at "Centre" the picture shrinks with it.
-          style={{ background: wallpaperCss(wallpaperFit, `${(1376 / window.innerWidth) * 100}% auto`) }}
+          style={{ background: wallpaperCss(wallpaperFit, `${(2560 / window.innerWidth) * 100}% auto`, wallpaper) }}
         />
-        <span>{WALLPAPER.name}</span>
+        <span>{wallpaperOf(wallpaper).name}</span>
+      </div>
+      <div className="st-wallpaper-grid" role="radiogroup" aria-label="Wallpaper">
+        {WALLPAPERS.map((w) => (
+          <button
+            key={w.id}
+            role="radio"
+            aria-checked={wallpaper === w.id}
+            className={`st-wallpaper-thumb${wallpaper === w.id ? ' on' : ''}`}
+            title={w.name}
+            onClick={() => set({ wallpaper: w.id })}
+            style={{ background: wallpaperCss('fill', undefined, w.id) }}
+          >
+            <span className="st-wallpaper-name">{w.name}</span>
+          </button>
+        ))}
       </div>
 
       <div className="st-inline st-slider">
@@ -107,8 +123,8 @@ function Appearance() {
       <h2>Dock</h2>
       <label className="st-inline st-slider">
         Magnification
-        <input type="range" min={48} max={128} step={4} value={dockZoom} onChange={(e) => set({ dockZoom: Number(e.target.value) })} />
-        <span className="k-muted">{dockZoom <= 48 ? 'Off' : dockZoom >= 128 ? 'Maximum' : `${dockZoom} px`}</span>
+        <input type="range" min={48} max={192} step={4} value={dockZoom} onChange={(e) => set({ dockZoom: Number(e.target.value) })} />
+        <span className="k-muted">{dockZoom <= 48 ? 'Off' : dockZoom >= 192 ? 'Maximum' : `${dockZoom} px`}</span>
       </label>
 
       <h2>Desktop</h2>
@@ -289,13 +305,13 @@ function PythonSection() {
       <h2>Python</h2>
       <div className="st-card">
         <div className="st-stat"><b>Pyodide {PYODIDE_VERSION}</b> — CPython 3.14 compiled to WebAssembly</div>
-        <div className="k-muted">Runs entirely in your browser, in the background, one process per Terminal or KherveBook window.</div>
+        <div className="k-muted">Runs entirely in your browser, in the background, one process per Terminal or kBook window.</div>
       </div>
       <p>
         The first time Python starts it downloads about 10 MB from <code>cdn.jsdelivr.net</code>; after that the browser keeps it.
         Packages load automatically when you import them: numpy, scipy, pandas, matplotlib, scikit-learn, sympy, h5py, lxml,
         Pillow and many more. Pure-Python packages from PyPI install with <code>pip install name</code> in the Terminal or
-        <code> %pip install name</code> in KherveBook.
+        <code> %pip install name</code> in kBook.
       </p>
       <p className="k-muted">
         Python sees your home folder at <code>/home/user</code>: files it writes appear in Files straight away. Not available yet:
@@ -327,12 +343,40 @@ function About() {
           Ktools
         </a>{' '}
         desktop in your browser:
-        KherveFitting, KherveSheet, KherveTeX, KherveSlide, KhervePDF, KherveRef, KherveNote, KherveBook and more, for
+        KherveFitting, kSheet, kTeX, kSlide, kPDF, kRef, kNote, kBook and more, for
         anyone, on any computer, without installing anything.
+      </p>
+      <h3>The author</h3>
+      <div className="st-author">
+        <div className="st-author-avatar" aria-hidden>
+          {AUTHOR.name.split(' ').map((w) => w[0]).join('')}
+        </div>
+        <div>
+          <div className="st-author-name">{AUTHOR.name}</div>
+          <div className="st-author-affil">{AUTHOR.affiliation}</div>
+          <div className="k-muted">{AUTHOR.role}</div>
+        </div>
+      </div>
+      <p>{AUTHOR.about}</p>
+      <p>
+        {AUTHOR.links.map((l, i) => (
+          <span key={l.url}>
+            {i > 0 && ' · '}
+            <a
+              href={l.url}
+              onClick={(e) => {
+                e.preventDefault()
+                os.openUrl(l.url)
+              }}
+            >
+              {l.label}
+            </a>
+          </span>
+        ))}
       </p>
       <p>
         KherveOS is free software: you can use it, study it, share it and improve it under the terms of the GNU General
-        Public License, version 3 or later.
+        Public License, version 3 or later. <span className="k-muted">{COPYRIGHT}</span>
       </p>
       <h3>Built with</h3>
       <ul className="st-credits">

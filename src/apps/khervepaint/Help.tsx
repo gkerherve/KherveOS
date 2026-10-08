@@ -20,7 +20,7 @@ const SECTIONS: [string, string[]][] = [
     'Save selection as object… keeps the selection as an SVG in ~/Documents/KhervePaint Library (type Folder/Name for sub-folders) to insert again later.',
   ]],
   ['Files', [
-    'Save writes editable SVG, the desktop’s default format; .kpaint (the desktop’s JSON) is offered too. Both open in the desktop KhervePaint and back here.',
+    'Save writes editable SVG, the desktop’s default format; .kpaint (the desktop’s JSON) is offered too. Both open in the desktop kPaint and back here.',
     'Export writes a flattened PNG (with its dpi) or a PDF the figure’s real size. Drawing Size sets the page in px, inches or mm with journal column presets, or fits the page to the drawing.',
   ]],
 ]
@@ -44,7 +44,7 @@ export function HelpDialog({ onClose }: { onClose(): void }) {
   return (
     <div className="kp-modal-back" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="kp-dialog kp-help" role="dialog" onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }} tabIndex={-1}>
-        <div className="kp-dialog-title">KhervePaint guide</div>
+        <div className="kp-dialog-title">kPaint guide</div>
         <div className="kp-help-body">
           {SECTIONS.map(([title, paras]) => (
             <section key={title}>

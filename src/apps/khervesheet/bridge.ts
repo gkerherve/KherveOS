@@ -120,7 +120,7 @@ export class SheetBridge {
   dispose() {
     this.disposed = true
     this.unsub()
-    for (const j of this.queue) j.reject(new Error('KherveSheet was closed.'))
+    for (const j of this.queue) j.reject(new Error('kSheet was closed.'))
     this.queue = []
     this.kernel.dispose()
   }

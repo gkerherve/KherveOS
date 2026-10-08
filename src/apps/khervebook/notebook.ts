@@ -1721,7 +1721,7 @@ export class Notebook {
       if (typeof spec.data === 'string') await os.fs.writeText(target, spec.data, { mkdirs: true })
       else await os.fs.writeBytes(target, spec.data, { mkdirs: true })
     } catch (e) {
-      await os.dialog.alert(`Could not hand the cell to ${spec.label}.\n\n${errorText(e)}`, { title: 'KherveBook' })
+      await os.dialog.alert(`Could not hand the cell to ${spec.label}.\n\n${errorText(e)}`, { title: 'kBook' })
       return
     }
     const written = typeof spec.data === 'string' ? spec.data : bytesToB64(spec.data)
@@ -1754,15 +1754,15 @@ export class Notebook {
     const id = c.id
     switch (app) {
       case 'khervepy':
-        return { label: 'KhervePY', name: `${stem}.py`, data: c.source, reload: (d) => this.replaceSource(id, text(d)) }
+        return { label: 'kPY', name: `${stem}.py`, data: c.source, reload: (d) => this.replaceSource(id, text(d)) }
       case 'khervepaint':
-        return { label: 'KhervePaint', name: `${stem}.svg`, data: c.source.trim() ? c.source : BLANK_SVG, reload: (d) => this.replaceSource(id, text(d)) }
+        return { label: 'kPaint', name: `${stem}.svg`, data: c.source.trim() ? c.source : BLANK_SVG, reload: (d) => this.replaceSource(id, text(d)) }
       case 'khervesheet': {
         // The web KherveSheet reads CSV: the sheet shown goes over as values (formulas stay here).
         const book = parseWorkbook(c.source)
         const i = Math.max(0, book.sheets.findIndex((s) => s.name === book.active))
         return {
-          label: 'KherveSheet',
+          label: 'kSheet',
           name: `${stem}.csv`,
           data: sheetCsv(book, i),
           reload: (d) => this.editSheet(id, (b) => csvIntoSheet(b, i, text(d))),
@@ -1772,7 +1772,7 @@ export class Notebook {
         const m = parseMol(c.source)
         const kmol = Object.keys(m.kmol).length ? m.kmol : { format: 'khervemol', version: 5 }
         return {
-          label: 'KherveMol',
+          label: 'kMol',
           name: `${stem}.kmol`,
           data: JSON.stringify(kmol, null, 1),
           reload: (d) => {
@@ -1799,7 +1799,7 @@ export class Notebook {
           return null
         }
         return {
-          label: app === 'khervefitting' ? 'KherveFitting' : 'KherveTeX',
+          label: app === 'khervefitting' ? 'KherveFitting' : 'kTeX',
           name: f.name,
           data: bytes,
           reload: (d) => {
@@ -1860,7 +1860,7 @@ export class Notebook {
         { label: 'Cancel', value: 'cancel' },
         { label: 'Save', value: 'save', primary: true },
       ],
-      { title: 'KherveBook' },
+      { title: 'kBook' },
     )
     const ok = choice === 'save' ? await this.save() : choice === 'discard'
     if (!ok) this.refocusSoon()
@@ -1900,7 +1900,7 @@ export class Notebook {
         this.set({ cells: [c], selectedId: c.id })
       }
       this.set({ loading: false })
-      await os.dialog.alert(`Could not open "${basename(path)}".\n\n${errorText(e)}`, { title: 'KherveBook' })
+      await os.dialog.alert(`Could not open "${basename(path)}".\n\n${errorText(e)}`, { title: 'kBook' })
       return false
     }
   }
@@ -1914,7 +1914,7 @@ export class Notebook {
       this.applyDoc(doc, { path: null, origin: null, untitled: basename(withExt(target, '')) })
       this.changed()
     } catch (e) {
-      await os.dialog.alert(`Could not import "${basename(target)}".\n\n${errorText(e)}`, { title: 'KherveBook' })
+      await os.dialog.alert(`Could not import "${basename(target)}".\n\n${errorText(e)}`, { title: 'kBook' })
     }
   }
 
@@ -1933,13 +1933,13 @@ export class Notebook {
         this.set({ cells: [c], selectedId: c.id })
       }
       this.set({ loading: false })
-      if (file !== WELCOME_FILE) await os.dialog.alert(`Could not open the example "${title}".\n\n${errorText(e)}`, { title: 'KherveBook' })
+      if (file !== WELCOME_FILE) await os.dialog.alert(`Could not open the example "${title}".\n\n${errorText(e)}`, { title: 'kBook' })
       return false
     }
   }
 
   openWelcome(ask = true) {
-    return this.openExample(WELCOME_FILE, 'Welcome to KherveBook', ask)
+    return this.openExample(WELCOME_FILE, 'Welcome to kBook', ask)
   }
 
   private applyDoc(doc: NotebookDoc, at: { path: string | null; origin: string | null; untitled: string | null }) {
@@ -1976,8 +1976,8 @@ export class Notebook {
     const target = await os.dialog.saveFile({ title: 'Save notebook', extensions: ['.kbook'], startDir: path || origin ? dir : NOTEBOOKS, defaultName: suggestion })
     if (!target) return false
     if (extname(target) === '.ipynb') {
-      await os.dialog.alert('KherveBook saves notebooks as .kbook files. To write a Jupyter notebook, use File → Export as Jupyter/Colab.', {
-        title: 'KherveBook',
+      await os.dialog.alert('kBook saves notebooks as .kbook files. To write a Jupyter notebook, use File → Export as Jupyter/Colab.', {
+        title: 'kBook',
       })
       return false
     }
@@ -1990,7 +1990,7 @@ export class Notebook {
       await this.materialize(target)
       await os.fs.writeText(target, serializeKbook(this.state.cells.map(cellData), this.docExtra, this.docVersion), { mkdirs: true })
     } catch (e) {
-      await os.dialog.alert(`Could not save "${basename(target)}".\n\n${errorText(e)}`, { title: 'KherveBook' })
+      await os.dialog.alert(`Could not save "${basename(target)}".\n\n${errorText(e)}`, { title: 'kBook' })
       return false
     }
     this.set({ path: target, origin: target, untitled: null, dirty: this.edits !== at })
@@ -2030,7 +2030,7 @@ export class Notebook {
       await os.fs.writeText(target, toIpynb(cells, pyVersion), { mkdirs: true })
       this.showFlash(`Exported ${pretty(target)}`)
     } catch (e) {
-      await os.dialog.alert(`Could not export "${basename(target)}".\n\n${errorText(e)}`, { title: 'KherveBook' })
+      await os.dialog.alert(`Could not export "${basename(target)}".\n\n${errorText(e)}`, { title: 'kBook' })
     }
   }
 
@@ -2048,7 +2048,7 @@ export class Notebook {
       this.focus(made[made.length - 1].id, 'command')
       return true
     } catch (e) {
-      await os.dialog.alert(errorText(e), { title: 'KherveBook' })
+      await os.dialog.alert(errorText(e), { title: 'kBook' })
       return false
     }
   }

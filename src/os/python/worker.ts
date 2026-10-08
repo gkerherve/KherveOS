@@ -9,7 +9,20 @@
 import runtimeSource from './runtime.py?raw'
 import { PYODIDE_VERSION } from '../version'
 
-const INDEX_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`
+const CDN_INDEX = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`
+// A copy next to the OS (made by `npm run pyodide:fetch`), for offline use. Used only when its
+// marker file says it is complete; otherwise the CDN.
+const LOCAL_INDEX = `${import.meta.env.BASE_URL}pyodide/v${PYODIDE_VERSION}/full/`
+
+async function indexUrl(): Promise<string> {
+  try {
+    const r = await fetch(`${LOCAL_INDEX}offline.json`, { cache: 'no-cache' })
+    if (r.ok && (await r.json())?.version === PYODIDE_VERSION) return LOCAL_INDEX
+  } catch {
+    // Not there (or not JSON): use the CDN.
+  }
+  return CDN_INDEX
+}
 const HOME = '/home/user'
 
 // Minimal typings for the parts of Pyodide we use.
@@ -93,6 +106,7 @@ function streamWriter(kind: 'stdout' | 'stderr') {
 
 async function init() {
   if (py) return py.version
+  const INDEX_URL = await indexUrl()
   const mod = (await import(/* @vite-ignore */ `${INDEX_URL}pyodide.mjs`)) as {
     loadPyodide(opts: { indexURL: string; env?: Record<string, string> }): Promise<Pyodide>
   }

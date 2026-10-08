@@ -26,7 +26,7 @@ function repoFor(path: string): string {
 
 /** desktop git_backend._signature: the user's identity, else "KherveBook". */
 async function author(dir: string): Promise<git.Identity> {
-  return (await git.resolveIdentity(dir)) ?? { name: 'KherveBook', email: 'khervebook@local' }
+  return (await git.resolveIdentity(dir)) ?? { name: 'kBook', email: 'khervebook@local' }
 }
 
 /** Paths (relative to the repository) of a notebook's files: the .kbook and its "<stem>_files" folder (desktop commit_all with file_stem). */
@@ -87,7 +87,7 @@ function showPushFailure(msg: string) {
   const low = msg.toLowerCase()
   const hints: string[] = []
   if (low.includes('auth') || low.includes('401') || low.includes('403')) {
-    hints.push('GitHub needs a Personal Access Token: create one (classic, with the "repo" scope) and add it in KherveOS Settings › Git, or in KhervePY.')
+    hints.push('GitHub needs a Personal Access Token: create one (classic, with the "repo" scope) and add it in KherveOS Settings › Git, or in kPY.')
   } else if (low.includes('not found') || low.includes('404')) {
     hints.push('GitHub says the repository does not exist. Check that the URL in Git → Connect to GitHub matches the one on the repo’s GitHub page (Code → HTTPS).')
   } else if (low.includes('pull first') || low.includes('rejected') || low.includes('fast')) {
@@ -118,7 +118,7 @@ export async function snapshotAndUpload(path: string | null, save: (message: str
     return
   }
   if (!git.findRoot(dirname(path))) {
-    await os.dialog.alert('This notebook is not in a Git repository, so there is no snapshot to make: Save (Ctrl+S) keeps it. (Repositories are made in KhervePY.)', {
+    await os.dialog.alert('This notebook is not in a Git repository, so there is no snapshot to make: Save (Ctrl+S) keeps it. (Repositories are made in kPY.)', {
       title: 'Save Snapshot & Upload',
     })
     return
@@ -137,7 +137,7 @@ export async function downloadLatest(path: string | null, reload: () => Promise<
   }
   const repo = repoFor(path)
   if (!git.findRoot(dirname(path)) || !(await git.getRemoteUrl(repo))) {
-    await os.dialog.alert('This notebook is not in a Git repository connected to a cloud service. (Repositories are made and connected in KhervePY.)', {
+    await os.dialog.alert('This notebook is not in a Git repository connected to a cloud service. (Repositories are made and connected in kPY.)', {
       title: 'Download latest',
     })
     return
@@ -152,7 +152,7 @@ export async function downloadLatest(path: string | null, reload: () => Promise<
     }
   } catch (e) {
     await os.dialog.alert(
-      `${errText(e)}\n\nWhat you can try:\n  • Check your internet connection\n  • Make sure the cloud URL is correct (Git → Connect to GitHub)\n  • If the problem says "diverged", resolve the merge in KhervePY's Git panel`,
+      `${errText(e)}\n\nWhat you can try:\n  • Check your internet connection\n  • Make sure the cloud URL is correct (Git → Connect to GitHub)\n  • If the problem says "diverged", resolve the merge in kPY's Git panel`,
       { title: 'Download failed' },
     )
   }
@@ -228,7 +228,7 @@ function RemoteEditor({ repo }: { repo: string }) {
       </div>
       {msg && <p className="nb-git-note">{msg}</p>}
       <p className="k-muted">
-        For a private repository or to upload, KherveOS needs a GitHub token (Settings › Git, or KhervePY’s Git panel). Tokens only go to github.com.
+        For a private repository or to upload, KherveOS needs a GitHub token (Settings › Git, or kPY’s Git panel). Tokens only go to github.com.
       </p>
     </div>
   )
@@ -237,7 +237,7 @@ function RemoteEditor({ repo }: { repo: string }) {
 /** Git → Connect to GitHub / GitLab… (desktop RemoteDialog). */
 export async function connectToCloud(path: string | null) {
   if (!path) {
-    await os.dialog.alert('You need to save your notebook first so KherveBook knows where to create the connection.\n\nUse File → Save (Ctrl+S), then try again.', {
+    await os.dialog.alert('You need to save your notebook first so kBook knows where to create the connection.\n\nUse File → Save (Ctrl+S), then try again.', {
       title: 'Connect to cloud',
     })
     return
@@ -425,7 +425,7 @@ export async function showHistory(path: string | null, reload: () => Promise<voi
   }
   const repo = git.findRoot(dirname(path))
   if (!repo || !(await git.log(repo, { depth: 1 })).length) {
-    await os.dialog.alert('No snapshots yet. Every time you save, KherveBook automatically creates a snapshot.\n\nSave your notebook and come back to see its history.', {
+    await os.dialog.alert('No snapshots yet. Every time you save, kBook automatically creates a snapshot.\n\nSave your notebook and come back to see its history.', {
       title,
     })
     return

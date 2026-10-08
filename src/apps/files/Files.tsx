@@ -18,7 +18,7 @@ import './files.css'
 type SortKey = 'name' | 'mtime' | 'size'
 
 const KINDS: Record<string, string> = {
-  '.txt': 'Text', '.md': 'Markdown', '.py': 'Python script', '.kbook': 'KherveBook notebook', '.ipynb': 'Jupyter notebook',
+  '.txt': 'Text', '.md': 'Markdown', '.py': 'Python script', '.kbook': 'kBook notebook', '.ipynb': 'Jupyter notebook',
   '.json': 'JSON', '.csv': 'CSV table', '.html': 'Web page', '.pdf': 'PDF document', '.png': 'PNG image', '.jpg': 'JPEG image',
   '.jpeg': 'JPEG image', '.gif': 'GIF image', '.svg': 'SVG image', '.webp': 'WebP image', '.tex': 'LaTeX source', '.zip': 'ZIP archive',
 }

@@ -119,7 +119,7 @@ export class MolBridge {
   dispose() {
     this.disposed = true
     this.unsub()
-    for (const j of this.queue) j.reject(new Error('KherveMol was closed.'))
+    for (const j of this.queue) j.reject(new Error('kMol was closed.'))
     this.queue = []
     this.kernel.dispose()
   }
@@ -150,7 +150,7 @@ export class MolBridge {
     await this.kernel.start()
     const code = `${INSTALL}_km_install(__import__('json').loads(${pyStr(JSON.stringify(files))}), ${pyStr(ROOT)})\ndel _km_install`
     const r = await this.kernel.runCell(code)
-    if (!r.ok) throw new Error(r.error?.message ?? 'The KherveMol engine could not be installed.')
+    if (!r.ok) throw new Error(r.error?.message ?? 'The kMol engine could not be installed.')
     this.installedFor = this.kernel
     this.installs++
   }

@@ -453,7 +453,7 @@ export default function KherveNote({ win, args }: AppProps) {
         setDirty(false)
         return true
       } catch (e) {
-        await os.dialog.alert(`The note could not be saved: ${errorText(e)}`, { title: 'KherveNote' })
+        await os.dialog.alert(`The note could not be saved: ${errorText(e)}`, { title: 'kNote' })
         return false
       }
     })()
@@ -480,7 +480,7 @@ export default function KherveNote({ win, args }: AppProps) {
       const { note, assets: a } = readKnote(await fs.readBytes(p))
       loadInto(note, a, p)
     } catch (e) {
-      await os.dialog.alert(`Could not open ${path.basename(p)}: ${errorText(e)}`, { title: 'KherveNote' })
+      await os.dialog.alert(`Could not open ${path.basename(p)}: ${errorText(e)}`, { title: 'kNote' })
     }
   }
 
@@ -702,7 +702,7 @@ export default function KherveNote({ win, args }: AppProps) {
   async function openAttachment(asset: string, name: string) {
     const data = assets.current.get(asset)
     if (!data) {
-      await os.dialog.alert(`${name} is not in this note's file any more.`, { title: 'KherveNote' })
+      await os.dialog.alert(`${name} is not in this note's file any more.`, { title: 'kNote' })
       return
     }
     const n = noteRef.current
@@ -726,7 +726,7 @@ export default function KherveNote({ win, args }: AppProps) {
 
   function attachmentMenu(e: MouseEvent, pos: number, asset: string, name: string) {
     os.contextMenu(e, [
-      { label: /\.pdf$/i.test(name) ? 'Open in KhervePDF' : 'Open', onClick: () => void openAttachment(asset, name) },
+      { label: /\.pdf$/i.test(name) ? 'Open in kPDF' : 'Open', onClick: () => void openAttachment(asset, name) },
       {
         label: 'Save a copy to the drive…',
         onClick: async () => {
@@ -1287,7 +1287,7 @@ export default function KherveNote({ win, args }: AppProps) {
     },
     add_text: async (a) => {
       const ed = edRef.current
-      if (!ed) throw new Error('KherveNote is not ready yet.')
+      if (!ed) throw new Error('kNote is not ready yet.')
       const text = String(a.text ?? '')
       if (!text.trim()) throw new Error('"text" is empty.')
       const kindArg = typeof a.kind === 'string' ? a.kind : 'text'
@@ -1348,7 +1348,7 @@ export default function KherveNote({ win, args }: AppProps) {
   useEffect(() => {
     win.setCloseGuard(async () => {
       if (!h.current || (await h.current.leaveNote())) return true
-      return os.dialog.confirm('The note could not be saved. Close KherveNote anyway?', { title: 'KherveNote', okLabel: 'Close', danger: true })
+      return os.dialog.confirm('The note could not be saved. Close kNote anyway?', { title: 'kNote', okLabel: 'Close', danger: true })
     })
     return () => win.setCloseGuard(null)
   }, [win])
@@ -1379,7 +1379,7 @@ export default function KherveNote({ win, args }: AppProps) {
   const note = noteRef.current
   const label = note.meta.title.trim() || (filePath ? stemOf(filePath) : 'New note')
   useEffect(() => {
-    win.setTitle(`${dirty ? '• ' : ''}${label} — KherveNote`)
+    win.setTitle(`${dirty ? '• ' : ''}${label} — kNote`)
   }, [win, dirty, label])
 
   // ------------------------------------------------------------- menus
@@ -1508,7 +1508,7 @@ export default function KherveNote({ win, args }: AppProps) {
       items: [
         { label: 'Example notes', onClick: () => void examples() },
         { label: 'User manual', icon: HelpCircle, shortcut: 'F1', onClick: () => os.openUrl(MANUAL_URL) },
-        { label: 'KherveNote on GitHub', onClick: () => os.openUrl(REPO_URL) },
+        { label: 'kNote on GitHub', onClick: () => os.openUrl(REPO_URL) },
       ],
     },
   ]

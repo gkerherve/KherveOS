@@ -93,10 +93,10 @@ function writeSetting(key: string, value: string) {
   }
 }
 
-/** The desktop opens with the PDF in its own window; a small screen has no room for two. */
+/** Opens in Visual only (the document panel closed); a PDF in its own window stays a choice. A small screen has no room for two. */
 function initialLayout(): Layout {
   const saved = readSetting(LAYOUT_KEY) as Layout | null
-  const mode = saved && ['side', 'window', 'visual', 'page'].includes(saved) ? saved : 'window'
+  const mode = saved && ['side', 'window', 'visual', 'page'].includes(saved) ? saved : 'visual'
   if (isSmallScreen()) return mode === 'window' || mode === 'side' ? 'visual' : mode
   return mode
 }
@@ -217,7 +217,7 @@ function MainWindow({ win, args }: AppProps) {
   const [tab, setTab] = useState<Tab>('visual')
   const [layout, setLayout] = useState<Layout>(initialLayout)
   const [pdfWidth, setPdfWidth] = useState(62)
-  const [docsVisible, setDocsVisible] = useState(layout !== 'page')
+  const [docsVisible, setDocsVisible] = useState(false)
   const [docsFloat, setDocsFloat] = useState<{ x: number; y: number } | null>(null)
   const [pdfZoom, setPdfZoom] = useState(100)
   const [pdfFitZoom, setPdfFitZoom] = useState(100)
@@ -589,9 +589,9 @@ function MainWindow({ win, args }: AppProps) {
         }
       }
       applyBundle({ doc, files: pictures, bib: '', project: null }, null, `${docStem(path.basename(p))} (imported)`, dir)
-      os.notify({ title: `Imported ${path.basename(p)}`, body: 'Save it to keep it as a KherveTeX document.' })
+      os.notify({ title: `Imported ${path.basename(p)}`, body: 'Save it to keep it as a kTeX document.' })
     } catch (e) {
-      await os.dialog.alert(`Could not import ${path.basename(p)}: ${errorText(e)}`, { title: 'KherveTeX' })
+      await os.dialog.alert(`Could not import ${path.basename(p)}: ${errorText(e)}`, { title: 'kTeX' })
     } finally {
       setLoading(false)
     }
@@ -691,7 +691,7 @@ function MainWindow({ win, args }: AppProps) {
       else {
         const text = strFromU8(bytes)
         const raw = JSON.parse(text) as { type?: unknown; children?: unknown } | null
-        if (!raw || (raw.type !== 'Document' && !Array.isArray(raw.children))) throw new Error('this JSON file is not a KherveTeX document')
+        if (!raw || (raw.type !== 'Document' && !Array.isArray(raw.children))) throw new Error('this JSON file is not a kTeX document')
         bundle = { doc: fromJson(text), files: new Map(), bib: '', project: null }
       }
       rememberRecent(p)
@@ -706,7 +706,7 @@ function MainWindow({ win, args }: AppProps) {
       const cached = path.join(path.dirname(p), `${docStem(name)}.pdf`)
       if (fs.isFile(cached)) showPdfBytes(await fs.readBytes(cached))
     } catch (e) {
-      await os.dialog.alert(`Could not open ${path.basename(p)}: ${errorText(e)}`, { title: 'KherveTeX' })
+      await os.dialog.alert(`Could not open ${path.basename(p)}: ${errorText(e)}`, { title: 'kTeX' })
     } finally {
       setLoading(false)
     }
@@ -757,7 +757,7 @@ function MainWindow({ win, args }: AppProps) {
         await fs.writeBytes(p, writeBundle({ doc: m, files: files.current, bib, project: projectJson }))
       }
     } catch (e) {
-      await os.dialog.alert(`Could not save: ${errorText(e)}`, { title: 'KherveTeX' })
+      await os.dialog.alert(`Could not save: ${errorText(e)}`, { title: 'kTeX' })
       return false
     }
     savedJson.current = toJson(m)
@@ -1520,7 +1520,7 @@ function MainWindow({ win, args }: AppProps) {
     live.current.layout = mode
     live.current.showPdf = !visual
     setLayout(mode)
-    setDocsVisible(mode !== 'page')
+    setDocsVisible(mode === 'side' || mode === 'window')
     if (mode === 'window') openPdfWindow()
     else closePdfWindow()
     setAuto(!visual)
@@ -1538,7 +1538,7 @@ function MainWindow({ win, args }: AppProps) {
     const id = os.open('khervetex', { pdfOf: win.id, _new: Date.now() })
     pdfWinId.current = id
     updateLink(win.id, { pdfWinId: id })
-    if (id) placeSideBySide(id)
+    if (id) placeSmall(id)
     win.focus()
   }
 
@@ -1553,22 +1553,14 @@ function MainWindow({ win, args }: AppProps) {
     else openPdfWindow()
   }
 
-  /** The editor on the left, the PDF window beside it on the right — the desktop's first view. */
-  function placeSideBySide(pdfId: string) {
+  /** The PDF window opens small, in the top right corner. The editor's own window keeps its size and place. */
+  function placeSmall(pdfId: string) {
     const ws = useWindows.getState()
-    const me = ws.windows.find((w) => w.id === win.id)
     const desk = desktopSize()
-    if (!me || desk.w < 900) return
-    const h = desk.h - 16
-    if (me.maximized || me.snapped) {
-      const w = Math.round(desk.w * 0.4)
-      ws.setBounds(pdfId, { x: desk.w - w - 8, y: 8, w, h })
-      return
-    }
-    const total = desk.w - 24
-    const mainW = Math.round(total * 0.6)
-    ws.setBounds(win.id, { x: 8, y: 8, w: mainW, h })
-    ws.setBounds(pdfId, { x: 16 + mainW, y: 8, w: total - mainW, h })
+    if (desk.w < 900) return
+    const w = Math.min(520, Math.round(desk.w * 0.36))
+    const h = Math.min(640, desk.h - 80)
+    ws.setBounds(pdfId, { x: desk.w - w - 16, y: 40, w, h })
   }
 
 
@@ -1649,7 +1641,7 @@ function MainWindow({ win, args }: AppProps) {
 
   function adoptImported(doc: Document, name: string, dir: string | null, pictures = new Map<string, Uint8Array>()) {
     applyBundle({ doc, files: pictures, bib: '', project: null }, null, `${name} (imported)`, dir)
-    os.notify({ title: `Imported ${name}`, body: 'Save it to keep it as a KherveTeX document.' })
+    os.notify({ title: `Imported ${name}`, body: 'Save it to keep it as a kTeX document.' })
   }
 
   async function importMdPath(p: string) {
@@ -1753,11 +1745,11 @@ function MainWindow({ win, args }: AppProps) {
     // with the same khervetex_ tools KherveAI uses. Settings › AI & MCP shows how to connect them.
     const go = await os.dialog.choose(
       'Claude can edit this document with KherveTeX\'s tools (read it, rewrite sections, replace the whole LaTeX, compile, save): ' +
-        'in KherveAI, or from Claude Code / Claude Desktop through the KherveOS MCP server.',
+        'in kAI, or from Claude Code / Claude Desktop through the KherveOS MCP server.',
       [
         { label: 'Cancel', value: 'cancel' },
         { label: 'MCP settings…', value: 'mcp' },
-        { label: 'Open KherveAI', value: 'ai', primary: true },
+        { label: 'Open kAI', value: 'ai', primary: true },
       ],
       { title: 'Connect to Claude' },
     )
@@ -1864,7 +1856,7 @@ function MainWindow({ win, args }: AppProps) {
       !cited.size
         ? 'This document cites nothing yet.'
         : missing.length
-          ? `${missing.length} cited key${missing.length > 1 ? 's are' : ' is'} not defined by any KherveRef library or bibliography file:\n\n${missing.join(', ')}`
+          ? `${missing.length} cited key${missing.length > 1 ? 's are' : ' is'} not defined by any kRef library or bibliography file:\n\n${missing.join(', ')}`
           : `All ${cited.size} cited key${cited.size > 1 ? 's are' : ' is'} defined.`,
       { title: 'Check citations' },
     )
@@ -1891,7 +1883,7 @@ function MainWindow({ win, args }: AppProps) {
     const id = await git.resolveIdentity(root)
     if (id) return id
     const u = useAuth.getState().user
-    return { name: u?.display_name || u?.username || 'KherveTeX', email: `${u?.username || 'khervetex'}@kherveos.local` }
+    return { name: u?.display_name || u?.username || 'kTeX', email: `${u?.username || 'khervetex'}@kherveos.local` }
   }
 
   /** _git_snapshot: commit the saved files (and upload them when a cloud is connected). */
@@ -1981,7 +1973,7 @@ function MainWindow({ win, args }: AppProps) {
   }
 
   async function configureRemotes() {
-    if (!needSaved('Connect to cloud', 'You need to save your document first so KherveTeX knows where to create the connection.\n\nUse File → Save (⌘S), then try again.')) return
+    if (!needSaved('Connect to cloud', 'You need to save your document first so kTeX knows where to create the connection.\n\nUse File → Save (⌘S), then try again.')) return
     const dir = path.dirname(live.current.filePath!)
     let root = git.findRoot(dir)
     if (!root) {
@@ -2003,7 +1995,7 @@ function MainWindow({ win, args }: AppProps) {
     }
     const root = git.findRoot(path.dirname(fp))
     if (!root) {
-      await os.dialog.alert('No snapshots yet. Every time you save, KherveTeX automatically creates a snapshot.\n\nSave your document and come back here to see its history.', { title: 'Version history' })
+      await os.dialog.alert('No snapshots yet. Every time you save, kTeX automatically creates a snapshot.\n\nSave your document and come back here to see its history.', { title: 'Version history' })
       return
     }
     showDialog((close) => (
@@ -2117,7 +2109,7 @@ function MainWindow({ win, args }: AppProps) {
       await flushChapter()
       if (p.idx !== 0) await writeProjectJson(p.mainPath, p.proj)
     } catch (e) {
-      await os.dialog.alert(`Could not save the project: ${errorText(e)}`, { title: 'KherveTeX' })
+      await os.dialog.alert(`Could not save the project: ${errorText(e)}`, { title: 'kTeX' })
       return false
     }
     const saved = [p.mainPath]
@@ -2616,7 +2608,7 @@ function MainWindow({ win, args }: AppProps) {
     [],
   )
 
-  const title = `KherveTeX — ${docName}`
+  const title = `kTeX — ${docName}`
   useEffect(() => {
     win.setTitle(`${dirty ? '• ' : ''}${title}`)
   }, [win, title, dirty])
@@ -2712,7 +2704,7 @@ function MainWindow({ win, args }: AppProps) {
   /** An AI edit: the new document goes into the editor as one undo step; the Code tab and the PDF follow. */
   function applyFromAi(doc: Document) {
     const ed = edRef.current
-    if (!ed || ed.isDestroyed) throw new Error('The KherveTeX editor is not ready.')
+    if (!ed || ed.isDestroyed) throw new Error('The kTeX editor is not ready.')
     dropCodeDraft()
     setCodeError(null)
     relinkFigures(doc)
@@ -2800,11 +2792,11 @@ function MainWindow({ win, args }: AppProps) {
   /** AI ▸ Ask KherveAI to edit this document…: KherveAI acts on this window with the khervetex_ tools. */
   async function askKherveAi() {
     const text = await os.dialog.prompt(
-      'What should KherveAI do with this document? It edits it here, in the editor, and recompiles the PDF (Ctrl+Z undoes each change).',
-      { title: 'Ask KherveAI', okLabel: 'Ask', defaultValue: '' },
+      'What should kAI do with this document? It edits it here, in the editor, and recompiles the PDF (Ctrl+Z undoes each change).',
+      { title: 'Ask kAI', okLabel: 'Ask', defaultValue: '' },
     )
     if (!text?.trim()) return
-    os.open('kherveai', { ask: `${text.trim()}\n\n(In my KherveTeX document "${docName}", window ${win.id}.)`, _ask: Date.now() })
+    os.open('kherveai', { ask: `${text.trim()}\n\n(In my kTeX document "${docName}", window ${win.id}.)`, _ask: Date.now() })
   }
 
   const stableLink = useMemo(
@@ -3029,8 +3021,8 @@ function MainWindow({ win, args }: AppProps) {
     {
       label: 'AI',
       items: [
-        { label: 'Ask KherveAI to edit this document…', onClick: () => void askKherveAi() },
-        { label: 'Open KherveAI', onClick: () => os.open('kherveai') },
+        { label: 'Ask kAI to edit this document…', onClick: () => void askKherveAi() },
+        { label: 'Open kAI', onClick: () => os.open('kherveai') },
         '-',
         { label: 'Connect to Claude…', onClick: () => void connectClaude() },
       ],

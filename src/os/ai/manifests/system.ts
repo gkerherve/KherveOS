@@ -30,7 +30,7 @@ const SETTINGS_TOOLS: AppToolSet = {
       description: 'Change KherveOS appearance settings (give only those to change). Returns the new values. The user can change them back in Settings.',
       inputSchema: object({
         ui_scale: num('Interface size: 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75 or 2 (1 = 100%; percentages like 125 also work).'),
-        dock_magnification: int('How big a Dock icon grows under the pointer, in px: 48 (off) to 128 (maximum).'),
+        dock_magnification: int('How big a Dock icon grows under the pointer, in px: 48 (off) to 192 (maximum).'),
         wallpaper_fit: oneOf(['fill', 'fit', 'centre'], 'fill: cover the screen; fit: show the whole picture; centre: its own size in the middle.'),
         wallpaper_visibility: int('How strongly the wallpaper shows, in percent: 10 to 100.'),
         desktop_icons: bool('Show app shortcuts on the desktop.'),
@@ -42,7 +42,7 @@ const SETTINGS_TOOLS: AppToolSet = {
       description: 'Make an app light or dark (KherveOS is dark; light apps open in white and green). app: an app id or name, or "all" for every app.',
       inputSchema: object(
         {
-          app: str('The app id or name, e.g. "khervesheet" or "KherveSheet", or "all".'),
+          app: str('The app id or name, e.g. "khervesheet" or "kSheet", or "all".'),
           mode: oneOf(['light', 'dark'], 'light or dark.'),
         },
         ['app', 'mode'],
@@ -59,18 +59,18 @@ const SETTINGS_TOOLS: AppToolSet = {
 // KherveAI: its chats (src/apps/kherveai/store.ts), code in src/apps/kherveai/aiTools.ts.
 const KHERVEAI_TOOLS: AppToolSet = {
   app: 'kherveai',
-  name: 'KherveAI',
+  name: 'kAI',
   summary: 'the AI chat app (Ollama, Claude, ChatGPT); start a chat in it or list saved chats.',
   keywords: ['kherveai', 'ai chat', 'ai chats', 'chat history'],
   tools: [
     {
       action: 'new_chat',
-      description: 'Start a new chat in KherveAI with a prompt typed in; it is sent to the chat\'s model only if "send" is true (else the user sends it).',
+      description: 'Start a new chat in kAI with a prompt typed in; it is sent to the chat\'s model only if "send" is true (else the user sends it).',
       inputSchema: object({ prompt: str('The message to type in the new chat.'), send: bool('Send it at once (default false: only typed in).') }, ['prompt']),
     },
     {
       action: 'list_chats',
-      description: 'List the saved KherveAI chats (newest first) with their titles, paths and when they last changed.',
+      description: 'List the saved kAI chats (newest first) with their titles, paths and when they last changed.',
       inputSchema: object({ query: str('Only chats whose title contains this.'), limit: int('At most this many (default 20).') }),
       readOnly: true,
     },

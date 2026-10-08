@@ -100,7 +100,7 @@ export function TokenDialog({ onClose }: { onClose: () => void }) {
         }}
       >
         <p className="kpy-dialog-text">
-          KhervePY uses a GitHub <b>personal access token</b> to clone private repositories, push, fork and list your
+          kPY uses a GitHub <b>personal access token</b> to clone private repositories, push, fork and list your
           repositories. It is kept in this browser only — never in a repository — and is only ever sent to github.com.
         </p>
         <button type="button" className="k-link-btn kpy-left" onClick={() => os.openUrl(git.CREATE_TOKEN_URL)}>

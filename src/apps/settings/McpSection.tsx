@@ -26,7 +26,7 @@ export function McpSection() {
       <p className="k-muted">
         Let AI apps work in KherveOS. Claude Code, Claude Desktop, ChatGPT and other apps that speak MCP (the Model
         Context Protocol) can read and write your files, open, arrange and close windows, run Python, and control every
-        app with its own tools (KherveSheet, Email, Terminal, Settings, the games…), through this browser tab, while it
+        app with its own tools (kSheet, Email, Terminal, Settings, the games…), through this browser tab, while it
         is open. KherveOS asks you before anything is deleted or replaced, a mail or message is sent, or a Terminal
         command runs.
       </p>

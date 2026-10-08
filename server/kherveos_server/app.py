@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket
 
-from . import __version__, ai, auth, clipboard, crashes, db, games, gitproxy, lab, latex, mail, mcp_server, messages, notes_sync, refs, webfetch
+from . import __version__, ai, arduino, auth, clipboard, crashes, db, games, gitproxy, lab, latex, mail, mcp_server, messages, notes_sync, refs, system, webfetch
 from .realtime import hub
 
 
@@ -35,6 +35,8 @@ app.include_router(clipboard.router)
 app.include_router(webfetch.router)
 app.include_router(lab.router)
 app.include_router(notes_sync.router)
+app.include_router(arduino.router)
+app.include_router(system.router)
 
 
 @app.get("/api/health")

@@ -52,14 +52,14 @@ export function settingsAiTools(view: SettingsView): AppTools {
         let v = Number(a.ui_scale)
         if (!Number.isFinite(v)) throw new Error('ui_scale must be a number, e.g. 1.25 (or 125 for 125%).')
         if (v > 2.5) v /= 100 // a percentage
-        if (v < 0.75 || v > 2) throw new Error(`ui_scale ${a.ui_scale} is out of range: choose one of ${UI_SCALES.join(', ')}.`)
+        if (v < 0.6 || v > 2) throw new Error(`ui_scale ${a.ui_scale} is out of range: choose one of ${UI_SCALES.join(', ')}.`)
         patch.uiScale = UI_SCALES.reduce((best, k) => (Math.abs(k - v) < Math.abs(best - v) ? k : best), UI_SCALES[0])
       }
 
       if (a.dock_magnification !== undefined) {
         const v = Number(a.dock_magnification)
-        if (!Number.isFinite(v)) throw new Error('dock_magnification must be a number of px from 48 (off) to 128.')
-        if (v !== 0 && (v < 48 || v > 128)) throw new Error(`dock_magnification ${v} is out of range: 48 (off) to 128 px.`)
+        if (!Number.isFinite(v)) throw new Error('dock_magnification must be a number of px from 48 (off) to 192.')
+        if (v !== 0 && (v < 48 || v > 192)) throw new Error(`dock_magnification ${v} is out of range: 48 (off) to 192 px.`)
         patch.dockZoom = v === 0 ? 48 : Math.round(v / 4) * 4
       }
 

@@ -40,7 +40,7 @@ const TABS: { id: string; title: string; help: string; icon: LucideIcon }[] = [
   { id: PROPS_TAB.id, title: PROPS_TAB.title, help: PROPS_TAB.help, icon: Atom },
 ]
 
-const FOLLOW_HELP = 'Click another element in the KherveDB window and every tab follows it.'
+const FOLLOW_HELP = 'Click another element in the kDB window and every tab follows it.'
 
 function validTab(id: string | null | undefined): string {
   return TABS.some((t) => t.id === id) ? (id as string) : TABS[0].id
@@ -180,7 +180,7 @@ export default function ReferencesWindow({ win, args }: AppProps) {
   if (!meta || !m || !homes) {
     return (
       <div className="k-app kdb-app kdb-refs">
-        <div className="k-center k-muted">{error ? `Could not load the KherveDB data: ${error}` : <LoaderCircle size={22} className="k-spin" />}</div>
+        <div className="k-center k-muted">{error ? `Could not load the kDB data: ${error}` : <LoaderCircle size={22} className="k-spin" />}</div>
       </div>
     )
   }
@@ -205,7 +205,7 @@ export default function ReferencesWindow({ win, args }: AppProps) {
       </div>
 
       <div className="k-toolbar kdb-refs-toolbar">
-        <span className={`kdb-info-sym kdb-cat-${m.cat} kdb-refs-el`} title={`${name} – click another element in the KherveDB window to follow it here`}>
+        <span className={`kdb-info-sym kdb-cat-${m.cat} kdb-refs-el`} title={`${name} – click another element in the kDB window to follow it here`}>
           {element}
         </span>
         <button type="button" className="k-icon-btn" title="Go back to the previous page" aria-label="Back" disabled={!frame || frame.index === 0} onClick={back}>

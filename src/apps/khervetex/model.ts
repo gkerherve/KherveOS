@@ -298,7 +298,7 @@ export function documentFromJson(d: Dict): Document {
 
 export function fromJson(s: string): Document {
   const d = JSON.parse(s) as unknown
-  if (!d || typeof d !== 'object' || Array.isArray(d)) throw new Error('Not a KherveTeX document')
+  if (!d || typeof d !== 'object' || Array.isArray(d)) throw new Error('Not a kTeX document')
   return documentFromJson(d as Dict)
 }
 

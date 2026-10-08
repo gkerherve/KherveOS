@@ -216,7 +216,7 @@ export function EquationEditor({ initial, showLayout, done }: {
   const [showSource, setShowSource] = useState(true)
   const area = useRef<HTMLTextAreaElement>(null)
   const insert = (tex: string) => insertAtCaret(area.current, latex, normalizeTemplate(tex), SQUARE, setLatex)
-  const symGroups = SYMBOL_GROUPS.filter(([g]) => g !== 'KherveTeX')
+  const symGroups = SYMBOL_GROUPS.filter(([g]) => g !== 'kTeX')
   const n = countSlots(latex, SQUARE)
   const preview = latex.trim() ? mathHtml(latex, display || !showLayout ? true : false) : null
   return (

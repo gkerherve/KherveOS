@@ -444,7 +444,7 @@ function buildThemeSpec(d: unknown): ThemeSpec {
 
 /** A deck from parsed JSON (the desktop's _build_deck). Throws when it isn't a presentation. */
 export function buildDeck(d: unknown): Deck {
-  if (!isObj(d) || d.type !== 'Deck') throw new Error('Not a KherveSlide presentation (no "type": "Deck").')
+  if (!isObj(d) || d.type !== 'Deck') throw new Error('Not a kSlide presentation (no "type": "Deck").')
   const out: Obj = { slides: (Array.isArray(d.slides) ? d.slides : []).map(buildSlide) }
   for (const [name, kind, dflt] of DECK) out[name] = convert(kind, get(d, name, dflt), name)
   out.theme_spec = buildThemeSpec(get(d, 'theme_spec', {}))

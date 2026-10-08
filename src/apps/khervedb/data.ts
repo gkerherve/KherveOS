@@ -132,7 +132,7 @@ function parseJson<T>(text: string, file: string): T {
 export function decodeNist(text: string): NistDb {
   const raw = parseJson<RawDb>(text, 'nist.bin')
   if (!raw || typeof raw.n !== 'number' || !Array.isArray(raw.columns) || !raw.cols?.['BE (eV)']) {
-    throw new Error('nist.bin is not a KherveDB database')
+    throw new Error('nist.bin is not a kDB database')
   }
   return new NistDb(raw)
 }
@@ -157,7 +157,7 @@ export function loadAll(base: string): Promise<KdbData> {
     const [bin, json] = await Promise.all([fetchBytes(`${base}nist.bin`), fetchBytes(`${base}elements.json`)])
     const db = decodeNist(await gunzipText(bin))
     const meta = parseJson<ElementsFile>(new TextDecoder().decode(json), 'elements.json')
-    if (!meta?.elements || !meta.overlaps) throw new Error('elements.json is not a KherveDB element table')
+    if (!meta?.elements || !meta.overlaps) throw new Error('elements.json is not a kDB element table')
     loaded = { db, meta }
     return loaded
   })().catch((e: unknown) => {

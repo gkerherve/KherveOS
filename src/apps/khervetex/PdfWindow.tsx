@@ -22,7 +22,7 @@ export default function PdfWindow({ win, mainId }: AppProps & { mainId: string }
   }, [link, win])
 
   useEffect(() => {
-    win.setTitle(`${link?.title ?? 'KherveTeX'} — PDF`)
+    win.setTitle(`${link?.title ?? 'kTeX'} — PDF`)
   }, [win, link?.title])
 
   // The menu bar shows the main window's menus over this window too, as on the desktop.

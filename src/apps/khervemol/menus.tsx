@@ -68,7 +68,7 @@ export function buildMenus(app: MolApp, s: State, catalog: Catalog | null): Menu
     { label: 'Save As…', shortcut: sc('Ctrl+Shift+S'), onClick: () => void app.saveAs() },
     '-',
     { label: 'Export PNG…', shortcut: sc('Ctrl+E'), image: icon(mdiImage), onClick: () => void app.exportPng() },
-    { label: 'Export SVG (KhervePaint)…', shortcut: sc('Ctrl+Shift+E'), image: icon(mdiVectorSquare), onClick: () => void app.exportSvg() },
+    { label: 'Export SVG (kPaint)…', shortcut: sc('Ctrl+Shift+E'), image: icon(mdiVectorSquare), onClick: () => void app.exportSvg() },
     { label: 'Export 3D model (STL, 3MF, OBJ, PLY, GLB)…', shortcut: sc('Ctrl+Shift+3'), image: icon(mdiPrinter3d), onClick: () => void app.exportMeshDialog() },
     { label: 'Export chemistry file (XYZ, MOL, SDF, PDB, CIF)…', shortcut: sc('Ctrl+Shift+X'), image: icon(mdiFileExportOutline), onClick: () => void app.exportChemistry() },
     '-',
@@ -163,7 +163,7 @@ export function buildMenus(app: MolApp, s: State, catalog: Catalog | null): Menu
     { label: 'Check for Updates…', onClick: () => void checkUpdates(s.version) },
     { label: 'Update Automatically', checked: true, disabled: true },
     '-',
-    { label: 'About KherveMol', onClick: () => void app.ask('about') },
+    { label: 'About kMol', onClick: () => void app.ask('about') },
   ]
 
   return {
@@ -186,12 +186,12 @@ async function connectClaude() {
   // As the desktop's AI ▸ Connect to Claude (MCP)…: Claude Desktop / Claude Code drive this
   // window — here through the KherveOS MCP server, with the khervemol_ tools.
   const go = await os.dialog.choose(
-    'Claude can build and edit in KherveMol with its tools (search the library, build molecules, crystals, surfaces, nanostructures, ' +
-      'polymers and reactions, edit atoms and bonds, export): in KherveAI, or from Claude Code / Claude Desktop through the KherveOS MCP server.',
+    'Claude can build and edit in kMol with its tools (search the library, build molecules, crystals, surfaces, nanostructures, ' +
+      'polymers and reactions, edit atoms and bonds, export): in kAI, or from Claude Code / Claude Desktop through the KherveOS MCP server.',
     [
       { label: 'Cancel', value: 'cancel' },
       { label: 'MCP settings…', value: 'mcp' },
-      { label: 'Open KherveAI', value: 'ai', primary: true },
+      { label: 'Open kAI', value: 'ai', primary: true },
     ],
     { title: 'Connect to Claude (MCP)' },
   )
@@ -201,7 +201,7 @@ async function connectClaude() {
 
 async function checkUpdates(version: string) {
   await os.dialog.alert(
-    `KherveMol in KherveOS runs the engine of the desktop KherveMol v${version} and is updated with KherveOS itself — there is nothing to download here.`,
+    `kMol in KherveOS runs the engine of the desktop kMol v${version} and is updated with KherveOS itself — there is nothing to download here.`,
     { title: 'Check for Updates' },
   )
 }
@@ -248,7 +248,7 @@ export function Toolbars({ app, menus }: { app: MolApp; menus: Menus }) {
         <TbButton path={mdiFolderOpen} tip={`Open a .kmol file (${sc('Ctrl+O')})`} onClick={() => void app.openDialog()} />
         <TbButton path={mdiContentSave} tip={`Save (${sc('Ctrl+S')})`} onClick={() => void app.save()} />
         <TbButton path={mdiImage} tip={`Export the current tab as a PNG (${sc('Ctrl+E')})`} onClick={() => void app.exportPng()} />
-        <TbButton path={mdiVectorSquare} tip={`Export an SVG that opens in KhervePaint (${sc('Ctrl+Shift+E')})`} onClick={() => void app.exportSvg()} />
+        <TbButton path={mdiVectorSquare} tip={`Export an SVG that opens in kPaint (${sc('Ctrl+Shift+E')})`} onClick={() => void app.exportSvg()} />
         <TbButton path={mdiPrinter3d} tip={`Export a 3D model: STL, 3MF, OBJ, PLY or GLB (${sc('Ctrl+Shift+3')})`} onClick={() => void app.exportMeshDialog()} />
         <TbButton path={mdiFileExportOutline} tip={`Export XYZ, MOL, SDF, PDB or CIF (${sc('Ctrl+Shift+X')})`} onClick={() => void app.exportChemistry()} />
         <Sep />

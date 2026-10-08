@@ -26,7 +26,7 @@ export const CELL_TYPES: readonly { type: CellType; label: string; convert: stri
   { type: 'js', label: 'JavaScript', convert: 'JavaScript' },
   { type: 'file', label: 'File', convert: 'File' },
   { type: 'kfit', label: 'KFit', convert: 'KFit' },
-  { type: 'ktex', label: 'KherveTeX Doc', convert: 'KherveTeX Document' },
+  { type: 'ktex', label: 'kTeX Doc', convert: 'kTeX Document' },
   { type: 'mol', label: 'Molecule', convert: 'Molecule' },
 ]
 
@@ -202,7 +202,7 @@ export function parseNotebook(text: string): NotebookDoc {
   if ('nbformat' in doc || 'worksheets' in doc) {
     return { kind: 'ipynb', cells: fromIpynb(doc), extra: {}, version: FORMAT_VERSION }
   }
-  if (!Array.isArray(doc.cells)) throw new Error('The file has no cells, so it is not a KherveBook notebook.')
+  if (!Array.isArray(doc.cells)) throw new Error('The file has no cells, so it is not a kBook notebook.')
   const cells: CellData[] = doc.cells.filter(isObj).map((c) => {
     const extra = omit(c, ['type', 'source', ...LAYOUT_KEYS])
     return {
@@ -407,7 +407,7 @@ function fileMarkdown(src: string): string {
 function ktexMarkdown(src: string): string {
   const d = jsonOf(src)
   const name = d && isObj(d.file) ? String(d.file.name ?? '') : ''
-  return name ? `📄 **KherveTeX document:** \`${name}\`` : '📄 KherveTeX document'
+  return name ? `📄 **KherveTeX document:** \`${name}\`` : '📄 kTeX document'
 }
 
 /** desktop ipynb._mol_markdown: "⚛ **Molecule:** label (formula)", C and H first. */

@@ -16,7 +16,7 @@ export function kherveaiAiTools(focus: () => void): AppTools {
     async new_chat(a, ctx) {
       // A KherveAI chat starting another KherveAI chat (and maybe sending it) would loop.
       if (/^kherveai/i.test(ctx.caller)) {
-        throw new Error('You are KherveAI already: answer in this chat instead of starting another one.')
+        throw new Error('You are kAI already: answer in this chat instead of starting another one.')
       }
       const prompt = String(a.prompt ?? '').trim()
       if (!prompt) throw new Error('"prompt" is empty: give the message to type in the new chat.')
@@ -28,10 +28,10 @@ export function kherveaiAiTools(focus: () => void): AppTools {
         if (!sendMessage(id, prompt)) {
           composerCommand(id, { type: 'fill', text: prompt, files: [] })
           throw new Error(
-            `KherveAI could not send it (no API key for ${chat?.provider ?? 'the provider'}, or the chat is busy). The prompt is typed in the new chat for the user to send.`,
+            `kAI could not send it (no API key for ${chat?.provider ?? 'the provider'}, or the chat is busy). The prompt is typed in the new chat for the user to send.`,
           )
         }
-        return { ...base, sent: true, note: 'KherveAI is writing the reply in its window.' }
+        return { ...base, sent: true, note: 'kAI is writing the reply in its window.' }
       }
       composerCommand(id, { type: 'fill', text: prompt, files: [] })
       return { ...base, sent: false, note: 'The prompt is typed in a new chat; the user sends it.' }

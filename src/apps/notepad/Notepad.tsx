@@ -77,7 +77,7 @@ export default function Notepad({ win, args }: AppProps) {
   }, [args.path, load])
 
   useEffect(() => {
-    win.setTitle(`${dirty ? '• ' : ''}${name} — Notepad`)
+    win.setTitle(`${dirty ? '• ' : ''}${name} — kText`)
   }, [win, name, dirty])
   useEffect(() => win.setDocumentPath(filePath), [win, filePath])
 

@@ -125,7 +125,7 @@ export default function KherveAI({ win, args }: AppProps) {
     }
   }, [usesOllama, ollama.status])
 
-  const title = chat && (chat.messages.length || saved) ? `KherveAI — ${chat.title}` : 'KherveAI'
+  const title = chat && (chat.messages.length || saved) ? `kAI — ${chat.title}` : 'kAI'
   useEffect(() => {
     win.setTitle(title)
   }, [win, title])
@@ -143,7 +143,7 @@ export default function KherveAI({ win, args }: AppProps) {
         const looking = useWindows.getState().focusedId === win.id && s.activeId === id && !document.hidden
         if (looking) continue
         os.notify({
-          title: last.error ? 'KherveAI ran into a problem' : 'KherveAI replied',
+          title: last.error ? 'kAI ran into a problem' : 'kAI replied',
           body: chat.title,
           icon: Sparkles,
           onClick: () => {
@@ -160,7 +160,7 @@ export default function KherveAI({ win, args }: AppProps) {
   useEffect(() => {
     win.setCloseGuard(async () => {
       if (!Object.keys(useAi.getState().running).length) return true
-      const ok = await os.dialog.confirm('KherveAI is still writing a reply. Stop it and close?', { title: 'Close KherveAI', okLabel: 'Stop and Close' })
+      const ok = await os.dialog.confirm('kAI is still writing a reply. Stop it and close?', { title: 'Close kAI', okLabel: 'Stop and Close' })
       if (ok) stopAll()
       return ok
     })

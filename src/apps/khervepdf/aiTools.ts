@@ -27,7 +27,7 @@ function flatOutline(items: PdfOutlineItem[], depth = 0, out: { title: string; p
 export function khervepdfAiTools(host: PdfAiHost): AppTools {
   const shown = (): PdfTab => {
     const t = host.tab()
-    if (!t) throw new Error('No PDF is open in KhervePDF: open one with khervepdf_open.')
+    if (!t) throw new Error('No PDF is open in kPDF: open one with khervepdf_open.')
     return t
   }
   const pageArg = (t: PdfTab, v: unknown, name: string, fallback: number): number => {

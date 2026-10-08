@@ -162,7 +162,7 @@ export default function KherveMol({ win, args }: AppProps) {
   const tabbed = showLib && showShelf
   const lower = tabbed ? s.leftTab : showLib ? 'library' : showShelf ? 'shelf' : null
   const anyLeft = s.docks.structure || lower !== null
-  const status = s.progress ?? (!s.ready && s.busy ? 'Starting the KherveMol engine (Python)…' : s.statusBar)
+  const status = s.progress ?? (!s.ready && s.busy ? 'Starting the kMol engine (Python)…' : s.statusBar)
 
   return (
     <div className="k-app km-app" tabIndex={-1} onKeyDown={onKeyDown}>

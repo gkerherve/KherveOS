@@ -51,18 +51,18 @@ export function WelcomeDialog({ recent, layout, showAtStart, done }: {
       <div
         className="k-dialog ktx-dialog ktx-welcome"
         role="dialog"
-        aria-label="Welcome to KherveTeX"
+        aria-label="Welcome to kTeX"
         onKeyDown={(e) => {
           e.stopPropagation()
           if (e.key === 'Escape') finish({ kind: 'continue' })
         }}
       >
-        <div className="k-dialog-title">Welcome to KherveTeX</div>
+        <div className="k-dialog-title">Welcome to kTeX</div>
         <div className="k-dialog-body">
           <div className="ktx-welcome-head">
             <img src={`${import.meta.env.BASE_URL}icons/apps/khervetex.png`} alt="" width={64} height={64} />
             <div>
-              <div className="ktx-welcome-name">KherveTeX</div>
+              <div className="ktx-welcome-name">kTeX</div>
               <div>Write like in Word, publish in LaTeX — version {DESKTOP_VERSION}</div>
             </div>
           </div>
@@ -122,7 +122,7 @@ export function WelcomeDialog({ recent, layout, showAtStart, done }: {
           </div>
           <div className="k-dialog-buttons">
             <label className="ktx-check">
-              <input type="checkbox" checked={again} onChange={(e) => setAgain(e.target.checked)} /> Show this page when KherveTeX starts
+              <input type="checkbox" checked={again} onChange={(e) => setAgain(e.target.checked)} /> Show this page when kTeX starts
             </label>
             <span style={{ flex: 1 }} />
             <button
@@ -148,7 +148,7 @@ export function HelpGuideDialog({ done }: { done: () => void }) {
   const [tab, setTab] = useState(0)
   const html = useMemo(() => DOMPurify.sanitize(HELP_TABS[tab][1]), [tab])
   return (
-    <Modal title="KherveTeX User Guide" width={720} onCancel={done} onOk={done} okLabel="Close">
+    <Modal title="kTeX User Guide" width={720} onCancel={done} onOk={done} okLabel="Close">
       <div className="ktx-dtabs">
         {HELP_TABS.map(([t], i) => (
           <button key={t} className={`ktx-tab${i === tab ? ' active' : ''}`} onClick={() => setTab(i)}>
@@ -213,11 +213,11 @@ const LIBRARIES: [string, string, string][] = [
 
 export function AboutDialog({ done }: { done: () => void }) {
   return (
-    <Modal title="About KherveTeX" width={680} onCancel={done} onOk={done} okLabel="Close">
+    <Modal title="About kTeX" width={680} onCancel={done} onOk={done} okLabel="Close">
       <div className="ktx-about-head">
         <img src={`${import.meta.env.BASE_URL}icons/apps/khervetex.png`} alt="" width={96} height={96} />
         <div>
-          <h2>KherveTeX</h2>
+          <h2>kTeX</h2>
           <p className="ktx-dim">v{DESKTOP_VERSION} · KherveOS edition</p>
           <p>A WYSIWYG LaTeX document editor with built-in Git version history.</p>
           <p>Press <b>F1</b> for the User Guide.</p>
@@ -230,7 +230,7 @@ export function AboutDialog({ done }: { done: () => void }) {
         <p>
           Works on surface analysis and X-ray Photoelectron Spectroscopy (XPS), with a focus on materials for energy storage and catalysis.
           Maintains a small constellation of open-source tools for the XPS community, including KherveFitting (peak fitting for XPS spectra)
-          and spe-xps-reader (an open reader for PHI Instruments SPE binary files). KherveTeX grew out of the same workflow — writing papers
+          and spe-xps-reader (an open reader for PHI Instruments SPE binary files). kTeX grew out of the same workflow — writing papers
           and reports in LaTeX without leaving the WYSIWYG comfort zone of Word.
         </p>
         <hr className="ktx-hr" />
@@ -299,7 +299,7 @@ export function StylesDialog({ dir, done }: { dir: string; done: () => void }) {
   return (
     <Modal title="Manage LaTeX styles" width={700} onCancel={done} onOk={done} okLabel="Close">
       <p className="ktx-help-p">
-        <b>Bundled styles</b> ship with KherveTeX and are always available. <b>User styles</b> are files you imported — they live in a
+        <b>Bundled styles</b> ship with kTeX and are always available. <b>User styles</b> are files you imported — they live in a
         personal folder and survive app updates.
         <br />
         <br />
@@ -493,7 +493,7 @@ export function HistoryDialog({ root, file, onRestore, done }: {
             </thead>
             <tbody>
               {snaps === null && <tr><td colSpan={4} className="ktx-dim">Reading the history…</td></tr>}
-              {snaps?.length === 0 && <tr><td colSpan={4} className="ktx-dim">No snapshots yet. Every time you save, KherveTeX creates a snapshot.</td></tr>}
+              {snaps?.length === 0 && <tr><td colSpan={4} className="ktx-dim">No snapshots yet. Every time you save, kTeX creates a snapshot.</td></tr>}
               {snaps?.map((s, i) => (
                 <tr key={s.oid} className={i === sel ? 'on' : ''} onClick={() => setSel(i)}>
                   <td className="ktx-rail"><span /></td>
@@ -591,7 +591,7 @@ export function RemoteDialog({ root, done }: { root: string; done: () => void })
       <p className="ktx-help-p ktx-dim">
         {signedIn
           ? 'Uploads to GitHub use the token saved in KherveOS.'
-          : 'To upload to GitHub, sign in with a token first (KhervePY ▸ Git ▸ GitHub account, or Settings).'}
+          : 'To upload to GitHub, sign in with a token first (kPY ▸ Git ▸ GitHub account, or Settings).'}
       </p>
     </Modal>
   )

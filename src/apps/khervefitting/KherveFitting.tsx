@@ -726,7 +726,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
           '-',
           { label: 'Export plot data as XLSX', disabled: true },
           { label: 'Export plot data as CSV', onClick: () => void exportData(view, 'csv') },
-          { label: 'Export plot data as KherveSheet', disabled: true },
+          { label: 'Export plot data as kSheet', disabled: true },
           '-',
           {
             label: 'About SVG & Inkscape...',

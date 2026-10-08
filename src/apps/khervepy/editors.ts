@@ -98,7 +98,7 @@ export function useEditors(opts: { autoSave: boolean; defaultDir: () => string; 
   const load = useCallback(async (p: string, o: { line?: number }): Promise<boolean> => {
     const st = fs.stat(p)
     if (!st || st.type !== 'file') {
-      await os.dialog.alert(`“${p}” doesn’t exist any more.`, { title: 'KhervePY' })
+      await os.dialog.alert(`“${p}” doesn’t exist any more.`, { title: 'kPY' })
       return false
     }
     if (st.size > MAX_SIZE) {
@@ -107,7 +107,7 @@ export function useEditors(opts: { autoSave: boolean; defaultDir: () => string; 
     }
     const data = await fs.readBytes(p)
     if (looksBinary(data)) {
-      const other = await os.dialog.confirm(`${path.basename(p)} isn’t a text file. Open it with its own app instead?`, { title: 'KhervePY', okLabel: 'Open' })
+      const other = await os.dialog.confirm(`${path.basename(p)} isn’t a text file. Open it with its own app instead?`, { title: 'kPY', okLabel: 'Open' })
       if (other) void os.openFile(p)
       return false
     }

@@ -440,3 +440,7 @@
   flex: 1 1 auto;
   min-height: 0;
 }
+
+/* A maximised tool window fills the app. */
+.kf-app .kt-float-max { border-radius: 0; }
+.kf-app .kt-float-maxbtn:hover { background: rgba(0, 0, 0, 0.15); color: #000; }

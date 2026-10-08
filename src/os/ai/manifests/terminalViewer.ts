@@ -7,7 +7,7 @@ import { int, num, object, oneOf, str } from './schema.ts'
 export const TERMINAL_VIEWER_TOOL_SETS: AppToolSet[] = [
   {
     app: 'terminal',
-    name: 'Terminal',
+    name: 'Term',
     summary: 'a shell over the KherveOS drive (ls, cd, cat, grep, python…).',
     keywords: ['terminal', 'shell', 'command line', 'bash', 'console'],
     tools: [

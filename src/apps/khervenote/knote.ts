@@ -41,7 +41,7 @@ export function readKnote(bytes: Uint8Array): NoteFile {
   try {
     entries = unzipSync(bytes)
   } catch {
-    throw new Error('This is not a KherveNote note (it is not a ZIP archive).')
+    throw new Error('This is not a kNote note (it is not a ZIP archive).')
   }
   const json = entries[NOTE_JSON]
   if (!json) throw new Error('This .knote file has no note.json.')

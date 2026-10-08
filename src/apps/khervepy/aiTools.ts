@@ -28,7 +28,7 @@ export function khervepyAiTools(host: PyAiHost): AppTools {
 
   const active = (): EditorTab => {
     const t = host.editors().active
-    if (!t) throw new Error('No file is open in KhervePY: open one with khervepy_open_file (create=true for a new one).')
+    if (!t) throw new Error('No file is open in kPY: open one with khervepy_open_file (create=true for a new one).')
     return t
   }
 
@@ -41,7 +41,7 @@ export function khervepyAiTools(host: PyAiHost): AppTools {
       if (!create) throw new Error(`${path.pretty(p)} does not exist (pass create=true to make it).`)
       await fs.writeText(p, '', { mkdirs: true })
     }
-    if (!(await host.editors().open(p))) throw new Error(`KhervePY could not open ${path.pretty(p)}.`)
+    if (!(await host.editors().open(p))) throw new Error(`kPY could not open ${path.pretty(p)}.`)
     if (!(await waitUntil(() => host.editors().active?.path === p && !!tabOf(p), 10_000, signal))) throw new Error(`${path.pretty(p)} did not open in time.`)
     return tabOf(p)!
   }
@@ -57,7 +57,7 @@ export function khervepyAiTools(host: PyAiHost): AppTools {
   return {
     async read(a) {
       const t = typeof a.path === 'string' && a.path.trim() ? tabOf(drivePath(a.path)) : host.editors().active
-      if (!t) throw new Error(typeof a.path === 'string' ? `${a.path} is not open in KhervePY (khervepy_open_file opens it).` : 'No file is open in KhervePY.')
+      if (!t) throw new Error(typeof a.path === 'string' ? `${a.path} is not open in kPY (khervepy_open_file opens it).` : 'No file is open in kPY.')
       return {
         path: t.path ? path.pretty(t.path) : null,
         unsaved_changes: isDirty(t),
@@ -72,7 +72,7 @@ export function khervepyAiTools(host: PyAiHost): AppTools {
       const code = String(a.code ?? '')
       const tab = typeof a.path === 'string' && a.path.trim() ? await openTab(a.path.trim(), true, ctx.signal) : active()
       await setText(tab, code, ctx.signal)
-      return { path: tab.path ? path.pretty(tab.path) : tab.title, lines: lines(code), saved: false, note: 'Shown in the KhervePY editor; khervepy_run saves and runs it.' }
+      return { path: tab.path ? path.pretty(tab.path) : tab.title, lines: lines(code), saved: false, note: 'Shown in the kPY editor; khervepy_run saves and runs it.' }
     },
 
     async replace(a, ctx) {
@@ -93,7 +93,7 @@ export function khervepyAiTools(host: PyAiHost): AppTools {
     },
 
     async run(a, ctx) {
-      if (host.running()) throw new Error('A program is already running in KhervePY.')
+      if (host.running()) throw new Error('A program is already running in kPY.')
       const tab = active()
       if (!tab.path) throw new Error('This file has never been saved: save it with a path first (khervepy_set_code with "path").')
       if (!tab.path.endsWith('.py')) throw new Error('Only .py files run.')

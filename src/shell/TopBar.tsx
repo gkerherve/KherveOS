@@ -1,10 +1,11 @@
 // The thin menu bar across the top of the screen, macOS-style: the Ꝃ menu,
 // the app in front (bold) with its own menus, then status icons and the clock.
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Maximize2, Minimize2, Search, Server, ServerOff } from 'lucide-react'
+import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from 'react'
+import { Camera, Maximize2, Minimize2, Minus, Plus, Search, Server, ServerOff } from 'lucide-react'
 import { useWindows } from '@/os/windows'
 import { getApp } from '@/os/registry'
+import { UI_SCALES, useSettings } from '@/os/settings'
 import { useWindowMenus } from '@/os/menus'
 import { useAuth, useServer } from '@/os/server'
 import { MenuList, type MenuBarMenu, type MenuItem } from '@/os/ui/Menu'
@@ -18,6 +19,8 @@ import { toggleFullscreen, useFullscreen } from '@/os/fullscreen'
 import { openUrl } from '@/os/web'
 import { os } from '@/os'
 import { frontWindow, takeScreenshot } from '@/os/screenshot'
+import { CalendarPopover } from './Calendar'
+import { SystemStats } from './SystemStats'
 
 interface TopMenu {
   key: string
@@ -26,7 +29,14 @@ interface TopMenu {
   items: MenuItem[]
 }
 
-function Clock() {
+/** One step smaller (-1) or bigger (+1) on the interface sizes Settings offers. */
+function stepUiScale(dir: -1 | 1) {
+  const { uiScale, set } = useSettings.getState()
+  const nearest = UI_SCALES.reduce((best, k, i) => (Math.abs(k - uiScale) < Math.abs(UI_SCALES[best] - uiScale) ? i : best), 0)
+  set({ uiScale: UI_SCALES[Math.min(UI_SCALES.length - 1, Math.max(0, nearest + dir))] })
+}
+
+function Clock({ onClick }: { onClick: (e: MouseEvent<HTMLButtonElement>) => void }) {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 10_000)
@@ -35,9 +45,9 @@ function Clock() {
   const day = now.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
   const time = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
   return (
-    <span className="k-topbar-clock" title={now.toLocaleDateString(undefined, { dateStyle: 'full' })}>
+    <button className="k-topbar-clock" title="Calendar" aria-label={`${day} ${time}: open the calendar`} onClick={onClick}>
       {day}&nbsp;&nbsp;{time}
-    </span>
+    </button>
   )
 }
 
@@ -53,7 +63,9 @@ export function TopBar() {
   const status = useServer((s) => s.status)
   const [open, setOpen] = useState<number | null>(null)
   const [anchor, setAnchor] = useState({ x: 0, y: 0 })
+  const [calendar, setCalendar] = useState<{ x: number; y: number } | null>(null)
   const fullscreen = useFullscreen()
+  const uiScale = useSettings((s) => s.uiScale)
 
   const menus: TopMenu[] = useMemo(() => {
     const appWins = app ? windows.filter((w) => w.appId === app.id) : []
@@ -243,6 +255,26 @@ export function TopBar() {
         ))}
       </div>
       <div className="k-topbar-status">
+        <SystemStats />
+        <button className="k-topbar-icon" title="Take a screenshot of the screen (⇧⌘3)" onClick={() => void takeScreenshot('screen')}>
+          <Camera size={14} />
+        </button>
+        <button
+          className="k-topbar-icon"
+          title={`Smaller interface (now ${Math.round(uiScale * 100)}%)`}
+          disabled={uiScale <= UI_SCALES[0]}
+          onClick={() => stepUiScale(-1)}
+        >
+          <Minus size={14} />
+        </button>
+        <button
+          className="k-topbar-icon"
+          title={`Bigger interface (now ${Math.round(uiScale * 100)}%)`}
+          disabled={uiScale >= UI_SCALES[UI_SCALES.length - 1]}
+          onClick={() => stepUiScale(1)}
+        >
+          <Plus size={14} />
+        </button>
         <button
           className="k-topbar-icon"
           title={
@@ -264,9 +296,14 @@ export function TopBar() {
         <button className="k-topbar-icon" title="Search apps and files" onClick={openLaunchpad}>
           <Search size={14} />
         </button>
-        <Clock />
+        <Clock onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect()
+          setOpen(null)
+          setCalendar(calendar ? null : { x: r.left + r.width / 2 - 116, y: r.bottom + 6 })
+        }} />
       </div>
     </div>
+    {calendar && <CalendarPopover x={calendar.x} y={calendar.y} onClose={() => setCalendar(null)} />}
     {open !== null && menus[open] && (
       <MenuList items={menus[open].items} x={anchor.x} y={anchor.y} minWidth={210} onClose={() => setOpen(null)} />
     )}

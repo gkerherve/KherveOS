@@ -5,7 +5,7 @@ import { techniqueToolSet } from './technique.ts'
 
 export const KHERVERAMAN_TOOL_SET = techniqueToolSet({
   app: 'kherveraman',
-  name: 'KherveRaman',
+  name: 'kRaman',
   summary: 'Raman spectra: peak detection, database assignment, plot labels, band library.',
   keywords: ['kherveraman', 'raman', 'raman shift', 'raman spectrum', 'wavenumber', 'phonon', 'band assignment', 'anatase', 'graphene', 'carbon d band', 'g band'],
   files: 'Raman (.txt: wavenumber, intensity)',

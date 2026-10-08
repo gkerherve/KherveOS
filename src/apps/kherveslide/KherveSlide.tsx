@@ -80,8 +80,8 @@ interface Prefs {
 
 const PREFS_KEY = 'kherveslide.prefs'
 const DEFAULT_PREFS: Prefs = {
-  // First launch: the PDF in its own window (welcome.LAYOUT_DEFAULT).
-  layout: 'window',
+  // First launch: Visual only, the PDF is one click away (View ▸ Visual + PDF in its own window).
+  layout: 'visual',
   autoCompile: true,
   skipImages: false,
   showTheme: true,
@@ -229,7 +229,7 @@ function printPdf(pdf: Uint8Array) {
       frame.contentWindow?.focus()
       frame.contentWindow?.print()
     } catch {
-      os.notify({ title: 'Print', body: 'The browser would not print the PDF; export it and print it from KhervePDF.' })
+      os.notify({ title: 'Print', body: 'The browser would not print the PDF; export it and print it from kPDF.' })
     }
     setTimeout(() => {
       frame.remove()
@@ -296,7 +296,7 @@ function MainWindow({ win, args }: AppProps) {
   const latexSource = override?.text ?? generated
   const dirty = json !== savedJson
   const docName = filePath ? P.basename(filePath) : untitledName
-  const title = `${dirty ? '• ' : ''}${docName} — KherveSlide`
+  const title = `${dirty ? '• ' : ''}${docName} — kSlide`
   const pdfPageOf = (row: number) => deck.slides.slice(0, row).filter((s) => !s.hidden).length
 
   // ------------------------------------------------------------------ status bar
@@ -429,7 +429,7 @@ function MainWindow({ win, args }: AppProps) {
         { label: 'Discard', value: 'discard', danger: true },
         { label: 'Save', value: 'save', primary: true },
       ],
-      { title: 'KherveSlide' },
+      { title: 'kSlide' },
     )
     if (choice === 'save') return save()
     return choice === 'discard'
@@ -477,7 +477,7 @@ function MainWindow({ win, args }: AppProps) {
       replaceDeck(d, null, item.title)
       flash(`Example “${item.title}” — edit freely, then Save As to keep it`, 5000)
     } catch (e) {
-      await os.dialog.alert(`The example could not be opened: ${errorText(e)}`, { title: 'KherveSlide' })
+      await os.dialog.alert(`The example could not be opened: ${errorText(e)}`, { title: 'kSlide' })
     } finally {
       setLoading(false)
     }
@@ -491,7 +491,7 @@ function MainWindow({ win, args }: AppProps) {
       // Like the desktop: the beamer source next to it, so a diff shows the content.
       await fs.writeText(P.join(P.dirname(p), `${stemOf(p)}.tex`), serializeDeck(d)).catch(() => {})
       const copied = await media.saveAssets(d, P.dirname(p))
-      if (copied) os.notify({ title: 'KherveSlide', body: `${copied} picture${copied === 1 ? '' : 's'} saved next to the presentation.` })
+      if (copied) os.notify({ title: 'kSlide', body: `${copied} picture${copied === 1 ? '' : 's'} saved next to the presentation.` })
       media.deckDir = P.dirname(p)
       setSavedJson(text)
       if (p !== filePath) {
@@ -502,7 +502,7 @@ function MainWindow({ win, args }: AppProps) {
       flash(`✔ Saved ${P.pretty(p)}`, 4000)
       return true
     } catch (e) {
-      await os.dialog.alert(`Could not save: ${errorText(e)}`, { title: 'KherveSlide' })
+      await os.dialog.alert(`Could not save: ${errorText(e)}`, { title: 'kSlide' })
       return false
     }
   }
@@ -943,7 +943,7 @@ function MainWindow({ win, args }: AppProps) {
     return true
   }
 
-  const figuresDir = () => (filePath ? P.join(P.dirname(filePath), 'figures') : P.join(HOME, 'Documents', 'KherveSlide figures'))
+  const figuresDir = () => (filePath ? P.join(P.dirname(filePath), 'figures') : P.join(HOME, 'Documents', 'kSlide figures'))
 
   /** A 2-D molecule drawn by chemfig: compiled once, placed as a picture, its source kept beside it. */
   const addChemStructure = async (i: number | null = null) => {
@@ -993,10 +993,10 @@ function MainWindow({ win, args }: AppProps) {
   }
 
   const notInKherveOS = (what: string, extra = '') =>
-    void os.dialog.alert(`${what} is not in KherveSlide for KherveOS yet.${extra ? `\n\n${extra}` : ''}`, { title: 'KherveSlide' })
-  const addFlowchart = () => notInKherveOS('The flowchart builder', 'Draw the chart with the shapes, lines and arrows of the left toolbar, or in KhervePaint, and add it as a picture.')
+    void os.dialog.alert(`${what} is not in kSlide for KherveOS yet.${extra ? `\n\n${extra}` : ''}`, { title: 'kSlide' })
+  const addFlowchart = () => notInKherveOS('The flowchart builder', 'Draw the chart with the shapes, lines and arrows of the left toolbar, or in kPaint, and add it as a picture.')
   const addDrawing = () =>
-    notInKherveOS('The drawing editor', 'Draw in KhervePaint, export a PNG and add it with Add image (or drop it on the slide).')
+    notInKherveOS('The drawing editor', 'Draw in kPaint, export a PNG and add it with Add image (or drop it on the slide).')
 
   const insertIntoText = (latex: string) => {
     const ta = activeEditor()
@@ -1091,7 +1091,7 @@ function MainWindow({ win, args }: AppProps) {
         const type = it.types.find((t) => t.startsWith('image/'))
         if (!type) continue
         const data = new Uint8Array(await (await it.getType(type)).arrayBuffer())
-        const dir = filePath ? P.dirname(filePath) : P.join(HOME, 'Documents', 'KherveSlide figures')
+        const dir = filePath ? P.dirname(filePath) : P.join(HOME, 'Documents', 'kSlide figures')
         let n = 1
         while (fs.exists(P.join(dir, `pasted_${String(n).padStart(3, '0')}.png`))) n++
         const p = P.join(dir, `pasted_${String(n).padStart(3, '0')}.png`)
@@ -1720,13 +1720,11 @@ function MainWindow({ win, args }: AppProps) {
       const id = os.open('kherveslide', { pdfFor: win.id })
       pdfWin.current = id
       if (!id || isSmallScreen()) return
+      // The PDF window opens small in the top right corner; this window keeps its size and place.
       const desk = desktopSize()
-      const gap = 8
-      const mainW = Math.max(560, Math.round((desk.w - 3 * gap) * 0.62))
-      const me = wm.windows.find((w) => w.id === win.id)
-      if (me && (me.maximized || me.snapped)) wm.snap(win.id, null)
-      useWindows.getState().setBounds(win.id, { x: gap, y: gap, w: mainW, h: desk.h - 2 * gap })
-      useWindows.getState().setBounds(id, { x: 2 * gap + mainW, y: gap, w: Math.max(320, desk.w - 3 * gap - mainW), h: desk.h - 2 * gap })
+      const w = Math.min(520, Math.round(desk.w * 0.36))
+      const h = Math.min(640, desk.h - 80)
+      useWindows.getState().setBounds(id, { x: desk.w - w - 16, y: 40, w, h })
       useWindows.getState().focus(win.id)
     } else if (pdfWin.current) {
       const id = pdfWin.current
@@ -1835,7 +1833,7 @@ function MainWindow({ win, args }: AppProps) {
       if (!/\.pdf$/i.test(p)) p += '.pdf'
       if (fs.exists(p) && !(await ctx.confirm(`replace ${P.pretty(p)}`))) throw new Error('The user kept the existing file.')
       const { pdf } = await slideshowPdf()
-      if (!pdf) throw new Error(`LaTeX could not compile the slides: ${compile.errors[0]?.message || 'see the console in KherveSlide'}`)
+      if (!pdf) throw new Error(`LaTeX could not compile the slides: ${compile.errors[0]?.message || 'see the console in kSlide'}`)
       await fs.writeBytes(p, pdf, { mkdirs: true })
       return { path: P.pretty(p), bytes: pdf.length }
     },
@@ -2106,7 +2104,7 @@ function MainWindow({ win, args }: AppProps) {
   ]
 
   const gitStub = (what: string) => () =>
-    notInKherveOS(`Git ▸ ${what}`, 'Every save writes the .kslide and its .tex; commit the folder from KhervePY’s Git panel to keep versions.')
+    notInKherveOS(`Git ▸ ${what}`, 'Every save writes the .kslide and its .tex; commit the folder from kPY’s Git panel to keep versions.')
 
   const buildMenus = (): MenuBarMenu[] => [
     {
@@ -2352,13 +2350,13 @@ function MainWindow({ win, args }: AppProps) {
       items: [
         {
           // KherveAI edits the open presentation with the kherveslide_ tools (list, add and edit slides, export).
-          label: 'Ask KherveAI to edit this presentation…',
+          label: 'Ask kAI to edit this presentation…',
           onClick: async () => {
-            const text = await os.dialog.prompt('What should KherveAI do with this presentation? It changes the slides here, in this window.', { title: 'Ask KherveAI', okLabel: 'Ask' })
-            if (text?.trim()) os.open('kherveai', { ask: `${text.trim()}\n\n(In my KherveSlide presentation "${docName}", window ${win.id}.)`, _ask: Date.now() })
+            const text = await os.dialog.prompt('What should kAI do with this presentation? It changes the slides here, in this window.', { title: 'Ask kAI', okLabel: 'Ask' })
+            if (text?.trim()) os.open('kherveai', { ask: `${text.trim()}\n\n(In my kSlide presentation "${docName}", window ${win.id}.)`, _ask: Date.now() })
           },
         },
-        { label: 'Open KherveAI', onClick: () => os.open('kherveai') },
+        { label: 'Open kAI', onClick: () => os.open('kherveai') },
         '-',
         { label: 'Connect to Claude (MCP)…', onClick: () => os.open('settings', { section: 'ai' }) },
       ],
@@ -2371,7 +2369,7 @@ function MainWindow({ win, args }: AppProps) {
         '-',
         { label: 'Check for updates (KherveOS updates its apps)', disabled: true },
         '-',
-        { label: 'About KherveSlide', onClick: () => setModal(<AboutDialog onClose={() => setModal(null)} onLink={(u) => os.openUrl(u)} />) },
+        { label: 'About kSlide', onClick: () => setModal(<AboutDialog onClose={() => setModal(null)} onLink={(u) => os.openUrl(u)} />) },
       ],
     },
   ]

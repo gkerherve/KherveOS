@@ -102,9 +102,9 @@ function MessagesApp({ win, args }: AppProps) {
 
   const title = active?.title
   useEffect(() => {
-    win.setTitle(title ? `Messages — ${title}` : 'Messages')
+    win.setTitle(title ? `Chat — ${title}` : 'Chat')
   }, [title, win])
-  useEffect(() => () => win.setTitle('Messages'), [win])
+  useEffect(() => () => win.setTitle('Chat'), [win])
 
   // The top menu bar.
   useEffect(() => {

@@ -237,7 +237,7 @@ export default function KhervePDF({ win, args }: AppProps) {
     const rel = relativeTo(root, t.path)
     if (!rel) return false
     await git.add(root, rel)
-    const author = (await git.resolveIdentity(root)) ?? { name: 'KhervePDF', email: 'khervepdf@local' }
+    const author = (await git.resolveIdentity(root)) ?? { name: 'kPDF', email: 'khervepdf@local' }
     await git.commit(root, { message, author })
     void refreshBranch(t)
     return true
@@ -437,7 +437,7 @@ export default function KhervePDF({ win, args }: AppProps) {
 
   // MainWindow._update_title: "KhervePDF v0.75 — file.pdf".
   useEffect(() => {
-    win.setTitle(`KhervePDF v${VERSION} — ${tab ? tab.name : 'Untitled'}`)
+    win.setTitle(`kPDF v${VERSION} — ${tab ? tab.name : 'Untitled'}`)
   })
   useEffect(() => win.setDocumentPath(tab?.path ?? null), [win, tab, tab?.path])
 
@@ -943,11 +943,11 @@ export default function KhervePDF({ win, args }: AppProps) {
   /** MainWindow._pdf_for_kherveref: offer to save unsaved annotations first. */
   const pdfForKherveRef = async (t: PdfTab): Promise<string | null> => {
     if (t.dirty || !t.path) {
-      const choice = await os.dialog.choose('There are unsaved annotations. Save them into the PDF first so KherveRef gets the annotated file?', [
+      const choice = await os.dialog.choose('There are unsaved annotations. Save them into the PDF first so kRef gets the annotated file?', [
         { label: 'Cancel', value: 'cancel' },
         { label: 'No', value: 'no' },
         { label: 'Yes', value: 'yes', primary: true },
-      ], { title: 'KherveRef' })
+      ], { title: 'kRef' })
       if (choice === 'cancel' || choice === null) return null
       if (choice === 'yes' && !(await saveTab(t))) return null
     }
@@ -958,14 +958,14 @@ export default function KhervePDF({ win, args }: AppProps) {
     const p = await pdfForKherveRef(t)
     if (!p) return
     os.open('kherveref', { add: p })
-    setStatus(`Sent to KherveRef: ${path.basename(p)}`)
+    setStatus(`Sent to kRef: ${path.basename(p)}`)
   }
 
   const showInKherveRef = async (t: PdfTab) => {
     const p = await pdfForKherveRef(t)
     if (!p) return
     os.open('kherveref')
-    setStatus(`Showing in KherveRef: ${path.basename(p)}`)
+    setStatus(`Showing in kRef: ${path.basename(p)}`)
   }
 
   const gitCommitNow = async (t: PdfTab) => {
@@ -1171,9 +1171,9 @@ export default function KhervePDF({ win, args }: AppProps) {
           '-',
           { label: 'Recognize Text (OCR)…', image: mi('ocr'), onClick: ocr },
           '-',
-          { label: 'Add to KherveRef', image: mi('kherveref'), disabled: !t, onClick: () => t && void addToKherveRef(t) },
-          { label: 'Show in KherveRef', image: mi('kherveref_show'), disabled: !t, onClick: () => t && void showInKherveRef(t) },
-          { label: 'Locate KherveRef…', onClick: () => void os.dialog.alert('KherveRef is part of KherveOS: Add to KherveRef and Show in KherveRef open it directly.', { title: 'Locate KherveRef' }) },
+          { label: 'Add to kRef', image: mi('kherveref'), disabled: !t, onClick: () => t && void addToKherveRef(t) },
+          { label: 'Show in kRef', image: mi('kherveref_show'), disabled: !t, onClick: () => t && void showInKherveRef(t) },
+          { label: 'Locate KherveRef…', onClick: () => void os.dialog.alert('kRef is part of KherveOS: Add to kRef and Show in kRef open it directly.', { title: 'Locate kRef' }) },
         ],
       },
       {
@@ -1204,10 +1204,10 @@ export default function KhervePDF({ win, args }: AppProps) {
       {
         label: 'Help',
         items: [
-          { label: 'Check for Updates…', image: mi('update'), onClick: () => void os.dialog.alert(`KhervePDF is up to date (latest release: v${VERSION}). KherveOS brings new versions itself.`, { title: 'Check for Updates' }) },
+          { label: 'Check for Updates…', image: mi('update'), onClick: () => void os.dialog.alert(`kPDF is up to date (latest release: v${VERSION}). KherveOS brings new versions itself.`, { title: 'Check for Updates' }) },
           { label: 'Check for Updates Automatically', checked: prefs.autoUpdate, onClick: () => setPrefs({ autoUpdate: !prefs.autoUpdate }) },
           '-',
-          { label: 'About KhervePDF', image: mi('about'), onClick: () => setDialog({ kind: 'about' }) },
+          { label: 'About kPDF', image: mi('about'), onClick: () => setDialog({ kind: 'about' }) },
           { label: 'Meet the Author…', image: mi('author'), onClick: () => setDialog({ kind: 'author' }) },
         ],
       },
@@ -1437,7 +1437,7 @@ export default function KhervePDF({ win, args }: AppProps) {
         <div className="kp-welcome-head">
           <AppMark size={88} />
           <div>
-            <h1>KhervePDF</h1>
+            <h1>kPDF</h1>
             <p>View, annotate and edit PDFs — with Git history · v{VERSION}</p>
           </div>
         </div>

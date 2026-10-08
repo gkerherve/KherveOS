@@ -149,7 +149,7 @@ function splitMarkdown(text: string): Part[] {
 // ----------------------------------------------------------- the component
 
 /** What code blocks need to know about the chat they are in. */
-export const CodeContext = createContext<{ title: string }>({ title: 'KherveAI' })
+export const CodeContext = createContext<{ title: string }>({ title: 'kAI' })
 
 function onLinkClick(e: React.MouseEvent) {
   const a = (e.target as HTMLElement).closest('a')
@@ -212,7 +212,7 @@ async function saveCode(code: string, lang: string, title: string) {
     await fs.writeText(target, code.endsWith('\n') ? code : `${code}\n`, { mkdirs: true })
     os.notify({ title: `Saved ${vpath.basename(target)}`, body: `In ${vpath.pretty(vpath.dirname(target))} — click to open`, onClick: () => void os.openFile(target) })
   } catch (e) {
-    await os.dialog.alert(`The file could not be saved.\n\n${errorText(e)}`, { title: 'KherveAI' })
+    await os.dialog.alert(`The file could not be saved.\n\n${errorText(e)}`, { title: 'kAI' })
   }
 }
 
@@ -221,12 +221,12 @@ async function openInKherveBook(code: string, title: string) {
   const dir = `${HOME}/Notebooks`
   try {
     await fs.mkdir(dir, { recursive: true })
-    const target = vpath.join(dir, fs.uniqueName(dir, `${safeName(title) || 'KherveAI'}.kbook`))
+    const target = vpath.join(dir, fs.uniqueName(dir, `${safeName(title) || 'kAI'}.kbook`))
     const doc = { format: 'kbook', version: 1, cells: [{ type: 'code', source: code.replace(/\n+$/, '') }] }
     await fs.writeText(target, JSON.stringify(doc, null, 1))
     os.open('khervebook', { path: target })
   } catch (e) {
-    await os.dialog.alert(`The notebook could not be created.\n\n${errorText(e)}`, { title: 'KherveAI' })
+    await os.dialog.alert(`The notebook could not be created.\n\n${errorText(e)}`, { title: 'kAI' })
   }
 }
 
@@ -262,9 +262,9 @@ function CodeBlock({ code, lang, writing }: { code: string; lang: string; writin
           <span>Save to file…</span>
         </button>
         {PYTHON.has(lang) && (
-          <button className="kai-code-btn" onClick={() => void openInKherveBook(code, title)} title="Open as a new KherveBook notebook" disabled={writing}>
+          <button className="kai-code-btn" onClick={() => void openInKherveBook(code, title)} title="Open as a new kBook notebook" disabled={writing}>
             <BookOpen size={13} />
-            <span>Open in KherveBook</span>
+            <span>Open in kBook</span>
           </button>
         )}
       </div>

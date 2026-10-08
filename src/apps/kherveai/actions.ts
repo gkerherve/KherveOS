@@ -16,7 +16,7 @@ export async function exportChat(target: { id?: string; path?: string }): Promis
   try {
     if (!chat && target.path) chat = await readChatFile(target.path)
   } catch (e) {
-    await os.dialog.alert(`Could not read the chat.\n\n${errorText(e)}`, { title: 'KherveAI' })
+    await os.dialog.alert(`Could not read the chat.\n\n${errorText(e)}`, { title: 'kAI' })
     return
   }
   if (!chat?.messages.length) {
@@ -36,7 +36,7 @@ export async function exportChat(target: { id?: string; path?: string }): Promis
     await fs.writeText(target2, chatToMarkdown(chat.title, chat.messages), { mkdirs: true })
     os.notify({ title: `Exported ${vpath.basename(target2)}`, body: 'Click to open it', onClick: () => void os.openFile(target2) })
   } catch (e) {
-    await os.dialog.alert(`The file could not be saved.\n\n${errorText(e)}`, { title: 'KherveAI' })
+    await os.dialog.alert(`The file could not be saved.\n\n${errorText(e)}`, { title: 'kAI' })
   }
 }
 

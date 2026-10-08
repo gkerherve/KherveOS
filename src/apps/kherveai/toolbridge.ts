@@ -65,7 +65,7 @@ export function toolFromWire(name: string, tools: WireTool[]): string {
 /** Run one call through the registry (which asks the person before destructive actions). */
 export async function execTool(name: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<ToolOutcome> {
   try {
-    const r = await runTool(name, args, { caller: 'KherveAI', signal })
+    const r = await runTool(name, args, { caller: 'kAI', signal })
     if (!r || typeof r !== 'object') return { ok: false, error: 'The tool gave no answer.' }
     return r.ok ? { ok: true, result: r.result } : { ok: false, error: r.error || 'The tool failed.' }
   } catch (e) {

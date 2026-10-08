@@ -204,7 +204,7 @@ export function toAnthropic(history: Message[], withTools: boolean): AnthropicMe
 
 /** The whole chat as a Markdown document. */
 export function chatToMarkdown(title: string, messages: Message[]): string {
-  const out: string[] = [`# ${title}`, '', `*Exported from KherveAI on ${new Date().toLocaleString()}*`, '']
+  const out: string[] = [`# ${title}`, '', `*Exported from kAI on ${new Date().toLocaleString()}*`, '']
   for (const m of messages) {
     if (m.role === 'user') {
       out.push('## You', '')
@@ -214,7 +214,7 @@ export function chatToMarkdown(title: string, messages: Message[]): string {
       if (m.attachments?.length) out.push('')
       out.push(m.text.trim(), '')
     } else {
-      out.push(`## KherveAI (${m.model})`, '')
+      out.push(`## kAI (${m.model})`, '')
       for (const t of m.turns) {
         if (t.text.trim()) out.push(t.text.trim(), '')
         for (const c of t.calls) {

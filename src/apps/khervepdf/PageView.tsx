@@ -729,7 +729,7 @@ export function PageView({ tab, tool, settings, onStatus, actions, marker }: Pag
   }
 
   function fail(err: unknown) {
-    void os.dialog.alert(err instanceof Error ? err.message : String(err), { title: 'KhervePDF' })
+    void os.dialog.alert(err instanceof Error ? err.message : String(err), { title: 'kPDF' })
   }
 
   function finishEditor(commit: boolean) {

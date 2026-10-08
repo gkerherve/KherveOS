@@ -67,7 +67,7 @@ export function readBundle(bytes: Uint8Array): Bundle {
   try {
     entries = unzipSync(bytes)
   } catch {
-    throw new Error('This is not a KherveTeX document (it is not a ZIP archive).')
+    throw new Error('This is not a kTeX document (it is not a ZIP archive).')
   }
   const byName = new Map<string, Uint8Array>()
   for (const [name, data] of Object.entries(entries)) if (!name.endsWith('/')) byName.set(cleanEntry(name), data)
@@ -79,10 +79,10 @@ export function readBundle(bytes: Uint8Array): Bundle {
     } catch {
       // a broken manifest is not fatal
     }
-    if (version > SCHEMA_VERSION) throw new Error(`This document was made by a newer KherveTeX (schema ${version} > ${SCHEMA_VERSION}).`)
+    if (version > SCHEMA_VERSION) throw new Error(`This document was made by a newer kTeX (schema ${version} > ${SCHEMA_VERSION}).`)
   }
   const docJson = byName.get(DOC)
-  if (!docJson) throw new Error('This archive has no document.json: it is not a KherveTeX document.')
+  if (!docJson) throw new Error('This archive has no document.json: it is not a kTeX document.')
   const doc = fromJson(strFromU8(docJson))
   const files = new Map<string, Uint8Array>()
   for (const [name, data] of byName) {

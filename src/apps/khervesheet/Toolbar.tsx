@@ -232,7 +232,7 @@ export function Toolbar({ book, root, actions }: { book: Book; root: HTMLElement
           onMenu={(r) => menuAt(r, SCIENCE_TOOLS.map((t): MenuItem => (t ? { label: t, onClick: () => actions.science(t) } : '-')))}
         />
         <Sep />
-        <Btn title="A chat box with KherveAI (Ctrl+Shift+A)" onClick={actions.aiChat}><Ico name="robot" /></Btn>
+        <Btn title="A chat box with kAI (Ctrl+Shift+A)" onClick={actions.aiChat}><Ico name="robot" /></Btn>
       </div>
       <div className="ks-toolbar" role="toolbar" aria-label="Font">
         <select

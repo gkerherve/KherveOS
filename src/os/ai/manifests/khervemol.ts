@@ -9,7 +9,7 @@ const VIEWS = ['front', 'back', 'left', 'right', 'top', 'bottom', 'isometric'] a
 
 export const KHERVEMOL_TOOL_SET: AppToolSet = {
   app: 'khervemol',
-  name: 'KherveMol',
+  name: 'kMol',
   summary: 'the 2D/3D molecule and crystal builder (700 molecules, 120 crystals, surfaces, nanotubes, polymers, reactions).',
   keywords: ['khervemol', 'molecule', 'molecules', 'crystal', 'smiles', 'atom', 'bond', 'surface', 'graphene', 'nanotube', 'fullerene', 'polymer', 'reaction', 'chemistry', 'caffeine'],
   tools: [
@@ -102,7 +102,7 @@ export const KHERVEMOL_TOOL_SET: AppToolSet = {
     },
     {
       action: 'export_file',
-      description: 'Export the structure; the format follows the extension: .png .svg (KhervePaint), .xyz .mol .sdf .pdb .cif, or a 3D-print mesh .stl .3mf .obj .ply .glb.',
+      description: 'Export the structure; the format follows the extension: .png .svg (kPaint), .xyz .mol .sdf .pdb .cif, or a 3D-print mesh .stl .3mf .obj .ply .glb.',
       inputSchema: object({ path: str('e.g. "~/Documents/water.png".'), scale: num('Mesh size in mm per Å (default 10).') }, ['path']),
     },
   ],

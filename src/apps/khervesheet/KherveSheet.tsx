@@ -44,7 +44,7 @@ import { useAppTools } from '@/os/ai/appTools'
 import { sheetAiTools } from './aiTools'
 
 /** The desktop KherveSheet this edition follows (its dev branch). */
-export const CORE_SOURCE = 'KherveSheet dev @ cef25ce'
+export const CORE_SOURCE = 'kSheet dev @ cef25ce'
 const GITHUB_URL = 'https://github.com/gkerherve/KherveSheet'
 const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent)
 const MOD = MAC ? '⌘' : 'Ctrl+'
@@ -98,7 +98,7 @@ function Shortcuts() {
     [`${SHIFT}F3`, 'Insert a function'],
     [`${MOD}= / ${MOD}- / ${MOD}0`, 'Zoom in / out / reset'],
     [`${MOD}P`, 'Print'],
-    [`${SHIFT}${MOD}A`, 'KherveAI chat'],
+    [`${SHIFT}${MOD}A`, 'kAI chat'],
     [`${MOD}S / ${SHIFT}${MOD}S`, 'Save / save as'],
     [`${MOD}/ and ${MOD}Space (Python editor)`, 'Comment lines / complete a name'],
   ]
@@ -129,7 +129,7 @@ function UserGuide() {
   return (
     <div className="ks-doc ks-guide">
       <p>
-        KherveSheet is a spreadsheet for science and everyday work. This web edition computes every formula with the desktop KherveSheet's own engine,
+        kSheet is a spreadsheet for science and everyday work. This web edition computes every formula with the desktop kSheet's own engine,
         running in Python in your browser, so a workbook gives the same numbers in both. Workbooks are <code>.ksheet</code> files on your KherveOS drive,
         shared with the desktop app.
       </p>
@@ -242,7 +242,7 @@ export default function KherveSheet({ win, args }: AppProps) {
   }, [book, args])
 
   useEffect(() => {
-    win.setTitle(`${dirty ? '• ' : ''}${name} — KherveSheet`)
+    win.setTitle(`${dirty ? '• ' : ''}${name} — kSheet`)
   }, [win, dirty, name])
   useEffect(() => win.setDocumentPath(path), [win, path])
   useEffect(() => {
@@ -359,7 +359,7 @@ export default function KherveSheet({ win, args }: AppProps) {
   const science = (tool: string) => {
     const t = tool.replace(/…$/, '')
     if (WEB_SCIENCE.has(t)) setDialog({ kind: 'science', tool: t })
-    else void os.dialog.alert(`${t} is a desktop KherveSheet tool that is not in the web edition yet.`, { title: t })
+    else void os.dialog.alert(`${t} is a desktop kSheet tool that is not in the web edition yet.`, { title: t })
   }
   const curveFitting = () => {
     const id = selectedChart()
@@ -739,20 +739,20 @@ export default function KherveSheet({ win, args }: AppProps) {
         label: 'AI',
         items: [
           { label: 'Connect to Claude (Simple)…', image: menuIcon('lan_connect'), onClick: aiChat },
-          { label: 'ChatBox (KherveAI)', shortcut: `${SHIFT}${MOD}A`, image: menuIcon('robot'), onClick: aiChat },
+          { label: 'ChatBox (kAI)', shortcut: `${SHIFT}${MOD}A`, image: menuIcon('robot'), onClick: aiChat },
         ],
       },
       { label: 'Examples', items: exampleItems },
       {
         label: 'Help',
         items: [
-          { label: 'User Guide', shortcut: 'F1', onClick: () => void os.dialog.alert(<UserGuide />, { title: 'KherveSheet — User Guide' }).finally(() => book.refocus()) },
-          { label: 'Python in KherveSheet', onClick: () => showPythonHelp(book) },
-          { label: 'Keyboard Shortcuts', onClick: () => void os.dialog.alert(<div className="ks-doc"><Shortcuts /></div>, { title: 'KherveSheet shortcuts' }).finally(() => book.refocus()) },
+          { label: 'User Guide', shortcut: 'F1', onClick: () => void os.dialog.alert(<UserGuide />, { title: 'kSheet — User Guide' }).finally(() => book.refocus()) },
+          { label: 'Python in kSheet', onClick: () => showPythonHelp(book) },
+          { label: 'Keyboard Shortcuts', onClick: () => void os.dialog.alert(<div className="ks-doc"><Shortcuts /></div>, { title: 'kSheet shortcuts' }).finally(() => book.refocus()) },
           '-',
           { label: 'Check for Updates…', disabled: true },
           '-',
-          { label: 'About', onClick: () => void os.dialog.alert(<About core={CORE_SOURCE} python={null} />, { title: 'About KherveSheet' }).finally(() => book.refocus()) },
+          { label: 'About', onClick: () => void os.dialog.alert(<About core={CORE_SOURCE} python={null} />, { title: 'About kSheet' }).finally(() => book.refocus()) },
           { label: 'GitHub Repository', onClick: () => os.openUrl(GITHUB_URL) },
         ],
       },
@@ -785,7 +785,7 @@ export default function KherveSheet({ win, args }: AppProps) {
       e.preventDefault()
       void Promise.resolve(fn()).finally(() => book.refocus())
     }
-    if (k === 'F1') return run(() => os.dialog.alert(<UserGuide />, { title: 'KherveSheet — User Guide' }))
+    if (k === 'F1') return run(() => os.dialog.alert(<UserGuide />, { title: 'kSheet — User Guide' }))
     if (k === 'F2' && e.shiftKey) return run(() => editNote('note'))
     if (k === 'F3' && e.shiftKey) {
       e.preventDefault()

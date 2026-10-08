@@ -36,7 +36,7 @@ function followLink(e: MouseEvent, baseDir: string) {
   else if (href && !href.startsWith('#') && !/^[a-z][a-z0-9+.-]*:/i.test(href)) {
     const p = drivePath(baseDir, href)
     if (os.fs.exists(p)) void os.openFile(p)
-    else void os.dialog.alert(`"${p}" doesn't exist.`, { title: 'KherveBook' })
+    else void os.dialog.alert(`"${p}" doesn't exist.`, { title: 'kBook' })
   }
 }
 
@@ -322,8 +322,8 @@ const OTHER_LABEL: Record<string, string> = {
   note: 'A Note cell (rich text and pen)',
   file: 'A File cell (attached files)',
   kfit: 'A KherveFitting project (KFit cell)',
-  ktex: 'A KherveTeX document',
-  mol: 'A KherveMol molecule',
+  ktex: 'A kTeX document',
+  mol: 'A kMol molecule',
 }
 
 function otherDetail(type: string, source: string): { html?: string; text?: string } {
@@ -361,7 +361,7 @@ export function OtherView({ cell }: { cell: Cell }) {
       <div className="nb-other-head">
         <Info size={14} />
         <span>
-          {OTHER_LABEL[type] ?? `A “${type}” cell`} from the desktop KherveBook. The web version can't edit it yet; it is kept unchanged when you save.
+          {OTHER_LABEL[type] ?? `A “${type}” cell`} from the desktop kBook. The web version can't edit it yet; it is kept unchanged when you save.
         </span>
       </div>
       {detail.html && <div ref={ref} className="nb-other-html" dangerouslySetInnerHTML={{ __html: detail.html }} />}

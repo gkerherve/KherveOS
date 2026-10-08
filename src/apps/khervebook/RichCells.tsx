@@ -602,7 +602,7 @@ export function newKtexz(title = 'Untitled document'): Uint8Array {
     children: [
       { level: 1, children: [text('Introduction')], numbered: true, label: null, type: 'Section' },
       {
-        children: [text('Start writing here. Open this document in KherveTeX to edit it; the notebook shows the typeset pages.')],
+        children: [text('Start writing here. Open this document in kTeX to edit it; the notebook shows the typeset pages.')],
         alignment: 'justify',
         type: 'Paragraph',
       },
@@ -663,7 +663,7 @@ export function KtexView({ nb, cell }: { nb: Notebook; cell: Cell }) {
   const { id } = cell
   const doc = useMemo(() => parseKtex(cell.source), [cell.source])
   const [pages, setPages] = useState<string[]>([])
-  const [title, setTitle] = useState('KherveTeX document')
+  const [title, setTitle] = useState('kTeX document')
   const [hint, setHint] = useState('')
   const [page, setPage] = useState(doc.page)
   const [token, setToken] = useState(0)
@@ -678,7 +678,7 @@ export function KtexView({ nb, cell }: { nb: Notebook; cell: Cell }) {
     let alive = true
     if (!f) {
       setPages([])
-      setTitle('KherveTeX document')
+      setTitle('kTeX document')
       setHint('')
       return
     }
@@ -707,7 +707,7 @@ export function KtexView({ nb, cell }: { nb: Notebook; cell: Cell }) {
         bytes = r.pdf
       } else {
         setPages([])
-        setHint('No typeset pages yet: open the document in KherveTeX and export it as PDF beside the .ktexz (or keep its .tex there) — the web edition cannot typeset a .ktexz by itself.')
+        setHint('No typeset pages yet: open the document in kTeX and export it as PDF beside the .ktexz (or keep its .tex there) — the web edition cannot typeset a .ktexz by itself.')
         return
       }
       const imgs = await pdfPages(bytes)
@@ -731,14 +731,14 @@ export function KtexView({ nb, cell }: { nb: Notebook; cell: Cell }) {
   }
   const attach = async (path: string) => {
     if (!/\.(ktexz|kdocz|tex)$/i.test(path)) {
-      setHint(`${basename(path)} is not a KherveTeX document (.ktexz) or a .tex file.`)
+      setHint(`${basename(path)} is not a kTeX document (.ktexz) or a .tex file.`)
       return false
     }
     set({ file: await readAttachment(path), origin: path, page: 0 }, true)
     return true
   }
   const choose = async () => {
-    const p = await os.dialog.openFile({ title: 'Insert a KherveTeX document', extensions: ['.ktexz', '.kdocz', '.tex'], startDir: nb.baseDir() })
+    const p = await os.dialog.openFile({ title: 'Insert a kTeX document', extensions: ['.ktexz', '.kdocz', '.tex'], startDir: nb.baseDir() })
     if (p) await attach(p)
     nb.refocusSoon()
   }
@@ -768,7 +768,7 @@ export function KtexView({ nb, cell }: { nb: Notebook; cell: Cell }) {
           <Mdi name="mdi.chevron-down" size={20} />
         </button>
         <span className="nb-ktex-sep" />
-        <button className="nb-file-tool" title="New KherveTeX document" onClick={() => nb.callCell(id, 'newDocument')}>
+        <button className="nb-file-tool" title="New kTeX document" onClick={() => nb.callCell(id, 'newDocument')}>
           <Mdi name="mdi.file-plus-outline" size={20} />
         </button>
         <button className="nb-file-tool" title="Insert an existing .ktexz or .tex document" onClick={() => void choose()}>
@@ -777,9 +777,9 @@ export function KtexView({ nb, cell }: { nb: Notebook; cell: Cell }) {
         <button className="nb-file-tool" title="Re-read the document and its pages" onClick={() => setToken((t) => t + 1)}>
           <Mdi name="mdi.refresh" size={20} />
         </button>
-        <button className="k-btn" title="Open this document in KherveTeX — saving there updates the cell" disabled={!f} onClick={() => void nb.openInApp(id, 'khervetex')}>
+        <button className="k-btn" title="Open this document in kTeX — saving there updates the cell" disabled={!f} onClick={() => void nb.openInApp(id, 'khervetex')}>
           <Mdi name="mdi.pencil-outline" size={16} />
-          Edit in KherveTeX
+          Edit in kTeX
         </button>
       </div>
       <div
@@ -840,7 +840,7 @@ function Mol3D({ atoms, bonds }: { atoms: { el: string; x: number; y: number; z:
     const k = (Math.min(W, H) / 2 / (ext + 1.2)) * zoom
     return { pts, k }
   }, [atoms, rot, zoom])
-  if (!view) return <div className="nb-mol-empty">No molecule yet — open KherveMol to build one, or drop a .kmol here.</div>
+  if (!view) return <div className="nb-mol-empty">No molecule yet — open kMol to build one, or drop a .kmol here.</div>
   const { pts, k } = view
   const order = pts.map((_p, i) => i).sort((a, b) => pts[a].z - pts[b].z)
   const P = (i: number) => [W / 2 + pts[i].x * k, H / 2 - pts[i].y * k] as const
@@ -884,7 +884,7 @@ function Mol3D({ atoms, bonds }: { atoms: { el: string; x: number; y: number; z:
 
 function Mol2D({ sketch }: { sketch: { atoms: { el: string; x: number; y: number }[]; bonds: [number, number, number][] } }) {
   const { atoms, bonds } = sketch
-  if (!atoms.length) return <div className="nb-mol-empty">No 2D sketch in this molecule — draw one in KherveMol (2D Sketch).</div>
+  if (!atoms.length) return <div className="nb-mol-empty">No 2D sketch in this molecule — draw one in kMol (2D Sketch).</div>
   const xs = atoms.map((a) => a.x)
   const ys = atoms.map((a) => a.y)
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
@@ -967,12 +967,12 @@ export function MolView({ nb, cell }: { nb: Notebook; cell: Cell }) {
               {v.toUpperCase()}
             </button>
           ))}
-          <button className="nb-file-tool" title="Show the 3D building tools (in KherveMol)" disabled>
+          <button className="nb-file-tool" title="Show the 3D building tools (in kMol)" disabled>
             <Mdi name="mdi.tools" size={20} />
           </button>
-          <button className="k-btn" title="Edit in KherveMol; saving there updates this cell" onClick={() => void nb.openInApp(id, 'khervemol')}>
+          <button className="k-btn" title="Edit in kMol; saving there updates this cell" onClick={() => void nb.openInApp(id, 'khervemol')}>
             <Mdi name="mdi.open-in-new" size={16} />
-            Open in KherveMol
+            Open in kMol
           </button>
         </div>
         <div className="nb-mol-entry">
@@ -985,8 +985,8 @@ export function MolView({ nb, cell }: { nb: Notebook; cell: Cell }) {
           />
           <button
             className="k-btn"
-            title="Building from a name, SMILES or formula needs KherveMol's engine: open the cell in KherveMol and use its Build box"
-            onClick={() => nb.showFlash('Build is done in KherveMol in the web edition: click “Open in KherveMol”.')}
+            title="Building from a name, SMILES or formula needs kMol's engine: open the cell in kMol and use its Build box"
+            onClick={() => nb.showFlash('Build is done in kMol in the web edition: click “Open in kMol”.')}
           >
             <Mdi name="mdi.hammer-wrench" size={16} />
             Build

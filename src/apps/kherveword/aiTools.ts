@@ -79,7 +79,7 @@ function hf(s: unknown): HeaderFooter | null {
 
 export function kherveWordAiTools(host: WordHost): AppTools {
   const ready = async (signal?: AbortSignal): Promise<Editor> => {
-    if (!(await waitUntil(() => !host.loading() && !!host.editor(), 30_000, signal))) throw new Error('KherveWord is still opening the document. Try again in a moment.')
+    if (!(await waitUntil(() => !host.loading() && !!host.editor(), 30_000, signal))) throw new Error('kWord is still opening the document. Try again in a moment.')
     return host.editor()!
   }
   const itemAt = (ed: Editor, index: unknown): Item => {
@@ -388,7 +388,7 @@ export function kherveWordAiTools(host: WordHost): AppTools {
     async new_document(a, ctx) {
       await ready(ctx.signal)
       const info = host.info()
-      if (info.unsaved && !(await ctx.confirm('replace the open document in KherveWord with a new one', 'Its unsaved changes will be lost.'))) {
+      if (info.unsaved && !(await ctx.confirm('replace the open document in kWord with a new one', 'Its unsaved changes will be lost.'))) {
         throw new Error('The user did not allow replacing the unsaved document.')
       }
       const id = (['blank', 'letter', 'report', 'cv'].includes(String(a.template)) ? String(a.template) : 'blank') as TemplateId

@@ -233,7 +233,7 @@ export const AssistantBlock = memo(function AssistantBlock({
       </div>
       <div className="kai-reply">
         <div className="kai-reply-head">
-          <span className="kai-reply-name">KherveAI</span>
+          <span className="kai-reply-name">kAI</span>
           <span className="kai-reply-model">{m.model}</span>
         </div>
         {m.turns.map((t, i) => (
@@ -267,7 +267,7 @@ export const AssistantBlock = memo(function AssistantBlock({
         {m.stopped && !live && <div className="kai-note">Stopped.</div>}
         {m.limited && !live && (
           <div className="kai-note">
-            KherveAI stops after {MAX_STEPS} steps per message.
+            kAI stops after {MAX_STEPS} steps per message.
             {last && (
               <button className="k-btn small" onClick={() => continueRun(chatId)}>
                 <Play size={12} /> Continue

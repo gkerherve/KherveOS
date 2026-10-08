@@ -60,7 +60,7 @@ export async function chooseModel(): Promise<AiChoice> {
       installed = await fetchOllamaModels(s.ollamaUrl)
     } catch {
       throw new Error(
-        `Ollama is not running on this computer (${s.ollamaUrl}). Start it (the Ollama app, or "ollama serve") — or choose Claude or ChatGPT in KherveAI's settings.`,
+        `Ollama is not running on this computer (${s.ollamaUrl}). Start it (the Ollama app, or "ollama serve") — or choose Claude or ChatGPT in kAI's settings.`,
       )
     }
     if (!installed.length) throw new Error('Ollama has no model yet. Install one in a terminal, e.g.:  ollama pull qwen3.5:4b')
