@@ -1,0 +1,150 @@
+/* kCode: toolbar, course list | lesson text | editor + output, status bar.  Theme variables only. */
+
+.kcd-app { position: relative; min-width: 0; }
+.kcd-bar { flex-wrap: wrap; row-gap: 4px; }
+.kcd-bar .k-btn svg { flex: none; }
+.kcd-bar .short { display: none; }
+.kcd-lang { width: 112px; height: 26px; padding: 0 6px; }
+.kcd-seg-ctl { display: inline-flex; border: 1px solid var(--k-border); border-radius: var(--k-radius-sm); overflow: hidden; }
+.kcd-seg-ctl button { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border: 0; background: transparent; color: var(--k-muted); font-size: 12px; cursor: pointer; }
+.kcd-seg-ctl button:hover { background: var(--k-button-hover); color: var(--k-text); }
+.kcd-seg-ctl button.on { background: var(--k-selection); color: var(--k-text); }
+
+.kcd-tabs { display: flex; gap: 2px; padding: 4px 8px 0; background: var(--k-chrome); border-bottom: 1px solid var(--k-border); flex: none; }
+.kcd-tabs button { border: 0; background: transparent; color: var(--k-muted); padding: 6px 12px; border-radius: 6px 6px 0 0; cursor: pointer; }
+.kcd-tabs button.on { background: var(--k-bg); color: var(--k-text); box-shadow: inset 0 -2px var(--k-accent); }
+
+.kcd-body { flex: 1; min-height: 0; display: flex; }
+.kcd-work { flex: 1; min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr); }
+.kcd-right { min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+
+/* ----------------------------------------------------------- dividers */
+.kcd-divider { background: var(--k-border); position: relative; touch-action: none; }
+.kcd-divider::after { content: ''; position: absolute; inset: -3px; }
+.kcd-divider.col { cursor: col-resize; width: 7px; background: linear-gradient(to right, transparent 3px, var(--k-border) 3px, var(--k-border) 4px, transparent 4px); }
+.kcd-divider.row { cursor: row-resize; height: 7px; background: linear-gradient(to bottom, transparent 3px, var(--k-border) 3px, var(--k-border) 4px, transparent 4px); }
+.kcd-divider:hover, .kcd-divider:focus-visible { outline: none; background-color: color-mix(in srgb, var(--k-accent) 35%, transparent); }
+
+/* ----------------------------------------------------------- course list */
+.kcd-side { width: 250px; flex: none; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--k-border); background: var(--k-surface); }
+.kcd-search { display: flex; align-items: center; gap: 6px; padding: 8px 8px 4px; color: var(--k-muted); }
+.kcd-search .k-input { flex: 1; min-width: 0; height: 26px; }
+.kcd-overall { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 4px 10px 8px; font-size: 11.5px; color: var(--k-muted); }
+.kcd-overall .kcd-progress { flex: 1 0 100%; }
+.kcd-streak { display: inline-flex; align-items: center; gap: 3px; color: var(--k-warning); }
+.kcd-progress { height: 5px; border-radius: 3px; background: var(--k-alt); overflow: hidden; }
+.kcd-progress.thin { height: 2px; margin: 0 8px 2px; border-radius: 1px; }
+.kcd-progress > div { height: 100%; background: var(--k-accent); border-radius: inherit; transition: width 0.25s; }
+.kcd-tree { flex: 1; min-height: 0; overflow: auto; padding: 0 6px 12px; }
+.kcd-course { margin-top: 6px; }
+.kcd-course-head { display: flex; align-items: center; gap: 4px; width: 100%; border: 0; background: transparent; color: var(--k-text); padding: 5px 6px; border-radius: 5px; font-weight: 600; font-size: 12.5px; cursor: pointer; text-align: left; }
+.kcd-course-head:hover { background: var(--k-button-hover); }
+.kcd-course-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kcd-count { font-weight: 400; font-size: 11px; color: var(--k-muted); }
+.kcd-chapter-title { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--k-muted); padding: 8px 8px 2px 22px; }
+.kcd-item { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; border: 0; background: transparent; color: inherit; padding: 4px 8px 4px 20px; border-radius: 5px; font-size: 12.5px; cursor: pointer; }
+.kcd-item:hover { background: var(--k-button-hover); }
+.kcd-item.on { background: var(--k-selection); }
+.kcd-item.done .kcd-tick { color: var(--k-success); }
+.kcd-tick { display: inline-flex; flex: none; color: var(--k-muted); }
+.kcd-item-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kcd-item-hint { font-size: 10.5px; color: var(--k-muted); flex: none; }
+.kcd-lvl { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--k-success); }
+.kcd-lvl.intermediate { background: var(--k-warning); }
+.kcd-lvl.advanced { background: var(--k-danger); }
+.kcd-empty { color: var(--k-muted); font-size: 12.5px; padding: 8px 10px; margin: 0; }
+
+/* ----------------------------------------------------------- lesson text */
+.kcd-lesson { min-width: 0; min-height: 0; overflow: auto; padding: 14px 18px 24px; }
+.kcd-crumb { font-size: 11.5px; color: var(--k-muted); }
+.kcd-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 2px 0 6px; }
+.kcd-title { margin: 0; font-size: 19px; }
+.kcd-done-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--k-success); }
+.kcd-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.kcd-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--k-border); color: var(--k-muted); }
+.kcd-badge.beginner { color: var(--k-success); border-color: color-mix(in srgb, var(--k-success) 45%, transparent); }
+.kcd-badge.intermediate { color: var(--k-warning); border-color: color-mix(in srgb, var(--k-warning) 45%, transparent); }
+.kcd-badge.advanced { color: var(--k-danger); border-color: color-mix(in srgb, var(--k-danger) 45%, transparent); }
+
+.kcd-md { line-height: 1.6; }
+.kcd-md p { margin: 0 0 10px; }
+.kcd-md ul, .kcd-md ol { margin: 0 0 10px; padding-left: 22px; }
+.kcd-md li { margin: 2px 0; }
+.kcd-md blockquote { margin: 0 0 10px; padding: 4px 12px; border-left: 3px solid var(--k-accent); color: var(--k-muted); }
+.kcd-md hr { border: 0; border-top: 1px solid var(--k-border); margin: 14px 0; }
+.kcd-h1, .kcd-h2, .kcd-h3 { margin: 14px 0 6px; font-size: 15px; }
+.kcd-h2 { font-size: 14px; }
+.kcd-h3 { font-size: 13px; }
+.kcd-ic { font-family: var(--k-mono); font-size: 0.92em; padding: 1px 5px; border-radius: 4px; background: var(--k-alt); }
+.kcd-link { color: var(--k-link); }
+.kcd-block { position: relative; margin: 0 0 12px; border: 1px solid var(--k-border); border-radius: 6px; overflow: hidden; background: var(--k-bg); }
+.kcd-block .k-code-editor { padding: 2px 0; }
+.kcd-copy { position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity 0.12s; background: var(--k-surface); }
+.kcd-block:hover .kcd-copy, .kcd-copy:focus-visible { opacity: 1; }
+.kcd-plain { margin: 0; padding: 8px 10px; font-family: var(--k-mono); font-size: 12px; overflow: auto; }
+
+.kcd-task { margin: 14px 0; padding: 10px 14px 4px; border: 1px solid color-mix(in srgb, var(--k-accent) 50%, var(--k-border)); border-radius: 8px; background: color-mix(in srgb, var(--k-accent) 7%, transparent); }
+.kcd-task-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; color: var(--k-accent); margin-bottom: 4px; }
+.kcd-checks { list-style: none; margin: 0 0 8px; padding: 0; font-size: 12.5px; }
+.kcd-checks li { display: flex; gap: 8px; padding: 2px 0; color: var(--k-muted); }
+.kcd-checks li.ok { color: var(--k-text); }
+.kcd-checks li.ok .kcd-check-mark { color: var(--k-success); }
+.kcd-checks li.fail .kcd-check-mark { color: var(--k-danger); }
+.kcd-check-mark { width: 14px; flex: none; text-align: center; }
+.kcd-why { color: var(--k-muted); font-style: normal; word-break: break-word; }
+
+.kcd-success { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0; padding: 10px 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--k-success) 55%, transparent); background: color-mix(in srgb, var(--k-success) 10%, transparent); color: var(--k-text); font-size: 13px; }
+.kcd-success svg { color: var(--k-success); flex: none; }
+.kcd-success > div { flex: 1; min-width: 160px; }
+.kcd-help { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.kcd-reveal { margin: 8px 0 0; font-size: 13px; line-height: 1.55; padding: 8px 12px; border-left: 3px solid var(--k-warning); background: var(--k-alt); border-radius: 0 6px 6px 0; }
+.kcd-reveal .kcd-block { margin: 0 0 8px; }
+.kcd-nextrow { margin-top: 14px; }
+
+/* ----------------------------------------------------------- editor and output */
+.kcd-editor { min-width: 0; min-height: 0; overflow: hidden; border-bottom: 0; }
+.kcd-editor .k-code-editor { height: 100%; }
+.kcd-errline { background: color-mix(in srgb, var(--k-danger) 22%, transparent); }
+
+.kcd-output { min-height: 0; min-width: 0; display: flex; flex-direction: column; background: var(--k-surface); }
+.kcd-out-head { display: flex; align-items: center; gap: 8px; padding: 3px 8px 3px 12px; border-bottom: 1px solid var(--k-border); font-size: 11.5px; color: var(--k-muted); flex: none; }
+.kcd-out-title { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.kcd-out-meta { font-family: var(--k-mono); }
+.kcd-out-body { flex: 1; min-height: 0; overflow: auto; padding: 8px 12px 12px; font-family: var(--k-mono); }
+.kcd-out-body .kcd-empty { font-family: var(--k-font); padding: 0; }
+.kcd-seg { margin: 0; white-space: pre-wrap; word-break: break-word; font: inherit; }
+.kcd-seg.err { color: var(--k-danger); }
+.kcd-seg.warn { color: var(--k-warning); }
+.kcd-seg.status { color: var(--k-muted); font-style: italic; }
+.kcd-value { margin: 4px 0; padding: 0 0 0 14px; white-space: pre-wrap; word-break: break-word; font: inherit; color: var(--k-accent); position: relative; }
+.kcd-value::before { content: '→'; position: absolute; left: 0; }
+.kcd-fig { display: block; max-width: 100%; height: auto; margin: 8px 0; background: #fff; border-radius: 4px; }
+.kcd-error { margin: 8px 0; padding: 8px 10px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--k-danger) 55%, transparent); background: color-mix(in srgb, var(--k-danger) 9%, transparent); font-family: var(--k-font); font-size: 12.5px; }
+.kcd-error-head { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; word-break: break-word; }
+.kcd-error details { margin-top: 6px; color: var(--k-muted); }
+.kcd-error pre { margin: 4px 0 0; white-space: pre-wrap; font-family: var(--k-mono); font-size: 11.5px; }
+.kcd-note { margin: 8px 0; font-family: var(--k-font); font-size: 12.5px; color: var(--k-muted); }
+.kcd-note.warn { color: var(--k-warning); }
+.kcd-result { margin: 10px 0 0; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--k-border); font-family: var(--k-font); font-size: 12.5px; }
+.kcd-result.ok { border-color: color-mix(in srgb, var(--k-success) 55%, transparent); background: color-mix(in srgb, var(--k-success) 9%, transparent); }
+.kcd-result.fail { border-color: color-mix(in srgb, var(--k-warning) 55%, transparent); background: color-mix(in srgb, var(--k-warning) 8%, transparent); }
+.kcd-result-head { font-weight: 600; margin-bottom: 4px; }
+.kcd-result ul { list-style: none; margin: 0; padding: 0; }
+.kcd-result li { padding: 1px 0; word-break: break-word; }
+.kcd-result li.ok span { color: var(--k-success); }
+.kcd-result li.fail span { color: var(--k-danger); }
+.kcd-input { padding: 6px 12px; border-bottom: 1px solid var(--k-border); font-size: 12px; color: var(--k-muted); flex: none; }
+.kcd-input label { display: block; margin-bottom: 4px; }
+.kcd-input textarea { width: 100%; font-family: var(--k-mono); resize: vertical; min-height: 40px; }
+
+/* ----------------------------------------------------------- status bar */
+.kcd-status { gap: 14px; }
+.kcd-where { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* ----------------------------------------------------------- small windows */
+.kcd-app.narrow .kcd-bar .lbl { display: none; }
+.kcd-app.narrow .kcd-bar .short { display: inline; }
+.kcd-app.narrow .kcd-side { position: absolute; z-index: 5; top: 0; bottom: 0; left: 0; width: min(280px, 86%); box-shadow: var(--k-shadow); }
+.kcd-app.narrow .kcd-body { position: relative; }
+.kcd-app.narrow .kcd-lesson { padding: 12px 14px 20px; }
+.kcd-app.narrow .kcd-right { grid-template-rows: minmax(120px, 1fr) 7px minmax(120px, 1fr) !important; }

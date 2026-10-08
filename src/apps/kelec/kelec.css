@@ -1,0 +1,298 @@
+/* kElec: a palette, a schematic sheet and side panels. Colours come from the theme variables only. */
+
+.ke-app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  position: relative;
+  min-width: 0;
+  outline: none;
+}
+
+.ke-toolbar { flex-wrap: wrap; row-gap: 4px; height: auto; min-height: 38px; }
+.ke-toolbar .ke-analysis { width: auto; height: 28px; padding: 0 6px; }
+
+.ke-tabs {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0 8px;
+  background: var(--k-chrome);
+  border-bottom: 1px solid var(--k-border);
+  overflow-x: auto;
+}
+.ke-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--k-muted);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ke-tabs button:hover { color: var(--k-text); }
+.ke-tabs button.on { color: var(--k-text); border-bottom-color: var(--k-accent); font-weight: 600; }
+.ke-tabs .ke-tab-extra { margin-left: auto; color: var(--k-accent); }
+
+.ke-body { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+
+/* ---------------------------------------------------------------- schematic layout */
+
+.ke-schematic { flex: 1; min-height: 0; display: flex; position: relative; }
+.ke-left {
+  flex: none;
+  width: 214px;
+  background: var(--k-surface);
+  border-right: 1px solid var(--k-border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.ke-center { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ke-sheet { flex: 1; min-height: 120px; position: relative; }
+.ke-dock { flex: none; min-height: 0; border-top: 1px solid var(--k-border); background: var(--k-surface); }
+.ke-splitter { flex: none; height: 5px; margin-top: -3px; cursor: ns-resize; position: relative; z-index: 2; touch-action: none; }
+.ke-splitter:hover { background: var(--k-accent); opacity: 0.5; }
+.ke-side {
+  flex: none;
+  width: 296px;
+  background: var(--k-surface);
+  border-left: 1px solid var(--k-border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.ke-side-tabs { margin: 8px; }
+.ke-side-body { flex: 1; min-height: 0; overflow-y: auto; }
+
+.ke-app[data-size='s'] .ke-left,
+.ke-app[data-size='s'] .ke-side {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  width: min(280px, 86%);
+  box-shadow: var(--k-shadow-lg);
+}
+.ke-app[data-size='s'] .ke-left { left: 0; }
+.ke-app[data-size='s'] .ke-side { right: 0; }
+.ke-app[data-size='m'] .ke-side { width: 250px; }
+.ke-app[data-size='m'] .ke-left { width: 180px; }
+
+/* ---------------------------------------------------------------- the sheet */
+
+.ke-canvas { position: absolute; inset: 0; outline: none; background: var(--k-bg); overflow: hidden; }
+.ke-svg { display: block; background: var(--k-bg); user-select: none; -webkit-user-select: none; touch-action: none; }
+.ke-grid-dot { fill: color-mix(in srgb, var(--k-muted) 60%, transparent); }
+.ke-wire { stroke: var(--k-success); stroke-width: 1.6; stroke-linecap: round; fill: none; }
+.ke-wire-halo { stroke: var(--k-link); stroke-width: 7; stroke-linecap: round; opacity: 0.35; }
+.ke-junction { fill: var(--k-success); }
+.ke-part { color: var(--k-text); }
+.ke-glyph, .ke-ghost { stroke: currentColor; stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ke-part.ke-sel { color: var(--k-link); }
+.ke-selbox { fill: color-mix(in srgb, var(--k-link) 9%, transparent); stroke: var(--k-link); stroke-width: 1; stroke-dasharray: 4 3; }
+.ke-part.ke-warn .ke-selbox { fill: color-mix(in srgb, var(--k-danger) 12%, transparent); stroke: var(--k-danger); }
+.ke-sym-text { font-family: var(--k-font); stroke: none; }
+.ke-tag { fill: var(--k-text); font-size: 11px; font-family: var(--k-font); stroke: none; }
+.ke-tag.ke-ref { font-weight: 600; }
+.ke-tag.ke-val { fill: var(--k-muted); }
+.ke-part.ke-sel .ke-tag { fill: var(--k-link); }
+.ke-pin { fill: var(--k-accent); stroke: none; }
+.ke-pin-open { fill: color-mix(in srgb, var(--k-danger) 25%, transparent); stroke: var(--k-danger); stroke-width: 1.2; }
+.ke-flag { fill: color-mix(in srgb, var(--k-warning) 12%, var(--k-bg)); stroke: var(--k-warning); stroke-width: 1.2; }
+.ke-flag-text { fill: var(--k-warning); font-size: 11px; font-family: var(--k-font); }
+.ke-label.ke-sel .ke-flag { stroke: var(--k-link); }
+.ke-label.ke-sel .ke-flag-text { fill: var(--k-link); }
+.ke-note { fill: var(--k-muted); font-size: 12px; font-family: var(--k-font); }
+.ke-note.ke-sel { fill: var(--k-link); }
+.ke-annot rect { fill: var(--k-surface); stroke: var(--k-border); }
+.ke-annot text { font-size: 10.5px; font-family: var(--k-mono); fill: var(--k-text); stroke: none; }
+.ke-annot-voltage rect { stroke: var(--k-success); }
+.ke-annot-voltage text { fill: var(--k-success); }
+.ke-annot-current text { fill: var(--k-warning); }
+.ke-annot-meter rect { stroke: var(--k-accent); fill: var(--k-accent); }
+.ke-annot-meter text { fill: var(--k-accent-text); font-weight: 600; }
+.ke-ghost { color: var(--k-accent); opacity: 0.75; }
+.ke-wire-prev { fill: none; stroke: var(--k-accent); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.ke-box { fill: color-mix(in srgb, var(--k-link) 10%, transparent); stroke: var(--k-link); stroke-width: 1; stroke-dasharray: 4 3; }
+
+.ke-empty { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; padding: 20px; }
+.ke-empty-card {
+  max-width: 380px;
+  padding: 16px 18px;
+  border: 1px dashed var(--k-border);
+  border-radius: var(--k-radius);
+  background: color-mix(in srgb, var(--k-surface) 85%, transparent);
+  text-align: center;
+}
+.ke-empty-card p { margin: 6px 0 0; }
+
+/* ---------------------------------------------------------------- palette */
+
+.ke-palette { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.ke-search { display: flex; align-items: center; gap: 6px; padding: 8px; border-bottom: 1px solid var(--k-border); color: var(--k-muted); }
+.ke-search input { flex: 1; min-width: 0; }
+.ke-palette-list { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 8px 12px; }
+.ke-palette-list h4 { margin: 10px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--k-muted); }
+.ke-palette-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.ke-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--k-radius-sm);
+  background: transparent;
+  color: var(--k-text);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.2;
+  cursor: grab;
+  text-align: center;
+}
+.ke-entry:hover { background: var(--k-button-hover); border-color: var(--k-border); }
+.ke-entry.on { background: var(--k-selection); border-color: var(--k-accent); }
+.ke-icon { stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; color: var(--k-text); overflow: visible; }
+.ke-icon text, .ke-thumb text { stroke: none; }
+.ke-pad { padding: 8px; }
+
+/* ---------------------------------------------------------------- panels */
+
+.ke-panel-body { padding: 4px 12px 14px; }
+.ke-panel-body h3 { margin: 6px 0 4px; font-size: 14px; }
+.ke-panel-body h4 { margin: 14px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--k-muted); }
+.ke-prop-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.ke-prop-head h3 { margin: 0; }
+.ke-field { display: flex; flex-direction: column; gap: 3px; margin: 8px 0; }
+.ke-field > span:first-child { font-size: 11.5px; color: var(--k-muted); }
+.ke-field-in { display: flex; align-items: center; gap: 6px; }
+.ke-field-in .k-input { flex: 1; min-width: 0; }
+.ke-field-in em { font-style: normal; color: var(--k-muted); min-width: 22px; }
+.ke-field small { font-size: 11px; }
+.ke-check { display: flex; gap: 6px; align-items: flex-start; margin: 10px 0; font-size: 12px; color: var(--k-muted); }
+.ke-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.ke-seg { display: flex; gap: 2px; padding: 2px; background: var(--k-bg); border: 1px solid var(--k-border); border-radius: var(--k-radius-sm); }
+.ke-seg button { flex: 1; height: 24px; padding: 0 6px; border: 0; border-radius: 4px; background: transparent; color: var(--k-muted); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.ke-seg button.on { background: var(--k-selection); color: var(--k-text); font-weight: 600; }
+.ke-seg button:hover:not(.on) { color: var(--k-text); }
+.ke-kv { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ke-kv th, .ke-kv td { text-align: left; padding: 2px 4px; border-bottom: 1px solid color-mix(in srgb, var(--k-border) 60%, transparent); }
+.ke-kv th { font-weight: 500; color: var(--k-muted); white-space: nowrap; }
+.ke-kv thead th, .ke-kv thead td { color: var(--k-muted); font-size: 11px; }
+.ke-kv td { font-family: var(--k-mono); font-size: 11.5px; }
+.ke-supply { color: var(--k-success); }
+.ke-pins-table table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ke-pins-table th { text-align: left; color: var(--k-muted); font-weight: 500; padding: 2px 4px; }
+.ke-pins-table td { padding: 2px 4px; font-family: var(--k-mono); font-size: 11.5px; }
+.ke-problems { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ke-problems li button { display: flex; gap: 7px; align-items: flex-start; width: 100%; padding: 6px 8px; border: 1px solid var(--k-border); border-radius: var(--k-radius-sm); background: var(--k-bg); color: var(--k-text); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.ke-problems li button:disabled { cursor: default; }
+.ke-problems li.error button { border-color: var(--k-danger); }
+.ke-problems li.warning button { border-color: var(--k-warning); }
+.ke-problems li.error svg { color: var(--k-danger); flex: none; }
+.ke-problems li.warning svg { color: var(--k-warning); flex: none; }
+.ke-problems li.info svg { color: var(--k-link); flex: none; }
+.ke-ok { display: flex; gap: 6px; align-items: center; color: var(--k-success); font-size: 12px; margin: 8px 0; }
+.ke-bad { display: flex; gap: 6px; align-items: center; color: var(--k-warning); font-size: 12px; margin: 8px 0; }
+.ke-run-error { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; padding: 8px; border: 1px solid var(--k-danger); border-radius: var(--k-radius-sm); background: color-mix(in srgb, var(--k-danger) 10%, transparent); font-size: 12px; margin: 6px 0; }
+.ke-run-error svg { color: var(--k-danger); flex: none; margin-top: 2px; }
+.ke-run-msg { font-size: 12px; color: var(--k-muted); }
+.ke-stale-note { padding: 6px 8px; border-radius: var(--k-radius-sm); background: color-mix(in srgb, var(--k-warning) 14%, transparent); font-size: 12px; }
+
+/* ---------------------------------------------------------------- scope */
+
+.ke-scope { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.ke-scope-bar { flex: none; display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--k-border); flex-wrap: wrap; }
+.ke-scope-title { font-size: 12px; }
+.ke-stale { font-size: 11px; padding: 1px 6px; border-radius: 999px; background: color-mix(in srgb, var(--k-warning) 25%, transparent); }
+.ke-chips { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 160px; flex-wrap: wrap; }
+.ke-chip { display: inline-flex; align-items: center; gap: 3px; padding: 1px 4px 1px 8px; border: 1px solid var(--k-border); border-radius: 999px; font-size: 11.5px; background: var(--k-bg); font-family: var(--k-mono); }
+.ke-chip button { display: grid; place-items: center; width: 16px; height: 16px; border: 0; background: transparent; color: var(--k-muted); cursor: pointer; border-radius: 50%; }
+.ke-chip button:hover { color: var(--k-danger); }
+.ke-trace-input { width: 230px; height: 24px; font-size: 12px; }
+.ke-scope-err { padding: 4px 10px; font-size: 12px; color: var(--k-danger); }
+.ke-scope-body { flex: 1; min-height: 0; display: flex; }
+.ke-chart { position: relative; flex: 1; min-width: 0; min-height: 0; }
+.ke-chart-plot { position: absolute; inset: 0; }
+.ke-chart-note { position: absolute; inset: 0; display: grid; place-items: center; }
+.ke-readout { flex: none; width: 236px; overflow-y: auto; padding: 6px 8px; border-left: 1px solid var(--k-border); font-size: 11.5px; }
+.ke-readout table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+.ke-readout th, .ke-readout td { padding: 2px 3px; text-align: left; border-bottom: 1px solid color-mix(in srgb, var(--k-border) 55%, transparent); font-family: var(--k-mono); font-weight: 400; }
+.ke-readout caption { text-align: left; font-family: var(--k-font); color: var(--k-muted); font-size: 11px; padding-bottom: 2px; }
+.ke-readout td:first-child { font-family: var(--k-font); color: var(--k-muted); }
+.ke-hint { margin: 0; font-size: 11.5px; }
+.ke-app[data-size='s'] .ke-readout { display: none; }
+
+/* ---------------------------------------------------------------- netlist */
+
+.ke-netlist-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.ke-netlist { flex: 1; min-height: 120px; display: flex; flex-direction: column; }
+.ke-subbar { border-bottom: 1px solid var(--k-border); }
+.ke-netlist-edit { flex: 1; min-height: 0; }
+.ke-netlist-msg { flex: none; padding: 6px 12px; font-size: 12px; color: var(--k-muted); border-top: 1px solid var(--k-border); background: var(--k-chrome); }
+.ke-netlist-msg.error { color: var(--k-danger); }
+.ke-netlist-msg.ok { color: var(--k-success); }
+.ke-netlist-res { flex: none; max-height: 40%; overflow-y: auto; border-top: 1px solid var(--k-border); background: var(--k-surface); }
+
+/* ---------------------------------------------------------------- calculators */
+
+.ke-calc { flex: 1; min-height: 0; display: flex; }
+.ke-calc-nav { flex: none; width: 220px; overflow-y: auto; padding: 8px; background: var(--k-surface); border-right: 1px solid var(--k-border); }
+.ke-calc-nav h4 { margin: 12px 4px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--k-muted); }
+.ke-calc-nav button { display: block; width: 100%; padding: 5px 8px; border: 0; border-radius: var(--k-radius-sm); background: transparent; color: var(--k-text); font: inherit; text-align: left; cursor: pointer; }
+.ke-calc-nav button:hover { background: var(--k-button-hover); }
+.ke-calc-nav button.on { background: var(--k-selection); font-weight: 600; }
+.ke-calc-main { flex: 1; min-width: 0; overflow-y: auto; padding: 14px 20px 30px; max-width: 760px; }
+.ke-calc-main h2 { margin: 0 0 2px; font-size: 18px; }
+.ke-calc-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 4px 16px; margin: 12px 0; }
+.ke-calc-err { padding: 8px 10px; border: 1px solid var(--k-warning); border-radius: var(--k-radius-sm); background: color-mix(in srgb, var(--k-warning) 10%, transparent); }
+.ke-calc-out { margin-top: 10px; }
+.ke-calc-out table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+.ke-calc-out th { text-align: left; font-weight: 500; color: var(--k-muted); padding: 5px 8px 5px 0; border-bottom: 1px solid var(--k-border); width: 45%; }
+.ke-calc-out td { padding: 5px 4px; border-bottom: 1px solid var(--k-border); font-family: var(--k-mono); }
+.ke-calc-out td:last-child { width: 30px; text-align: right; }
+.ke-calc-out tr.main td { color: var(--k-accent); font-weight: 600; }
+.ke-note-line { margin: 4px 0; font-size: 12px; }
+.ke-draw { display: block; margin: 8px 0; color: var(--k-text); }
+.ke-draw-lead { stroke: var(--k-muted); stroke-width: 3; fill: none; }
+.ke-resbody { fill: color-mix(in srgb, var(--k-warning) 30%, var(--k-surface)); stroke: var(--k-border); }
+.ke-band { stroke: color-mix(in srgb, var(--k-bg) 60%, transparent); stroke-width: 0.5; }
+.ke-axis { stroke: var(--k-border); stroke-width: 1; }
+.ke-vec line { stroke: currentColor; stroke-width: 2; }
+.ke-vec text { fill: currentColor; font-size: 12px; font-family: var(--k-font); }
+.ke-vec-0 { color: var(--k-link); } .ke-vec-1 { color: var(--k-warning); } .ke-vec-2 { color: var(--k-success); } .ke-vec-3 { color: var(--k-accent); }
+.ke-app[data-size='s'] .ke-calc { flex-direction: column; }
+.ke-app[data-size='s'] .ke-calc-nav { width: auto; max-height: 150px; border-right: 0; border-bottom: 1px solid var(--k-border); }
+
+/* ---------------------------------------------------------------- examples */
+
+.ke-examples { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 16px 24px; }
+.ke-examples-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; position: sticky; top: 0; background: var(--k-bg); padding: 4px 0; z-index: 2; }
+.ke-examples-bar .k-input { width: 180px; }
+.ke-tabs-inline { display: flex; flex-wrap: wrap; gap: 4px; }
+.ke-tabs-inline button { height: 26px; padding: 0 10px; border: 1px solid var(--k-border); border-radius: 999px; background: transparent; color: var(--k-muted); font: inherit; cursor: pointer; }
+.ke-tabs-inline button.on { background: var(--k-selection); color: var(--k-text); border-color: var(--k-accent); }
+.ke-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.ke-card { display: flex; flex-direction: column; gap: 4px; padding: 10px; text-align: left; border: 1px solid var(--k-border); border-radius: var(--k-radius); background: var(--k-surface); color: var(--k-text); font: inherit; cursor: pointer; }
+.ke-card:hover { border-color: var(--k-accent); background: var(--k-button-hover); }
+.ke-card small { color: var(--k-muted); font-size: 11.5px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ke-card-cat { font-size: 11px; color: var(--k-accent); }
+.ke-thumb { width: 100%; height: 120px; background: var(--k-bg); border-radius: var(--k-radius-sm); border: 1px solid var(--k-border); }
+.ke-thumb .ke-part { color: var(--k-text); stroke: currentColor; stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ke-thumb .ke-wire { stroke-width: 2.4; }
+
+/* ---------------------------------------------------------------- status bar */
+
+.ke-status { gap: 14px; }
+.ke-status-hover { overflow: hidden; text-overflow: ellipsis; min-width: 0; color: var(--k-text); }
+.ke-sim-status.error { color: var(--k-danger); }
+.ke-sim-status.running { color: var(--k-warning); }
+.ke-sim-status.done { color: var(--k-success); }

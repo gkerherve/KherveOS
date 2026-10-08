@@ -471,3 +471,22 @@
 .mg-app.mg-pinball {
   --mg-panel: 124px;
 }
+
+/* Pac-Man: lives are little Pac-Men, the level's fruit sits by its name. */
+.mg-app .mg-pac-life {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: conic-gradient(#ffd83a 0 62deg, transparent 62deg 118deg, #ffd83a 118deg 360deg);
+  filter: drop-shadow(0 0 4px rgba(255, 216, 58, 0.45));
+}
+.mg-app .mg-pac-life.mg-off {
+  background: transparent;
+  filter: none;
+  box-shadow: inset 0 0 0 1.5px var(--k-border);
+}
+.mg-app .mg-fruit {
+  width: 26px;
+  height: 26px;
+  vertical-align: middle;
+}
