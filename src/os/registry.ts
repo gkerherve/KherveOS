@@ -5,6 +5,7 @@ import {
   Atom, Bird, Blocks, Box, FlaskConical, Rocket, Spade, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sheet, Sigma, Sparkles, SquareTerminal, StickyNote,
 } from 'lucide-react'
+import { Calculator } from 'lucide-react'
 import type { AppManifest } from './types'
 
 export const APPS: AppManifest[] = [
@@ -322,6 +323,21 @@ export const APPS: AppManifest[] = [
     defaultSize: { w: 1400, h: 880 },
     minSize: { w: 900, h: 560 },
     fileTypes: ['.kcad', '.scad', '.csg', '.stl', '.obj', '.off', '.3mf', '.amf'],
+  },
+  {
+    id: 'khervecalc',
+    name: 'KherveCalc',
+    icon: Calculator,
+    color: '#22b357',
+    image: '/icons/apps/khervecalc.png',
+    brand: { label: 'KCalc', from: '#3a414a', to: '#14171b', glyph: '#3ddc84' },
+    category: 'kherve',
+    group: 'Science',
+    description: 'A scientific calculator: exact and 1000-digit maths, calculus, matrices, statistics, units, constants, graphs',
+    load: () => import('@/apps/khervecalc/KherveCalc'),
+    defaultSize: { w: 1180, h: 800 },
+    minSize: { w: 640, h: 480 },
+    fileTypes: ['.kcalc'],
   },
   {
     id: 'browser',
