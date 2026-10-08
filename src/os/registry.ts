@@ -24,6 +24,21 @@ export const APPS: AppManifest[] = [
     desktop: true,
   },
   {
+    id: 'kherveword',
+    name: 'KherveWord',
+    icon: FileText,
+    color: '#2b579a',
+    image: '/icons/apps/kherveword.png',
+    brand: { label: 'KWord', from: '#4f8ad8', to: '#1d4a8f' },
+    category: 'kherve',
+    group: 'Office',
+    description: 'A word processor: styles, tables, pictures, comments, track changes, .docx and PDF',
+    load: () => import('@/apps/kherveword/KherveWord'),
+    defaultSize: { w: 1180, h: 800 },
+    minSize: { w: 640, h: 420 },
+    fileTypes: ['.docx', '.dotx', '.docm', '.odt', '.rtf'],
+  },
+  {
     id: 'khervepdf',
     name: 'KhervePDF',
     icon: FileText,
@@ -86,6 +101,10 @@ export const APPS: AppManifest[] = [
     // .xlsx stays with KherveSheet; KherveFitting opens its workbooks from its own File menu.
     fileTypes: ['.vms'],
   },
+  // The techniques of KherveFitting-AI, one app each (src/apps/khervetech is their shared base).
+  // Projects are the desktop's .kfit: a KherveTGA window given another technique's project hands it
+  // on to that app. Raw .csv/.txt/.dat files stay KherveSheet's / Notepad's: "Open with" or the
+  // app's File > Import.
   {
     id: 'kherveslide',
     name: 'KherveSlide',

@@ -702,7 +702,11 @@ APP_TOOL_SETS.push(KHERVECAD_TOOL_SET)
 import { NOTES_TOOL_SET } from './manifests/notes.ts'
 APP_TOOL_SETS.push(NOTES_TOOL_SET)
 
+// KherveWord (its tools' code: src/apps/kherveword/aiTools.ts)
+import { KHERVEWORD_TOOL_SET } from './manifests/kherveword.ts'
+APP_TOOL_SETS.push(KHERVEWORD_TOOL_SET)
 
 // KherveCalc (its tools' code: src/apps/khervecalc/aiTools.ts)
 import { KHERVECALC_TOOL_SET } from './manifests/khervecalc.ts'
 APP_TOOL_SETS.push(KHERVECALC_TOOL_SET)
+
