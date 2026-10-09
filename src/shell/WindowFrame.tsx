@@ -170,6 +170,9 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
     let detached = !(win.maximized || win.snapped)
     let hint: typeof snapHint = null
     let moved = false
+    // Moving a window must not select text either (see startResize).
+    e.preventDefault()
+    window.getSelection()?.removeAllRanges()
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
     document.body.classList.add('k-dragging')
 
@@ -225,6 +228,9 @@ function WindowFrame({ win, focused }: { win: WinState; focused: boolean }) {
   const startResize = (edge: Edge) => (e: React.PointerEvent) => {
     if (e.button !== 0) return
     e.stopPropagation()
+    // A resize drag must not select text in the page (the press would start a selection that grows with the pointer).
+    e.preventDefault()
+    window.getSelection()?.removeAllRanges()
     focus(win.id)
     const el = ref.current!
     const s = { px: e.clientX, py: e.clientY, ...b }

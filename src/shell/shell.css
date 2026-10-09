@@ -560,6 +560,7 @@
   border-radius: 6px;
   box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--k-text) 22%, transparent), var(--k-shadow);
   pointer-events: auto;
+  -webkit-user-select: text;
   user-select: text;
   animation: k-open 0.16s ease-out;
 }
@@ -707,6 +708,7 @@
 
 .k-dragging,
 .k-dragging * {
+  -webkit-user-select: none !important;
   user-select: none !important;
 }
 .k-dragging iframe {
