@@ -1,0 +1,25 @@
+{
+  "format": "kdig",
+  "version": 1,
+  "name": "Number systems and IEEE-754",
+  "description": "Open the Numbers tab: type a number and see binary, octal, hex, two's complement, Gray, BCD, fixed point and the IEEE-754 half / single / double bit fields.",
+  "tab": "numbers",
+  "circuit": {
+    "parts": [],
+    "wires": [],
+    "labels": [],
+    "notes": [
+      {
+        "id": "n1",
+        "text": "The Numbers tab shows an integer in every representation,\nIEEE-754 bit fields (click a bit to flip it) and\nbinary arithmetic step by step.",
+        "x": 0,
+        "y": 0
+      }
+    ]
+  },
+  "numbers": {
+    "value": "-118.625",
+    "base": 10,
+    "bits": 8
+  }
+}

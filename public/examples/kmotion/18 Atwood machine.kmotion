@@ -1,0 +1,16 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "oscillator",
+  "title": "Atwood machine",
+  "description": "Masses 3 kg and 2 kg over an ideal pulley: a = (m₁ − m₂) g / (m₁ + m₂) = 1.96 m/s², tension 23.5 N. Add a pulley mass and a drops.",
+  "params": {
+    "mode": "atwood",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "m1": 3,
+    "m2": 2,
+    "M": 0,
+    "v0a": 0
+  }
+}

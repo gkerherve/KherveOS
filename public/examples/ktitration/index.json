@@ -1,0 +1,204 @@
+{
+  "app": "ktitration",
+  "folder": "kTitration Examples",
+  "examples": [
+    {
+      "file": "01 HCl with NaOH.ktitr",
+      "title": "HCl with NaOH",
+      "description": "The strong–strong titration: 25.00 mL of 0.1000 M HCl with 0.1000 M NaOH. The pH starts at 1.00, the equivalence point is at 25.00 mL and pH 7.00, and the jump covers pH 4–10, so almost any indicator will do. Bromothymol blue is drawn.",
+      "group": "Acid-base basics"
+    },
+    {
+      "file": "02 Acetic acid with NaOH.ktitr",
+      "title": "Acetic acid with NaOH",
+      "description": "A weak acid, pKa 4.76: 25.00 mL of 0.1000 M acetic acid with 0.1000 M NaOH. At the half-equivalence point (12.50 mL) the pH equals the pKa. The equivalence point is basic (pH 8.73), so phenolphthalein is right and methyl orange is not.",
+      "group": "Acid-base basics"
+    },
+    {
+      "file": "03 Ammonia with HCl.ktitr",
+      "title": "Ammonia with HCl",
+      "description": "A weak base: 25.00 mL of 0.1000 M ammonia with 0.1000 M HCl. The ammonium ion is a weak acid (pKa 9.25), so the equivalence point is acidic (pH 5.28) and methyl red is the indicator.",
+      "group": "Acid-base basics"
+    },
+    {
+      "file": "04 Acetic acid with ammonia.ktitr",
+      "title": "Acetic acid with ammonia",
+      "description": "A weak acid titrated with a weak base has no sharp jump: the pH changes by less than 2 units around the equivalence point and no indicator gives a good end point. This is why strong titrants are used.",
+      "group": "Acid-base basics"
+    },
+    {
+      "file": "05 Mixture - HCl and acetic acid.ktitr",
+      "title": "Mixture: HCl and acetic acid",
+      "description": "A strong and a weak acid together, 12.50 mL of each at 0.1000 M, with 0.1000 M NaOH. The strong acid is titrated first (equivalence at 12.50 mL, pH about 3.1), then acetic acid (25.00 mL, pH 8.58). The first step is only a shoulder: acetic acid (pKa 4.76) is too strong to leave a sharp jump after the HCl. The best indicator for the first end point still errs by about 3 % (methyl orange 8 %); phenolphthalein gives the total of both acids.",
+      "group": "Acid-base basics"
+    },
+    {
+      "file": "06 Mixture - HCl and ammonium chloride.ktitr",
+      "title": "Mixture: HCl and ammonium chloride",
+      "description": "A strong acid and a weak acid that is much weaker, 12.50 mL of each at 0.1000 M, with 0.1000 M NaOH: now both steps are sharp. HCl is neutralised first (12.50 mL, pH 5.4, methyl red), then NH₄⁺ (25.00 mL, pH 10.8): the second jump is weak because ammonium is a weak acid, and only alizarin yellow R comes within 2 %.",
+      "group": "Acid-base basics"
+    },
+    {
+      "file": "07 Sodium carbonate with HCl.ktitr",
+      "title": "Sodium carbonate with HCl",
+      "description": "25.00 mL of 0.0500 M Na₂CO₃ with 0.1000 M HCl. Carbonate is protonated to hydrogencarbonate (first equivalence point, 12.50 mL, pH 8.3: a gentle bend that phenolphthalein shows only roughly) and then to carbonic acid (second, 25.00 mL, pH 4.0: sharper, methyl orange). Between them bicarbonate is the main species.",
+      "group": "Polyprotic and mixtures"
+    },
+    {
+      "file": "08 Phosphoric acid with NaOH.ktitr",
+      "title": "Phosphoric acid with NaOH",
+      "description": "Three pKa values (2.15, 7.20, 12.35), two usable jumps. 25.00 mL of 0.1000 M H₃PO₄ with 0.1000 M NaOH: the first equivalence point (25 mL) is at pH ≈ (pKa1 + pKa2)/2 = 4.7, the second (50 mL) at ≈ (pKa2 + pKa3)/2 = 9.8 (9.7 exactly). The third proton cannot be titrated in water (pKa 12.35).",
+      "group": "Polyprotic and mixtures"
+    },
+    {
+      "file": "09 Citric acid with NaOH.ktitr",
+      "title": "Citric acid with NaOH",
+      "description": "Citric acid has three pKa values close together (3.13, 4.76, 6.40), so the steps overlap and the curve has one broad rise with a single clear jump at the third equivalence point (75 mL for 25.00 mL of 0.1000 M acid with 0.1000 M NaOH). Used to buffer between pH 2.5 and 7.5.",
+      "group": "Polyprotic and mixtures"
+    },
+    {
+      "file": "10 Oxalic acid with NaOH.ktitr",
+      "title": "Oxalic acid with NaOH",
+      "description": "Oxalic acid, pKa 1.25 and 4.27, 25.00 mL of 0.0500 M with 0.1000 M NaOH. The two steps are close (ΔpKa 3.0), so the first jump is weak and only the total (25.00 mL) is sharp: titrate to the second end point with phenolphthalein.",
+      "group": "Polyprotic and mixtures"
+    },
+    {
+      "file": "11 EDTA protonation (H4Y with NaOH).ktitr",
+      "title": "EDTA protonation (H₄Y with NaOH)",
+      "description": "The free acid H₄Y (pKa 2.00, 2.69, 6.13, 10.37) with 0.1000 M NaOH. The first two protons are lost together (pKa values only 0.7 apart), then one at pH 6.1 and the last at 10.4: this is why EDTA titrations need a buffer. The species Y⁴⁻, which binds metals, is only 30 % of the EDTA at pH 10.",
+      "group": "Polyprotic and mixtures"
+    },
+    {
+      "file": "12 Glycine hydrochloride with NaOH.ktitr",
+      "title": "Glycine hydrochloride with NaOH",
+      "description": "The amino acid glycine as its hydrochloride (H₂Gly⁺) with NaOH: pKa 2.34 (carboxyl) and 9.60 (ammonium). The zwitterion Gly± dominates between them and the isoelectric point is (2.34 + 9.60)/2 = 5.97, almost exactly the pH at the first equivalence point (5.99). The second equivalence point (50 mL, pH 11.05) is a weak jump: the amino group is hard to titrate sharply.",
+      "group": "Amino acids"
+    },
+    {
+      "file": "13 Histidine dihydrochloride with NaOH.ktitr",
+      "title": "Histidine dihydrochloride with NaOH",
+      "description": "Histidine as H₃His²⁺ (pKa 1.82 carboxyl, 6.00 imidazole, 9.17 amino) with NaOH: three equivalence points at 25, 50 and 75 mL. The imidazole group is the one that buffers near physiological pH; the isoelectric point is (6.00 + 9.17)/2 = 7.59.",
+      "group": "Amino acids"
+    },
+    {
+      "file": "14 Vinegar analysis.ktitr",
+      "title": "Vinegar analysis",
+      "description": "Acetic acid in vinegar: 5.00 mL of vinegar (about 5 % w/v, 0.83 M) diluted with 45 mL water and titrated with 0.5000 M NaOH, phenolphthalein. The equivalence volume (8.3 mL) gives the concentration: c = V·c_NaOH/5.00 mL. Check the error of the indicator in the Indicator chooser.",
+      "group": "Real samples"
+    },
+    {
+      "file": "15 Antacid - back titration.ktitr",
+      "title": "Antacid: back titration",
+      "description": "An antacid tablet (0.5000 g CaCO₃) is dissolved in 25.00 mL of 0.5000 M HCl (12.50 mmol, 9.991 mmol used up), the CO₂ is boiled off, and the 2.509 mmol of excess acid is titrated with 0.1000 M NaOH (25.09 mL). Then mmol CaCO₃ = (mmol HCl − mmol NaOH)/2 and the mass is that times 100.09 mg/mmol.",
+      "group": "Real samples"
+    },
+    {
+      "file": "16 Boric acid with mannitol.ktitr",
+      "title": "Boric acid with mannitol",
+      "description": "Boric acid is too weak to titrate (pKa 9.24), but mannitol forms a much stronger acid complex with it (apparent pKa about 5 with excess mannitol): 25.00 mL of 0.1000 M boric acid plus mannitol titrates sharply with NaOH to a phenolphthalein end point. The apparent pKa used here is 5.15 and depends on the mannitol concentration.",
+      "group": "Real samples"
+    },
+    {
+      "file": "17 Tris buffer with HCl at 37 C.ktitr",
+      "title": "Tris buffer with HCl at 37 °C",
+      "description": "Tris base (0.0500 M, 25.00 mL) with 0.1000 M HCl at 37 °C. The pKa of Tris falls 0.028 per degree: 8.07 at 25 °C but 7.73 at 37 °C, and Kw changes too. Change the temperature in the setup to see the curve move.",
+      "group": "Real samples"
+    },
+    {
+      "file": "18 Hard water - Ca2+ with EDTA.ktitr",
+      "title": "Hard water: Ca²⁺ with EDTA",
+      "description": "Calcium in hard water: 100.0 mL (120 mg Ca per litre, 3.00 mM) with 0.01000 M EDTA at pH 10 (ammonia buffer). The conditional constant K′ = K_f·α(Y⁴⁻) is 10^10.1 and the equivalence point is at 30.00 mL. Eriochrome Black T binds calcium weakly (log K′ 3.8 at pH 10), so its colour changes about 7 % early: see the error in the results; the magnesium example shows a good end point.",
+      "group": "Complexometric"
+    },
+    {
+      "file": "19 Magnesium with EDTA and EBT.ktitr",
+      "title": "Magnesium with EDTA and EBT",
+      "description": "Magnesium (3.00 mM, 100.0 mL) with 0.01000 M EDTA at pH 10. Eriochrome Black T binds Mg strongly (log K′ ≈ 5.4 at this pH), so the red-to-blue change falls within the jump: the textbook hardness titration. The equivalence point is at 30.00 mL.",
+      "group": "Complexometric"
+    },
+    {
+      "file": "20 Zinc with EDTA in ammonia buffer.ktitr",
+      "title": "Zinc with EDTA in ammonia buffer",
+      "description": "Zinc (1.00 mM, 50.0 mL) with 0.01000 M EDTA in 0.10 M ammonia buffer at pH 10. Ammonia holds zinc as Zn(NH₃)ₙ²⁺: α(Zn) ≈ 10^4.8 (hydroxide alone gives 10^2.1), which lowers the conditional constant by 2.7 orders of magnitude and shortens the jump compared with the same pH without ammonia.",
+      "group": "Complexometric"
+    },
+    {
+      "file": "21 Fe2+ with Ce4+.ktitr",
+      "title": "Fe²⁺ with Ce⁴⁺",
+      "description": "The classic redox titration: 25.00 mL of 0.0500 M Fe²⁺ with 0.1000 M Ce⁴⁺ in 1 M H₂SO₄ (formal potentials 0.68 and 1.44 V). Equivalence at 12.50 mL; at that point E is the mean of the two formal potentials, 1.06 V, which is the transition potential of ferroin.",
+      "group": "Redox"
+    },
+    {
+      "file": "22 Fe2+ with permanganate.ktitr",
+      "title": "Fe²⁺ with permanganate",
+      "description": "Iron(II) (0.0500 M, 25.00 mL) with 0.02000 M KMnO₄ in strong acid (pH 0). The equivalence potential is (E°(Fe) + 5E°(MnO₄⁻))/6 = 1.38 V, closer to the permanganate couple because it takes five electrons. Permanganate is its own indicator. Change the pH to see the equivalence potential fall by 0.079 V per pH unit (the permanganate couple consumes eight H⁺).",
+      "group": "Redox"
+    },
+    {
+      "file": "23 Fe2+ with dichromate.ktitr",
+      "title": "Fe²⁺ with dichromate",
+      "description": "Iron(II) (0.0600 M, 25.00 mL) with 0.01667 M K₂Cr₂O₇ (a primary standard, six electrons per dichromate). Diphenylamine sulfonate is the indicator; it needs phosphoric acid in practice so that its colour change falls inside the jump.",
+      "group": "Redox"
+    },
+    {
+      "file": "24 Iodine with thiosulfate.ktitr",
+      "title": "Iodine with thiosulfate",
+      "description": "Iodometry: 25.00 mL of 0.0500 M I₂ (in iodide solution) with 0.1000 M sodium thiosulfate, two S₂O₃²⁻ per I₂. Equivalence at 25.00 mL. In the lab starch is added near the end: the blue colour vanishes at the equivalence point.",
+      "group": "Redox"
+    },
+    {
+      "file": "25 Chloride by the Mohr method.ktitr",
+      "title": "Chloride by the Mohr method",
+      "description": "Chloride, 25.00 mL of 0.0500 M NaCl with 0.0500 M AgNO₃ and 2.5 mM chromate indicator. The equivalence point is at 25.00 mL, pAg 4.88; the red Ag₂CrO₄ appears when [Ag⁺] reaches (K_sp/[CrO₄²⁻])^½, a little after the equivalence point.",
+      "group": "Precipitation"
+    },
+    {
+      "file": "26 Iodide and chloride with silver.ktitr",
+      "title": "Iodide and chloride with silver",
+      "description": "A mixture of 12.50 mL of 0.0500 M iodide and 12.50 mL of 0.0500 M chloride with 0.0500 M AgNO₃. AgI (K_sp 8.5×10⁻¹⁷) is far less soluble than AgCl, so iodide is precipitated first (12.50 mL) and chloride next (25.00 mL): two steps in pAg.",
+      "group": "Precipitation"
+    },
+    {
+      "file": "27 Silver by the Volhard method.ktitr",
+      "title": "Silver by the Volhard method",
+      "description": "Silver, 25.00 mL of 0.0500 M Ag⁺ in nitric acid, with 0.0500 M KSCN and iron(III) (10 mM) as indicator. AgSCN forms (equivalence 25.00 mL); the first excess thiocyanate gives the blood-red FeSCN²⁺.",
+      "group": "Precipitation"
+    },
+    {
+      "file": "28 Phosphate buffer, pH 7.4.ktitr",
+      "title": "Phosphate buffer, pH 7.4",
+      "description": "A 10 mM phosphate buffer of pH 7.4 made isotonic with NaCl (I = 0.15 M, like PBS): NaH₂PO₄ and Na₂HPO₄ from 1 M stocks in 1000 mL, plus the salt. The ratio is not the Henderson–Hasselbalch value 1.58: at I = 0.15 M the activity coefficients lower the effective pKa₂ from 7.20 to about 6.8.",
+      "group": "Buffers"
+    },
+    {
+      "file": "29 Tris-HCl buffer, pH 7.4 at 37 C.ktitr",
+      "title": "Tris-HCl buffer, pH 7.4 at 37 °C",
+      "description": "Tris 50 mM at pH 7.4 at 37 °C, made from Tris base and 1 M HCl in 500 mL. Tris is the buffer most sensitive to temperature (−0.028 pH per °C): a buffer made to pH 7.4 at 37 °C reads about 7.75 at 25 °C — check the table of the same recipe at other temperatures.",
+      "group": "Buffers"
+    },
+    {
+      "file": "30 Acetate buffer, pH 5.00.ktitr",
+      "title": "Acetate buffer, pH 5.00",
+      "description": "Acetic acid 0.100 M brought to pH 5.00 with NaOH: 1 M acetic acid and 1 M NaOH in 500 mL. Exactly as many equivalents of base as the charge balance requires — more than Henderson–Hasselbalch gives, because the buffer must also cancel the acid's own protons.",
+      "group": "Buffers"
+    },
+    {
+      "file": "31 Analyse data - acetic acid (synthetic).ktitr",
+      "title": "Analyse data: acetic acid (synthetic)",
+      "description": "SYNTHETIC data, not a real experiment: acetic acid of unknown concentration (25.00 mL + 25 mL water) titrated with 0.1000 M NaOH, generated from the exact model plus 0.010 pH noise. Find the equivalence volume, the concentration and the pKa with the derivative, the Gran plot and the full fit.",
+      "group": "Data analysis"
+    },
+    {
+      "file": "32 Gran plot - strong acid (synthetic).ktitr",
+      "title": "Gran plot: strong acid (synthetic)",
+      "description": "SYNTHETIC data, not a real experiment: hydrochloric acid of unknown concentration (25.00 mL + 25 mL water) with 0.1000 M NaOH, 0.010 pH noise. The Gran plot straightens the curve on both sides of the equivalence point and finds it from the points far from the jump, where the pH is most reliable.",
+      "group": "Data analysis"
+    },
+    {
+      "file": "33 Analyse data - sodium carbonate (synthetic).ktitr",
+      "title": "Analyse data: sodium carbonate (synthetic)",
+      "description": "SYNTHETIC data, not a real experiment: sodium carbonate of unknown concentration (25.00 mL + 25 mL water) with 0.1000 M HCl, 0.015 pH noise. Two equivalence points; the fit finds both pKa values and the concentration.",
+      "group": "Data analysis"
+    }
+  ]
+}

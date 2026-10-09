@@ -1,0 +1,12 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Inner solar system",
+  "description": "Sun, Mercury, Venus, Earth and Mars from real orbital elements (J2000), integrated as an N-body problem with velocity-Verlet. The periods come out as 87.97, 224.7, 365.2 and 687 days.",
+  "method": "verlet",
+  "params": {
+    "mode": "solar",
+    "outer": false
+  }
+}

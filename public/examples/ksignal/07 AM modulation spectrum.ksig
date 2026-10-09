@@ -1,0 +1,92 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "AM modulation spectrum",
+  "description": "Synthetic: a 1000 Hz carrier of amplitude 1, amplitude-modulated at 100 Hz with depth 0.5. The spectrum has the carrier (1.000) and two sidebands at 900 and 1100 Hz of amplitude m/2 = 0.250 each (-12 dB below the carrier).",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 8192,
+    "duration": 1,
+    "components": [
+      {
+        "type": "am",
+        "amp": 1,
+        "freq": 440,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0,
+      "seed": 1,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "flattop",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 1600,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "original",
+    "peakRangeDb": 40,
+    "maxPeaks": 10,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 1024,
+    "f2": 2048,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "none"
+  },
+  "tab": "spectrum",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "projectile",
+  "title": "Jump on the Moon",
+  "description": "The same take-off with the Moon's gravity (1.62 m/s²): 4.05 s in the air and 7.08 m, about 4.7 times as far.",
+  "params": {
+    "mode": "flight",
+    "v0": 3.5,
+    "angle": 60,
+    "h0": 1,
+    "gravity": "moon",
+    "gcustom": 9.81,
+    "drag": "none",
+    "k": 0.3,
+    "kq": 0.005,
+    "wind": 0,
+    "mass": 1,
+    "target": 0,
+    "targetR": 2
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Trojan asteroids of Jupiter",
+  "description": "The Sun-Jupiter problem (μ = 0.000954): an asteroid on a slightly wider orbit than L4 librates along a long tadpole that reaches towards Jupiter, as the Trojans do. Switch on the inertial frame to see the bodies circle.",
+  "method": "rk45",
+  "params": {
+    "mode": "restricted3",
+    "mu": 0.000954,
+    "ic": "l4",
+    "off": 0.02,
+    "cx": 0.5,
+    "cy": 0.3,
+    "cvx": 0,
+    "cvy": 0.3,
+    "inertial": false
+  }
+}

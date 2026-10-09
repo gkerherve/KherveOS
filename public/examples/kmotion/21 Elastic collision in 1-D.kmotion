@@ -1,0 +1,16 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "collision",
+  "title": "Elastic collision in 1-D",
+  "description": "A 2 kg cart at 3 m/s hits a 1 kg cart at −1 m/s with e = 1. Momentum and kinetic energy are both conserved: the velocities after are 0.33 and 4.33 m/s.",
+  "params": {
+    "mode": "oned",
+    "m1": 2,
+    "m2": 1,
+    "v1": 3,
+    "v2": -1,
+    "e": 1,
+    "rail": false
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "circular",
+  "title": "Banked curve",
+  "description": "A 60 m curve banked at 15°: the ideal speed is √(R g tan θ) = 12.6 m/s; with μ = 0.3 the car may go as fast as 19.1 m/s before it skids out.",
+  "params": {
+    "mode": "banked",
+    "m": 1,
+    "Rb": 60,
+    "bank": 15,
+    "mu": 0.3,
+    "vb": 18,
+    "gravity": "earth",
+    "gcustom": 9.81
+  }
+}

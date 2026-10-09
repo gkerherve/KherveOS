@@ -1,0 +1,21 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "oscillator",
+  "title": "Coupled pendulums: normal modes and beats",
+  "description": "Two pendulums joined by a spring. Pull one and the energy swaps back and forth (beats); start in mode 1 or mode 2 and it stays a pure sine at ω = √(g/L) or √(g/L + 2k/m).",
+  "params": {
+    "mode": "coupled",
+    "m": 1,
+    "k": 20,
+    "N": 2,
+    "form": "pendulums",
+    "L": 1,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "kc": 2,
+    "cc": 0,
+    "init": "pluck",
+    "a0": 0.4
+  }
+}

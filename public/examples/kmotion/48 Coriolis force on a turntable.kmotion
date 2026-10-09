@@ -1,0 +1,16 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "circular",
+  "title": "Coriolis force on a turntable",
+  "description": "A ball rolls from the centre of a disc turning at 0.8 rad/s. On the ground it moves in a straight line; on the disc it curves. Switch the view to see both.",
+  "params": {
+    "mode": "coriolis",
+    "Om": 0.8,
+    "u": 3,
+    "Rd": 5,
+    "ang": 0,
+    "r0": 0,
+    "view": "rotating"
+  }
+}

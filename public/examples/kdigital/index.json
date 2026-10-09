@@ -1,0 +1,144 @@
+{
+  "app": "kdigital",
+  "folder": "kDigital Examples",
+  "examples": [
+    {
+      "file": "01 Half adder.kdig",
+      "title": "Half adder",
+      "description": "XOR and AND add two bits.",
+      "group": "Basics"
+    },
+    {
+      "file": "02 Full adder.kdig",
+      "title": "Full adder",
+      "description": "Two half adders and an OR add three bits.",
+      "group": "Basics"
+    },
+    {
+      "file": "03 2-1 multiplexer.kdig",
+      "title": "2:1 multiplexer",
+      "description": "A select line picks one of two inputs.",
+      "group": "Basics"
+    },
+    {
+      "file": "04 4-1 multiplexer.kdig",
+      "title": "4:1 multiplexer",
+      "description": "Two select lines pick one of four inputs.",
+      "group": "Basics"
+    },
+    {
+      "file": "05 4-bit ripple-carry adder.kdig",
+      "title": "4-bit ripple-carry adder",
+      "description": "Four full adders with a 7-segment sum.",
+      "group": "Arithmetic"
+    },
+    {
+      "file": "06 4-bit ALU (add - and - or - xor).kdig",
+      "title": "4-bit ALU (add / and / or / xor)",
+      "description": "Four bit slices and a mux per bit.",
+      "group": "Arithmetic"
+    },
+    {
+      "file": "07 SR latch from NOR gates.kdig",
+      "title": "SR latch from NOR gates",
+      "description": "Cross-coupled NORs and the forbidden state.",
+      "group": "Memory"
+    },
+    {
+      "file": "08 D flip-flop from NAND gates (master-slave).kdig",
+      "title": "D flip-flop from NAND gates (master–slave)",
+      "description": "Two gated latches make an edge-triggered flip-flop.",
+      "group": "Memory"
+    },
+    {
+      "file": "09 4-bit synchronous counter with 7-segment display.kdig",
+      "title": "4-bit synchronous counter with 7-segment display",
+      "description": "T flip-flops count 0…15 and wrap.",
+      "group": "Counters and registers"
+    },
+    {
+      "file": "10 4-bit shift register.kdig",
+      "title": "4-bit shift register",
+      "description": "Serial in, bits move one place per clock.",
+      "group": "Counters and registers"
+    },
+    {
+      "file": "11 Ring and Johnson counters.kdig",
+      "title": "Ring and Johnson counters",
+      "description": "A shift register fed back on itself.",
+      "group": "Counters and registers"
+    },
+    {
+      "file": "12 ROM lookup table for a 7-segment display.kdig",
+      "title": "ROM lookup table for a 7-segment display",
+      "description": "A ROM as a truth table.",
+      "group": "Counters and registers"
+    },
+    {
+      "file": "13 BCD to 7-segment decoder (K-map minimised).kdig",
+      "title": "BCD to 7-segment decoder (K-map minimised)",
+      "description": "Seven functions with don't-cares, minimised.",
+      "group": "Minimisation"
+    },
+    {
+      "file": "14 Majority voter (K-map).kdig",
+      "title": "Majority voter (K-map)",
+      "description": "Two out of three, with its Karnaugh map.",
+      "group": "Minimisation"
+    },
+    {
+      "file": "15 Minimisation with don't-cares (Quine-McCluskey).kdig",
+      "title": "Minimisation with don't-cares (Quine–McCluskey)",
+      "description": "Prime implicants, chart, K-map and POS.",
+      "group": "Minimisation"
+    },
+    {
+      "file": "16 Parity generator and checker.kdig",
+      "title": "Parity generator and checker",
+      "description": "XOR trees detect a single-bit error.",
+      "group": "Minimisation"
+    },
+    {
+      "file": "17 Traffic-light controller (Moore FSM).kdig",
+      "title": "Traffic-light controller (Moore FSM)",
+      "description": "Four states, six lamps, a timer input.",
+      "group": "State machines"
+    },
+    {
+      "file": "18 1011 sequence detector (Mealy FSM, with overlap).kdig",
+      "title": "1011 sequence detector (Mealy FSM, with overlap)",
+      "description": "Finds 1011 in a bit stream, overlaps included.",
+      "group": "State machines"
+    },
+    {
+      "file": "19 Static-1 hazard (glitch).kdig",
+      "title": "Static-1 hazard (glitch)",
+      "description": "A glitch caused by unequal gate delays.",
+      "group": "Hazards and delays"
+    },
+    {
+      "file": "20 Hazard fixed with a consensus term.kdig",
+      "title": "Hazard fixed with a consensus term",
+      "description": "A redundant AND term removes the glitch.",
+      "group": "Hazards and delays"
+    },
+    {
+      "file": "21 Ring oscillator.kdig",
+      "title": "Ring oscillator",
+      "description": "An odd number of inversions oscillates.",
+      "group": "Hazards and delays"
+    },
+    {
+      "file": "22 Tri-state bus with a pull-up.kdig",
+      "title": "Tri-state bus with a pull-up",
+      "description": "Shared line: Z, X and pull-ups.",
+      "group": "Hazards and delays"
+    },
+    {
+      "file": "23 Number systems and IEEE-754.kdig",
+      "title": "Number systems and IEEE-754",
+      "description": "Representations, bit fields, arithmetic.",
+      "group": "Numbers"
+    }
+  ]
+}

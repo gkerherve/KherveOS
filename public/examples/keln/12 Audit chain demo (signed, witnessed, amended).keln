@@ -1,0 +1,457 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "Audit chain demo",
+ "description": "Shows signing, witnessing and amending. Use Notebook > Verify notebook to recompute the SHA-256 chain.",
+ "owner": "Ana Martin",
+ "created": "2026-06-01T08:00:00.000Z",
+ "modified": "2026-06-05T09:03:00.000Z",
+ "settings": {
+  "samplePrefix": "DEM",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "DEM",
+   "name": "Demonstration",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "DEM-2026-001",
+   "title": "Preparation of 50 mmol/L phosphate buffer, pH 7.4",
+   "date": "2026-06-01T09:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "buffer",
+    "signed"
+   ],
+   "status": "witnessed",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Procedure"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Dissolved 0.69 g NaH"
+       },
+       {
+        "type": "text",
+        "text": "2",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "PO"
+       },
+       {
+        "type": "text",
+        "text": "4",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " and 3.55 g Na"
+       },
+       {
+        "type": "text",
+        "text": "2",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "HPO"
+       },
+       {
+        "type": "text",
+        "text": "4",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " in 900 mL water, adjusted to pH with HCl, made up to 1 L."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "pH meter (Mettler SevenCompact)",
+         "method": "Calibrated at pH 4.01 / 7.00 / 10.01 the same morning",
+         "operator": "Ana Martin",
+         "started": "2026-06-01T09:20:00",
+         "file": "",
+         "path": "",
+         "parameters": "",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "pH check",
+         "columns": [
+          {
+           "name": "Reading",
+           "unit": "pH"
+          }
+         ],
+         "rows": [
+          [
+           "7.83"
+          ],
+          [
+           "7.84"
+          ],
+          [
+           "7.83"
+          ]
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "",
+   "created": "2026-06-01T09:00:00.000Z",
+   "modified": "2026-06-01T09:21:00.000Z",
+   "signature": {
+    "user": "Ana Martin",
+    "time": "2026-06-01T09:09:00.000Z",
+    "hash": "8aa4f4ac5f1df72651d3a06acda24dd8b6dcd6c74f4028f4baa6982b7df0db6a"
+   },
+   "witness": {
+    "user": "Ben Okafor",
+    "time": "2026-06-01T09:15:00.000Z",
+    "hash": "8aa4f4ac5f1df72651d3a06acda24dd8b6dcd6c74f4028f4baa6982b7df0db6a"
+   },
+   "addenda": [
+    {
+     "id": "add-004",
+     "time": "2026-06-01T09:21:00.000Z",
+     "author": "Ana Martin",
+     "reason": "Transposed digits in the pH readings",
+     "content": {
+      "type": "doc",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Correction: the pH readings were mistyped. The correct readings are "
+         },
+         {
+          "type": "text",
+          "text": "7.38, 7.39, 7.38",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (digits transposed); the buffer is at the target pH 7.4. The signed text above is left as written."
+         }
+        ]
+       }
+      ]
+     },
+     "hash": "f59e1dcbcd68d1804d4917fc5b3c4f7b91f5bfae8d85860c2787e16763150f26"
+    }
+   ]
+  },
+  {
+   "id": "ent-005",
+   "projectId": "prj-002",
+   "experiment": "DEM-2026-002",
+   "title": "Crystal growth of CuSO4 from solution",
+   "date": "2026-06-02T10:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "crystals",
+    "signed"
+   ],
+   "status": "signed",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Saturated CuSO"
+       },
+       {
+        "type": "text",
+        "text": "4",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " solution at 40 °C cooled slowly to room temperature over 48 h. Blue triclinic crystals up to 6 mm."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "timeline",
+        "data": {
+         "title": "Observations",
+         "items": [
+          {
+           "time": "2026-06-02T10:30:00",
+           "text": "Seed crystal added."
+          },
+          {
+           "time": "2026-06-03T10:30:00",
+           "text": "Crystals visible, 2 mm."
+          },
+          {
+           "time": "2026-06-04T10:30:00",
+           "text": "Harvested; 6 mm largest."
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "",
+   "created": "2026-06-02T10:00:00.000Z",
+   "modified": "2026-06-02T10:06:00.000Z",
+   "signature": {
+    "user": "Ana Martin",
+    "time": "2026-06-02T10:06:00.000Z",
+    "hash": "bf1fbb85d7021bfe3379875ba3093c9e06e17fad2eaab6d6c7f778c956c6c428"
+   },
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-006",
+   "projectId": "prj-002",
+   "experiment": "DEM-2026-003",
+   "title": "Next experiment (draft)",
+   "date": "2026-06-05T09:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "draft"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Plan"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Draft entries can be edited freely; the audit log records the edits but the entry is not signed."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "",
+   "created": "2026-06-05T09:00:00.000Z",
+   "modified": "2026-06-05T09:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [
+  "pH meter (Mettler SevenCompact)"
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-06-01T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "Audit chain demo",
+   "prev": "",
+   "rec": "e9b2dec748c8aa4edd93affd4ef820c8bd3dc5a17a166c6ac81f2d3344fa5968"
+  },
+  {
+   "seq": 2,
+   "time": "2026-06-01T09:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "DEM-2026-001",
+   "hash": "8aa4f4ac5f1df72651d3a06acda24dd8b6dcd6c74f4028f4baa6982b7df0db6a",
+   "detail": "Preparation of 50 mmol/L phosphate buffer, pH 7.4",
+   "prev": "e9b2dec748c8aa4edd93affd4ef820c8bd3dc5a17a166c6ac81f2d3344fa5968",
+   "rec": "a65c331b1760fb856c8b322de86f3d68d9912731b88de80dad7fe4276d15990c"
+  },
+  {
+   "seq": 3,
+   "time": "2026-06-01T09:12:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-signed",
+   "entryId": "ent-003",
+   "number": "DEM-2026-001",
+   "hash": "8aa4f4ac5f1df72651d3a06acda24dd8b6dcd6c74f4028f4baa6982b7df0db6a",
+   "detail": "Signed by Ana Martin",
+   "prev": "a65c331b1760fb856c8b322de86f3d68d9912731b88de80dad7fe4276d15990c",
+   "rec": "fd97b99dbfc2c54fd5401e4f81fd6ee9c7c7d27c3f04399af5e6314091616c34"
+  },
+  {
+   "seq": 4,
+   "time": "2026-06-01T09:18:00.000Z",
+   "user": "Ben Okafor",
+   "action": "entry-witnessed",
+   "entryId": "ent-003",
+   "number": "DEM-2026-001",
+   "hash": "8aa4f4ac5f1df72651d3a06acda24dd8b6dcd6c74f4028f4baa6982b7df0db6a",
+   "detail": "Witnessed by Ben Okafor",
+   "prev": "fd97b99dbfc2c54fd5401e4f81fd6ee9c7c7d27c3f04399af5e6314091616c34",
+   "rec": "ccc712606addadf4a0a81cda168137db962a062f114012b05f0c7988742a7fb3"
+  },
+  {
+   "seq": 5,
+   "time": "2026-06-01T09:24:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-amended",
+   "entryId": "ent-003",
+   "number": "DEM-2026-001",
+   "hash": "f59e1dcbcd68d1804d4917fc5b3c4f7b91f5bfae8d85860c2787e16763150f26",
+   "detail": "Transposed digits in the pH readings",
+   "prev": "ccc712606addadf4a0a81cda168137db962a062f114012b05f0c7988742a7fb3",
+   "rec": "4a70e017ffd90fbdf87f5cc0492efc33a5de27be6aae305b2d8acf78357ae812"
+  },
+  {
+   "seq": 6,
+   "time": "2026-06-02T10:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-005",
+   "number": "DEM-2026-002",
+   "hash": "bf1fbb85d7021bfe3379875ba3093c9e06e17fad2eaab6d6c7f778c956c6c428",
+   "detail": "Crystal growth of CuSO4 from solution",
+   "prev": "4a70e017ffd90fbdf87f5cc0492efc33a5de27be6aae305b2d8acf78357ae812",
+   "rec": "ba60a8f43e6d8eb343f265fe25606f8939f847ec1ae2c39df6eb7941cbb98786"
+  },
+  {
+   "seq": 7,
+   "time": "2026-06-02T10:09:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-signed",
+   "entryId": "ent-005",
+   "number": "DEM-2026-002",
+   "hash": "bf1fbb85d7021bfe3379875ba3093c9e06e17fad2eaab6d6c7f778c956c6c428",
+   "detail": "Signed by Ana Martin",
+   "prev": "ba60a8f43e6d8eb343f265fe25606f8939f847ec1ae2c39df6eb7941cbb98786",
+   "rec": "64f009a74963e2bd9787000c0c9437d0497f07552c4100f5794f9bcc1d8cf92b"
+  },
+  {
+   "seq": 8,
+   "time": "2026-06-02T10:12:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-exported",
+   "entryId": "ent-005",
+   "number": "DEM-2026-002",
+   "hash": "bf1fbb85d7021bfe3379875ba3093c9e06e17fad2eaab6d6c7f778c956c6c428",
+   "detail": "PDF",
+   "prev": "64f009a74963e2bd9787000c0c9437d0497f07552c4100f5794f9bcc1d8cf92b",
+   "rec": "d0755db9958a6e2d9e4f8994e634fc98fde53ebc2c82101a9f5d9d318a7a3f47"
+  },
+  {
+   "seq": 9,
+   "time": "2026-06-05T09:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-006",
+   "number": "DEM-2026-003",
+   "hash": "136af396116adebe5957e8d8271a1f00749876935c9f7b1a4b0c9fb69e125071",
+   "detail": "Next experiment (draft)",
+   "prev": "d0755db9958a6e2d9e4f8994e634fc98fde53ebc2c82101a9f5d9d318a7a3f47",
+   "rec": "f1e88c1221c1884626aa7e9aaccf30188e02fd42fb5eb8409a19ec0aa7579d19"
+  }
+ ]
+}

@@ -1,0 +1,440 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "Cell culture passages",
+ "description": "Maintenance of HEK293 cells: passage records, observations and contamination checks.",
+ "owner": "Ana Martin",
+ "created": "2026-05-18T08:00:00.000Z",
+ "modified": "2026-05-25T09:33:00.000Z",
+ "settings": {
+  "samplePrefix": "CELL",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "CELL",
+   "name": "HEK293 culture",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "CELL-2026-001",
+   "title": "HEK293 passage 14",
+   "date": "2026-05-18T09:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "cell culture",
+    "HEK293"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Cell line",
+         "columns": [
+          {
+           "name": "Cell line",
+           "unit": ""
+          },
+          {
+           "name": "Passage",
+           "unit": ""
+          },
+          {
+           "name": "Confluence",
+           "unit": "%"
+          },
+          {
+           "name": "Viability",
+           "unit": "%"
+          },
+          {
+           "name": "Split ratio",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "HEK293",
+           "14",
+           "85",
+           "96",
+           "1:6"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Passage",
+         "items": [
+          {
+           "text": "Check morphology and contamination",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-18T09:40:00"
+          },
+          {
+           "text": "Wash with PBS",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-18T09:50:00"
+          },
+          {
+           "text": "Trypsinise 3 min and neutralise",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-18T09:55:00"
+          },
+          {
+           "text": "Count and seed",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-18T10:15:00"
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "timeline",
+        "data": {
+         "title": "Observations",
+         "items": [
+          {
+           "time": "2026-05-18T09:35:00",
+           "text": "Healthy, adherent, no contamination."
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "cell-culture",
+   "created": "2026-05-18T09:30:00.000Z",
+   "modified": "2026-05-18T09:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "CELL-2026-002",
+   "title": "HEK293 passage 15",
+   "date": "2026-05-21T09:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "cell culture",
+    "HEK293"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Cell line",
+         "columns": [
+          {
+           "name": "Cell line",
+           "unit": ""
+          },
+          {
+           "name": "Passage",
+           "unit": ""
+          },
+          {
+           "name": "Confluence",
+           "unit": "%"
+          },
+          {
+           "name": "Viability",
+           "unit": "%"
+          },
+          {
+           "name": "Split ratio",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "HEK293",
+           "15",
+           "90",
+           "96",
+           "1:8"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Passage",
+         "items": [
+          {
+           "text": "Check morphology and contamination",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-21T09:40:00"
+          },
+          {
+           "text": "Wash with PBS",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-21T09:50:00"
+          },
+          {
+           "text": "Trypsinise 3 min and neutralise",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-21T09:55:00"
+          },
+          {
+           "text": "Count and seed",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-21T10:15:00"
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "timeline",
+        "data": {
+         "title": "Observations",
+         "items": [
+          {
+           "time": "2026-05-21T09:35:00",
+           "text": "Slight clumping; media changed."
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "cell-culture",
+   "created": "2026-05-21T09:30:00.000Z",
+   "modified": "2026-05-21T09:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-005",
+   "projectId": "prj-002",
+   "experiment": "CELL-2026-003",
+   "title": "HEK293 passage 16",
+   "date": "2026-05-25T09:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "cell culture",
+    "HEK293"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Cell line",
+         "columns": [
+          {
+           "name": "Cell line",
+           "unit": ""
+          },
+          {
+           "name": "Passage",
+           "unit": ""
+          },
+          {
+           "name": "Confluence",
+           "unit": "%"
+          },
+          {
+           "name": "Viability",
+           "unit": "%"
+          },
+          {
+           "name": "Split ratio",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "HEK293",
+           "16",
+           "80",
+           "96",
+           "1:6"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Passage",
+         "items": [
+          {
+           "text": "Check morphology and contamination",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-25T09:40:00"
+          },
+          {
+           "text": "Wash with PBS",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-25T09:50:00"
+          },
+          {
+           "text": "Trypsinise 3 min and neutralise",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-25T09:55:00"
+          },
+          {
+           "text": "Count and seed",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-05-25T10:15:00"
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "timeline",
+        "data": {
+         "title": "Observations",
+         "items": [
+          {
+           "time": "2026-05-25T09:35:00",
+           "text": "Healthy."
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "cell-culture",
+   "created": "2026-05-25T09:30:00.000Z",
+   "modified": "2026-05-25T09:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [
+  "Inverted microscope"
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-05-18T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "Cell culture passages",
+   "prev": "",
+   "rec": "8c99d93e82e603a6a800f23802770c64caa0ecae2caec8dda8adb8a5f2082f00"
+  },
+  {
+   "seq": 2,
+   "time": "2026-05-18T09:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "CELL-2026-001",
+   "hash": "8afaddea77a04709f487868c9b9c11d0c8230b5895f707ce7a68c97d321e28ab",
+   "detail": "HEK293 passage 14",
+   "prev": "8c99d93e82e603a6a800f23802770c64caa0ecae2caec8dda8adb8a5f2082f00",
+   "rec": "7daaf6d5fed235863148e7651cf4fc36df2bdbf86395951fb1c059397750bd3a"
+  },
+  {
+   "seq": 3,
+   "time": "2026-05-21T09:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "CELL-2026-002",
+   "hash": "a8fd16aba1c81669c5de46461afd4a842f3b290e2b8839407c1aa01e8885710a",
+   "detail": "HEK293 passage 15",
+   "prev": "7daaf6d5fed235863148e7651cf4fc36df2bdbf86395951fb1c059397750bd3a",
+   "rec": "60adc5646c14b2175cc5afacdb57a403fbb0d7f8f859dff26bfcc21c5fd1101a"
+  },
+  {
+   "seq": 4,
+   "time": "2026-05-25T09:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-005",
+   "number": "CELL-2026-003",
+   "hash": "d5d2acaa848ab772c5f6edc9576d96f9227b41be47cb5c5c7e2db3af5943bbed",
+   "detail": "HEK293 passage 16",
+   "prev": "60adc5646c14b2175cc5afacdb57a403fbb0d7f8f859dff26bfcc21c5fd1101a",
+   "rec": "77a0e1e1e5c9bc7dc90dbb729717319f4614938a43f5b90f42f9269d3d749f1f"
+  }
+ ]
+}

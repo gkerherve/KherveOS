@@ -1,0 +1,75 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "gear",
+  "model": {
+    "name": "Profile-shifted pinion 12/40",
+    "view": "pair",
+    "pair": {
+      "g1": {
+        "z": 12,
+        "module": 2,
+        "alpha": 20,
+        "ha": 1,
+        "x": 0.4,
+        "backlash": 0,
+        "fillet": 0.38
+      },
+      "g2": {
+        "z": 40,
+        "module": 2,
+        "alpha": 20,
+        "ha": 1,
+        "x": -0.4,
+        "backlash": 0,
+        "fillet": 0.38
+      },
+      "rpm": 1200,
+      "torque": 10
+    },
+    "train": {
+      "stages": [
+        {
+          "driver": 18,
+          "driven": 54
+        },
+        {
+          "driver": 20,
+          "driven": 60
+        }
+      ],
+      "rpm": 1800,
+      "torque": 5,
+      "eff": 0.98
+    },
+    "planetary": {
+      "Zs": 24,
+      "Zr": 72,
+      "n": 3,
+      "module": 1.5,
+      "fixed": "ring",
+      "input": "sun",
+      "speed": 1000
+    },
+    "helical": {
+      "mn": 2,
+      "z1": 24,
+      "z2": 48,
+      "beta": 15,
+      "alphaN": 20,
+      "width": 30
+    },
+    "belt": {
+      "kind": "belt",
+      "D": 200,
+      "d": 80,
+      "C": 400,
+      "rpm": 1450,
+      "crossed": false,
+      "N1": 17,
+      "N2": 41,
+      "pitch": 12.7
+    },
+    "notes": "Set the shift of the pinion to 0 to see the undercut warning."
+  }
+}

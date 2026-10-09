@@ -1,0 +1,108 @@
+{
+  "app": "kfea",
+  "folder": "kFEA Examples",
+  "examples": [
+    {
+      "file": "01 Simple truss.kfea",
+      "title": "Simple truss",
+      "description": "A triangular truss: pin at A, roller at B, 10 kN down at the apex C. Expected (method of joints): reactions 5 kN each; AB = +3.3333 kN (tension), AC = BC = -6.0093 kN (compression); the apex moves 0.07393 mm down.",
+      "group": "Trusses"
+    },
+    {
+      "file": "02 Warren truss bridge.kfea",
+      "title": "Warren truss bridge",
+      "description": "A 24 m Warren bridge truss of equilateral triangles (8 m sides), tubes 114.3×6 in S355, 100 kN at each lower joint. Expected: reactions 100 kN; end diagonals -115.47 kN (compression), first bottom chord +57.735 kN, top chord -115.47 kN, middle bottom chord +115.47 kN.",
+      "group": "Trusses"
+    },
+    {
+      "file": "03 Pratt truss.kfea",
+      "title": "Pratt truss",
+      "description": "A Pratt truss, 4 panels of 3 m, 3 m deep, 100 kN at each lower joint. Expected: reactions 150 kN; end post -150 kN (compression), first diagonal +212.13 kN, the first bottom chord is unloaded and the next one carries +150 kN.",
+      "group": "Trusses"
+    },
+    {
+      "file": "04 Cantilever beam with a tip load.kfea",
+      "title": "Cantilever beam with a tip load",
+      "description": "IPE 200 in S235, 3 m long, fixed at A, 10 kN down at the tip. Expected: tip deflection PL³/3EI = 22.057 mm, tip rotation PL²/2EI = 0.01103 rad, fixed-end moment PL = 30 kN·m.",
+      "group": "Beams"
+    },
+    {
+      "file": "05 Simply supported beam, uniform load.kfea",
+      "title": "Simply supported beam, uniform load",
+      "description": "IPE 240 in S235, 6 m span, 12 kN/m. Expected: midspan deflection 5wL⁴/384EI = 24.776 mm, maximum moment wL²/8 = 54 kN·m, reactions 36 kN, end rotation wL³/24EI = 0.01321 rad.",
+      "group": "Beams"
+    },
+    {
+      "file": "06 Propped cantilever.kfea",
+      "title": "Propped cantilever",
+      "description": "IPE 200, 5 m, fixed at A and a roller at B, 10 kN/m. Expected: R_B = 3wL/8 = 18.75 kN, R_A = 5wL/8 = 31.25 kN, fixed-end moment wL²/8 = 31.25 kN·m, midspan deflection wL⁴/192EI = 7.9779 mm.",
+      "group": "Beams"
+    },
+    {
+      "file": "07 Two-span continuous beam.kfea",
+      "title": "Two-span continuous beam",
+      "description": "IPE 240, two equal spans of 4 m, 15 kN/m on both. Expected (three-moment equation): R_B = 5wL/4 = 75 kN, R_A = R_C = 3wL/8 = 22.5 kN, hogging moment over the middle support wL²/8 = 30 kN·m.",
+      "group": "Beams"
+    },
+    {
+      "file": "08 Portal frame under lateral load.kfea",
+      "title": "Portal frame under lateral load",
+      "description": "Fixed-base portal frame, columns HEA 200 (4 m), beam IPE 300 (6 m), 20 kN horizontal at the left corner. Expected (slope-deflection, axial strains neglected, so the solver agrees within 1 %): each base takes 10 kN, sway Δ = H h³ (1 + 1.5k) / (6 E Ic (1 + 6k)) = 8.9316 mm with k = (Ib/L)/(Ic/h) = 1.509.",
+      "group": "Frames"
+    },
+    {
+      "file": "09 Cantilever bracket frame.kfea",
+      "title": "Cantilever bracket frame",
+      "description": "A wall bracket: a continuous IPE 160 arm pinned at A and hung at B on a hinged tube brace from C; 5 kN down at the tip D, 1 m beyond B. Expected (statics): the brace carries -13.34 kN (compression), the arm has a hogging moment of 5 kN·m at B and a tension of 10.417 kN, the wall reaction at A is -10.417 kN horizontally and -3.3333 kN vertically.",
+      "group": "Frames"
+    },
+    {
+      "file": "10 Stepped bar (axial).kfea",
+      "title": "Stepped bar (axial)",
+      "description": "A bar of three squares (40, 30 and 20 mm, lengths 0.5, 0.4, 0.6 m) fixed at the left, 20 kN pull at the right end. Expected: the force is 20 kN in every part; the end moves Σ P L / (E A) = 0.21495 mm. The stress is 12.5, 22.2 and 50 MPa.",
+      "group": "Bars"
+    },
+    {
+      "file": "11 Heated bar between walls.kfea",
+      "title": "Heated bar between walls",
+      "description": "A 50×50 mm steel bar, 2 m long, fixed in two walls and heated by 40 K. Expected: it cannot expand, so it is compressed: N = −E A α ΔT = -252 kN, a stress of E α ΔT = 100.8 MPa.",
+      "group": "Bars"
+    },
+    {
+      "file": "12 Plate with a central hole in tension.kfea",
+      "title": "Plate with a central hole in tension",
+      "description": "A 100 × 200 mm steel plate (10 mm thick) with a 10 mm hole, 100 MPa tension. One quarter is modelled with symmetry supports. Expected: the stress at the hole edge is Kt σ with Kt ≈ 3 for a small hole (Kirsch); with the finite width (Peterson) σ_max = 302.3 MPa = 3.02 σ. The mesh is refined at the edge of the hole (refinement points); the triangles give the peak within a few percent.",
+      "group": "Plates"
+    },
+    {
+      "file": "13 L-bracket, inner corner.kfea",
+      "title": "L-bracket, inner corner",
+      "description": "An aluminium L-bracket, 10 mm thick, 30 mm wide legs, fixed at the top of the vertical leg, 2 kN down on the end of the horizontal leg. The inner corner has a 5 mm fillet. Expected: beam theory gives a nominal stress of 120 MPa in the vertical leg; the corner concentrates it, so the peak von Mises stress is expected to be about 1.5 to 2.5 times higher. Try the convergence study: without the fillet the peak would grow without limit.",
+      "group": "Plates"
+    },
+    {
+      "file": "14 Cook's membrane.kfea",
+      "title": "Cook's membrane",
+      "description": "The classic benchmark: a tapered panel clamped on the left, a total shear force of 1 on the right edge, E = 1, ν = 1/3, thickness 1. Expected: the vertical displacement at the middle of the loaded edge converges to 23.96 (this model: 16 × 16 bilinear quadrilaterals with incompatible modes, which are accurate in bending). With triangles the same answer needs a much finer mesh: switch the element type and compare.",
+      "group": "Plates"
+    },
+    {
+      "file": "15 Thick-walled cylinder (Lame).kfea",
+      "title": "Thick-walled cylinder (Lamé)",
+      "description": "A long steel cylinder (inner radius 100 mm, outer 200 mm) under 50 MPa internal pressure, plane strain, one quarter with symmetry supports. Expected (Lamé): hoop stress at the bore σθ = p (b²+a²)/(b²−a²) = 83.333 MPa, outer-surface hoop stress 33.33 MPa, radial displacement of the bore u = 0.045397 mm.",
+      "group": "Plates"
+    },
+    {
+      "file": "16 Cantilever natural frequency.kfea",
+      "title": "Cantilever natural frequency",
+      "description": "A steel cantilever, 1 m long, 20×40 mm (bending in the 40 mm direction). Expected: ω₁ = (1.875)² √(EI/ρAL⁴) = 209.988 rad/s = 33.421 Hz; the second mode is (4.694/1.875)² = 6.267 times higher. Use Solve to see the mode shapes.",
+      "group": "Dynamics and stability"
+    },
+    {
+      "file": "17 Euler column buckling.kfea",
+      "title": "Euler column buckling",
+      "description": "A pinned–pinned HEA 200 column, 3 m, loaded by 1 kN (the buckling factor is the critical load in kN). Expected: Euler P_cr = π² E I / L² = 8502.34 kN (weak-axis buckling is not modelled: the frame is 2-D, bending about the strong axis); the second mode is four times higher.",
+      "group": "Dynamics and stability"
+    }
+  ]
+}

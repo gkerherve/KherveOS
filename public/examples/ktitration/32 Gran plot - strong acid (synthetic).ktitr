@@ -1,0 +1,194 @@
+{
+  "format": "ktitr",
+  "version": 1,
+  "name": "Gran plot: strong acid (synthetic)",
+  "description": "SYNTHETIC data, not a real experiment: hydrochloric acid of unknown concentration (25.00 mL + 25 mL water) with 0.1000 M NaOH, 0.010 pH noise. The Gran plot straightens the curve on both sides of the equivalence point and finds it from the points far from the jump, where the pH is most reliable.",
+  "mode": "acidbase",
+  "tab": "analyse",
+  "acidbase": {
+    "items": [
+      {
+        "kind": "strong-acid",
+        "label": "HCl",
+        "conc": 0.0872,
+        "volume": 25
+      }
+    ],
+    "water": 25,
+    "titrant": {
+      "kind": "strong-base",
+      "label": "NaOH",
+      "conc": 0.1
+    },
+    "temperature": 25,
+    "activity": "none",
+    "background": 0,
+    "vmax": null,
+    "indicator": "bromothymolblue"
+  },
+  "redox": {
+    "analyte": {
+      "couple": {
+        "label": "Fe³⁺ / Fe²⁺",
+        "ox": "Fe³⁺",
+        "red": "Fe²⁺",
+        "E0": 0.68,
+        "n": 1,
+        "m": 0,
+        "b": 1
+      },
+      "start": "red",
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrant": {
+      "couple": {
+        "label": "Ce⁴⁺ / Ce³⁺",
+        "ox": "Ce⁴⁺",
+        "red": "Ce³⁺",
+        "E0": 1.44,
+        "n": 1,
+        "m": 0,
+        "b": 1
+      },
+      "conc": 0.1
+    },
+    "water": 0,
+    "pH": 0,
+    "temperature": 25,
+    "indicator": "ferroin",
+    "vmax": null
+  },
+  "edta": {
+    "metal": {
+      "symbol": "Ca",
+      "ion": "Ca²⁺",
+      "logKMY": 10.65,
+      "hydroxo": [
+        1.3
+      ],
+      "ammine": []
+    },
+    "conc": 0.003,
+    "volume": 100,
+    "water": 0,
+    "titrantConc": 0.01,
+    "pH": 10,
+    "ammonia": 0.1,
+    "indicator": "ebt",
+    "customLogK": 5,
+    "vmax": null
+  },
+  "precip": {
+    "mode": "silver-titrant",
+    "anions": [
+      {
+        "salt": "agcl",
+        "conc": 0.05,
+        "volume": 25
+      }
+    ],
+    "silver": {
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrantConc": 0.05,
+    "water": 0,
+    "indicator": "mohr",
+    "chromate": 0.0025,
+    "iron": 0.01,
+    "vmax": null
+  },
+  "speciation": {
+    "lib": "phosphoric",
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "conc": 0.1,
+    "ionic": 0,
+    "activity": "none",
+    "temperature": 25
+  },
+  "analyse": {
+    "text": "0.00\t1.349\n3.00\t1.442\n6.00\t1.544\n9.00\t1.642\n12.00\t1.792\n15.00\t1.987\n18.00\t2.246\n19.00\t2.396\n19.50\t2.477\n20.00\t2.580\n20.50\t2.741\n21.00\t2.939\n21.50\t3.385\n22.00\t10.444\n22.50\t10.974\n23.00\t11.231\n23.50\t11.372\n24.00\t11.483\n25.00\t11.626\n26.00\t11.733\n28.00\t11.904\n30.00\t12.013\n",
+    "gran": "strong",
+    "source": "synthetic: true value C = 0.0872 M, equivalence 21.80 mL",
+    "view": "gran",
+    "setup": {
+      "npk": 1,
+      "z0": 0,
+      "form": 0,
+      "titrant": "base",
+      "aliquot": 25,
+      "V0": 50,
+      "Ct": 0.1,
+      "temperature": 25,
+      "activity": "none",
+      "background": 0,
+      "fitCt": false,
+      "fitDV": false,
+      "guessC": null,
+      "pKa": [
+        {
+          "value": 5,
+          "fit": true
+        }
+      ],
+      "sigmaV": 0
+    }
+  },
+  "buffer": {
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "lib": "phosphoric",
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "mode": "salts",
+    "formA": 1,
+    "formB": 2,
+    "pH": 7.4,
+    "conc": 0.1,
+    "volume": 1000,
+    "temperature": 25,
+    "activity": "davies",
+    "ionicStrength": null,
+    "stockA": 1,
+    "stockB": 1,
+    "cation": "Na",
+    "anion": "Cl"
+  },
+  "notes": ""
+}

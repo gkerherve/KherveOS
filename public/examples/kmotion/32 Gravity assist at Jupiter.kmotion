@@ -1,0 +1,16 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Gravity assist at Jupiter",
+  "description": "A probe passes behind Jupiter: in the planet frame its speed is unchanged but its direction turns, and in the Sun frame it leaves much faster, with the energy taken from Jupiter's orbital motion.",
+  "params": {
+    "mode": "slingshot",
+    "pm": 1,
+    "U": 2.76,
+    "u": 2,
+    "b": 0.006,
+    "side": "behind",
+    "frame": "planet"
+  }
+}

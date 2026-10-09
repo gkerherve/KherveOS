@@ -1,0 +1,19 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "pendulum",
+  "title": "Driven damped pendulum: resonance",
+  "description": "A pendulum with natural frequency 3.13 rad/s driven at 3.0 rad/s: the amplitude builds up to the steady value A / (c ω₀) and then settles. Run the resonance sweep in the Plots tab.",
+  "params": {
+    "mode": "driven",
+    "L": 1,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "theta0": 0,
+    "omega0": 0,
+    "c": 0.4,
+    "A": 0.6,
+    "Om": 3,
+    "mass": 1
+  }
+}

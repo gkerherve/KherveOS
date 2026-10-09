@@ -1,0 +1,130 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Pantograph",
+    "points": [
+      {
+        "id": "O",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "O"
+      },
+      {
+        "id": "G",
+        "x": 62.406056297386,
+        "y": 43.659278310626,
+        "ground": true,
+        "label": "crank pivot"
+      },
+      {
+        "id": "B",
+        "x": 59.088465180732,
+        "y": 10.418890660016,
+        "label": "B"
+      },
+      {
+        "id": "D",
+        "x": -8.682408883347,
+        "y": 49.24038765061,
+        "label": "D"
+      },
+      {
+        "id": "C",
+        "x": 50.406056297386,
+        "y": 59.659278310626,
+        "label": "C (input)",
+        "tracer": true
+      },
+      {
+        "id": "E",
+        "x": 118.176930361465,
+        "y": 20.837781320032,
+        "label": "E"
+      },
+      {
+        "id": "F",
+        "x": -17.364817766693,
+        "y": 98.480775301221,
+        "label": "F"
+      },
+      {
+        "id": "T",
+        "x": 100.812112594772,
+        "y": 119.318556621252,
+        "label": "T (output)",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "bar1",
+        "pts": [
+          "O",
+          "D",
+          "F"
+        ],
+        "label": "bar 1"
+      },
+      {
+        "id": "bar2",
+        "pts": [
+          "O",
+          "B",
+          "E"
+        ],
+        "label": "bar 2"
+      },
+      {
+        "id": "BC",
+        "pts": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "id": "DC",
+        "pts": [
+          "D",
+          "C"
+        ]
+      },
+      {
+        "id": "ET",
+        "pts": [
+          "E",
+          "T"
+        ]
+      },
+      {
+        "id": "FT",
+        "pts": [
+          "F",
+          "T"
+        ]
+      },
+      {
+        "id": "crank",
+        "pts": [
+          "G",
+          "C"
+        ],
+        "label": "crank"
+      }
+    ],
+    "sliders": [],
+    "driver": {
+      "from": "G",
+      "to": "C",
+      "rpm": 20
+    },
+    "notes": "A parallelogram O-B-C-D scaled by 2 about O: the tracer T always lies on the line OC at twice the distance, so it draws a circle twice the size of the circle the crank makes C draw.",
+    "output": {
+      "kind": "point",
+      "point": "T",
+      "axis": "x"
+    }
+  }
+}

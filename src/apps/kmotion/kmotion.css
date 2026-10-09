@@ -1,0 +1,138 @@
+/* kMotion: a scene picker, a canvas with overlays, parameter and readout panels and a plots dock.
+   Colours come from the theme variables only; the scenes' own colours are drawn on the canvas. */
+
+.mo-app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  position: relative;
+  min-width: 0;
+  outline: none;
+}
+
+.mo-toolbar { flex-wrap: wrap; row-gap: 4px; height: auto; min-height: 38px; }
+.mo-toolbar select.k-input { width: auto; height: 28px; padding: 0 6px; }
+.mo-toolbar .mo-time { font-family: var(--k-mono); font-size: 12px; min-width: 96px; color: var(--k-text); }
+.mo-toolbar .mo-speed { display: inline-flex; align-items: center; gap: 6px; color: var(--k-muted); font-size: 12px; }
+.mo-toolbar .mo-speed input[type='range'] { width: 90px; }
+.mo-toolbar .k-icon-btn.on { background: var(--k-selection); color: var(--k-text); }
+.mo-toolbar .mo-title { font-weight: 600; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mo-body { flex: 1; min-height: 0; display: flex; position: relative; }
+.mo-left, .mo-right {
+  flex: none;
+  background: var(--k-surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.mo-left { width: 276px; border-right: 1px solid var(--k-border); }
+.mo-right { width: 262px; border-left: 1px solid var(--k-border); }
+.mo-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 12px 16px; }
+.mo-center { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.mo-scenes { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 10px 4px; }
+.mo-scenes button {
+  flex: 1 1 auto;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-bg);
+  color: var(--k-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mo-scenes button:hover { color: var(--k-text); }
+.mo-scenes button.on { background: var(--k-selection); color: var(--k-text); border-color: var(--k-accent); font-weight: 600; }
+
+.mo-sec h4 { margin: 14px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--k-muted); }
+.mo-blurb { margin: 4px 0 6px; font-size: 12px; color: var(--k-muted); line-height: 1.4; }
+.mo-row { display: flex; gap: 6px; align-items: center; margin: 6px 0; }
+.mo-row > .k-input, .mo-row > select { flex: 1; min-width: 0; }
+select.k-input { height: 28px; }
+
+.mo-field { display: flex; flex-direction: column; gap: 2px; margin: 9px 0; }
+.mo-field > label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11.5px; color: var(--k-muted); }
+.mo-field > label em { font-style: normal; color: var(--k-muted); opacity: 0.8; }
+.mo-field .mo-ctl { display: flex; align-items: center; gap: 6px; }
+.mo-field input[type='range'] { flex: 1; min-width: 0; accent-color: var(--k-accent); height: 18px; }
+.mo-field .k-input { width: 76px; height: 24px; padding: 0 6px; font-family: var(--k-mono); font-size: 12px; text-align: right; }
+.mo-field small { font-size: 11px; color: var(--k-muted); line-height: 1.3; }
+.mo-check { display: flex; gap: 8px; align-items: center; margin: 8px 0; font-size: 12.5px; cursor: pointer; }
+.mo-check input { accent-color: var(--k-accent); }
+
+.mo-seg { display: flex; gap: 2px; padding: 2px; background: var(--k-bg); border: 1px solid var(--k-border); border-radius: var(--k-radius-sm); flex-wrap: wrap; }
+.mo-seg button { flex: 1; height: 24px; padding: 0 6px; border: 0; border-radius: 4px; background: transparent; color: var(--k-muted); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.mo-seg button.on { background: var(--k-selection); color: var(--k-text); font-weight: 600; }
+.mo-seg button:hover:not(.on) { color: var(--k-text); }
+
+.mo-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+.mo-chip { height: 24px; padding: 0 9px; border: 1px solid var(--k-border); border-radius: 999px; background: var(--k-bg); color: var(--k-text); font: inherit; font-size: 12px; cursor: pointer; }
+.mo-chip:hover { border-color: var(--k-accent); }
+
+.mo-kv { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mo-kv th, .mo-kv td { text-align: left; vertical-align: top; padding: 4px 4px; border-bottom: 1px solid color-mix(in srgb, var(--k-border) 60%, transparent); }
+.mo-kv th { font-weight: 500; color: var(--k-muted); width: 46%; }
+.mo-kv td { font-family: var(--k-mono); font-size: 11.5px; word-break: break-word; }
+.mo-kv td small { display: block; color: var(--k-muted); font-family: var(--k-font); font-size: 11px; margin-top: 1px; }
+.mo-kv tr.ok td:first-child { color: var(--k-success); }
+.mo-kv tr.warn td:first-child { color: var(--k-warning); }
+.mo-kv tr.info td:first-child { color: var(--k-link); }
+
+.mo-stage { flex: 1; min-height: 120px; position: relative; overflow: hidden; background: var(--k-bg); }
+.mo-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+.mo-stage:focus-visible { outline: 2px solid var(--k-accent); outline-offset: -2px; }
+.mo-hud { position: absolute; right: 10px; bottom: 8px; max-width: 70%; text-align: right; pointer-events: none; font-size: 11.5px; color: var(--k-muted); background: color-mix(in srgb, var(--k-surface) 80%, transparent); padding: 3px 8px; border-radius: var(--k-radius-sm); }
+.mo-overlay-msg { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; padding: 20px; }
+.mo-card { max-width: 380px; padding: 14px 16px; border: 1px dashed var(--k-border); border-radius: var(--k-radius); background: color-mix(in srgb, var(--k-surface) 88%, transparent); text-align: center; pointer-events: auto; }
+.mo-card p { margin: 6px 0 0; color: var(--k-muted); }
+.mo-stage-bar { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 2px; background: color-mix(in srgb, var(--k-surface) 85%, transparent); border: 1px solid var(--k-border); border-radius: var(--k-radius-sm); padding: 2px; }
+.mo-tools { flex: none; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--k-chrome); border-bottom: 1px solid var(--k-border); flex-wrap: wrap; }
+.mo-tools .k-btn.on, .mo-tools .k-icon-btn.on { background: var(--k-selection); border-color: var(--k-accent); }
+.mo-tools .mo-hint { font-size: 11.5px; color: var(--k-muted); margin-left: 6px; }
+
+.mo-splitter { flex: none; height: 5px; margin-top: -3px; cursor: ns-resize; position: relative; z-index: 2; touch-action: none; }
+.mo-splitter:hover { background: var(--k-accent); opacity: 0.5; }
+.mo-dock { flex: none; min-height: 0; max-height: 65%; border-top: 1px solid var(--k-border); background: var(--k-surface); display: flex; flex-direction: column; }
+.mo-tabs { flex: none; display: flex; align-items: stretch; gap: 2px; padding: 0 8px; background: var(--k-chrome); border-bottom: 1px solid var(--k-border); overflow-x: auto; }
+.mo-tabs button {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border: 0; border-bottom: 2px solid transparent; background: transparent;
+  color: var(--k-muted); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap;
+}
+.mo-tabs button:hover { color: var(--k-text); }
+.mo-tabs button.on { color: var(--k-text); border-bottom-color: var(--k-accent); font-weight: 600; }
+.mo-dock-body { flex: 1; min-height: 0; position: relative; display: flex; }
+.mo-chart { position: relative; flex: 1; min-width: 0; min-height: 0; }
+.mo-chart-plot { position: absolute; inset: 0; }
+.mo-chart-note { position: absolute; inset: 0; display: grid; place-items: center; }
+.mo-chart-actions { position: absolute; right: 8px; top: 4px; z-index: 3; display: flex; gap: 4px; }
+
+.mo-data { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+.mo-data-bar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--k-border); font-size: 12px; }
+.mo-data-bar .k-input { width: 78px; height: 24px; padding: 0 6px; }
+.mo-table-wrap { flex: 1; min-height: 0; overflow: auto; }
+.mo-table { border-collapse: collapse; font-family: var(--k-mono); font-size: 11.5px; min-width: 100%; }
+.mo-table th, .mo-table td { padding: 2px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid color-mix(in srgb, var(--k-border) 50%, transparent); }
+.mo-table th { position: sticky; top: 0; background: var(--k-chrome); color: var(--k-muted); font-weight: 500; font-family: var(--k-font); }
+.mo-colpick { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px; border-bottom: 1px solid var(--k-border); max-height: 70px; overflow: auto; }
+.mo-colpick label { display: inline-flex; gap: 4px; align-items: center; font-size: 11.5px; padding: 1px 7px; border: 1px solid var(--k-border); border-radius: 999px; cursor: pointer; background: var(--k-bg); }
+
+.mo-stopwatch { font-family: var(--k-mono); font-size: 20px; margin: 4px 0; }
+.mo-laps { margin: 4px 0 0; padding: 0; list-style: none; font-family: var(--k-mono); font-size: 11.5px; max-height: 90px; overflow: auto; }
+
+.mo-inspector { border: 1px solid var(--k-border); border-radius: var(--k-radius-sm); padding: 6px 10px 10px; margin-top: 8px; background: var(--k-bg); }
+.mo-inspector h5 { margin: 4px 0; font-size: 12.5px; }
+.mo-error { padding: 8px 10px; border: 1px solid var(--k-danger); border-radius: var(--k-radius-sm); background: color-mix(in srgb, var(--k-danger) 10%, transparent); font-size: 12px; margin: 6px 0; }
+.mo-note { padding: 6px 8px; border-radius: var(--k-radius-sm); background: color-mix(in srgb, var(--k-warning) 14%, transparent); font-size: 12px; margin: 6px 0; }
+
+/* narrow windows: the side panels slide over the picture */
+.mo-app[data-size='s'] .mo-left,
+.mo-app[data-size='s'] .mo-right { position: absolute; top: 0; bottom: 0; z-index: 20; width: min(300px, 88%); box-shadow: var(--k-shadow-lg); }
+.mo-app[data-size='s'] .mo-left { left: 0; }
+.mo-app[data-size='s'] .mo-right { right: 0; }
+.mo-app[data-size='m'] .mo-left { width: 236px; }
+.mo-app[data-size='m'] .mo-right { width: 220px; }

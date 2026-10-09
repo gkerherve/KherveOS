@@ -1,0 +1,300 @@
+{
+  "app": "kmotion",
+  "folder": "kMotion Examples",
+  "examples": [
+    {
+      "file": "01 Projectile in vacuum.kmotion",
+      "title": "Projectile in vacuum",
+      "description": "20 m/s at 45° on level ground: the range is v² sin 2θ / g = 40.79 m and the flight lasts 2.88 s. The dashed parabola is the closed form; the simulation sits on it.",
+      "group": "Projectiles"
+    },
+    {
+      "file": "02 Projectile with quadratic air drag.kmotion",
+      "title": "Projectile with quadratic air drag",
+      "description": "A baseball-like ball (c = 0.006 /m) thrown at 40 m/s and 35°. Compare with the vacuum parabola: the drag shortens the range a lot and makes the descent steeper than the climb.",
+      "group": "Projectiles"
+    },
+    {
+      "file": "03 Maximum-range angle with drag.kmotion",
+      "title": "Maximum-range angle with drag",
+      "description": "With quadratic drag (c = 0.01 /m) the best angle for 40 m/s is 39.5°, below the vacuum 45°. The readout searches for it numerically.",
+      "group": "Projectiles"
+    },
+    {
+      "file": "04 Fan of angles from a cliff.kmotion",
+      "title": "Fan of angles from a cliff",
+      "description": "Five launch angles from a 30 m cliff at 20 m/s. From a height the farthest shot is flatter than 45°: atan(v / √(v² + 2 g h)).",
+      "group": "Projectiles"
+    },
+    {
+      "file": "05 Jump on Earth.kmotion",
+      "title": "Jump on Earth",
+      "description": "A 3.5 m/s take-off at 60° from a standing height of 1 m: the jump lasts 0.86 s and covers 1.50 m.",
+      "group": "Projectiles"
+    },
+    {
+      "file": "06 Jump on the Moon.kmotion",
+      "title": "Jump on the Moon",
+      "description": "The same take-off with the Moon's gravity (1.62 m/s²): 4.05 s in the air and 7.08 m, about 4.7 times as far.",
+      "group": "Projectiles"
+    },
+    {
+      "file": "07 Simple pendulum - exact against small-angle.kmotion",
+      "title": "Simple pendulum: exact against small-angle",
+      "description": "L = 1 m released at 80°. The small-angle cosine (pink) drifts out of step; the exact elliptic-function solution (green) stays on the simulation. The period is 2.2823 s instead of 2π√(L/g) = 2.0061 s.",
+      "group": "Pendulums"
+    },
+    {
+      "file": "08 Damped pendulum.kmotion",
+      "title": "Damped pendulum",
+      "description": "Friction at the pivot: the swing decays as e^(−c t/2) and the phase portrait spirals into the origin.",
+      "group": "Pendulums"
+    },
+    {
+      "file": "09 Driven damped pendulum - resonance.kmotion",
+      "title": "Driven damped pendulum: resonance",
+      "description": "A pendulum with natural frequency 3.13 rad/s driven at 3.0 rad/s: the amplitude builds up to the steady value A / (c ω₀) and then settles. Run the resonance sweep in the Plots tab.",
+      "group": "Pendulums"
+    },
+    {
+      "file": "10 Double pendulum - chaos.kmotion",
+      "title": "Double pendulum: chaos",
+      "description": "Two pendulums started 0.01° apart. For a few seconds they move together, then they separate exponentially (Lyapunov exponent in the readout) while the energy stays constant.",
+      "group": "Pendulums"
+    },
+    {
+      "file": "11 Physical pendulum - a rod on a nail.kmotion",
+      "title": "Physical pendulum: a rod on a nail",
+      "description": "A uniform rod swinging about its end behaves like a simple pendulum of length 2L/3. Move the pivot toward the centre to see the period pass through a minimum at L/√12 from the centre.",
+      "group": "Pendulums"
+    },
+    {
+      "file": "12 Damped oscillator - underdamped.kmotion",
+      "title": "Damped oscillator: underdamped",
+      "description": "ζ = 0.11: the mass rings down inside the envelope ±A e^(−c t/2m). The closed form lies on the simulation.",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "13 Damped oscillator - critical damping.kmotion",
+      "title": "Damped oscillator: critical damping",
+      "description": "c = 2√(km): the fastest return to rest without overshooting.",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "14 Damped oscillator - overdamped.kmotion",
+      "title": "Damped oscillator: overdamped",
+      "description": "ζ > 1: no oscillation, a slow creep back to equilibrium.",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "15 Driven oscillator at resonance.kmotion",
+      "title": "Driven oscillator at resonance",
+      "description": "Driven at its natural frequency √(k/m) = 4.47 rad/s. The amplitude F₀ / (c ω₀) is reached after about 2m/c seconds; the phase lag is 90°.",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "16 Coupled pendulums - normal modes and beats.kmotion",
+      "title": "Coupled pendulums: normal modes and beats",
+      "description": "Two pendulums joined by a spring. Pull one and the energy swaps back and forth (beats); start in mode 1 or mode 2 and it stays a pure sine at ω = √(g/L) or √(g/L + 2k/m).",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "17 Five coupled oscillators.kmotion",
+      "title": "Five coupled oscillators",
+      "description": "Five masses in a chain: five normal modes with different frequencies. Mode 2 is shown; the plot of modal amplitudes shows only that mode is excited.",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "18 Atwood machine.kmotion",
+      "title": "Atwood machine",
+      "description": "Masses 3 kg and 2 kg over an ideal pulley: a = (m₁ − m₂) g / (m₁ + m₂) = 1.96 m/s², tension 23.5 N. Add a pulley mass and a drops.",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "19 Block on an incline with friction.kmotion",
+      "title": "Block on an incline with friction",
+      "description": "θ = 35°, μs = 0.5, μk = 0.3: tan 35° = 0.70 > μs so the block slides with a = g (sin θ − μk cos θ) = 3.2 m/s². Lower the angle below 26.6° (arctan 0.5) and it stays put.",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "20 Rolling race down an incline.kmotion",
+      "title": "Rolling race down an incline",
+      "description": "A block, a ring, a cylinder and two spheres released together. Rolling objects are slower than the sliding block by 1 + I/mr²; the solid sphere wins and the ring comes last, whatever their masses and radii.",
+      "group": "Oscillators & friction"
+    },
+    {
+      "file": "21 Elastic collision in 1-D.kmotion",
+      "title": "Elastic collision in 1-D",
+      "description": "A 2 kg cart at 3 m/s hits a 1 kg cart at −1 m/s with e = 1. Momentum and kinetic energy are both conserved: the velocities after are 0.33 and 4.33 m/s.",
+      "group": "Collisions"
+    },
+    {
+      "file": "22 Perfectly inelastic collision.kmotion",
+      "title": "Perfectly inelastic collision",
+      "description": "Same carts with e = 0: they move together at the centre-of-mass velocity and kinetic energy is lost: ½ μ (1 − e²) v_rel².",
+      "group": "Collisions"
+    },
+    {
+      "file": "23 Billiard collision at right angles.kmotion",
+      "title": "Billiard collision at right angles",
+      "description": "A cue ball hits an equal ball at rest off-centre. With equal masses and e = 1 the two balls leave at exactly 90° to each other.",
+      "group": "Collisions"
+    },
+    {
+      "file": "24 Breaking a billiard rack.kmotion",
+      "title": "Breaking a billiard rack",
+      "description": "The cue ball hits fifteen balls in a triangle. Event-driven physics: each collision is resolved at its exact time. Momentum is conserved until the cushions are hit.",
+      "group": "Collisions"
+    },
+    {
+      "file": "25 Newton's cradle (planck).kmotion",
+      "title": "Newton's cradle (planck)",
+      "description": "Five steel balls on strings, rigid-body physics with planck: one ball in, one ball out. Lift two or three balls with the parameter panel.",
+      "group": "Collisions"
+    },
+    {
+      "file": "26 Ballistic pendulum.kmotion",
+      "title": "Ballistic pendulum",
+      "description": "A 10 g bullet at 300 m/s embeds in a 1 kg block on a 1.5 m string. Momentum gives V = m v / (m + M) = 2.97 m/s; energy gives the rise h = V²/2g = 0.45 m and the swing angle 45.6°. Only 1% of the kinetic energy survives the impact.",
+      "group": "Collisions"
+    },
+    {
+      "file": "27 Circular orbit.kmotion",
+      "title": "Circular orbit",
+      "description": "A planet at 1 AU around a one solar-mass star: period 1 yr and speed 2π AU/yr (29.8 km/s). Kepler III: T²/a³ = 1.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "28 Elliptical orbit - Kepler's laws.kmotion",
+      "title": "Elliptical orbit: Kepler's laws",
+      "description": "e = 0.6, perihelion 1 AU (a = 2.5 AU): the wedges swept in equal times have equal areas (II), r + r′ = 2a for the empty focus (I) and T²/a³ = 1 (III), all checked live.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "29 Binary star.kmotion",
+      "title": "Binary star",
+      "description": "Two equal masses orbiting their common centre of mass.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "30 Escape speed.kmotion",
+      "title": "Escape speed",
+      "description": "Fire a probe straight up from 1 AU at 90% of the escape speed: it climbs to 5.3 AU and falls back. At 100% it just escapes (a parabola). The escape speed is √2 times the circular speed.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "31 Hohmann transfer - Earth to Mars.kmotion",
+      "title": "Hohmann transfer: Earth to Mars",
+      "description": "Two burns: Δv₁ = 2.95 km/s at departure, Δv₂ = 2.65 km/s at arrival, 259 days of flight. Mars must lead Earth by 44.4° at launch.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "32 Gravity assist at Jupiter.kmotion",
+      "title": "Gravity assist at Jupiter",
+      "description": "A probe passes behind Jupiter: in the planet frame its speed is unchanged but its direction turns, and in the Sun frame it leaves much faster, with the energy taken from Jupiter's orbital motion.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "33 Restricted three-body - the Arenstorf orbit.kmotion",
+      "title": "Restricted three-body: the Arenstorf orbit",
+      "description": "A light spacecraft in the rotating Earth-Moon frame follows a periodic orbit (period 17.065) that visits the Moon twice per lap. The Jacobi constant stays fixed.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "34 Tadpole orbit around L4.kmotion",
+      "title": "Tadpole orbit around L4",
+      "description": "A body just inside the Lagrange point L4 of the Earth-Moon system circles it in a small, stable tadpole orbit (L4 is stable for μ < 0.0385). The Jacobi constant stays fixed.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "35 Trojan asteroids of Jupiter.kmotion",
+      "title": "Trojan asteroids of Jupiter",
+      "description": "The Sun-Jupiter problem (μ = 0.000954): an asteroid on a slightly wider orbit than L4 librates along a long tadpole that reaches towards Jupiter, as the Trojans do. Switch on the inertial frame to see the bodies circle.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "36 Figure-eight three-body.kmotion",
+      "title": "Figure-eight three-body",
+      "description": "Three equal masses follow the same eight-shaped curve, one third of a period apart (Chenciner–Montgomery, 2000). The period is 6.32591398 in units where G = m = 1.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "37 Inner solar system.kmotion",
+      "title": "Inner solar system",
+      "description": "Sun, Mercury, Venus, Earth and Mars from real orbital elements (J2000), integrated as an N-body problem with velocity-Verlet. The periods come out as 87.97, 224.7, 365.2 and 687 days.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "38 Disc galaxy.kmotion",
+      "title": "Disc galaxy",
+      "description": "120 light bodies on circular orbits around a heavy centre, with softened gravity. Switch on Barnes–Hut and the 3-D view.",
+      "group": "Orbits & gravity"
+    },
+    {
+      "file": "39 Ramp and a pile of boxes.kmotion",
+      "title": "Ramp and a pile of boxes",
+      "description": "Ramp and a pile of boxes: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+      "group": "Rigid bodies"
+    },
+    {
+      "file": "40 Car with a motor and suspension.kmotion",
+      "title": "Car with a motor and suspension",
+      "description": "Car with a motor and suspension: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+      "group": "Rigid bodies"
+    },
+    {
+      "file": "41 Pulley (Atwood machine).kmotion",
+      "title": "Pulley (Atwood machine)",
+      "description": "Pulley (Atwood machine): a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+      "group": "Rigid bodies"
+    },
+    {
+      "file": "42 Chain of hinged links.kmotion",
+      "title": "Chain of hinged links",
+      "description": "Chain of hinged links: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+      "group": "Rigid bodies"
+    },
+    {
+      "file": "43 Seesaw and a dropped ball.kmotion",
+      "title": "Seesaw and a dropped ball",
+      "description": "Seesaw and a dropped ball: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+      "group": "Rigid bodies"
+    },
+    {
+      "file": "44 Motorised slider and a welded T.kmotion",
+      "title": "Motorised slider and a welded T",
+      "description": "Motorised slider and a welded T: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+      "group": "Rigid bodies"
+    },
+    {
+      "file": "45 Centripetal force.kmotion",
+      "title": "Centripetal force",
+      "description": "A 1 kg mass on a 2 m string at 6 m/s: a = v²/R = 18 m/s² towards the centre, tension 18 N. Tick “Cut the string” and it leaves along the tangent.",
+      "group": "Circular motion"
+    },
+    {
+      "file": "46 Banked curve.kmotion",
+      "title": "Banked curve",
+      "description": "A 60 m curve banked at 15°: the ideal speed is √(R g tan θ) = 12.6 m/s; with μ = 0.3 the car may go as fast as 19.1 m/s before it skids out.",
+      "group": "Circular motion"
+    },
+    {
+      "file": "47 Conical pendulum.kmotion",
+      "title": "Conical pendulum",
+      "description": "L = 1.2 m at 35°: the bob circles with period 2π√(L cos θ / g) = 1.99 s. Change the speed ratio and the cone breathes.",
+      "group": "Circular motion"
+    },
+    {
+      "file": "48 Coriolis force on a turntable.kmotion",
+      "title": "Coriolis force on a turntable",
+      "description": "A ball rolls from the centre of a disc turning at 0.8 rad/s. On the ground it moves in a straight line; on the disc it curves. Switch the view to see both.",
+      "group": "Circular motion"
+    },
+    {
+      "file": "49 Spinning top.kmotion",
+      "title": "Spinning top",
+      "description": "A fast top (150 rad/s) precesses slowly at m g d / (I₃ ω₃) = 3.9 rad/s while it nutates at about I₃ω₃/I₁ = 100 rad/s.",
+      "group": "Circular motion"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "collision",
+  "title": "Breaking a billiard rack",
+  "description": "The cue ball hits fifteen balls in a triangle. Event-driven physics: each collision is resolved at its exact time. Momentum is conserved until the cushions are hit.",
+  "params": {
+    "mode": "twod",
+    "e": 0.96,
+    "layout": "rack",
+    "speed": 4,
+    "offset": 0.5,
+    "mc": 1,
+    "mt": 1,
+    "n": 12,
+    "ew": 0.9,
+    "decay": 0.15,
+    "seed": 7
+  }
+}

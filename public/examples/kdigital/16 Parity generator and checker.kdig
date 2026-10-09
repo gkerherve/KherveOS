@@ -1,0 +1,664 @@
+{
+  "format": "kdig",
+  "version": 1,
+  "name": "Parity generator and checker",
+  "description": "P makes the number of 1s even. The checker XORs all five bits: ERROR lights up when a single bit is flipped (use FAULT) — and misses double errors.",
+  "tab": "circuit",
+  "circuit": {
+    "parts": [
+      {
+        "id": "p1",
+        "kind": "switch",
+        "ref": "SW1",
+        "x": 0,
+        "y": 0,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "D3",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "switch",
+        "ref": "SW2",
+        "x": 0,
+        "y": 50,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "D2",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "switch",
+        "ref": "SW3",
+        "x": 0,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "D1",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "switch",
+        "ref": "SW4",
+        "x": 0,
+        "y": 150,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "D0",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p5",
+        "kind": "switch",
+        "ref": "SW5",
+        "x": 0,
+        "y": 250,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "FAULT",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p6",
+        "kind": "xor",
+        "ref": "U1",
+        "x": 200,
+        "y": 30,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p7",
+        "kind": "xor",
+        "ref": "U2",
+        "x": 200,
+        "y": 130,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p8",
+        "kind": "xor",
+        "ref": "U3",
+        "x": 340,
+        "y": 80,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p9",
+        "kind": "led",
+        "ref": "LED1",
+        "x": 460,
+        "y": 80,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "yellow",
+          "name": "P"
+        }
+      },
+      {
+        "id": "p10",
+        "kind": "xor",
+        "ref": "U4",
+        "x": 200,
+        "y": 250,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p11",
+        "kind": "xor",
+        "ref": "U5",
+        "x": 600,
+        "y": 30,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p12",
+        "kind": "xor",
+        "ref": "U6",
+        "x": 600,
+        "y": 130,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p13",
+        "kind": "xor",
+        "ref": "U7",
+        "x": 740,
+        "y": 80,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p14",
+        "kind": "xor",
+        "ref": "U8",
+        "x": 860,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p15",
+        "kind": "led",
+        "ref": "LED2",
+        "x": 980,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "red",
+          "name": "ERROR"
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "x1": 30,
+        "y1": 0,
+        "x2": 50,
+        "y2": 0
+      },
+      {
+        "id": "w2",
+        "x1": 30,
+        "y1": 50,
+        "x2": 50,
+        "y2": 50
+      },
+      {
+        "id": "w3",
+        "x1": 30,
+        "y1": 100,
+        "x2": 50,
+        "y2": 100
+      },
+      {
+        "id": "w4",
+        "x1": 30,
+        "y1": 150,
+        "x2": 50,
+        "y2": 150
+      },
+      {
+        "id": "w5",
+        "x1": 30,
+        "y1": 250,
+        "x2": 50,
+        "y2": 250
+      },
+      {
+        "id": "w6",
+        "x1": 170,
+        "y1": 20,
+        "x2": 150,
+        "y2": 20
+      },
+      {
+        "id": "w7",
+        "x1": 170,
+        "y1": 40,
+        "x2": 150,
+        "y2": 40
+      },
+      {
+        "id": "w8",
+        "x1": 170,
+        "y1": 120,
+        "x2": 150,
+        "y2": 120
+      },
+      {
+        "id": "w9",
+        "x1": 170,
+        "y1": 140,
+        "x2": 150,
+        "y2": 140
+      },
+      {
+        "id": "w10",
+        "x1": 230,
+        "y1": 30,
+        "x2": 270,
+        "y2": 30
+      },
+      {
+        "id": "w11",
+        "x1": 270,
+        "y1": 30,
+        "x2": 270,
+        "y2": 70
+      },
+      {
+        "id": "w12",
+        "x1": 270,
+        "y1": 70,
+        "x2": 310,
+        "y2": 70
+      },
+      {
+        "id": "w13",
+        "x1": 230,
+        "y1": 130,
+        "x2": 270,
+        "y2": 130
+      },
+      {
+        "id": "w14",
+        "x1": 270,
+        "y1": 130,
+        "x2": 270,
+        "y2": 90
+      },
+      {
+        "id": "w15",
+        "x1": 270,
+        "y1": 90,
+        "x2": 310,
+        "y2": 90
+      },
+      {
+        "id": "w16",
+        "x1": 370,
+        "y1": 80,
+        "x2": 390,
+        "y2": 80
+      },
+      {
+        "id": "w17",
+        "x1": 390,
+        "y1": 80,
+        "x2": 430,
+        "y2": 80
+      },
+      {
+        "id": "w18",
+        "x1": 170,
+        "y1": 240,
+        "x2": 150,
+        "y2": 240
+      },
+      {
+        "id": "w19",
+        "x1": 170,
+        "y1": 260,
+        "x2": 150,
+        "y2": 260
+      },
+      {
+        "id": "w20",
+        "x1": 230,
+        "y1": 250,
+        "x2": 250,
+        "y2": 250
+      },
+      {
+        "id": "w21",
+        "x1": 570,
+        "y1": 20,
+        "x2": 550,
+        "y2": 20
+      },
+      {
+        "id": "w22",
+        "x1": 570,
+        "y1": 40,
+        "x2": 550,
+        "y2": 40
+      },
+      {
+        "id": "w23",
+        "x1": 570,
+        "y1": 120,
+        "x2": 550,
+        "y2": 120
+      },
+      {
+        "id": "w24",
+        "x1": 570,
+        "y1": 140,
+        "x2": 550,
+        "y2": 140
+      },
+      {
+        "id": "w25",
+        "x1": 630,
+        "y1": 30,
+        "x2": 670,
+        "y2": 30
+      },
+      {
+        "id": "w26",
+        "x1": 670,
+        "y1": 30,
+        "x2": 670,
+        "y2": 70
+      },
+      {
+        "id": "w27",
+        "x1": 670,
+        "y1": 70,
+        "x2": 710,
+        "y2": 70
+      },
+      {
+        "id": "w28",
+        "x1": 630,
+        "y1": 130,
+        "x2": 670,
+        "y2": 130
+      },
+      {
+        "id": "w29",
+        "x1": 670,
+        "y1": 130,
+        "x2": 670,
+        "y2": 90
+      },
+      {
+        "id": "w30",
+        "x1": 670,
+        "y1": 90,
+        "x2": 710,
+        "y2": 90
+      },
+      {
+        "id": "w31",
+        "x1": 770,
+        "y1": 80,
+        "x2": 800,
+        "y2": 80
+      },
+      {
+        "id": "w32",
+        "x1": 800,
+        "y1": 80,
+        "x2": 800,
+        "y2": 90
+      },
+      {
+        "id": "w33",
+        "x1": 800,
+        "y1": 90,
+        "x2": 830,
+        "y2": 90
+      },
+      {
+        "id": "w34",
+        "x1": 830,
+        "y1": 110,
+        "x2": 810,
+        "y2": 110
+      },
+      {
+        "id": "w35",
+        "x1": 890,
+        "y1": 100,
+        "x2": 950,
+        "y2": 100
+      }
+    ],
+    "labels": [
+      {
+        "id": "l1",
+        "name": "D3",
+        "x": 50,
+        "y": 0,
+        "flip": false
+      },
+      {
+        "id": "l2",
+        "name": "D2",
+        "x": 50,
+        "y": 50,
+        "flip": false
+      },
+      {
+        "id": "l3",
+        "name": "D1",
+        "x": 50,
+        "y": 100,
+        "flip": false
+      },
+      {
+        "id": "l4",
+        "name": "D0",
+        "x": 50,
+        "y": 150,
+        "flip": false
+      },
+      {
+        "id": "l5",
+        "name": "FAULT",
+        "x": 50,
+        "y": 250,
+        "flip": false
+      },
+      {
+        "id": "l6",
+        "name": "D3",
+        "x": 150,
+        "y": 20,
+        "flip": true
+      },
+      {
+        "id": "l7",
+        "name": "D2",
+        "x": 150,
+        "y": 40,
+        "flip": true
+      },
+      {
+        "id": "l8",
+        "name": "D1",
+        "x": 150,
+        "y": 120,
+        "flip": true
+      },
+      {
+        "id": "l9",
+        "name": "D0",
+        "x": 150,
+        "y": 140,
+        "flip": true
+      },
+      {
+        "id": "l10",
+        "name": "P",
+        "x": 390,
+        "y": 80,
+        "flip": false
+      },
+      {
+        "id": "l11",
+        "name": "D0",
+        "x": 150,
+        "y": 240,
+        "flip": true
+      },
+      {
+        "id": "l12",
+        "name": "FAULT",
+        "x": 150,
+        "y": 260,
+        "flip": true
+      },
+      {
+        "id": "l13",
+        "name": "D0r",
+        "x": 250,
+        "y": 250,
+        "flip": false
+      },
+      {
+        "id": "l14",
+        "name": "D3",
+        "x": 550,
+        "y": 20,
+        "flip": true
+      },
+      {
+        "id": "l15",
+        "name": "D2",
+        "x": 550,
+        "y": 40,
+        "flip": true
+      },
+      {
+        "id": "l16",
+        "name": "D1",
+        "x": 550,
+        "y": 120,
+        "flip": true
+      },
+      {
+        "id": "l17",
+        "name": "D0r",
+        "x": 550,
+        "y": 140,
+        "flip": true
+      },
+      {
+        "id": "l18",
+        "name": "P",
+        "x": 810,
+        "y": 110,
+        "flip": true
+      }
+    ],
+    "notes": [
+      {
+        "id": "n1",
+        "text": "Even-parity generator: P = D3 xor D2 xor D1 xor D0",
+        "x": 160,
+        "y": -20
+      },
+      {
+        "id": "n2",
+        "text": "Checker: ERROR = 1 when the received word has odd parity",
+        "x": 560,
+        "y": -20
+      },
+      {
+        "id": "n3",
+        "text": "FAULT flips D0 on the way (a single-bit error)",
+        "x": 160,
+        "y": 200
+      }
+    ]
+  },
+  "stimulus": [
+    {
+      "t": 0,
+      "set": {
+        "D3": 1,
+        "D2": 0,
+        "D1": 1,
+        "D0": 1,
+        "FAULT": 0
+      }
+    },
+    {
+      "t": 30,
+      "set": {
+        "D3": 1,
+        "D2": 0,
+        "D1": 1,
+        "D0": 1,
+        "FAULT": 1
+      }
+    },
+    {
+      "t": 60,
+      "set": {
+        "D3": 0,
+        "D2": 1,
+        "D1": 1,
+        "D0": 0,
+        "FAULT": 0
+      }
+    },
+    {
+      "t": 90,
+      "set": {
+        "D3": 0,
+        "D2": 1,
+        "D1": 1,
+        "D0": 0,
+        "FAULT": 1
+      }
+    },
+    {
+      "t": 120,
+      "set": {
+        "D3": 1,
+        "D2": 1,
+        "D1": 1,
+        "D0": 1,
+        "FAULT": 0
+      }
+    },
+    {
+      "t": 150,
+      "set": {
+        "D3": 1,
+        "D2": 1,
+        "D1": 1,
+        "D0": 1,
+        "FAULT": 1
+      }
+    }
+  ],
+  "until": 180
+}

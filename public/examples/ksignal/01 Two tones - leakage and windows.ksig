@@ -1,0 +1,119 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "Two tones: leakage and windows",
+  "description": "Synthetic: 1000 Hz (amplitude 1.0, exactly on a bin) plus 1234.5 Hz (amplitude 0.5, half a bin off). Flat-top reads both amplitudes within 0.01 dB; a rectangular window loses 3.9 dB on the second tone and smears both into sidelobes; Hann loses 1.4 dB before the peak finder interpolates. Switch the window or tick \"Compare windows\".",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 8192,
+    "duration": 1,
+    "components": [
+      {
+        "type": "sine",
+        "amp": 1,
+        "freq": 1000,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      },
+      {
+        "type": "sine",
+        "amp": 0.5,
+        "freq": 1234.5,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0,
+      "seed": 1,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "flattop",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -140,
+    "dbMax": null,
+    "fMax": 2000,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [
+      "rectangular",
+      "hann"
+    ],
+    "analyse": "original",
+    "peakRangeDb": 60,
+    "maxPeaks": 10,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 1024,
+    "f2": 2048,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "none"
+  },
+  "tab": "spectrum",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

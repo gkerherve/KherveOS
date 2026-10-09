@@ -1,0 +1,78 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Parallelogram linkage (change-point)",
+    "points": [
+      {
+        "id": "O2",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "O2"
+      },
+      {
+        "id": "O4",
+        "x": 100,
+        "y": 0,
+        "ground": true,
+        "label": "O4"
+      },
+      {
+        "id": "A",
+        "x": 21.525554840415,
+        "y": 45.129264217493,
+        "label": "A"
+      },
+      {
+        "id": "B",
+        "x": 121.525554840415,
+        "y": 45.129264217493,
+        "label": "B"
+      },
+      {
+        "id": "P",
+        "x": 71.525554840415,
+        "y": 125.129264217493,
+        "label": "P",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "crank",
+        "pts": [
+          "O2",
+          "A"
+        ],
+        "label": "crank"
+      },
+      {
+        "id": "coupler",
+        "pts": [
+          "A",
+          "B",
+          "P"
+        ],
+        "label": "coupler",
+        "shape": "plate"
+      },
+      {
+        "id": "rocker",
+        "pts": [
+          "O4",
+          "B"
+        ],
+        "label": "output"
+      }
+    ],
+    "sliders": [],
+    "driver": {
+      "from": "O2",
+      "to": "A",
+      "rpm": 30
+    },
+    "notes": "A change-point four-bar (s + l = p + q): the coupler keeps its orientation and every coupler point draws the same circle as the crank pin. At the folded position the linkage could branch into an anti-parallelogram; kMech follows the parallelogram branch."
+  }
+}

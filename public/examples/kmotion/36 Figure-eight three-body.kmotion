@@ -1,0 +1,12 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Figure-eight three-body",
+  "description": "Three equal masses follow the same eight-shaped curve, one third of a period apart (Chenciner–Montgomery, 2000). The period is 6.32591398 in units where G = m = 1.",
+  "method": "rk45",
+  "params": {
+    "mode": "figure8",
+    "perturb": 0
+  }
+}

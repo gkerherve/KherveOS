@@ -1,0 +1,101 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Geneva drive (4 slots)",
+    "points": [
+      {
+        "id": "O1",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "driver"
+      },
+      {
+        "id": "O2",
+        "x": 100,
+        "y": 0,
+        "ground": true,
+        "label": "wheel"
+      },
+      {
+        "id": "P",
+        "x": 70.710678118655,
+        "y": 0,
+        "label": "pin",
+        "tracer": true
+      },
+      {
+        "id": "S0",
+        "x": 4,
+        "y": 0,
+        "label": "slot 1"
+      },
+      {
+        "id": "S1",
+        "x": 100,
+        "y": -96,
+        "label": "slot 2"
+      },
+      {
+        "id": "S2",
+        "x": 196,
+        "y": 0,
+        "label": "slot 3"
+      },
+      {
+        "id": "S3",
+        "x": 100,
+        "y": 96,
+        "label": "slot 4"
+      }
+    ],
+    "links": [
+      {
+        "id": "crank",
+        "pts": [
+          "O1",
+          "P"
+        ],
+        "label": "driver crank"
+      },
+      {
+        "id": "wheel",
+        "pts": [
+          "O2",
+          "S0",
+          "S1",
+          "S2",
+          "S3"
+        ],
+        "label": "Geneva wheel",
+        "shape": "star"
+      }
+    ],
+    "sliders": [
+      {
+        "id": "pinslot",
+        "point": "P",
+        "line": {
+          "kind": "link",
+          "a": "O2",
+          "b": "S0"
+        },
+        "label": "pin in slot",
+        "mass": 0.05
+      }
+    ],
+    "driver": {
+      "from": "O1",
+      "to": "P",
+      "rpm": 30
+    },
+    "limits": {
+      "min": -45,
+      "max": 45
+    },
+    "dwell": true,
+    "notes": "Engaged only while the driver turns through ±45° (π/2 − π/4); the analysis covers that window and the wheel then rests while the driver completes the turn. Wheel angle: tan φ = sin(π/4)·sin θ / (1 − sin(π/4)·cos θ); the wheel advances 90° per turn."
+  }
+}

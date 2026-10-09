@@ -1,0 +1,76 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "gear",
+  "model": {
+    "name": "Gear train with an idler",
+    "view": "train",
+    "pair": {
+      "g1": {
+        "z": 20,
+        "module": 2,
+        "alpha": 20,
+        "ha": 1,
+        "x": 0,
+        "backlash": 0,
+        "fillet": 0.38
+      },
+      "g2": {
+        "z": 40,
+        "module": 2,
+        "alpha": 20,
+        "ha": 1,
+        "x": 0,
+        "backlash": 0,
+        "fillet": 0.38
+      },
+      "rpm": 1200,
+      "torque": 10
+    },
+    "train": {
+      "stages": [
+        {
+          "driver": 20,
+          "driven": 30,
+          "shared": true
+        },
+        {
+          "driver": 30,
+          "driven": 60
+        }
+      ],
+      "rpm": 1200,
+      "torque": 8,
+      "eff": 0.98
+    },
+    "planetary": {
+      "Zs": 24,
+      "Zr": 72,
+      "n": 3,
+      "module": 1.5,
+      "fixed": "ring",
+      "input": "sun",
+      "speed": 1000
+    },
+    "helical": {
+      "mn": 2,
+      "z1": 24,
+      "z2": 48,
+      "beta": 15,
+      "alphaN": 20,
+      "width": 30
+    },
+    "belt": {
+      "kind": "belt",
+      "D": 200,
+      "d": 80,
+      "C": 400,
+      "rpm": 1450,
+      "crossed": false,
+      "N1": 17,
+      "N2": 41,
+      "pitch": 12.7
+    },
+    "notes": "Only the 20-tooth driver and the 60-tooth gear set the ratio (1/3). The 30-tooth idler turns the output the same way as the input."
+  }
+}

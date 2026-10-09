@@ -1,0 +1,21 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "oscillator",
+  "title": "Five coupled oscillators",
+  "description": "Five masses in a chain: five normal modes with different frequencies. Mode 2 is shown; the plot of modal amplitudes shows only that mode is excited.",
+  "params": {
+    "mode": "coupled",
+    "m": 1,
+    "k": 20,
+    "N": 5,
+    "form": "springs",
+    "L": 1,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "kc": 10,
+    "cc": 0,
+    "init": "mode2",
+    "a0": 0.4
+  }
+}

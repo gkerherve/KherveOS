@@ -1,0 +1,19 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "oscillator",
+  "title": "Rolling race down an incline",
+  "description": "A block, a ring, a cylinder and two spheres released together. Rolling objects are slower than the sliding block by 1 + I/mr²; the solid sphere wins and the ring comes last, whatever their masses and radii.",
+  "params": {
+    "mode": "incline",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "theta": 25,
+    "mus": 0.9,
+    "muk": 0.6,
+    "slen": 6,
+    "mi": 2,
+    "v0i": 0,
+    "object": "race"
+  }
+}

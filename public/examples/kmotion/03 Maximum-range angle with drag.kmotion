@@ -1,0 +1,22 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "projectile",
+  "title": "Maximum-range angle with drag",
+  "description": "With quadratic drag (c = 0.01 /m) the best angle for 40 m/s is 39.5°, below the vacuum 45°. The readout searches for it numerically.",
+  "params": {
+    "mode": "flight",
+    "v0": 40,
+    "angle": 39.5,
+    "h0": 0,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "drag": "quadratic",
+    "k": 0.3,
+    "kq": 0.01,
+    "wind": 0,
+    "mass": 1,
+    "target": 0,
+    "targetR": 2
+  }
+}

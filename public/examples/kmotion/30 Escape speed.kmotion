@@ -1,0 +1,14 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Escape speed",
+  "description": "Fire a probe straight up from 1 AU at 90% of the escape speed: it climbs to 5.3 AU and falls back. At 100% it just escapes (a parabola). The escape speed is √2 times the circular speed.",
+  "params": {
+    "mode": "escape",
+    "M": 1,
+    "r0": 1,
+    "f": 0.9,
+    "launch": 90
+  }
+}

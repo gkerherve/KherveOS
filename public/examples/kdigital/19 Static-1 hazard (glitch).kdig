@@ -1,0 +1,385 @@
+{
+  "format": "kdig",
+  "version": 1,
+  "name": "Static-1 hazard (glitch)",
+  "description": "With B = C = 1 the output should stay 1 while A toggles, but the inverter makes A' arrive one gate delay late: both AND gates are 0 for an instant and F glitches. Zoom into the timing diagram.",
+  "tab": "circuit",
+  "circuit": {
+    "parts": [
+      {
+        "id": "p1",
+        "kind": "switch",
+        "ref": "SW1",
+        "x": 0,
+        "y": 0,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "A",
+          "value": "1"
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "switch",
+        "ref": "SW2",
+        "x": 0,
+        "y": 120,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "B",
+          "value": "1"
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "switch",
+        "ref": "SW3",
+        "x": 0,
+        "y": 200,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "C",
+          "value": "1"
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "not",
+        "ref": "U1",
+        "x": 140,
+        "y": 40,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": ""
+        }
+      },
+      {
+        "id": "p5",
+        "kind": "and",
+        "ref": "U2",
+        "x": 300,
+        "y": 40,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p6",
+        "kind": "and",
+        "ref": "U3",
+        "x": 300,
+        "y": 130,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p7",
+        "kind": "or",
+        "ref": "U4",
+        "x": 460,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p8",
+        "kind": "led",
+        "ref": "LED1",
+        "x": 580,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "F"
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "x1": 30,
+        "y1": 0,
+        "x2": 50,
+        "y2": 0
+      },
+      {
+        "id": "w2",
+        "x1": 30,
+        "y1": 120,
+        "x2": 50,
+        "y2": 120
+      },
+      {
+        "id": "w3",
+        "x1": 30,
+        "y1": 200,
+        "x2": 50,
+        "y2": 200
+      },
+      {
+        "id": "w4",
+        "x1": 110,
+        "y1": 40,
+        "x2": 90,
+        "y2": 40
+      },
+      {
+        "id": "w5",
+        "x1": 170,
+        "y1": 40,
+        "x2": 190,
+        "y2": 40
+      },
+      {
+        "id": "w6",
+        "x1": 270,
+        "y1": 30,
+        "x2": 250,
+        "y2": 30
+      },
+      {
+        "id": "w7",
+        "x1": 270,
+        "y1": 50,
+        "x2": 250,
+        "y2": 50
+      },
+      {
+        "id": "w8",
+        "x1": 270,
+        "y1": 120,
+        "x2": 250,
+        "y2": 120
+      },
+      {
+        "id": "w9",
+        "x1": 270,
+        "y1": 140,
+        "x2": 250,
+        "y2": 140
+      },
+      {
+        "id": "w10",
+        "x1": 330,
+        "y1": 40,
+        "x2": 380,
+        "y2": 40
+      },
+      {
+        "id": "w11",
+        "x1": 380,
+        "y1": 40,
+        "x2": 380,
+        "y2": 90
+      },
+      {
+        "id": "w12",
+        "x1": 380,
+        "y1": 90,
+        "x2": 430,
+        "y2": 90
+      },
+      {
+        "id": "w13",
+        "x1": 330,
+        "y1": 130,
+        "x2": 380,
+        "y2": 130
+      },
+      {
+        "id": "w14",
+        "x1": 380,
+        "y1": 130,
+        "x2": 380,
+        "y2": 110
+      },
+      {
+        "id": "w15",
+        "x1": 380,
+        "y1": 110,
+        "x2": 430,
+        "y2": 110
+      },
+      {
+        "id": "w16",
+        "x1": 490,
+        "y1": 100,
+        "x2": 510,
+        "y2": 100
+      },
+      {
+        "id": "w17",
+        "x1": 510,
+        "y1": 100,
+        "x2": 550,
+        "y2": 100
+      }
+    ],
+    "labels": [
+      {
+        "id": "l1",
+        "name": "A",
+        "x": 50,
+        "y": 0,
+        "flip": false
+      },
+      {
+        "id": "l2",
+        "name": "B",
+        "x": 50,
+        "y": 120,
+        "flip": false
+      },
+      {
+        "id": "l3",
+        "name": "C",
+        "x": 50,
+        "y": 200,
+        "flip": false
+      },
+      {
+        "id": "l4",
+        "name": "A",
+        "x": 90,
+        "y": 40,
+        "flip": true
+      },
+      {
+        "id": "l5",
+        "name": "An",
+        "x": 190,
+        "y": 40,
+        "flip": false
+      },
+      {
+        "id": "l6",
+        "name": "A",
+        "x": 250,
+        "y": 30,
+        "flip": true
+      },
+      {
+        "id": "l7",
+        "name": "B",
+        "x": 250,
+        "y": 50,
+        "flip": true
+      },
+      {
+        "id": "l8",
+        "name": "An",
+        "x": 250,
+        "y": 120,
+        "flip": true
+      },
+      {
+        "id": "l9",
+        "name": "C",
+        "x": 250,
+        "y": 140,
+        "flip": true
+      },
+      {
+        "id": "l10",
+        "name": "Fnet",
+        "x": 510,
+        "y": 100,
+        "flip": false
+      }
+    ],
+    "notes": [
+      {
+        "id": "n1",
+        "text": "F = AB + A'C  (static-1 hazard when A falls with B = C = 1)",
+        "x": 0,
+        "y": -50
+      }
+    ]
+  },
+  "stimulus": [
+    {
+      "t": 0,
+      "set": {
+        "A": 1,
+        "B": 1,
+        "C": 1
+      }
+    },
+    {
+      "t": 20,
+      "set": {
+        "A": 0
+      }
+    },
+    {
+      "t": 40,
+      "set": {
+        "A": 1
+      }
+    },
+    {
+      "t": 60,
+      "set": {
+        "A": 0
+      }
+    }
+  ],
+  "until": 90,
+  "sim": {
+    "delayMode": "unit",
+    "inertial": true
+  },
+  "boolean": {
+    "text": "F = A&B | !A&C",
+    "style": "as-is",
+    "focus": "F"
+  },
+  "probes": [
+    {
+      "name": "A",
+      "bits": [
+        "A"
+      ]
+    },
+    {
+      "name": "A'",
+      "bits": [
+        "An"
+      ]
+    },
+    {
+      "name": "AB",
+      "bits": [
+        "U2.Y"
+      ]
+    },
+    {
+      "name": "A'C",
+      "bits": [
+        "U3.Y"
+      ]
+    },
+    {
+      "name": "F",
+      "bits": [
+        "Fnet"
+      ]
+    }
+  ]
+}

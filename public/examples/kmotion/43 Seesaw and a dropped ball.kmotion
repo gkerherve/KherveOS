@@ -1,0 +1,94 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "sandbox",
+  "title": "Seesaw and a dropped ball",
+  "description": "Seesaw and a dropped ball: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+  "params": {
+    "mode": "world",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "friction": 0.5,
+    "restitution": 0.1,
+    "snap": true,
+    "world": {
+      "bodies": [
+        {
+          "id": "b1",
+          "kind": "box",
+          "x": 0,
+          "y": -0.25,
+          "angle": 0,
+          "w": 14,
+          "h": 0.5,
+          "type": "static",
+          "density": 1,
+          "friction": 0.8,
+          "restitution": 0.1,
+          "color": "#64748b"
+        },
+        {
+          "id": "post",
+          "kind": "box",
+          "x": 0,
+          "y": 0.55,
+          "angle": 0,
+          "w": 0.3,
+          "h": 1.1,
+          "type": "static",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "plank",
+          "kind": "box",
+          "x": 0,
+          "y": 1.2,
+          "angle": 0,
+          "w": 6,
+          "h": 0.2,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "weight",
+          "kind": "box",
+          "x": -2.5,
+          "y": 2.2,
+          "angle": 0,
+          "w": 0.8,
+          "h": 0.8,
+          "type": "dynamic",
+          "density": 2,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "ball",
+          "kind": "circle",
+          "x": 2.5,
+          "y": 4.5,
+          "angle": 0,
+          "r": 0.3,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.3
+        }
+      ],
+      "joints": [
+        {
+          "kind": "revolute",
+          "a": "post",
+          "b": "plank",
+          "ax": 0,
+          "ay": 1.2,
+          "id": "j1"
+        }
+      ]
+    }
+  }
+}

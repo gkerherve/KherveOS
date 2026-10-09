@@ -1,0 +1,113 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "Audio chime (press play)",
+  "description": "Synthetic: a bell made of four inharmonic partials at 880, 1760, 2429 and 4752 Hz (ratios 1, 2, 2.76, 5.4), each fading with its own time constant. Press Play in the Time tab, then look at the Spectrum and Spectrogram tabs: the partials are the lines, and the high ones vanish first.",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 44100,
+    "duration": 2.5,
+    "components": [
+      {
+        "type": "partials",
+        "amp": 0.4,
+        "freq": 440,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0.002,
+        "partials": [
+          {
+            "freq": 880,
+            "amp": 1,
+            "tau": 1.2
+          },
+          {
+            "freq": 1760,
+            "amp": 0.55,
+            "tau": 0.9
+          },
+          {
+            "freq": 2428.8,
+            "amp": 0.4,
+            "tau": 0.6
+          },
+          {
+            "freq": 4752,
+            "amp": 0.25,
+            "tau": 0.3
+          }
+        ],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0,
+      "seed": 1,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "blackmanharris",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 6000,
+    "stftSize": 2048,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "original",
+    "peakRangeDb": 50,
+    "maxPeaks": 10,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -90,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 5513,
+    "f2": 11025,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "none"
+  },
+  "tab": "time",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

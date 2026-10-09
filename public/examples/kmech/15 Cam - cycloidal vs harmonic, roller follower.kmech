@@ -1,0 +1,78 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "cam",
+  "model": {
+    "name": "Cam: cycloidal vs harmonic",
+    "program": {
+      "segments": [
+        {
+          "kind": "rise",
+          "beta": 100,
+          "lift": 20,
+          "law": "cycloidal"
+        },
+        {
+          "kind": "dwell",
+          "beta": 60,
+          "lift": 0,
+          "law": "cycloidal"
+        },
+        {
+          "kind": "return",
+          "beta": 140,
+          "lift": 20,
+          "law": "cycloidal"
+        },
+        {
+          "kind": "dwell",
+          "beta": 60,
+          "lift": 0,
+          "law": "cycloidal"
+        }
+      ]
+    },
+    "follower": "roller",
+    "motion": "translating",
+    "baseRadius": 40,
+    "rollerRadius": 10,
+    "offset": 0,
+    "pivotDistance": 90,
+    "armLength": 70,
+    "direction": "ccw",
+    "bore": 10,
+    "maxPressure": 30,
+    "notes": "The harmonic law jumps in acceleration at the ends of the rise and return; the cycloidal law does not, at the cost of a higher peak acceleration.",
+    "compare": {
+      "label": "Simple harmonic",
+      "program": {
+        "segments": [
+          {
+            "kind": "rise",
+            "beta": 100,
+            "lift": 20,
+            "law": "harmonic"
+          },
+          {
+            "kind": "dwell",
+            "beta": 60,
+            "lift": 0,
+            "law": "harmonic"
+          },
+          {
+            "kind": "return",
+            "beta": 140,
+            "lift": 20,
+            "law": "harmonic"
+          },
+          {
+            "kind": "dwell",
+            "beta": 60,
+            "lift": 0,
+            "law": "harmonic"
+          }
+        ]
+      }
+    }
+  }
+}

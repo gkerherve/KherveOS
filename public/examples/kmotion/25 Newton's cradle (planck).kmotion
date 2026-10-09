@@ -1,0 +1,17 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "collision",
+  "title": "Newton's cradle (planck)",
+  "description": "Five steel balls on strings, rigid-body physics with planck: one ball in, one ball out. Lift two or three balls with the parameter panel.",
+  "params": {
+    "mode": "cradle",
+    "balls": 5,
+    "lift": 1,
+    "liftAngle": 35,
+    "restitution": 1,
+    "length": 1,
+    "gravity": "earth",
+    "gcustom": 9.81
+  }
+}

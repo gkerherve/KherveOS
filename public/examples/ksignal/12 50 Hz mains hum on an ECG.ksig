@@ -1,0 +1,116 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "50 Hz mains hum on an ECG",
+  "description": "Synthetic ECG (72 bpm) with 50 Hz mains interference of amplitude 0.3 and a little noise. A notch (Q = 30) applied forwards and backwards removes the hum by more than 40 dB without distorting the QRS complexes. The Spectrum tab draws the filtered spectrum over the original (grey): the 50 Hz line is gone.",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 500,
+    "duration": 10,
+    "components": [
+      {
+        "type": "ecg",
+        "amp": 1,
+        "freq": 440,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0.03,
+        "seed": 3,
+        "center": 0.5,
+        "width": 0.02
+      },
+      {
+        "type": "sine",
+        "amp": 0.3,
+        "freq": 50,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0.02,
+      "seed": 5,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "hann",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 125,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "processed",
+    "peakRangeDb": 50,
+    "maxPeaks": 10,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "notch",
+    "type": "bandstop",
+    "order": 2,
+    "f1": 50,
+    "f2": 125,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": true
+  },
+  "process": {
+    "type": "filter"
+  },
+  "tab": "spectrum",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

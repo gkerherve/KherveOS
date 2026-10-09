@@ -1,0 +1,150 @@
+{
+  "app": "kmech",
+  "folder": "kMech Examples",
+  "examples": [
+    {
+      "file": "01 Crank-rocker four-bar.kmech",
+      "title": "Crank-rocker four-bar",
+      "description": "A Grashof crank-rocker with a coupler point: the crank turns fully, the rocker swings. Coupler curve, transmission angle, Grashof label.",
+      "group": "Four-bar linkages"
+    },
+    {
+      "file": "02 Double-rocker four-bar.kmech",
+      "title": "Double-rocker four-bar",
+      "description": "A non-Grashof four-bar: no link can turn fully, the input rocks between two lock-up angles.",
+      "group": "Four-bar linkages"
+    },
+    {
+      "file": "03 Drag-link (double-crank).kmech",
+      "title": "Drag-link (double-crank)",
+      "description": "The shortest link is the frame: both cranks turn fully, the output speed varies during the turn.",
+      "group": "Four-bar linkages"
+    },
+    {
+      "file": "04 Change-point parallelogram linkage.kmech",
+      "title": "Change-point parallelogram linkage",
+      "description": "Equal opposite links: s + l = p + q. The coupler stays parallel to the frame (translates on circles).",
+      "group": "Four-bar linkages"
+    },
+    {
+      "file": "05 Slider-crank engine.kmech",
+      "title": "Slider-crank engine",
+      "description": "A single-cylinder engine: piston kinematics, a gas-pressure curve, indicated torque and flywheel energy fluctuation.",
+      "group": "Slider mechanisms"
+    },
+    {
+      "file": "06 Whitworth quick-return mechanism.kmech",
+      "title": "Whitworth quick-return mechanism",
+      "description": "A crank drives a slotted lever that turns fully; the ram strokes slowly forward and returns quickly (ratio 2.26).",
+      "group": "Slider mechanisms"
+    },
+    {
+      "file": "07 Scotch yoke.kmech",
+      "title": "Scotch yoke",
+      "description": "A pin in a slot drives a yoke in exact simple harmonic motion.",
+      "group": "Slider mechanisms"
+    },
+    {
+      "file": "08 Peaucellier-Lipkin inversor.kmech",
+      "title": "Peaucellier-Lipkin inversor",
+      "description": "Seven bars turn a circle into an exact straight line (inversion about O).",
+      "group": "Straight lines and copying"
+    },
+    {
+      "file": "09 Watt's linkage.kmech",
+      "title": "Watt's linkage",
+      "description": "Two rockers and a coupler: the coupler midpoint follows an approximate straight line.",
+      "group": "Straight lines and copying"
+    },
+    {
+      "file": "10 Pantograph.kmech",
+      "title": "Pantograph",
+      "description": "A parallelogram scaled about a fixed pivot: the tracer draws a copy twice the size.",
+      "group": "Straight lines and copying"
+    },
+    {
+      "file": "11 Windscreen-wiper linkage.kmech",
+      "title": "Windscreen-wiper linkage",
+      "description": "A crank-rocker whose rocker is extended into a wiper arm with a blade.",
+      "group": "Real mechanisms"
+    },
+    {
+      "file": "12 Theo Jansen's walking linkage.kmech",
+      "title": "Theo Jansen's walking linkage",
+      "description": "One leg of the Strandbeest: eleven bars turn a crank into a walking foot path.",
+      "group": "Real mechanisms"
+    },
+    {
+      "file": "13 Geneva drive.kmech",
+      "title": "Geneva drive",
+      "description": "A four-slot Geneva wheel indexing 90° per turn of the driver; analysed through the engaged window.",
+      "group": "Real mechanisms"
+    },
+    {
+      "file": "14 Cam - 3-4-5 polynomial rise-dwell-return.kmech",
+      "title": "Cam: 3-4-5 polynomial rise-dwell-return",
+      "description": "A translating roller follower rising 25 mm in 120°, dwelling 60°, returning in 120° with 3-4-5 polynomials.",
+      "group": "Cams"
+    },
+    {
+      "file": "15 Cam - cycloidal vs harmonic, roller follower.kmech",
+      "title": "Cam: cycloidal vs harmonic, roller follower",
+      "description": "The same rise-dwell-return with a cycloidal law (smooth) compared with simple harmonic motion (acceleration jump).",
+      "group": "Cams"
+    },
+    {
+      "file": "16 Cam - flat-face follower, modified trapezoid.kmech",
+      "title": "Cam: flat-face follower, modified trapezoid",
+      "description": "A flat-faced translating follower (zero pressure angle) with a modified-trapezoid rise and return.",
+      "group": "Cams"
+    },
+    {
+      "file": "17 Cam - swing-arm roller follower.kmech",
+      "title": "Cam: swing-arm roller follower",
+      "description": "An oscillating roller follower (arm 70 mm) swinging 25° with harmonic motion.",
+      "group": "Cams"
+    },
+    {
+      "file": "18 Spur gear pair 20-40, 20.kmech",
+      "title": "Spur gear pair 20/40, 20°",
+      "description": "The standard module-2 pair: d 40/80, contact ratio 1.6, centre distance 60 mm.",
+      "group": "Gears"
+    },
+    {
+      "file": "19 Profile-shifted pinion (12-40).kmech",
+      "title": "Profile-shifted pinion (12/40)",
+      "description": "A 12-tooth pinion would be undercut; a profile shift of +0.4 on the pinion and −0.4 on the gear fixes it at the standard centre distance.",
+      "group": "Gears"
+    },
+    {
+      "file": "20 Compound gear train 9-1.kmech",
+      "title": "Compound gear train 9:1",
+      "description": "Two stages (18→54 and 20→60) on a common intermediate shaft: speed and torque of every shaft.",
+      "group": "Gears"
+    },
+    {
+      "file": "21 Gear train with an idler.kmech",
+      "title": "Gear train with an idler",
+      "description": "An idler reverses the sense of rotation without changing the ratio.",
+      "group": "Gears"
+    },
+    {
+      "file": "22 Planetary gearset - ratios with each member fixed.kmech",
+      "title": "Planetary gearset: ratios with each member fixed",
+      "description": "Sun 24, ring 72, three 24-tooth planets: the Willis equation for every fixed member.",
+      "group": "Gears"
+    },
+    {
+      "file": "23 Helical gear pair.kmech",
+      "title": "Helical gear pair",
+      "description": "Module 2, 15° helix: transverse module, contact ratios and virtual teeth.",
+      "group": "Gears"
+    },
+    {
+      "file": "24 Belt and chain drives.kmech",
+      "title": "Belt and chain drives",
+      "description": "An open belt between 200 and 80 mm pulleys and a roller chain between 17 and 41 sprockets.",
+      "group": "Gears"
+    }
+  ]
+}

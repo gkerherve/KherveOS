@@ -1,0 +1,554 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "Instrument maintenance log",
+ "description": "Service records for the XPS, the analytical balance and the rotary pump.",
+ "owner": "Ana Martin",
+ "created": "2026-01-12T08:00:00.000Z",
+ "modified": "2026-03-23T14:03:00.000Z",
+ "settings": {
+  "samplePrefix": "MNT",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "MNT",
+   "name": "Maintenance",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "MNT-2026-001",
+   "title": "XPS: annual source and pump service",
+   "date": "2026-01-12T09:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "maintenance",
+    "XPS"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Instrument"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "XPS (Thermo K-Alpha)",
+         "method": "Scheduled maintenance",
+         "operator": "Ana Martin",
+         "started": "2026-01-12T09:00:00",
+         "file": "",
+         "path": "",
+         "parameters": "",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Checklist"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Service steps",
+         "items": [
+          {
+           "text": "Vent the load lock and inspect the seals",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-01-12T09:00:00"
+          },
+          {
+           "text": "Replace the rotary pump oil",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-01-12T09:00:00"
+          },
+          {
+           "text": "Replace the X-ray source filament",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-01-12T09:00:00"
+          },
+          {
+           "text": "Bake the analysis chamber 24 h",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-01-12T09:00:00"
+          },
+          {
+           "text": "Run the Au 4f / Ag 3d / Cu 2p calibration",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-01-12T09:00:00"
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Parts and consumables"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Parts replaced",
+         "columns": [
+          {
+           "name": "Part",
+           "unit": ""
+          },
+          {
+           "name": "Lot / serial",
+           "unit": ""
+          },
+          {
+           "name": "Quantity",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "Pump oil",
+           "L-2290",
+           "1 L"
+          ],
+          [
+           "Filament",
+           "SN 50184",
+           "1"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Au 4f7/2 at 84.00 eV, Ag 3d5/2 FWHM 0.52 eV: back in service. Next service due 2027-01."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "instrument-maintenance",
+   "created": "2026-01-12T09:00:00.000Z",
+   "modified": "2026-01-12T09:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "MNT-2026-002",
+   "title": "Balance: quarterly adjustment",
+   "date": "2026-02-02T10:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "maintenance",
+    "Analytical"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Instrument"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "Analytical balance (Sartorius)",
+         "method": "Scheduled maintenance",
+         "operator": "Ana Martin",
+         "started": "2026-02-02T10:00:00",
+         "file": "",
+         "path": "",
+         "parameters": "",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Checklist"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Service steps",
+         "items": [
+          {
+           "text": "Level the balance",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-02T10:00:00"
+          },
+          {
+           "text": "Internal adjustment",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-02T10:00:00"
+          },
+          {
+           "text": "Check 1 g, 10 g, 100 g reference masses",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-02T10:00:00"
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Parts and consumables"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Parts replaced",
+         "columns": [
+          {
+           "name": "Part",
+           "unit": ""
+          },
+          {
+           "name": "Lot / serial",
+           "unit": ""
+          },
+          {
+           "name": "Quantity",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "Reference mass set",
+           "E2-2231",
+           "3"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "All three reference masses within 0.1 mg. Next check due 2026-05."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "instrument-maintenance",
+   "created": "2026-02-02T10:00:00.000Z",
+   "modified": "2026-02-02T10:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-005",
+   "projectId": "prj-002",
+   "experiment": "MNT-2026-003",
+   "title": "Rotary pump: oil change",
+   "date": "2026-03-23T14:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "maintenance",
+    "XPS"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Instrument"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "XPS (Thermo K-Alpha)",
+         "method": "Scheduled maintenance",
+         "operator": "Ana Martin",
+         "started": "2026-03-23T14:00:00",
+         "file": "",
+         "path": "",
+         "parameters": "",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Checklist"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Service steps",
+         "items": [
+          {
+           "text": "Switch off and cool the pump",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-03-23T14:00:00"
+          },
+          {
+           "text": "Drain and flush",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-03-23T14:00:00"
+          },
+          {
+           "text": "Refill with new oil",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-03-23T14:00:00"
+          },
+          {
+           "text": "Leak check",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-03-23T14:00:00"
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Parts and consumables"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Parts replaced",
+         "columns": [
+          {
+           "name": "Part",
+           "unit": ""
+          },
+          {
+           "name": "Lot / serial",
+           "unit": ""
+          },
+          {
+           "name": "Quantity",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "Pump oil",
+           "L-2301",
+           "0.7 L"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "The old oil was dark: shorten the interval to 6 months."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "instrument-maintenance",
+   "created": "2026-03-23T14:00:00.000Z",
+   "modified": "2026-03-23T14:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [
+  "Analytical balance (Sartorius)",
+  "XPS (Thermo K-Alpha)"
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-01-12T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "Instrument maintenance log",
+   "prev": "",
+   "rec": "3166f9398956433f7ffacb2b573ee76d48cfee043f35a7b5db26ebd9c98a4780"
+  },
+  {
+   "seq": 2,
+   "time": "2026-01-12T09:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "MNT-2026-001",
+   "hash": "4c011ad0775efc5caa95c99df35928a0be38b39149e6321ae2f2ae63c2b8cba7",
+   "detail": "XPS: annual source and pump service",
+   "prev": "3166f9398956433f7ffacb2b573ee76d48cfee043f35a7b5db26ebd9c98a4780",
+   "rec": "53ef6f204524648a4d49a4b97d01ba2d5a37792f4c5fa06e40ba2045101faccf"
+  },
+  {
+   "seq": 3,
+   "time": "2026-02-02T10:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "MNT-2026-002",
+   "hash": "3c5c3d1e07561ffbb99f8f97b56b8dc550ce09fbff324aef9756232b96ae6afc",
+   "detail": "Balance: quarterly adjustment",
+   "prev": "53ef6f204524648a4d49a4b97d01ba2d5a37792f4c5fa06e40ba2045101faccf",
+   "rec": "cac99ae3090a102c5ae0d414afba4e3511c19e9eded6859885fb3f43529db08c"
+  },
+  {
+   "seq": 4,
+   "time": "2026-03-23T14:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-005",
+   "number": "MNT-2026-003",
+   "hash": "12fd23c61c8a805458ec556af9287892a125eba4a45fbb548b2e218a8aefb94b",
+   "detail": "Rotary pump: oil change",
+   "prev": "cac99ae3090a102c5ae0d414afba4e3511c19e9eded6859885fb3f43529db08c",
+   "rec": "fddad3b8fe765e44443d0cb686475be5f30abbcd22ef731f73391b42f4bcd9ff"
+  }
+ ]
+}

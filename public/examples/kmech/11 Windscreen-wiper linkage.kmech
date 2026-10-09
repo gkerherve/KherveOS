@@ -1,0 +1,86 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Windscreen wiper",
+    "points": [
+      {
+        "id": "O2",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "O2"
+      },
+      {
+        "id": "O4",
+        "x": 100,
+        "y": 0,
+        "ground": true,
+        "label": "O4"
+      },
+      {
+        "id": "A",
+        "x": 12.5,
+        "y": 21.650635094611,
+        "label": "A"
+      },
+      {
+        "id": "B",
+        "x": 116.422101230177,
+        "y": 57.708877923469,
+        "label": "B",
+        "tracer": true
+      },
+      {
+        "id": "W",
+        "x": 57.30253680154,
+        "y": -150.043082601019,
+        "label": "arm tip"
+      },
+      {
+        "id": "W2",
+        "x": 163.102146327899,
+        "y": -180.150268189677,
+        "label": "blade tip",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "crank",
+        "pts": [
+          "O2",
+          "A"
+        ],
+        "label": "crank"
+      },
+      {
+        "id": "coupler",
+        "pts": [
+          "A",
+          "B"
+        ],
+        "label": "coupler",
+        "shape": "bar"
+      },
+      {
+        "id": "rocker",
+        "pts": [
+          "B",
+          "O4",
+          "W",
+          "W2"
+        ],
+        "label": "wiper arm"
+      }
+    ],
+    "sliders": [],
+    "driver": {
+      "from": "O2",
+      "to": "A",
+      "rpm": 30
+    },
+    "notes": "A crank-rocker: the motor turns the crank all the way round and the wiper arm (the rocker, extended beyond its pivot) sweeps to and fro. The blade tip draws the wiped area."
+  }
+}

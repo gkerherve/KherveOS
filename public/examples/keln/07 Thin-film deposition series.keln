@@ -1,0 +1,719 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "Thin-film deposition series",
+ "description": "DC magnetron sputtering of copper films at three powers; one film annealed.",
+ "owner": "Ana Martin",
+ "created": "2026-04-20T08:00:00.000Z",
+ "modified": "2026-04-24T15:03:00.000Z",
+ "settings": {
+  "samplePrefix": "TF",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "TFD",
+   "name": "Sputtered Cu films",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "TFD-2026-001",
+   "title": "Cu deposition at 100 W",
+   "date": "2026-04-21T10:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "sputtering",
+    "Cu"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Film "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TF-0002",
+         "label": "TF-0002"
+        }
+       },
+       {
+        "type": "text",
+        "text": " on "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TF-0001",
+         "label": "TF-0001"
+        }
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "Sputter coater (AJA)",
+         "method": "DC magnetron, Cu 99.99 % target",
+         "operator": "Ana Martin",
+         "started": "2026-04-21T10:30:00",
+         "file": "",
+         "path": "",
+         "parameters": "Ar 20 sccm, 3 mTorr, 100 W, 10 min, room temperature",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Parameters and result",
+         "columns": [
+          {
+           "name": "Power",
+           "unit": "W"
+          },
+          {
+           "name": "Pressure",
+           "unit": "mTorr"
+          },
+          {
+           "name": "Time",
+           "unit": "min"
+          },
+          {
+           "name": "Thickness",
+           "unit": "nm"
+          },
+          {
+           "name": "Rate",
+           "unit": "nm/s"
+          }
+         ],
+         "rows": [
+          [
+           "100",
+           "3",
+           "10",
+           "108",
+           "0.18"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "timeline",
+        "data": {
+         "title": "Observations",
+         "items": [
+          {
+           "time": "2026-04-21T10:35:00",
+           "text": "Plasma struck at 20 W, ramped to the set power."
+          },
+          {
+           "time": "2026-04-21T10:46:00",
+           "text": "Shutter closed; film has the usual copper colour."
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [
+    "TF-0002",
+    "TF-0001"
+   ],
+   "template": "thin-film",
+   "created": "2026-04-21T10:00:00.000Z",
+   "modified": "2026-04-21T10:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "TFD-2026-002",
+   "title": "Cu deposition at 200 W",
+   "date": "2026-04-22T10:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "sputtering",
+    "Cu"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Film "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TF-0003",
+         "label": "TF-0003"
+        }
+       },
+       {
+        "type": "text",
+        "text": " on "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TF-0001",
+         "label": "TF-0001"
+        }
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "Sputter coater (AJA)",
+         "method": "DC magnetron, Cu 99.99 % target",
+         "operator": "Ana Martin",
+         "started": "2026-04-22T10:30:00",
+         "file": "",
+         "path": "",
+         "parameters": "Ar 20 sccm, 3 mTorr, 200 W, 10 min, room temperature",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Parameters and result",
+         "columns": [
+          {
+           "name": "Power",
+           "unit": "W"
+          },
+          {
+           "name": "Pressure",
+           "unit": "mTorr"
+          },
+          {
+           "name": "Time",
+           "unit": "min"
+          },
+          {
+           "name": "Thickness",
+           "unit": "nm"
+          },
+          {
+           "name": "Rate",
+           "unit": "nm/s"
+          }
+         ],
+         "rows": [
+          [
+           "200",
+           "3",
+           "10",
+           "222",
+           "0.37"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "timeline",
+        "data": {
+         "title": "Observations",
+         "items": [
+          {
+           "time": "2026-04-22T10:35:00",
+           "text": "Plasma struck at 20 W, ramped to the set power."
+          },
+          {
+           "time": "2026-04-22T10:46:00",
+           "text": "Shutter closed; film has the usual copper colour."
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [
+    "TF-0003",
+    "TF-0001"
+   ],
+   "template": "thin-film",
+   "created": "2026-04-22T10:00:00.000Z",
+   "modified": "2026-04-22T10:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-005",
+   "projectId": "prj-002",
+   "experiment": "TFD-2026-003",
+   "title": "Cu deposition at 300 W",
+   "date": "2026-04-23T10:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "sputtering",
+    "Cu"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Film "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TF-0004",
+         "label": "TF-0004"
+        }
+       },
+       {
+        "type": "text",
+        "text": " on "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TF-0001",
+         "label": "TF-0001"
+        }
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "Sputter coater (AJA)",
+         "method": "DC magnetron, Cu 99.99 % target",
+         "operator": "Ana Martin",
+         "started": "2026-04-23T10:30:00",
+         "file": "",
+         "path": "",
+         "parameters": "Ar 20 sccm, 3 mTorr, 300 W, 10 min, room temperature",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Parameters and result",
+         "columns": [
+          {
+           "name": "Power",
+           "unit": "W"
+          },
+          {
+           "name": "Pressure",
+           "unit": "mTorr"
+          },
+          {
+           "name": "Time",
+           "unit": "min"
+          },
+          {
+           "name": "Thickness",
+           "unit": "nm"
+          },
+          {
+           "name": "Rate",
+           "unit": "nm/s"
+          }
+         ],
+         "rows": [
+          [
+           "300",
+           "3",
+           "10",
+           "330",
+           "0.55"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "timeline",
+        "data": {
+         "title": "Observations",
+         "items": [
+          {
+           "time": "2026-04-23T10:35:00",
+           "text": "Plasma struck at 20 W, ramped to the set power."
+          },
+          {
+           "time": "2026-04-23T10:46:00",
+           "text": "Shutter closed; film has the usual copper colour."
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [
+    "TF-0004",
+    "TF-0001"
+   ],
+   "template": "thin-film",
+   "created": "2026-04-23T10:00:00.000Z",
+   "modified": "2026-04-23T10:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-006",
+   "projectId": "prj-002",
+   "experiment": "TFD-2026-001",
+   "title": "Thickness vs power and annealing of the 200 W film",
+   "date": "2026-04-24T15:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "profilometry",
+    "annealing"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "Profilometer",
+         "method": "Step height at a scratch",
+         "operator": "Ana Martin",
+         "started": "2026-04-24T14:00:00",
+         "file": "",
+         "path": "",
+         "parameters": "2 mg stylus force, 5 scans per film",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "plot",
+        "data": {
+         "title": "Deposition rate",
+         "xLabel": "Power (W)",
+         "yLabel": "Rate (nm/s)",
+         "kind": "line",
+         "series": [
+          "Rate"
+         ],
+         "rows": [
+          [
+           "100",
+           "0.18"
+          ],
+          [
+           "200",
+           "0.37"
+          ],
+          [
+           "300",
+           "0.55"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "The rate is linear in power ("
+       },
+       {
+        "type": "mathInline",
+        "attrs": {
+         "latex": "R \\approx 1.8\\times 10^{-3}\\,P"
+        }
+       },
+       {
+        "type": "text",
+        "text": " nm/s per W). "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TF-0005",
+         "label": "TF-0005"
+        }
+       },
+       {
+        "type": "text",
+        "text": " was annealed from "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TF-0003",
+         "label": "TF-0003"
+        }
+       },
+       {
+        "type": "text",
+        "text": ": sheet resistance fell from 0.42 to 0.31 Ω/sq."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [
+    "TF-0002",
+    "TF-0003",
+    "TF-0004",
+    "TF-0005"
+   ],
+   "template": "",
+   "created": "2026-04-24T15:00:00.000Z",
+   "modified": "2026-04-24T15:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [
+  {
+   "id": "TF-0001",
+   "name": "Glass slide, cleaned",
+   "composition": "borosilicate glass",
+   "batch": "B-114",
+   "location": "Cleanroom box",
+   "made": "2026-04-20",
+   "parents": [],
+   "status": "in use",
+   "notes": "",
+   "projectId": "",
+   "author": "Ana Martin"
+  },
+  {
+   "id": "TF-0002",
+   "name": "Cu film 100 W",
+   "composition": "Cu",
+   "batch": "run 1",
+   "location": "Slide box A",
+   "made": "2026-04-21",
+   "parents": [
+    "TF-0001"
+   ],
+   "status": "in use",
+   "notes": "",
+   "projectId": "",
+   "author": "Ana Martin"
+  },
+  {
+   "id": "TF-0003",
+   "name": "Cu film 200 W",
+   "composition": "Cu",
+   "batch": "run 2",
+   "location": "Slide box A",
+   "made": "2026-04-22",
+   "parents": [
+    "TF-0001"
+   ],
+   "status": "in use",
+   "notes": "",
+   "projectId": "",
+   "author": "Ana Martin"
+  },
+  {
+   "id": "TF-0004",
+   "name": "Cu film 300 W",
+   "composition": "Cu",
+   "batch": "run 3",
+   "location": "Slide box A",
+   "made": "2026-04-23",
+   "parents": [
+    "TF-0001"
+   ],
+   "status": "in use",
+   "notes": "",
+   "projectId": "",
+   "author": "Ana Martin"
+  },
+  {
+   "id": "TF-0005",
+   "name": "Cu film 200 W annealed",
+   "composition": "Cu",
+   "batch": "",
+   "location": "Slide box A",
+   "made": "2026-04-24",
+   "parents": [
+    "TF-0003"
+   ],
+   "status": "in use",
+   "notes": "Vacuum anneal 300 °C, 1 h.",
+   "projectId": "",
+   "author": "Ana Martin"
+  }
+ ],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [
+  "Profilometer",
+  "Sputter coater (AJA)"
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-04-20T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "Thin-film deposition series",
+   "prev": "",
+   "rec": "87dd37d5ee76f8b29d7d27eb512196366229c52ba3bc1b6bb4a88f3de1092960"
+  },
+  {
+   "seq": 2,
+   "time": "2026-04-21T10:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "TFD-2026-001",
+   "hash": "4fcac9020dc3ec6a4a9b39bd307ea4ac193abc687d04b4655bc3aa83890b1fd1",
+   "detail": "Cu deposition at 100 W",
+   "prev": "87dd37d5ee76f8b29d7d27eb512196366229c52ba3bc1b6bb4a88f3de1092960",
+   "rec": "22f6fbae47db557f21849c1e694d1a53683e285ec392c0f8ffab32c4ccfcd07f"
+  },
+  {
+   "seq": 3,
+   "time": "2026-04-22T10:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "TFD-2026-002",
+   "hash": "32e5e9208d85fac1e596b46d0ce36a0eb25e516c25100611c176e118bef004e3",
+   "detail": "Cu deposition at 200 W",
+   "prev": "22f6fbae47db557f21849c1e694d1a53683e285ec392c0f8ffab32c4ccfcd07f",
+   "rec": "ef42efafc849fff8dd467d226e58a88a2d048ce8ae96349061fd2311645c0642"
+  },
+  {
+   "seq": 4,
+   "time": "2026-04-23T10:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-005",
+   "number": "TFD-2026-003",
+   "hash": "754d987cd6bb41556bc669507639e928f422f8014ddf7f3e110235df5bc87ae4",
+   "detail": "Cu deposition at 300 W",
+   "prev": "ef42efafc849fff8dd467d226e58a88a2d048ce8ae96349061fd2311645c0642",
+   "rec": "9b0413ed9ea7158ee0b269ebaf80f47ccffdc9e48d9fd2890584d472b7e99794"
+  },
+  {
+   "seq": 5,
+   "time": "2026-04-24T15:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-006",
+   "number": "TFD-2026-001",
+   "hash": "7d23c05b99447d0374985462f32d9bbcec5332a45b6a373159c479f40c02f65b",
+   "detail": "Thickness vs power and annealing of the 200 W film",
+   "prev": "9b0413ed9ea7158ee0b269ebaf80f47ccffdc9e48d9fd2890584d472b7e99794",
+   "rec": "72db10c145e78847faa2e565699dfcbcbd0f16ff356bf4645385476f0c594fe7"
+  }
+ ]
+}

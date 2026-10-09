@@ -1,0 +1,14 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Elliptical orbit: Kepler's laws",
+  "description": "e = 0.6, perihelion 1 AU (a = 2.5 AU): the wedges swept in equal times have equal areas (II), r + r′ = 2a for the empty focus (I) and T²/a³ = 1 (III), all checked live.",
+  "params": {
+    "mode": "kepler",
+    "M": 1,
+    "q": 0.0001,
+    "rp": 1,
+    "ecc": 0.6
+  }
+}

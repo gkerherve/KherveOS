@@ -1,0 +1,102 @@
+{
+  "app": "ksignal",
+  "folder": "kSignal Examples",
+  "examples": [
+    {
+      "file": "01 Two tones - leakage and windows.ksig",
+      "title": "Two tones: leakage and windows",
+      "description": "Synthetic: 1000 Hz (amplitude 1.0, exactly on a bin) plus 1234.5 Hz (amplitude 0.5, half a bin off). Flat-top reads both amplitudes within 0.01 dB; a rectangular window loses 3.9 dB on the second tone and smears both into sidelobes; Hann loses 1.4 dB before the peak finder interpolates. Switch the window or tick \"Compare windows\".",
+      "group": "Spectrum basics"
+    },
+    {
+      "file": "02 Spectral leakage versus window.ksig",
+      "title": "Spectral leakage versus window",
+      "description": "Synthetic: one sine of amplitude 1 at 100.5 Hz, exactly between two bins (the worst case). The highest bin reads 0.637 (-3.92 dB) with a rectangular window, 0.849 (-1.42 dB) with Hann and 1.000 (-0.01 dB) with flat-top (the peak table interpolates between bins and reports 1.00 for all of them); the price of flat-top is a wide main lobe. Look at the skirts: Hann and Blackman-Harris fall off much faster than rectangular.",
+      "group": "Spectrum basics"
+    },
+    {
+      "file": "03 Square wave - odd harmonics.ksig",
+      "title": "Square wave: odd harmonics",
+      "description": "Synthetic: a 100 Hz square wave of amplitude 1. Fourier says it holds only odd harmonics with amplitude 4/(pi k): 1.273 at 100 Hz, 0.424 at 300 Hz, 0.255 at 500 Hz, 0.182 at 700 Hz. The metrics panel shows the THD of the square wave against its fundamental.",
+      "group": "Spectrum basics"
+    },
+    {
+      "file": "04 Chirp spectrogram.ksig",
+      "title": "Chirp spectrogram",
+      "description": "Synthetic: a linear sweep from 100 Hz to 3000 Hz in 2 s (amplitude 1). The spectrogram shows the straight ridge f(t) = 100 + 1450 t. Try a longer or shorter segment: a long window sharpens the frequency but blurs the time.",
+      "group": "Time-frequency"
+    },
+    {
+      "file": "05 Guitar string - harmonic series.ksig",
+      "title": "Guitar string: harmonic series",
+      "description": "Synthetic (not a recording): a plucked A2 string at 110 Hz with 12 harmonics of amplitude 1/k, the higher ones dying faster (decay time 1 s / k). The peaks sit at 110, 220, 330 Hz... and the harmonic table of the Spectrum tab shows the series. The estimated fundamental is 110 Hz.",
+      "group": "Time-frequency"
+    },
+    {
+      "file": "06 Audio chime (press play).ksig",
+      "title": "Audio chime (press play)",
+      "description": "Synthetic: a bell made of four inharmonic partials at 880, 1760, 2429 and 4752 Hz (ratios 1, 2, 2.76, 5.4), each fading with its own time constant. Press Play in the Time tab, then look at the Spectrum and Spectrogram tabs: the partials are the lines, and the high ones vanish first.",
+      "group": "Time-frequency"
+    },
+    {
+      "file": "07 AM modulation spectrum.ksig",
+      "title": "AM modulation spectrum",
+      "description": "Synthetic: a 1000 Hz carrier of amplitude 1, amplitude-modulated at 100 Hz with depth 0.5. The spectrum has the carrier (1.000) and two sidebands at 900 and 1100 Hz of amplitude m/2 = 0.250 each (-12 dB below the carrier).",
+      "group": "Modulation"
+    },
+    {
+      "file": "08 FM modulation spectrum.ksig",
+      "title": "FM modulation spectrum",
+      "description": "Synthetic: a 2000 Hz carrier frequency-modulated by 200 Hz with a 400 Hz deviation, so the modulation index is beta = 2. The lines at 2000 +/- n x 200 Hz have the Bessel amplitudes J0(2) = 0.224 at the carrier, J1(2) = 0.577, J2(2) = 0.353, J3(2) = 0.129, J4(2) = 0.034.",
+      "group": "Modulation"
+    },
+    {
+      "file": "09 Aliasing - 9 kHz sampled at 8 kHz.ksig",
+      "title": "Aliasing: 9 kHz sampled at 8 kHz",
+      "description": "Synthetic: a 9000 Hz sine sampled at only 8000 Hz. It is above the Nyquist frequency (4000 Hz), so it folds back to |9000 - 8000| = 1000 Hz: the spectrum shows a perfectly clean tone at 1000 Hz, and nothing in the samples can tell the two apart. Raise the sample rate in the Source panel to 32000 Hz and the peak moves to the real 9000 Hz.",
+      "group": "Sampling and converters"
+    },
+    {
+      "file": "10 ADC quantisation noise.ksig",
+      "title": "ADC quantisation noise",
+      "description": "Synthetic: a 1031 Hz sine at 99% of full scale, rounded to 10 bits. The ideal converter gives SNR = 6.02 N + 1.76 = 61.96 dB for a full-scale sine (61.9 dB here with the 1 % headroom) and ENOB = 10. Change the bit depth in the Source panel: every bit adds 6.02 dB.",
+      "group": "Sampling and converters"
+    },
+    {
+      "file": "11 Noisy sine and a Butterworth low-pass.ksig",
+      "title": "Noisy sine and a Butterworth low-pass",
+      "description": "Synthetic: a 50 Hz sine (amplitude 1) buried in white noise (sigma 0.5, SNR 3 dB). A 4th-order Butterworth low-pass at 100 Hz (-3.01 dB at the cutoff, 24 dB/octave beyond) removes most of the noise and passes the sine: the SNR rises from 3 dB to about 13 dB. It is applied forwards and backwards (zero phase), so the clean trace lines up with the noisy one; untick \"Zero phase\" in the Filter tab to see the delay a single pass adds.",
+      "group": "Filtering"
+    },
+    {
+      "file": "12 50 Hz mains hum on an ECG.ksig",
+      "title": "50 Hz mains hum on an ECG",
+      "description": "Synthetic ECG (72 bpm) with 50 Hz mains interference of amplitude 0.3 and a little noise. A notch (Q = 30) applied forwards and backwards removes the hum by more than 40 dB without distorting the QRS complexes. The Spectrum tab draws the filtered spectrum over the original (grey): the 50 Hz line is gone.",
+      "group": "Filtering"
+    },
+    {
+      "file": "13 FIR versus IIR - linear phase.ksig",
+      "title": "FIR versus IIR: linear phase",
+      "description": "Synthetic square wave through two low-pass filters: a 51-tap Hamming FIR and a 4th-order Butterworth, both at 1000 Hz at fs 8000 Hz. The FIR has exactly linear phase: a constant group delay of (51 - 1)/2 = 25 samples (3.125 ms). The Butterworth needs only 4 poles and has the -3 dB point at 1000 Hz (the Hamming FIR is already 6 dB down there), but its group delay changes by about 2 samples across the passband, which distorts the shape of a square wave (the source here).",
+      "group": "Filtering"
+    },
+    {
+      "file": "14 Savitzky-Golay versus moving average.ksig",
+      "title": "Savitzky-Golay versus moving average",
+      "description": "Synthetic: a Gaussian peak (height 1, sigma 8 ms) with noise (sigma 0.05). A 21-point moving average flattens the peak to about 0.78 of its height and widens it (SNR 12 dB); a Savitzky-Golay filter of the same width (cubic fit) keeps about 0.95 of the height (SNR 14 dB). Switch the Process control in the Time tab between the two.",
+      "group": "Filtering"
+    },
+    {
+      "file": "15 Heart rate from R peaks.ksig",
+      "title": "Heart rate from R peaks",
+      "description": "Synthetic ECG at 72 bpm with a little beat-to-beat variability and noise. Peak detection (height 0.5, at least 0.3 s apart) finds the 18 R peaks; the mean R-R interval is 0.83 s, which gives 72 bpm. The Time tab lists the intervals.",
+      "group": "Biomedical"
+    },
+    {
+      "file": "16 White noise - power spectral density.ksig",
+      "title": "White noise: power spectral density",
+      "description": "Synthetic: white noise of standard deviation 0.1 plus a 1000 Hz sine of amplitude 0.5. Welch averaging (Hann, 50 % overlap) shows a flat floor at sigma^2 / (fs/2) = 2e-6 V^2/Hz = -57 dB/Hz, with the sine a narrow line about 35 dB above it. Averaging more segments (a shorter segment length) smooths the floor but widens the bins.",
+      "group": "Noise"
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "sandbox",
+  "title": "Car with a motor and suspension",
+  "description": "Car with a motor and suspension: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+  "params": {
+    "mode": "world",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "friction": 0.5,
+    "restitution": 0.1,
+    "snap": true,
+    "world": {
+      "bodies": [
+        {
+          "id": "b1",
+          "kind": "box",
+          "x": 0,
+          "y": -0.25,
+          "angle": 0,
+          "w": 60,
+          "h": 0.5,
+          "type": "static",
+          "density": 1,
+          "friction": 0.8,
+          "restitution": 0.1,
+          "color": "#64748b"
+        },
+        {
+          "id": "b2",
+          "kind": "box",
+          "x": 12,
+          "y": 0.3,
+          "angle": 12,
+          "w": 6,
+          "h": 0.5,
+          "type": "static",
+          "density": 1,
+          "friction": 0.9,
+          "restitution": 0.1
+        },
+        {
+          "id": "chassis",
+          "kind": "box",
+          "x": 0,
+          "y": 0.9,
+          "angle": 0,
+          "w": 2.2,
+          "h": 0.5,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "rear",
+          "kind": "circle",
+          "x": -0.8,
+          "y": 0.5,
+          "angle": 0,
+          "r": 0.4,
+          "type": "dynamic",
+          "density": 1.5,
+          "friction": 1,
+          "restitution": 0.1
+        },
+        {
+          "id": "front",
+          "kind": "circle",
+          "x": 0.8,
+          "y": 0.5,
+          "angle": 0,
+          "r": 0.4,
+          "type": "dynamic",
+          "density": 1.5,
+          "friction": 1,
+          "restitution": 0.1
+        }
+      ],
+      "joints": [
+        {
+          "kind": "wheel",
+          "a": "chassis",
+          "b": "rear",
+          "ax": -0.8,
+          "ay": 0.5,
+          "axisX": 0,
+          "axisY": 1,
+          "motor": true,
+          "speed": -14,
+          "maxForce": 25,
+          "freq": 4,
+          "damping": 0.7,
+          "id": "j1"
+        },
+        {
+          "kind": "wheel",
+          "a": "chassis",
+          "b": "front",
+          "ax": 0.8,
+          "ay": 0.5,
+          "axisX": 0,
+          "axisY": 1,
+          "motor": false,
+          "freq": 4,
+          "damping": 0.7,
+          "id": "j2"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,503 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "TGA run log",
+ "description": "Thermogravimetric runs on a calcium oxalate monohydrate standard and a polymer filler.",
+ "owner": "Ana Martin",
+ "created": "2026-03-10T08:00:00.000Z",
+ "modified": "2026-03-11T14:03:00.000Z",
+ "settings": {
+  "samplePrefix": "TGA",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "TGA",
+   "name": "Thermal analysis",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "TGA-2026-001",
+   "title": "Calcium oxalate monohydrate, N2, 10 K/min",
+   "date": "2026-03-10T10:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "TGA",
+    "standard",
+    "calibration"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Sample"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Sample "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TGA-0001",
+         "label": "TGA-0001"
+        }
+       },
+       {
+        "type": "text",
+        "text": ", 12.34 mg in an alumina crucible (85 µL), empty crucible as reference."
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Method"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "TGA (Netzsch STA 449)",
+         "method": "Dynamic, 10 K/min",
+         "operator": "Ana Martin",
+         "started": "2026-03-10T10:20:00",
+         "file": "",
+         "path": "",
+         "parameters": "N2 50 mL/min protective + 20 mL/min purge; 30 to 850 °C; baseline subtracted",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Mass-loss steps"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Mass loss vs theory",
+         "columns": [
+          {
+           "name": "Step",
+           "unit": ""
+          },
+          {
+           "name": "T range",
+           "unit": "°C"
+          },
+          {
+           "name": "Found",
+           "unit": "%"
+          },
+          {
+           "name": "Theory",
+           "unit": "%"
+          }
+         ],
+         "rows": [
+          [
+           "−H2O",
+           "100-250",
+           "12.3",
+           "12.3"
+          ],
+          [
+           "−CO",
+           "400-550",
+           "19.1",
+           "19.2"
+          ],
+          [
+           "−CO2",
+           "650-800",
+           "30.0",
+           "30.1"
+          ],
+          [
+           "Residue CaO",
+           "",
+           "38.3",
+           "38.4"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "plot",
+        "data": {
+         "title": "TGA curve, CaC2O4·H2O",
+         "xLabel": "Temperature (°C)",
+         "yLabel": "Mass (%)",
+         "kind": "line",
+         "series": [
+          "Mass"
+         ],
+         "rows": [
+          [
+           "30",
+           "100"
+          ],
+          [
+           "100",
+           "99.8"
+          ],
+          [
+           "150",
+           "88"
+          ],
+          [
+           "250",
+           "87.6"
+          ],
+          [
+           "400",
+           "87.4"
+          ],
+          [
+           "450",
+           "80"
+          ],
+          [
+           "520",
+           "68.2"
+          ],
+          [
+           "600",
+           "68"
+          ],
+          [
+           "700",
+           "55"
+          ],
+          [
+           "780",
+           "38.3"
+          ],
+          [
+           "850",
+           "38.1"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Three well-separated steps as expected: dehydration, CaC"
+       },
+       {
+        "type": "text",
+        "text": "2",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "O"
+       },
+       {
+        "type": "text",
+        "text": "4",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " → CaCO"
+       },
+       {
+        "type": "text",
+        "text": "3",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " + CO, and CaCO"
+       },
+       {
+        "type": "text",
+        "text": "3",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " → CaO + CO"
+       },
+       {
+        "type": "text",
+        "text": "2",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". The balance is within 0.2 % of theory."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [
+    "TGA-0001"
+   ],
+   "template": "tga-session",
+   "created": "2026-03-10T10:00:00.000Z",
+   "modified": "2026-03-10T10:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "TGA-2026-001",
+   "title": "PE with CaCO3 filler: filler content",
+   "date": "2026-03-11T14:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "TGA",
+    "polymer"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Sample "
+       },
+       {
+        "type": "sampleMention",
+        "attrs": {
+         "id": "TGA-0002",
+         "label": "TGA-0002"
+        }
+       },
+       {
+        "type": "text",
+        "text": ", 9.87 mg, air 50 mL/min, 10 K/min to 900 °C."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Steps",
+         "columns": [
+          {
+           "name": "Step",
+           "unit": ""
+          },
+          {
+           "name": "T range",
+           "unit": "°C"
+          },
+          {
+           "name": "Mass loss",
+           "unit": "%"
+          }
+         ],
+         "rows": [
+          [
+           "Polymer burn-off",
+           "350-550",
+           "78.9"
+          ],
+          [
+           "CaCO3 → CaO + CO2",
+           "620-780",
+           "8.8"
+          ],
+          [
+           "Residue",
+           "",
+           "12.3"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "CO2 loss of 8.8 % corresponds to "
+       },
+       {
+        "type": "mathInline",
+        "attrs": {
+         "latex": "8.8 \\times \\frac{100.09}{44.01} = 20.0\\ \\%"
+        }
+       },
+       {
+        "type": "text",
+        "text": " CaCO3: the filler content is 20 wt%, as compounded."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [
+    "TGA-0002"
+   ],
+   "template": "",
+   "created": "2026-03-11T14:00:00.000Z",
+   "modified": "2026-03-11T14:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [
+  {
+   "id": "TGA-0001",
+   "name": "Calcium oxalate monohydrate (standard)",
+   "composition": "CaC2O4·H2O",
+   "batch": "Sigma 21400",
+   "location": "Desiccator 2",
+   "made": "2026-03-10",
+   "parents": [],
+   "status": "in use",
+   "notes": "",
+   "projectId": "",
+   "author": "Ana Martin"
+  },
+  {
+   "id": "TGA-0002",
+   "name": "PE with CaCO3 filler",
+   "composition": "HDPE + 20 wt% CaCO3",
+   "batch": "compounded 2026-03-01",
+   "location": "Shelf B",
+   "made": "2026-03-01",
+   "parents": [],
+   "status": "in use",
+   "notes": "",
+   "projectId": "",
+   "author": "Ana Martin"
+  }
+ ],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [
+  "TGA (Netzsch STA 449)"
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-03-10T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "TGA run log",
+   "prev": "",
+   "rec": "6c1b7d2b1a517f1ac17e59444bdf1075d89fea180ff43559603615fadcb83b24"
+  },
+  {
+   "seq": 2,
+   "time": "2026-03-10T10:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "TGA-2026-001",
+   "hash": "599de3f7a5d15659852fd8d9bc086d0b4196f8ed2616265b4885980d446079e3",
+   "detail": "Calcium oxalate monohydrate, N2, 10 K/min",
+   "prev": "6c1b7d2b1a517f1ac17e59444bdf1075d89fea180ff43559603615fadcb83b24",
+   "rec": "8222b28c03c5929a7413b8c693907412427b8bb08075cb930717aba211fadb1a"
+  },
+  {
+   "seq": 3,
+   "time": "2026-03-11T14:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "TGA-2026-001",
+   "hash": "9aebae76c67814b6d4976587cf4012c30f78907794ed2f46a976e8eeedf34a5e",
+   "detail": "PE with CaCO3 filler: filler content",
+   "prev": "8222b28c03c5929a7413b8c693907412427b8bb08075cb930717aba211fadb1a",
+   "rec": "010785f2c58b84a0d6667a3102c95c95f47f09bcd2db8d34b5e73c5e102b7175"
+  }
+ ]
+}

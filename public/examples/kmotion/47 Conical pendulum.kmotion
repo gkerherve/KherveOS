@@ -1,0 +1,16 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "circular",
+  "title": "Conical pendulum",
+  "description": "L = 1.2 m at 35°: the bob circles with period 2π√(L cos θ / g) = 1.99 s. Change the speed ratio and the cone breathes.",
+  "params": {
+    "mode": "conical",
+    "m": 1,
+    "L": 1.2,
+    "th0": 35,
+    "spin": 1,
+    "gravity": "earth",
+    "gcustom": 9.81
+  }
+}

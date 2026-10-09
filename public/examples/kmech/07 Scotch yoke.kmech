@@ -1,0 +1,105 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Scotch yoke",
+    "points": [
+      {
+        "id": "O",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "O"
+      },
+      {
+        "id": "P",
+        "x": 32.76608177156,
+        "y": 22.943057454042,
+        "label": "pin"
+      },
+      {
+        "id": "Y",
+        "x": 32.76608177156,
+        "y": 0,
+        "label": "yoke",
+        "tracer": true
+      },
+      {
+        "id": "Q",
+        "x": 72.76608177156,
+        "y": 60,
+        "label": "guide"
+      },
+      {
+        "id": "S",
+        "x": 32.76608177156,
+        "y": 80,
+        "label": "slot end"
+      }
+    ],
+    "links": [
+      {
+        "id": "crank",
+        "pts": [
+          "O",
+          "P"
+        ],
+        "label": "crank"
+      },
+      {
+        "id": "yoke",
+        "pts": [
+          "Y",
+          "Q",
+          "S"
+        ],
+        "label": "yoke",
+        "shape": "plate"
+      }
+    ],
+    "sliders": [
+      {
+        "id": "yokeslide",
+        "point": "Y",
+        "line": {
+          "kind": "ground",
+          "x": 0,
+          "y": 0,
+          "angle": 0
+        },
+        "label": "yoke",
+        "mass": 0.5
+      },
+      {
+        "id": "guide",
+        "point": "Q",
+        "line": {
+          "kind": "ground",
+          "x": 0,
+          "y": 60,
+          "angle": 0
+        },
+        "label": "guide",
+        "mass": 0.05
+      },
+      {
+        "id": "slot",
+        "point": "P",
+        "line": {
+          "kind": "link",
+          "a": "Y",
+          "b": "S"
+        },
+        "label": "pin in slot",
+        "mass": 0.05
+      }
+    ],
+    "driver": {
+      "from": "O",
+      "to": "P",
+      "rpm": 60
+    },
+    "notes": "The yoke moves in pure simple harmonic motion: x = r cos θ, with no obliquity of the rod."
+  }
+}

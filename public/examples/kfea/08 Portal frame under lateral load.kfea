@@ -1,0 +1,132 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Portal frame under lateral load",
+  "description": "Fixed-base portal frame, columns HEA 200 (4 m), beam IPE 300 (6 m), 20 kN horizontal at the left corner. Expected (slope-deflection, axial strains neglected, so the solver agrees within 1 %): each base takes 10 kN, sway Δ = H h³ (1 + 1.5k) / (6 E Ic (1 + 6k)) = 8.9316 mm with k = (Ib/L)/(Ic/h) = 1.509.",
+  "analysis": "frame",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "HEA200",
+      "name": "HEA 200",
+      "shape": "ibeam",
+      "params": {
+        "h": 0.19,
+        "b": 0.2,
+        "tw": 0.0065,
+        "tf": 0.01
+      },
+      "A": 0.00538,
+      "I": 0.00003692,
+      "Z": 0.000388631578947,
+      "h": 0.19
+    },
+    {
+      "id": "IPE300",
+      "name": "IPE 300",
+      "shape": "ibeam",
+      "params": {
+        "h": 0.3,
+        "b": 0.15,
+        "tw": 0.0071,
+        "tf": 0.0107
+      },
+      "A": 0.00538,
+      "I": 0.00008356,
+      "Z": 0.000557066666667,
+      "h": 0.3
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "B",
+      "x": 0,
+      "y": 4
+    },
+    {
+      "id": "C",
+      "x": 6,
+      "y": 4
+    },
+    {
+      "id": "D",
+      "x": 6,
+      "y": 0
+    }
+  ],
+  "members": [
+    {
+      "id": "c1",
+      "n1": "A",
+      "n2": "B",
+      "section": "HEA200",
+      "material": "S235"
+    },
+    {
+      "id": "bm",
+      "n1": "B",
+      "n2": "C",
+      "section": "IPE300",
+      "material": "S235"
+    },
+    {
+      "id": "c2",
+      "n1": "D",
+      "n2": "C",
+      "section": "HEA200",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A",
+      "ux": true,
+      "uy": true,
+      "rz": true
+    },
+    {
+      "id": "s2",
+      "node": "D",
+      "ux": true,
+      "uy": true,
+      "rz": true
+    }
+  ],
+  "nodeLoads": [
+    {
+      "id": "l1",
+      "node": "B",
+      "fx": 20000,
+      "fy": 0,
+      "mz": 0
+    }
+  ],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "ux:B": 0.00893164647758,
+    "ux:C": 0.00893164647758,
+    "rx:A": -10000,
+    "rx:D": -10000
+  }
+}

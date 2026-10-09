@@ -1,0 +1,92 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "Noisy sine and a Butterworth low-pass",
+  "description": "Synthetic: a 50 Hz sine (amplitude 1) buried in white noise (sigma 0.5, SNR 3 dB). A 4th-order Butterworth low-pass at 100 Hz (-3.01 dB at the cutoff, 24 dB/octave beyond) removes most of the noise and passes the sine: the SNR rises from 3 dB to about 13 dB. It is applied forwards and backwards (zero phase), so the clean trace lines up with the noisy one; untick \"Zero phase\" in the Filter tab to see the delay a single pass adds.",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 2000,
+    "duration": 2,
+    "components": [
+      {
+        "type": "sine",
+        "amp": 1,
+        "freq": 50,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0.5,
+      "seed": 7,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "hann",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 500,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "processed",
+    "peakRangeDb": 60,
+    "maxPeaks": 10,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 100,
+    "f2": 500,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": true
+  },
+  "process": {
+    "type": "filter"
+  },
+  "tab": "time",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Stepped bar under axial load",
+  "description": "A bar of three squares (40, 30 and 20 mm, lengths 0.5, 0.4, 0.6 m) fixed at the left, 20 kN pull at the right end. Expected: the force is 20 kN in every part; the end moves Σ P L / (E A) = 0.21495 mm. The stress is 12.5, 22.2 and 50 MPa.",
+  "analysis": "frame",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "SQ40",
+      "name": "Square 40×40 mm",
+      "shape": "rect",
+      "params": {
+        "b": 0.04,
+        "h": 0.04
+      },
+      "A": 0.0016,
+      "I": 2.13333333333e-7,
+      "Z": 0.0000106666666667,
+      "h": 0.04
+    },
+    {
+      "id": "SQ30",
+      "name": "Square 30×30 mm",
+      "shape": "rect",
+      "params": {
+        "b": 0.03,
+        "h": 0.03
+      },
+      "A": 0.0009,
+      "I": 6.75e-8,
+      "Z": 0.0000045,
+      "h": 0.03
+    },
+    {
+      "id": "SQ20",
+      "name": "Square 20×20 mm",
+      "shape": "rect",
+      "params": {
+        "b": 0.02,
+        "h": 0.02
+      },
+      "A": 0.0004,
+      "I": 1.33333333333e-8,
+      "Z": 0.00000133333333333,
+      "h": 0.02
+    }
+  ],
+  "nodes": [
+    {
+      "id": "N0",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "N1",
+      "x": 0.5,
+      "y": 0
+    },
+    {
+      "id": "N2",
+      "x": 0.9,
+      "y": 0
+    },
+    {
+      "id": "N3",
+      "x": 1.5,
+      "y": 0
+    }
+  ],
+  "members": [
+    {
+      "id": "s1",
+      "n1": "N0",
+      "n2": "N1",
+      "section": "SQ40",
+      "material": "S235"
+    },
+    {
+      "id": "s2",
+      "n1": "N1",
+      "n2": "N2",
+      "section": "SQ30",
+      "material": "S235"
+    },
+    {
+      "id": "s3",
+      "n1": "N2",
+      "n2": "N3",
+      "section": "SQ20",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s0",
+      "node": "N0",
+      "ux": true,
+      "uy": true,
+      "rz": true
+    }
+  ],
+  "nodeLoads": [
+    {
+      "id": "l1",
+      "node": "N3",
+      "fx": 20000,
+      "fy": 0,
+      "mz": 0
+    }
+  ],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "ux:N3": 0.000214947089947,
+    "N:s1": 20000,
+    "N:s3": 20000,
+    "rx:N0": -20000
+  }
+}

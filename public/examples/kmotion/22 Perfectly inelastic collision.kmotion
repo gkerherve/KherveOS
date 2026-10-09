@@ -1,0 +1,16 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "collision",
+  "title": "Perfectly inelastic collision",
+  "description": "Same carts with e = 0: they move together at the centre-of-mass velocity and kinetic energy is lost: ½ μ (1 − e²) v_rel².",
+  "params": {
+    "mode": "oned",
+    "m1": 2,
+    "m2": 1,
+    "v1": 3,
+    "v2": -1,
+    "e": 0,
+    "rail": false
+  }
+}

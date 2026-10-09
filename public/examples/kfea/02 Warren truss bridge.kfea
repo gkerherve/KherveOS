@@ -1,0 +1,195 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Warren truss bridge",
+  "description": "A 24 m Warren bridge truss of equilateral triangles (8 m sides), tubes 114.3×6 in S355, 100 kN at each lower joint. Expected: reactions 100 kN; end diagonals -115.47 kN (compression), first bottom chord +57.735 kN, top chord -115.47 kN, middle bottom chord +115.47 kN.",
+  "analysis": "truss",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S355",
+      "name": "Structural steel S355",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 355000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "TUBE114x6",
+      "name": "Tube Ø114.3×6 mm",
+      "shape": "tube",
+      "params": {
+        "D": 0.1143,
+        "t": 0.006
+      },
+      "A": 0.0020414069063,
+      "I": 0.00000300211596224,
+      "Z": 0.0000525304630313,
+      "h": 0.1143
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A0",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "A1",
+      "x": 8,
+      "y": 0
+    },
+    {
+      "id": "A2",
+      "x": 16,
+      "y": 0
+    },
+    {
+      "id": "A3",
+      "x": 24,
+      "y": 0
+    },
+    {
+      "id": "U1",
+      "x": 4,
+      "y": 6.92820323028
+    },
+    {
+      "id": "U2",
+      "x": 12,
+      "y": 6.92820323028
+    },
+    {
+      "id": "U3",
+      "x": 20,
+      "y": 6.92820323028
+    }
+  ],
+  "members": [
+    {
+      "id": "b1",
+      "n1": "A0",
+      "n2": "A1",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "b2",
+      "n1": "A1",
+      "n2": "A2",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "b3",
+      "n1": "A2",
+      "n2": "A3",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "t1",
+      "n1": "U1",
+      "n2": "U2",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "t2",
+      "n1": "U2",
+      "n2": "U3",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "d1",
+      "n1": "A0",
+      "n2": "U1",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "d2",
+      "n1": "U1",
+      "n2": "A1",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "d3",
+      "n1": "A1",
+      "n2": "U2",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "d4",
+      "n1": "U2",
+      "n2": "A2",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "d5",
+      "n1": "A2",
+      "n2": "U3",
+      "section": "TUBE114x6",
+      "material": "S355"
+    },
+    {
+      "id": "d6",
+      "n1": "U3",
+      "n2": "A3",
+      "section": "TUBE114x6",
+      "material": "S355"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A0",
+      "ux": true,
+      "uy": true,
+      "rz": false
+    },
+    {
+      "id": "s2",
+      "node": "A3",
+      "ux": false,
+      "uy": true,
+      "rz": false
+    }
+  ],
+  "nodeLoads": [
+    {
+      "id": "l1",
+      "node": "A1",
+      "fx": 0,
+      "fy": -100000,
+      "mz": 0
+    },
+    {
+      "id": "l2",
+      "node": "A2",
+      "fx": 0,
+      "fy": -100000,
+      "mz": 0
+    }
+  ],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "ry:A0": 100000,
+    "ry:A3": 100000,
+    "N:d1": -115470.053838,
+    "N:b1": 57735.026919,
+    "N:t1": -115470.053838,
+    "N:b2": 115470.053838
+  }
+}

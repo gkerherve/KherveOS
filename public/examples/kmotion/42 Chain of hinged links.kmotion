@@ -1,0 +1,153 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "sandbox",
+  "title": "Chain of hinged links",
+  "description": "Chain of hinged links: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+  "params": {
+    "mode": "world",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "friction": 0.5,
+    "restitution": 0.1,
+    "snap": true,
+    "world": {
+      "bodies": [
+        {
+          "id": "b1",
+          "kind": "box",
+          "x": 0,
+          "y": -0.25,
+          "angle": 0,
+          "w": 14,
+          "h": 0.5,
+          "type": "static",
+          "density": 1,
+          "friction": 0.8,
+          "restitution": 0.1,
+          "color": "#64748b"
+        },
+        {
+          "id": "pivot",
+          "kind": "box",
+          "x": 0,
+          "y": 6,
+          "angle": 0,
+          "w": 1,
+          "h": 0.3,
+          "type": "static",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "link1",
+          "kind": "box",
+          "x": 0.4,
+          "y": 5.6,
+          "angle": 80,
+          "w": 0.2,
+          "h": 0.8,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "link2",
+          "kind": "box",
+          "x": 0,
+          "y": 4.800000000000001,
+          "angle": 0,
+          "w": 0.2,
+          "h": 0.8,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "link3",
+          "kind": "box",
+          "x": 0,
+          "y": 4.000000000000001,
+          "angle": 0,
+          "w": 0.2,
+          "h": 0.8,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "link4",
+          "kind": "box",
+          "x": 0,
+          "y": 3.2000000000000006,
+          "angle": 0,
+          "w": 0.2,
+          "h": 0.8,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "link5",
+          "kind": "box",
+          "x": 0,
+          "y": 2.400000000000001,
+          "angle": 0,
+          "w": 0.2,
+          "h": 0.8,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        }
+      ],
+      "joints": [
+        {
+          "kind": "revolute",
+          "a": "pivot",
+          "b": "link1",
+          "ax": 0,
+          "ay": 6,
+          "id": "j1"
+        },
+        {
+          "kind": "revolute",
+          "a": "link1",
+          "b": "link2",
+          "ax": 0,
+          "ay": 5.2,
+          "id": "j2"
+        },
+        {
+          "kind": "revolute",
+          "a": "link2",
+          "b": "link3",
+          "ax": 0,
+          "ay": 4.4,
+          "id": "j3"
+        },
+        {
+          "kind": "revolute",
+          "a": "link3",
+          "b": "link4",
+          "ax": 0,
+          "ay": 3.6000000000000005,
+          "id": "j4"
+        },
+        {
+          "kind": "revolute",
+          "a": "link4",
+          "b": "link5",
+          "ax": 0,
+          "ay": 2.8000000000000007,
+          "id": "j5"
+        }
+      ]
+    }
+  }
+}

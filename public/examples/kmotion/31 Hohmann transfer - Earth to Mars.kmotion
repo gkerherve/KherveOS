@@ -1,0 +1,15 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Hohmann transfer: Earth to Mars",
+  "description": "Two burns: Δv₁ = 2.95 km/s at departure, Δv₂ = 2.65 km/s at arrival, 259 days of flight. Mars must lead Earth by 44.4° at launch.",
+  "params": {
+    "mode": "hohmann",
+    "M": 1,
+    "r1": 1,
+    "r2": 1.524,
+    "dv1": 100,
+    "burn2": true
+  }
+}

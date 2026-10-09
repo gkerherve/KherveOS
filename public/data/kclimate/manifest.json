@@ -1,0 +1,435 @@
+{
+  "format": "kclimate-data",
+  "version": 1,
+  "generated_by": "tools/fetch_kclimate_data.py",
+  "datasets": [
+    {
+      "id": "co2_mlo",
+      "file": "co2_mlo.csv",
+      "title": "Atmospheric CO2 at Mauna Loa, monthly",
+      "description": "Monthly mean dry-air CO2 mole fraction at Mauna Loa (ppm) and the same with the seasonal cycle removed.",
+      "provider": "NOAA Global Monitoring Laboratory (GML), with the 1958-1974 record of C. D. Keeling, Scripps Institution of Oceanography",
+      "url": "https://gml.noaa.gov/ccgg/trends/data.html",
+      "download_urls": [
+        "https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.csv"
+      ],
+      "licence": "US Government work, public domain; NOAA asks for credit and a citation (Lan et al., NOAA GML)",
+      "citation": "Lan, X., Tans, P. and Thoning, K.W.: Trends in globally-averaged CO2 determined from NOAA Global Monitoring Laboratory measurements.",
+      "version": "NOAA GML co2_mm_mlo.csv, file created Sat Sep  5 03:55:38 2026",
+      "retrieved": "2026-10-08",
+      "rows": 822,
+      "t_first": 1958.2083,
+      "t_last": 2026.625,
+      "raw_sha256": {
+        "co2_mm_mlo.csv": "dcf0198658c87ebb5e3b2ce807fe3a52e1d5f000aa0479fb1bf334afb7adde4d"
+      },
+      "step": "monthly",
+      "columns": [
+        {
+          "key": "co2",
+          "name": "CO2 (Mauna Loa)",
+          "unit": "ppm",
+          "kind": "level"
+        },
+        {
+          "key": "co2_deseasonalized",
+          "name": "CO2 (Mauna Loa), seasonal cycle removed",
+          "unit": "ppm",
+          "kind": "level"
+        }
+      ],
+      "missing": "No month is empty: NOAA fills the few months without measurements by interpolation (ndays = -1 in its file) and says so in the file header. The deseasonalized column is the provider's own."
+    },
+    {
+      "id": "gistemp",
+      "file": "gistemp.csv",
+      "title": "GISTEMP v4 surface temperature anomaly: global, northern and southern hemisphere, monthly",
+      "description": "Land-ocean temperature index (LOTI), anomalies in degrees C relative to 1951-1980.",
+      "provider": "NASA Goddard Institute for Space Studies (GISS)",
+      "url": "https://data.giss.nasa.gov/gistemp/",
+      "download_urls": [
+        "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv",
+        "https://data.giss.nasa.gov/gistemp/tabledata_v4/NH.Ts+dSST.csv",
+        "https://data.giss.nasa.gov/gistemp/tabledata_v4/SH.Ts+dSST.csv"
+      ],
+      "licence": "NASA data, public domain; GISS asks to cite GISTEMP Team and Lenssen et al. (2024)",
+      "citation": "GISTEMP Team: GISS Surface Temperature Analysis (GISTEMP), version 4. NASA GISS. Lenssen, N. et al. (2024), J. Geophys. Res. Atmos., doi:10.1029/2023JD040179.",
+      "version": "GISTEMP v4 (LOTI, ERSSTv5 ocean)",
+      "retrieved": "2026-10-08",
+      "rows": 1760,
+      "t_first": 1880.0417,
+      "t_last": 2026.625,
+      "raw_sha256": {
+        "gistemp_glb.csv": "c9ce0750ca93a8241c42fe86cd5bf54d07b28b21ae650b0ae49a206907018cd9",
+        "gistemp_nh.csv": "478319f2ae822f1a70c49913d6281b8fa70efbcb7dc0348764d1fc2c3e0a9cb5",
+        "gistemp_sh.csv": "261350363c0343368b4ff018bbfb9a08deb7228b9d2c74a3fa18901c8698c6ef"
+      },
+      "step": "monthly",
+      "columns": [
+        {
+          "key": "global",
+          "name": "GISTEMP global",
+          "unit": "°C",
+          "kind": "anomaly",
+          "baseline": [
+            1951,
+            1980
+          ]
+        },
+        {
+          "key": "nh",
+          "name": "GISTEMP northern hemisphere",
+          "unit": "°C",
+          "kind": "anomaly",
+          "baseline": [
+            1951,
+            1980
+          ]
+        },
+        {
+          "key": "sh",
+          "name": "GISTEMP southern hemisphere",
+          "unit": "°C",
+          "kind": "anomaly",
+          "baseline": [
+            1951,
+            1980
+          ]
+        }
+      ],
+      "missing": "The provider publishes values to 0.01 °C; months not yet analysed are left empty."
+    },
+    {
+      "id": "hadcrut5",
+      "file": "hadcrut5.csv",
+      "title": "HadCRUT5 global temperature anomaly, monthly, with 95 % uncertainty range",
+      "description": "Global mean near-surface temperature anomaly (degrees C) relative to 1961-1990, 1850 to now, with the lower and upper 95 % limits.",
+      "provider": "Met Office Hadley Centre / Climatic Research Unit, University of East Anglia",
+      "url": "https://www.metoffice.gov.uk/hadobs/hadcrut5/",
+      "download_urls": [
+        "https://www.metoffice.gov.uk/hadobs/hadcrut5/data/HadCRUT.5.2.0.0/analysis/diagnostics/HadCRUT.5.2.0.0.analysis.summary_series.global.monthly.csv"
+      ],
+      "licence": "Open Government Licence v3.0 (contains public sector information); cite Morice et al. (2021)",
+      "citation": "Morice, C.P. et al. (2021), An updated assessment of near-surface temperature change from 1850: the HadCRUT5 data set, J. Geophys. Res. Atmos., 126, e2019JD032361.",
+      "version": "HadCRUT.5.2.0.0, analysis, global monthly summary series",
+      "retrieved": "2026-10-08",
+      "rows": 2120,
+      "t_first": 1850.0417,
+      "t_last": 2026.625,
+      "raw_sha256": {
+        "hadcrut5_monthly.csv": "dd4449a3e25b75396ec4f0445f8647e5b9f5a10f3993929fb82918f3ec135dd1"
+      },
+      "step": "monthly",
+      "columns": [
+        {
+          "key": "anomaly",
+          "name": "HadCRUT5 global",
+          "unit": "°C",
+          "kind": "anomaly",
+          "baseline": [
+            1961,
+            1990
+          ]
+        },
+        {
+          "key": "lower",
+          "name": "HadCRUT5 lower 95 % limit",
+          "unit": "°C",
+          "kind": "anomaly",
+          "baseline": [
+            1961,
+            1990
+          ]
+        },
+        {
+          "key": "upper",
+          "name": "HadCRUT5 upper 95 % limit",
+          "unit": "°C",
+          "kind": "anomaly",
+          "baseline": [
+            1961,
+            1990
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oni",
+      "file": "oni.csv",
+      "title": "Oceanic Nino Index (ONI), ENSO",
+      "description": "3-month running mean of the Nino 3.4 sea-surface temperature anomaly (degrees C, ERSSTv5, centred 30-year base periods). Each value is placed on the middle month of its 3-month season (DJF = January).",
+      "provider": "NOAA Climate Prediction Center (CPC)",
+      "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php",
+      "download_urls": [
+        "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt"
+      ],
+      "licence": "US Government work, public domain",
+      "citation": "NOAA CPC: Oceanic Nino Index (ONI), ERSSTv5 Nino 3.4 region, 3-month running mean.",
+      "version": "ONI based on ERSSTv5",
+      "retrieved": "2026-10-08",
+      "rows": 920,
+      "t_first": 1950.0417,
+      "t_last": 2026.625,
+      "raw_sha256": {
+        "oni.ascii.txt": "5d6fa3a2f857d916550d39c2c686e94cb942430195c82518e6a5d0f5ffbd0665"
+      },
+      "step": "monthly",
+      "columns": [
+        {
+          "key": "oni",
+          "name": "Oceanic Niño Index",
+          "unit": "°C",
+          "kind": "anomaly",
+          "baseline": null
+        },
+        {
+          "key": "nino34_sst",
+          "name": "Niño 3.4 SST (3-month mean)",
+          "unit": "°C",
+          "kind": "level"
+        }
+      ],
+      "missing": "Each 3-month season is placed on its middle month, so the record ends one month before the latest month observed."
+    },
+    {
+      "id": "arctic_ice",
+      "file": "arctic_sea_ice.csv",
+      "title": "Arctic sea-ice extent, monthly (Sea Ice Index)",
+      "description": "Monthly mean Northern Hemisphere sea-ice extent and area, millions of km2, from passive-microwave satellites, November 1978 onwards (two months, December 1987 and January 1988, have no data).",
+      "provider": "NOAA@NSIDC, National Snow and Ice Data Center",
+      "url": "https://nsidc.org/data/g02135/versions/4",
+      "download_urls": [
+        "https://noaadata.apps.nsidc.org/NOAA/G02135/north/monthly/data/N_MM_extent_v4.0.csv (MM = 01 to 12)"
+      ],
+      "licence": "Free and open access; citation required as a condition of use (Fetterer et al., doi:10.7265/a98x-0f50)",
+      "citation": "Fetterer, F., Knowles, K., Meier, W. N., Savoie, M., Windnagel, A. K. & Stafford, T. Sea Ice Index, Version 4 (G02135). NSIDC. doi:10.7265/a98x-0f50.",
+      "version": "Sea Ice Index v4.0 (monthly extent files)",
+      "retrieved": "2026-10-08",
+      "rows": 575,
+      "t_first": 1978.875,
+      "t_last": 2026.7083,
+      "raw_sha256": {
+        "N_01_extent_v4.0.csv": "61938dffac6f610d1d9610f70e8fb54fd14dfa93eaeec4047fd6ad13cbe2628f",
+        "N_02_extent_v4.0.csv": "cf1df2e3730acdc39831c386fc4c5ae765fc0d661f7466290e9239490422b32e",
+        "N_03_extent_v4.0.csv": "01c4fa25d1a4a35aee9558eeecd652564fc91582e35e7b2fcaf8c19ebf56aff7",
+        "N_04_extent_v4.0.csv": "31ededc3210d6b30dce1ac5c3bf1009d8ab8faee75d1cdf6a9ff39dcc7fe6e94",
+        "N_05_extent_v4.0.csv": "143786739a6f3d5d1a3208fa61f299a4afdff142974dfc973bfd1ee86670dc72",
+        "N_06_extent_v4.0.csv": "33f08540d96b62554ebcd8e27030364815be3e0836d03453e9bb078ef4452d0f",
+        "N_07_extent_v4.0.csv": "0be2b36d07f5eb3ec2ddb7a8604fcdf508ef718254ae3795c655681b3e567bf4",
+        "N_08_extent_v4.0.csv": "099dfed84622912b5dc11d56acfa81193788e0d81a2e751ebeecb16ddb1de504",
+        "N_09_extent_v4.0.csv": "3968dfdbe73b8361712da9136cfeff6dbc9a6d87ab3e75daa30cc254615eab1f",
+        "N_10_extent_v4.0.csv": "5b54b8bab1785d704c78a59d0df03171f4c9fccb88438d56b28e4c2befe2c150",
+        "N_11_extent_v4.0.csv": "2e883fcb0968770e2e6e02147e7004b75d9f937dbea353a78a60cb19aaa626ea",
+        "N_12_extent_v4.0.csv": "4bda9d85fd7212bb847dea3a19a5e6a28aa65bb6e38db6a586a88251049ffc94"
+      },
+      "step": "monthly",
+      "columns": [
+        {
+          "key": "extent",
+          "name": "Arctic sea-ice extent",
+          "unit": "million km²",
+          "kind": "level"
+        },
+        {
+          "key": "area",
+          "name": "Arctic sea-ice area",
+          "unit": "million km²",
+          "kind": "level"
+        }
+      ]
+    },
+    {
+      "id": "owid_co2",
+      "file": "owid_world_co2.csv",
+      "title": "World CO2 emissions per year (fossil fuels, cement, land use)",
+      "description": "Annual emissions of the world, million tonnes of CO2 (fossil fuels and cement; including land-use change from 1850), and cumulative totals.",
+      "provider": "Our World in Data, from the Global Carbon Project (Global Carbon Budget) and others",
+      "url": "https://github.com/owid/co2-data",
+      "download_urls": [
+        "https://raw.githubusercontent.com/owid/co2-data/master/owid-co2-data.csv"
+      ],
+      "licence": "Creative Commons Attribution 4.0 (CC BY 4.0); credit Our World in Data and the Global Carbon Project",
+      "citation": "Our World in Data CO2 and Greenhouse Gas Emissions dataset, based on the Global Carbon Budget (Friedlingstein et al.), World rows.",
+      "version": "master branch as retrieved",
+      "retrieved": "2026-10-08",
+      "rows": 275,
+      "t_first": 1750.5,
+      "t_last": 2024.5,
+      "raw_sha256": {
+        "owid-co2-data.csv": "7f78e2b218ce4bb8c538bbec04fdc9a7982e8d40bff972e650df603899edd5f6"
+      },
+      "step": "annual",
+      "columns": [
+        {
+          "key": "co2",
+          "name": "CO2 emissions (fossil fuels and cement)",
+          "unit": "Mt CO₂",
+          "kind": "level"
+        },
+        {
+          "key": "co2_including_luc",
+          "name": "CO2 emissions including land-use change",
+          "unit": "Mt CO₂",
+          "kind": "level"
+        },
+        {
+          "key": "cumulative_co2",
+          "name": "Cumulative CO2 emissions (fossil fuels and cement)",
+          "unit": "Mt CO₂ (cumulative)",
+          "kind": "level"
+        },
+        {
+          "key": "cumulative_co2_including_luc",
+          "name": "Cumulative CO2 emissions including land-use change",
+          "unit": "Mt CO₂ (cumulative)",
+          "kind": "level"
+        },
+        {
+          "key": "coal_co2",
+          "name": "CO2 from coal",
+          "unit": "Mt CO₂",
+          "kind": "level"
+        },
+        {
+          "key": "oil_co2",
+          "name": "CO2 from oil",
+          "unit": "Mt CO₂",
+          "kind": "level"
+        },
+        {
+          "key": "gas_co2",
+          "name": "CO2 from gas",
+          "unit": "Mt CO₂",
+          "kind": "level"
+        },
+        {
+          "key": "cement_co2",
+          "name": "CO2 from cement",
+          "unit": "Mt CO₂",
+          "kind": "level"
+        },
+        {
+          "key": "land_use_change_co2",
+          "name": "CO2 from land-use change",
+          "unit": "Mt CO₂",
+          "kind": "level"
+        }
+      ],
+      "missing": "Series start when the provider's estimates start (fossil CO2 1750, oil 1855, gas 1882, cement 1880, land use 1850)."
+    },
+    {
+      "id": "sealevel_csiro",
+      "file": "sealevel_csiro.csv",
+      "title": "Global mean sea level, tide-gauge reconstruction 1880-2013",
+      "description": "Annual global mean sea level in mm (arbitrary zero), with its uncertainty, reconstructed from tide gauges.",
+      "provider": "CSIRO (Church and White 2011, updated 2015)",
+      "url": "https://research.csiro.au/slrwavescoast/sea-level/",
+      "download_urls": [
+        "https://www.cmar.csiro.au/sealevel/downloads/church_white_gmsl_2011_up.zip"
+      ],
+      "licence": "Free to use; the provider asks that the source is acknowledged. The data page states no formal licence",
+      "citation": "Church, J.A. and White, N.J. (2011), Sea-level rise from the late 19th to the early 21st century, Surveys in Geophysics, 32, 585-602.",
+      "version": "Church and White 2011, update to 2013 (files dated June 2015)",
+      "retrieved": "2026-10-08",
+      "rows": 134,
+      "t_first": 1880.5,
+      "t_last": 2013.5,
+      "raw_sha256": {
+        "church_white_gmsl_2011_up.zip": "ff6732be7d58385e30bcf2f424a458ab9f0f8b3c907661306db011b7179e0862"
+      },
+      "step": "annual",
+      "columns": [
+        {
+          "key": "gmsl_mm",
+          "name": "Global mean sea level (tide-gauge reconstruction)",
+          "unit": "mm",
+          "kind": "level"
+        },
+        {
+          "key": "uncertainty_mm",
+          "name": "Sea level uncertainty",
+          "unit": "mm",
+          "kind": "level"
+        }
+      ]
+    },
+    {
+      "id": "sealevel_noaa",
+      "file": "sealevel_noaa_altimetry.csv",
+      "title": "Global mean sea level from satellite altimetry, 1993-now",
+      "description": "Global mean sea level anomaly in mm from successive altimetry missions, about every 10 days, annual cycle removed.",
+      "provider": "NOAA Laboratory for Satellite Altimetry (STAR)",
+      "url": "https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/",
+      "download_urls": [
+        "https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/slr/slr_sla_gbl_free_all_66.csv"
+      ],
+      "licence": "US Government work, public domain; acknowledgment requested: 'Altimetry data are provided by NOAA Laboratory for Satellite Altimetry.'",
+      "citation": "NOAA Laboratory for Satellite Altimetry: Sea level rise (TOPEX/Poseidon, Jason-1/2/3, Sentinel-6MF), global ocean 66S to 66N, annual signals removed, no glacial isostatic adjustment.",
+      "version": "slr_sla_gbl_free_all_66",
+      "retrieved": "2026-10-08",
+      "rows": 1557,
+      "t_first": 1992.9614,
+      "t_last": 2025.1268,
+      "raw_sha256": {
+        "slr_sla_gbl_free_all_66.csv": "5158a989a58320564588848bf22037ab9ce773a31d6bb9fb12ff1f902ade425d"
+      },
+      "step": "irregular",
+      "columns": [
+        {
+          "key": "gmsl_mm",
+          "name": "Global mean sea level (satellite altimetry)",
+          "unit": "mm",
+          "kind": "level"
+        }
+      ],
+      "note": "Provider's own trend of the whole record: 3.17 mm/year (no glacial isostatic adjustment correction).",
+      "provider_trend": "3.17 mm/year (no glacial isostatic adjustment correction)"
+    },
+    {
+      "id": "giss_aod",
+      "file": "giss_aod.csv",
+      "title": "Stratospheric aerosol optical depth (volcanic forcing) 1850-2012",
+      "description": "Monthly global and hemispheric mean stratospheric aerosol optical depth at 550 nm (dimensionless), a measure of volcanic eruptions.",
+      "provider": "NASA Goddard Institute for Space Studies (Sato, Lacis, Hansen)",
+      "url": "https://data.giss.nasa.gov/modelforce/strataer/",
+      "download_urls": [
+        "https://data.giss.nasa.gov/modelforce/strataer/original_GISS_data/tau.line_2012.12.txt"
+      ],
+      "licence": "NASA data, public domain; cite Sato et al. (1993) and the GISS forcing page",
+      "citation": "Sato, M., Hansen, J.E., McCormick, M.P. and Pollack, J.B. (1993), Stratospheric aerosol optical depths 1850-1990, J. Geophys. Res., 98, 22987-22994 (extended by GISS to 2012).",
+      "version": "tau.line_2012.12",
+      "retrieved": "2026-10-08",
+      "rows": 1953,
+      "t_first": 1850.0417,
+      "t_last": 2012.7083,
+      "raw_sha256": {
+        "tau.line_2012.12.txt": "40b245c8fc871b75da40803c8dffee78fe9707758702297b6b9945e5ed003393"
+      },
+      "step": "monthly",
+      "columns": [
+        {
+          "key": "global",
+          "name": "Stratospheric aerosol optical depth (global)",
+          "unit": "",
+          "kind": "level"
+        },
+        {
+          "key": "nh",
+          "name": "Stratospheric aerosol optical depth (N hemisphere)",
+          "unit": "",
+          "kind": "level"
+        },
+        {
+          "key": "sh",
+          "name": "Stratospheric aerosol optical depth (S hemisphere)",
+          "unit": "",
+          "kind": "level"
+        }
+      ]
+    }
+  ],
+  "not_included": [
+    "Solar activity (sunspot number): the SILSO series is licensed CC BY-NC (non-commercial), so it is not shipped. The NOAA SWPC F10.7 table starts only in 2004. Import one with File > Import CSV.",
+    "Ice-core CO2 before 1958: not downloaded; the model builds the earlier path from cumulative emissions and says so."
+  ]
+}

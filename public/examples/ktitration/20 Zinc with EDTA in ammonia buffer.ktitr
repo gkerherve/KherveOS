@@ -1,0 +1,209 @@
+{
+  "format": "ktitr",
+  "version": 1,
+  "name": "Zinc with EDTA in ammonia buffer",
+  "description": "Zinc (1.00 mM, 50.0 mL) with 0.01000 M EDTA in 0.10 M ammonia buffer at pH 10. Ammonia holds zinc as Zn(NH₃)ₙ²⁺: α(Zn) ≈ 10^4.8 (hydroxide alone gives 10^2.1), which lowers the conditional constant by 2.7 orders of magnitude and shortens the jump compared with the same pH without ammonia.",
+  "mode": "edta",
+  "tab": "titration",
+  "acidbase": {
+    "items": [
+      {
+        "kind": "weak",
+        "label": "Acetic acid",
+        "pKa": [
+          4.76
+        ],
+        "z0": 0,
+        "form": 0,
+        "conc": 0.1,
+        "volume": 25,
+        "dpKadT": [
+          0.0002
+        ],
+        "lib": "acetic"
+      }
+    ],
+    "water": 0,
+    "titrant": {
+      "kind": "strong-base",
+      "label": "NaOH",
+      "conc": 0.1
+    },
+    "temperature": 25,
+    "activity": "none",
+    "background": 0,
+    "vmax": null,
+    "indicator": "phenolphthalein"
+  },
+  "redox": {
+    "analyte": {
+      "couple": {
+        "label": "Fe³⁺ / Fe²⁺",
+        "ox": "Fe³⁺",
+        "red": "Fe²⁺",
+        "E0": 0.68,
+        "n": 1,
+        "m": 0,
+        "b": 1
+      },
+      "start": "red",
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrant": {
+      "couple": {
+        "label": "Ce⁴⁺ / Ce³⁺",
+        "ox": "Ce⁴⁺",
+        "red": "Ce³⁺",
+        "E0": 1.44,
+        "n": 1,
+        "m": 0,
+        "b": 1
+      },
+      "conc": 0.1
+    },
+    "water": 0,
+    "pH": 0,
+    "temperature": 25,
+    "indicator": "ferroin",
+    "vmax": null
+  },
+  "edta": {
+    "metal": {
+      "symbol": "Zn",
+      "ion": "Zn²⁺",
+      "logKMY": 16.5,
+      "hydroxo": [
+        4.4,
+        10.1
+      ],
+      "ammine": [
+        2.27,
+        4.61,
+        7.01,
+        9.06
+      ]
+    },
+    "conc": 0.001,
+    "volume": 50,
+    "water": 0,
+    "titrantConc": 0.01,
+    "pH": 10,
+    "ammonia": 0.1,
+    "indicator": "ebt",
+    "customLogK": 5,
+    "vmax": null
+  },
+  "precip": {
+    "mode": "silver-titrant",
+    "anions": [
+      {
+        "salt": "agcl",
+        "conc": 0.05,
+        "volume": 25
+      }
+    ],
+    "silver": {
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrantConc": 0.05,
+    "water": 0,
+    "indicator": "mohr",
+    "chromate": 0.0025,
+    "iron": 0.01,
+    "vmax": null
+  },
+  "speciation": {
+    "lib": "phosphoric",
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "conc": 0.1,
+    "ionic": 0,
+    "activity": "none",
+    "temperature": 25
+  },
+  "analyse": {
+    "text": "",
+    "setup": {
+      "npk": 1,
+      "z0": 0,
+      "form": 0,
+      "titrant": "base",
+      "aliquot": 25,
+      "V0": 25,
+      "Ct": 0.1,
+      "temperature": 25,
+      "activity": "none",
+      "background": 0,
+      "fitCt": false,
+      "fitDV": false,
+      "guessC": null,
+      "pKa": [
+        {
+          "value": 5,
+          "fit": true
+        }
+      ],
+      "sigmaV": 0
+    },
+    "gran": "weak",
+    "source": "",
+    "view": "curve"
+  },
+  "buffer": {
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "lib": "phosphoric",
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "mode": "salts",
+    "formA": 1,
+    "formB": 2,
+    "pH": 7.4,
+    "conc": 0.1,
+    "volume": 1000,
+    "temperature": 25,
+    "activity": "davies",
+    "ionicStrength": null,
+    "stockA": 1,
+    "stockB": 1,
+    "cation": "Na",
+    "anion": "Cl"
+  },
+  "notes": ""
+}

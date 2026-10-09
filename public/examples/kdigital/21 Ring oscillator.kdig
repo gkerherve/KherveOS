@@ -1,0 +1,212 @@
+{
+  "format": "kdig",
+  "version": 1,
+  "name": "Ring oscillator",
+  "description": "A NAND and two inverters in a loop. With EN = 0 the loop is held; with EN = 1 it oscillates — the simulator notices and tells you.",
+  "tab": "circuit",
+  "circuit": {
+    "parts": [
+      {
+        "id": "p1",
+        "kind": "switch",
+        "ref": "SW1",
+        "x": 0,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "EN",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "nand",
+        "ref": "U1",
+        "x": 140,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "not",
+        "ref": "U2",
+        "x": 300,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": ""
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "not",
+        "ref": "U3",
+        "x": 440,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": ""
+        }
+      },
+      {
+        "id": "p5",
+        "kind": "led",
+        "ref": "LED1",
+        "x": 620,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "OUT"
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "x1": 30,
+        "y1": 100,
+        "x2": 70,
+        "y2": 100
+      },
+      {
+        "id": "w2",
+        "x1": 70,
+        "y1": 100,
+        "x2": 70,
+        "y2": 90
+      },
+      {
+        "id": "w3",
+        "x1": 70,
+        "y1": 90,
+        "x2": 110,
+        "y2": 90
+      },
+      {
+        "id": "w4",
+        "x1": 170,
+        "y1": 100,
+        "x2": 270,
+        "y2": 100
+      },
+      {
+        "id": "w5",
+        "x1": 330,
+        "y1": 100,
+        "x2": 410,
+        "y2": 100
+      },
+      {
+        "id": "w6",
+        "x1": 470,
+        "y1": 100,
+        "x2": 490,
+        "y2": 100
+      },
+      {
+        "id": "w7",
+        "x1": 490,
+        "y1": 100,
+        "x2": 520,
+        "y2": 100
+      },
+      {
+        "id": "w8",
+        "x1": 520,
+        "y1": 100,
+        "x2": 520,
+        "y2": 180
+      },
+      {
+        "id": "w9",
+        "x1": 520,
+        "y1": 180,
+        "x2": 90,
+        "y2": 180
+      },
+      {
+        "id": "w10",
+        "x1": 90,
+        "y1": 180,
+        "x2": 90,
+        "y2": 110
+      },
+      {
+        "id": "w11",
+        "x1": 90,
+        "y1": 110,
+        "x2": 110,
+        "y2": 110
+      },
+      {
+        "id": "w12",
+        "x1": 520,
+        "y1": 100,
+        "x2": 590,
+        "y2": 100
+      }
+    ],
+    "labels": [
+      {
+        "id": "l1",
+        "name": "ring",
+        "x": 490,
+        "y": 100,
+        "flip": false
+      }
+    ],
+    "notes": [
+      {
+        "id": "n1",
+        "text": "Ring oscillator: three inversions in a loop never settle.",
+        "x": 0,
+        "y": 20
+      },
+      {
+        "id": "n2",
+        "text": "Set EN = 1: the loop oscillates with period 6 gate delays (kDigital reports the oscillation).",
+        "x": 0,
+        "y": 215
+      }
+    ]
+  },
+  "stimulus": [
+    {
+      "t": 0,
+      "set": {
+        "EN": 0
+      }
+    },
+    {
+      "t": 30,
+      "set": {
+        "EN": 1
+      }
+    }
+  ],
+  "until": 200,
+  "probes": [
+    {
+      "name": "EN",
+      "bits": [
+        "EN"
+      ]
+    },
+    {
+      "name": "OUT",
+      "bits": [
+        "ring"
+      ]
+    }
+  ]
+}

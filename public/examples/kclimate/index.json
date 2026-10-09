@@ -1,0 +1,108 @@
+{
+  "app": "kclimate",
+  "folder": "kClimate Examples",
+  "examples": [
+    {
+      "file": "01 The Keeling curve with seasonal decomposition.kclim",
+      "title": "The Keeling curve with seasonal decomposition",
+      "description": "Atmospheric CO₂ at Mauna Loa since 1958 split into a long-term trend (quadratic), the seasonal cycle (four harmonics) and the residual. The cycle peaks in May and bottoms out in October as the northern forests grow and rot.",
+      "group": "Carbon dioxide"
+    },
+    {
+      "file": "02 CO2 seasonal amplitude is growing.kclim",
+      "title": "CO₂ seasonal amplitude is growing",
+      "description": "The size of the Mauna Loa seasonal cycle, year by year (a harmonic fit in a sliding 5-year window), with its trend and 95 % confidence band. More CO₂ and a longer growing season make the northern-hemisphere breathing deeper.",
+      "group": "Carbon dioxide"
+    },
+    {
+      "file": "03 Warming stripes 1850-now (HadCRUT5).kclim",
+      "title": "Warming stripes 1850–now (HadCRUT5)",
+      "description": "One stripe per year, blue for cooler and red for warmer than the 1961–1990 average, in the style of Ed Hawkins. Nothing else: no axes, no numbers, just the pattern of the last 175 years.",
+      "group": "Temperature"
+    },
+    {
+      "file": "04 Warming stripes 1880-now (GISTEMP).kclim",
+      "title": "Warming stripes 1880–now (GISTEMP)",
+      "description": "The same picture from NASA’s GISTEMP record, which starts in 1880. Compare with the HadCRUT5 stripes: two independent analyses of the same thermometers and ships tell the same story.",
+      "group": "Temperature"
+    },
+    {
+      "file": "05 Global warming trend per decade, with confidence band.kclim",
+      "title": "Global warming trend per decade, with confidence band",
+      "description": "A straight line through the annual GISTEMP anomalies since 1970 gives about 0.2 °C per decade. The interval allows for the autocorrelation of the residuals (AR(1)), which is wider than the textbook one.",
+      "group": "Temperature"
+    },
+    {
+      "file": "06 Is warming accelerating - a breakpoint and three periods.kclim",
+      "title": "Is warming accelerating: a breakpoint and three periods",
+      "description": "A two-segment trend fitted to GISTEMP since 1880 finds a break in the 1970s, after which warming is several times faster. The period comparison shows the trend per decade of three eras with their confidence intervals.",
+      "group": "Temperature"
+    },
+    {
+      "file": "07 Baselines - 1951-1980 vs 1961-1990 vs pre-industrial.kclim",
+      "title": "Baselines: 1951–1980 vs 1961–1990 vs pre-industrial",
+      "description": "The same HadCRUT5 record expressed against three baselines. The curves have identical shape and differ only by a constant: the choice of baseline moves the zero line, not the warming.",
+      "group": "Temperature"
+    },
+    {
+      "file": "08 ENSO and global temperature - lagged correlation.kclim",
+      "title": "ENSO and global temperature: lagged correlation",
+      "description": "Cross-correlation of the Oceanic Niño Index with GISTEMP monthly anomalies, both detrended: global temperature follows El Niño by about three months.",
+      "group": "Temperature"
+    },
+    {
+      "file": "09 Observed warming vs CO2, ENSO and volcanoes (regression).kclim",
+      "title": "Observed warming vs CO₂, ENSO and volcanoes (regression)",
+      "description": "Monthly GISTEMP regressed on log₂(CO₂), the ENSO index (3 months earlier) and volcanic aerosol (4 months earlier), 1960–2012. The CO₂ coefficient is the warming per doubling; the green curve has the natural wiggles taken out.",
+      "group": "Temperature"
+    },
+    {
+      "file": "10 September Arctic sea-ice decline and trend.kclim",
+      "title": "September Arctic sea-ice decline and trend",
+      "description": "The Arctic sea-ice extent at its yearly minimum (September), 1979 to now, with a linear trend of about −0.7 million km² per decade and its confidence interval.",
+      "group": "Ice and sea level"
+    },
+    {
+      "file": "11 Sea level - tide gauges and satellites.kclim",
+      "title": "Sea level: tide gauges and satellites",
+      "description": "Global mean sea level from the CSIRO tide-gauge reconstruction (1880–2013) and NOAA satellite altimetry (1993–now), both zeroed on 1993–2013 so that they can be compared. Rising ever faster.",
+      "group": "Ice and sea level"
+    },
+    {
+      "file": "12 Doubling CO2 - 1.1 K with no feedbacks, 3 K with them.kclim",
+      "title": "Doubling CO₂: 1.1 K with no feedbacks, 3 K with them",
+      "description": "CO₂ is doubled at once in a zero-dimensional energy-balance model. The planet warms until outgoing radiation balances the extra 3.7 W/m²: by 1.1 K without feedbacks, by 3 K with the net feedback of a climate sensitivity of 3 K per doubling.",
+      "group": "Energy-balance model"
+    },
+    {
+      "file": "13 Net zero by 2050 (toy scenario).kclim",
+      "title": "Net zero by 2050 (toy scenario)",
+      "description": "Emissions fall in a straight line from today’s level to zero in 2050. The model starts from the real emission history and Mauna Loa CO₂, and warming above 1850–1900 is compared with observed HadCRUT5. A teaching model, not a projection.",
+      "group": "Energy-balance model"
+    },
+    {
+      "file": "14 Business as usual - emissions growing 1 % a year (toy scenario).kclim",
+      "title": "Business as usual: emissions growing 1 % a year (toy scenario)",
+      "description": "Same model, but emissions keep growing by 1 % a year from 2025. Compare the end-of-century warming with the net-zero example.",
+      "group": "Energy-balance model"
+    },
+    {
+      "file": "15 Ice-albedo bistability and the snowball hysteresis loop.kclim",
+      "title": "Ice–albedo bistability and the snowball hysteresis loop",
+      "description": "When ice reflects more sunlight, a cooler Earth gets colder still. With that feedback the same sunlight allows two stable climates, and sweeping the solar constant down and back up traces a hysteresis loop: a frozen Earth needs far more sunlight to thaw than it took to freeze.",
+      "group": "Energy-balance model"
+    },
+    {
+      "file": "16 The 255 K Earth with no greenhouse effect.kclim",
+      "title": "The 255 K Earth with no greenhouse effect",
+      "description": "Without an atmosphere that absorbs infrared, Earth’s surface would settle at 255 K (−18 °C): the temperature at which it radiates away the sunlight it absorbs. The real 288 K is 33 K warmer, and that difference is the natural greenhouse effect.",
+      "group": "Energy-balance model"
+    },
+    {
+      "file": "17 Import your own CSV - a synthetic weather station.kclim",
+      "title": "Import your own CSV: a synthetic weather station",
+      "description": "A starter for your own time series: a made-up weather station (synthetic data, not observations) imported as monthly temperature and rainfall. Use File › Import CSV… with your own file: choose the time column and the value columns, and everything in kClimate works on it.",
+      "group": "Your own data"
+    }
+  ]
+}

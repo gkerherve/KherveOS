@@ -1,0 +1,14 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Circular orbit",
+  "description": "A planet at 1 AU around a one solar-mass star: period 1 yr and speed 2π AU/yr (29.8 km/s). Kepler III: T²/a³ = 1.",
+  "params": {
+    "mode": "kepler",
+    "M": 1,
+    "q": 0.0001,
+    "rp": 1,
+    "ecc": 0
+  }
+}

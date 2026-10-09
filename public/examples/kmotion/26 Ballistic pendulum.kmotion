@@ -1,0 +1,16 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "collision",
+  "title": "Ballistic pendulum",
+  "description": "A 10 g bullet at 300 m/s embeds in a 1 kg block on a 1.5 m string. Momentum gives V = m v / (m + M) = 2.97 m/s; energy gives the rise h = V²/2g = 0.45 m and the swing angle 45.6°. Only 1% of the kinetic energy survives the impact.",
+  "params": {
+    "mode": "ballistic",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "mb": 10,
+    "MB": 1,
+    "vb": 300,
+    "Lb": 1.5
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Double-rocker four-bar",
+    "points": [
+      {
+        "id": "O2",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "O2"
+      },
+      {
+        "id": "O4",
+        "x": 100,
+        "y": 0,
+        "ground": true,
+        "label": "O4"
+      },
+      {
+        "id": "A",
+        "x": 22.231309316168,
+        "y": 61.080020351084,
+        "label": "A"
+      },
+      {
+        "id": "B",
+        "x": 111.883573265884,
+        "y": 68.983916143072,
+        "label": "B"
+      },
+      {
+        "id": "P",
+        "x": 63.105493395032,
+        "y": 109.858100221936,
+        "label": "P",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "crank",
+        "pts": [
+          "O2",
+          "A"
+        ],
+        "label": "crank"
+      },
+      {
+        "id": "coupler",
+        "pts": [
+          "A",
+          "B",
+          "P"
+        ],
+        "label": "coupler",
+        "shape": "plate"
+      },
+      {
+        "id": "rocker",
+        "pts": [
+          "O4",
+          "B"
+        ],
+        "label": "output"
+      }
+    ],
+    "sliders": [],
+    "driver": {
+      "from": "O2",
+      "to": "A",
+      "rpm": 30
+    },
+    "notes": "Shortest + longest > the other two: no link turns fully. The input stops at two lock-up angles (documented limits of the range)."
+  }
+}

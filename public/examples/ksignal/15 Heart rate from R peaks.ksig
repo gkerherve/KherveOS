@@ -1,0 +1,92 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "Heart rate from R peaks",
+  "description": "Synthetic ECG at 72 bpm with a little beat-to-beat variability and noise. Peak detection (height 0.5, at least 0.3 s apart) finds the 18 R peaks; the mean R-R interval is 0.83 s, which gives 72 bpm. The Time tab lists the intervals.",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 250,
+    "duration": 15,
+    "components": [
+      {
+        "type": "ecg",
+        "amp": 1,
+        "freq": 440,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0.03,
+        "seed": 4,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0.02,
+      "seed": 9,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "hann",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 60,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "original",
+    "peakRangeDb": 60,
+    "maxPeaks": 10,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": true,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 31,
+    "f2": 63,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "none"
+  },
+  "tab": "time",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

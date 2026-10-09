@@ -1,0 +1,22 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "pendulum",
+  "title": "Double pendulum: chaos",
+  "description": "Two pendulums started 0.01° apart. For a few seconds they move together, then they separate exponentially (Lyapunov exponent in the readout) while the energy stays constant.",
+  "params": {
+    "mode": "double",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "L1": 1,
+    "L2": 1,
+    "m1": 1,
+    "m2": 1,
+    "th1": 120,
+    "th2": -10,
+    "w1": 0,
+    "w2": 0,
+    "twin": true,
+    "eps": 0.01
+  }
+}

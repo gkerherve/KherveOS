@@ -1,0 +1,14 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "circular",
+  "title": "Centripetal force",
+  "description": "A 1 kg mass on a 2 m string at 6 m/s: a = v²/R = 18 m/s² towards the centre, tension 18 N. Tick “Cut the string” and it leaves along the tangent.",
+  "params": {
+    "mode": "centripetal",
+    "m": 1,
+    "R": 2,
+    "v": 6,
+    "cut": false
+  }
+}

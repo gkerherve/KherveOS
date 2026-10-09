@@ -1,0 +1,141 @@
+{
+  "format": "kclim",
+  "version": 1,
+  "title": "Breakpoint and periods",
+  "notes": "The break position is searched over the data, so its p-value is approximate (it flatters the two-segment model). Try the quadratic model for a smooth alternative.",
+  "datasets": [
+    "gistemp"
+  ],
+  "views": {
+    "tab": "trend",
+    "series": {
+      "lines": [
+        {
+          "ref": "hadcrut5.anomaly",
+          "axis": "left"
+        }
+      ],
+      "from": null,
+      "to": null,
+      "baseline": "1961-1990",
+      "smooth": {
+        "kind": "none"
+      },
+      "trendLine": "none"
+    },
+    "trend": {
+      "series": "gistemp.global",
+      "from": 1880,
+      "to": null,
+      "baseline": "native",
+      "model": "linear",
+      "annual": true,
+      "ar1": true,
+      "breakpoint": true,
+      "periods": [
+        [
+          1880,
+          1940
+        ],
+        [
+          1941,
+          1975
+        ],
+        [
+          1976,
+          2025
+        ]
+      ]
+    },
+    "seasonal": {
+      "series": "co2_mlo.co2",
+      "from": null,
+      "to": null,
+      "harmonics": 4,
+      "degree": 2,
+      "windowYears": 5
+    },
+    "relate": {
+      "mode": "lag",
+      "x": "oni.oni",
+      "y": "gistemp.global",
+      "step": "monthly",
+      "maxLag": 24,
+      "detrend": true,
+      "from": 1960,
+      "to": null,
+      "target": "gistemp.global",
+      "predictors": [
+        {
+          "ref": "co2_mlo.co2",
+          "transform": "log2",
+          "lag": 0
+        },
+        {
+          "ref": "oni.oni",
+          "transform": "none",
+          "lag": 3
+        }
+      ],
+      "trend": false
+    },
+    "stripes": {
+      "series": "hadcrut5.anomaly",
+      "from": null,
+      "to": null,
+      "baseline": "1961-1990",
+      "kind": "stripes",
+      "periodA": [
+        1951,
+        1980
+      ],
+      "periodB": [
+        1991,
+        2020
+      ]
+    }
+  },
+  "model": {
+    "params": {
+      "solar": 1361,
+      "albedo": 0.3,
+      "emissivity": 0.61,
+      "ecs": 3,
+      "mixedDepth": 100,
+      "oceanFraction": 0.71,
+      "deepOcean": true,
+      "deepDepth": 1000,
+      "exchange": 0.7,
+      "c0": 280,
+      "ice": false,
+      "iceAlbedo": 0.62,
+      "tCold": 250,
+      "tWarm": 280
+    },
+    "scenario": {
+      "mode": "emissions",
+      "preset": "netzero",
+      "startYear": 2025,
+      "growthPct": 1,
+      "peakYear": 2040,
+      "declineYears": 40,
+      "zeroYear": 2050,
+      "points": [
+        [
+          2025,
+          40
+        ],
+        [
+          2050,
+          20
+        ],
+        [
+          2100,
+          0
+        ]
+      ]
+    },
+    "tool": "response",
+    "observed": "hadcrut5.anomaly"
+  }
+}

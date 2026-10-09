@@ -1,0 +1,209 @@
+{
+  "format": "ktitr",
+  "version": 1,
+  "name": "Analyse data: sodium carbonate (synthetic)",
+  "description": "SYNTHETIC data, not a real experiment: sodium carbonate of unknown concentration (25.00 mL + 25 mL water) with 0.1000 M HCl, 0.015 pH noise. Two equivalence points; the fit finds both pKa values and the concentration.",
+  "mode": "acidbase",
+  "tab": "analyse",
+  "acidbase": {
+    "items": [
+      {
+        "kind": "weak",
+        "label": "Carbonic acid (CO₂ + H₂O)",
+        "pKa": [
+          6.35,
+          10.33
+        ],
+        "z0": 0,
+        "form": 2,
+        "conc": 0.05,
+        "volume": 25,
+        "dpKadT": [
+          -0.008,
+          -0.009
+        ],
+        "lib": "carbonic"
+      }
+    ],
+    "water": 25,
+    "titrant": {
+      "kind": "strong-acid",
+      "label": "HCl",
+      "conc": 0.1
+    },
+    "temperature": 25,
+    "activity": "none",
+    "background": 0,
+    "vmax": null,
+    "indicator": "methylorange"
+  },
+  "redox": {
+    "analyte": {
+      "couple": {
+        "label": "Fe³⁺ / Fe²⁺",
+        "ox": "Fe³⁺",
+        "red": "Fe²⁺",
+        "E0": 0.68,
+        "n": 1,
+        "m": 0,
+        "b": 1
+      },
+      "start": "red",
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrant": {
+      "couple": {
+        "label": "Ce⁴⁺ / Ce³⁺",
+        "ox": "Ce⁴⁺",
+        "red": "Ce³⁺",
+        "E0": 1.44,
+        "n": 1,
+        "m": 0,
+        "b": 1
+      },
+      "conc": 0.1
+    },
+    "water": 0,
+    "pH": 0,
+    "temperature": 25,
+    "indicator": "ferroin",
+    "vmax": null
+  },
+  "edta": {
+    "metal": {
+      "symbol": "Ca",
+      "ion": "Ca²⁺",
+      "logKMY": 10.65,
+      "hydroxo": [
+        1.3
+      ],
+      "ammine": []
+    },
+    "conc": 0.003,
+    "volume": 100,
+    "water": 0,
+    "titrantConc": 0.01,
+    "pH": 10,
+    "ammonia": 0.1,
+    "indicator": "ebt",
+    "customLogK": 5,
+    "vmax": null
+  },
+  "precip": {
+    "mode": "silver-titrant",
+    "anions": [
+      {
+        "salt": "agcl",
+        "conc": 0.05,
+        "volume": 25
+      }
+    ],
+    "silver": {
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrantConc": 0.05,
+    "water": 0,
+    "indicator": "mohr",
+    "chromate": 0.0025,
+    "iron": 0.01,
+    "vmax": null
+  },
+  "speciation": {
+    "lib": "phosphoric",
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "conc": 0.1,
+    "ionic": 0,
+    "activity": "none",
+    "temperature": 25
+  },
+  "analyse": {
+    "text": "0.00\t11.326\n2.00\t10.924\n4.00\t10.636\n6.00\t10.343\n8.00\t10.073\n10.00\t9.707\n11.00\t9.454\n11.50\t9.299\n12.00\t8.946\n12.50\t8.347\n13.00\t7.706\n13.50\t7.388\n14.00\t7.196\n15.00\t6.959\n17.00\t6.588\n20.00\t6.160\n23.00\t5.622\n24.00\t5.278\n24.50\t4.995\n25.00\t4.066\n25.50\t3.187\n26.00\t2.881\n27.00\t2.595\n28.00\t2.432\n30.00\t2.199\n32.00\t2.073\n35.00\t1.935\n38.00\t1.838\n",
+    "gran": "weak",
+    "source": "synthetic: true values C = 0.0500 M, pKa 6.35 and 10.33",
+    "view": "fit",
+    "setup": {
+      "npk": 2,
+      "z0": 0,
+      "form": 2,
+      "titrant": "acid",
+      "aliquot": 25,
+      "V0": 50,
+      "Ct": 0.1,
+      "temperature": 25,
+      "activity": "none",
+      "background": 0,
+      "fitCt": false,
+      "fitDV": false,
+      "guessC": null,
+      "pKa": [
+        {
+          "value": 6,
+          "fit": true
+        },
+        {
+          "value": 10,
+          "fit": true
+        }
+      ],
+      "sigmaV": 0
+    }
+  },
+  "buffer": {
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "lib": "phosphoric",
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "mode": "salts",
+    "formA": 1,
+    "formB": 2,
+    "pH": 7.4,
+    "conc": 0.1,
+    "volume": 1000,
+    "temperature": 25,
+    "activity": "davies",
+    "ionicStrength": null,
+    "stockA": 1,
+    "stockB": 1,
+    "cation": "Na",
+    "anion": "Cl"
+  },
+  "notes": ""
+}

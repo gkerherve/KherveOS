@@ -1,0 +1,105 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "FIR versus IIR: linear phase",
+  "description": "Synthetic square wave through two low-pass filters: a 51-tap Hamming FIR and a 4th-order Butterworth, both at 1000 Hz at fs 8000 Hz. The FIR has exactly linear phase: a constant group delay of (51 - 1)/2 = 25 samples (3.125 ms). The Butterworth needs only 4 poles and has the -3 dB point at 1000 Hz (the Hamming FIR is already 6 dB down there), but its group delay changes by about 2 samples across the passband, which distorts the shape of a square wave (the source here).",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 8000,
+    "duration": 0.5,
+    "components": [
+      {
+        "type": "square",
+        "amp": 1,
+        "freq": 250,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0,
+      "seed": 1,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "hann",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 4000,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "original",
+    "peakRangeDb": 60,
+    "maxPeaks": 10,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "fir",
+    "type": "lowpass",
+    "order": 51,
+    "f1": 1000,
+    "f2": 2000,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "compare": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 1000,
+    "f2": 2000,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "filter"
+  },
+  "tab": "filter",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

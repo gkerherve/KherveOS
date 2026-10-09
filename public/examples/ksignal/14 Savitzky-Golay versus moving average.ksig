@@ -1,0 +1,95 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "Savitzky-Golay versus moving average",
+  "description": "Synthetic: a Gaussian peak (height 1, sigma 8 ms) with noise (sigma 0.05). A 21-point moving average flattens the peak to about 0.78 of its height and widens it (SNR 12 dB); a Savitzky-Golay filter of the same width (cubic fit) keeps about 0.95 of the height (SNR 14 dB). Switch the Process control in the Time tab between the two.",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 1000,
+    "duration": 2,
+    "components": [
+      {
+        "type": "gaussian",
+        "amp": 1,
+        "freq": 440,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 1,
+        "width": 0.008
+      }
+    ],
+    "noise": {
+      "sigma": 0.05,
+      "seed": 11,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "hann",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 500,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "original",
+    "peakRangeDb": 60,
+    "maxPeaks": 10,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 125,
+    "f2": 250,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "smooth",
+    "method": "sg",
+    "width": 21,
+    "order": 3
+  },
+  "tab": "time",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

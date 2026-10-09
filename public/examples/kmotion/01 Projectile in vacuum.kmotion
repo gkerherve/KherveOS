@@ -1,0 +1,22 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "projectile",
+  "title": "Projectile in vacuum",
+  "description": "20 m/s at 45° on level ground: the range is v² sin 2θ / g = 40.79 m and the flight lasts 2.88 s. The dashed parabola is the closed form; the simulation sits on it.",
+  "params": {
+    "mode": "flight",
+    "v0": 20,
+    "angle": 45,
+    "h0": 0,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "drag": "none",
+    "k": 0.3,
+    "kq": 0.005,
+    "wind": 0,
+    "mass": 1,
+    "target": 0,
+    "targetR": 2
+  }
+}

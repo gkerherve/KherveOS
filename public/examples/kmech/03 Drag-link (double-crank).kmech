@@ -1,0 +1,78 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Drag-link (double-crank)",
+    "points": [
+      {
+        "id": "O2",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "O2"
+      },
+      {
+        "id": "O4",
+        "x": 40,
+        "y": 0,
+        "ground": true,
+        "label": "O4"
+      },
+      {
+        "id": "A",
+        "x": 51.423008774923,
+        "y": 61.283555449518,
+        "label": "A"
+      },
+      {
+        "id": "B",
+        "x": -17.365025457885,
+        "y": 48.314116510769,
+        "label": "B"
+      },
+      {
+        "id": "P",
+        "x": 23.513711127894,
+        "y": 20.404818863739,
+        "label": "P",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "crank",
+        "pts": [
+          "O2",
+          "A"
+        ],
+        "label": "crank"
+      },
+      {
+        "id": "coupler",
+        "pts": [
+          "A",
+          "B",
+          "P"
+        ],
+        "label": "coupler",
+        "shape": "plate"
+      },
+      {
+        "id": "rocker",
+        "pts": [
+          "O4",
+          "B"
+        ],
+        "label": "output"
+      }
+    ],
+    "sliders": [],
+    "driver": {
+      "from": "O2",
+      "to": "A",
+      "rpm": 30
+    },
+    "notes": "Frame = shortest link: input and output both rotate all the way round (a drag link)."
+  }
+}

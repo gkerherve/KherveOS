@@ -1,0 +1,17 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "pendulum",
+  "title": "Damped pendulum",
+  "description": "Friction at the pivot: the swing decays as e^(−c t/2) and the phase portrait spirals into the origin.",
+  "params": {
+    "mode": "damped",
+    "L": 1,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "theta0": 50,
+    "omega0": 0,
+    "c": 0.3,
+    "mass": 1
+  }
+}

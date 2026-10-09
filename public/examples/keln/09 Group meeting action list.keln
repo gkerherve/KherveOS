@@ -1,0 +1,474 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "Group meeting action list",
+ "description": "Weekly group meetings: decisions and who does what by when.",
+ "owner": "Ana Martin",
+ "created": "2026-05-04T08:00:00.000Z",
+ "modified": "2026-05-11T10:03:00.000Z",
+ "settings": {
+  "samplePrefix": "GRP",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "GRP",
+   "name": "Group meetings",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "GRP-2026-001",
+   "title": "Group meeting 4 May",
+   "date": "2026-05-04T10:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "meeting"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Attendees"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Ana Martin, Ben Okafor, Chen Wei, Dara Singh."
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Discussion"
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "XPS beam time in June: 3 days booked."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TiO2 films: annealing study results look good."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Safety walk-round next week."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Decisions"
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Prepare six more films for the June beam time."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Move to the new label scheme for samples."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Actions"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Actions",
+         "columns": [
+          {
+           "name": "Action",
+           "unit": ""
+          },
+          {
+           "name": "Owner",
+           "unit": ""
+          },
+          {
+           "name": "Due",
+           "unit": ""
+          },
+          {
+           "name": "Done",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "Prepare six TiO2 films",
+           "Ana",
+           "2026-05-20",
+           ""
+          ],
+          [
+           "Order Ar+ sputter gun filament",
+           "Ben",
+           "2026-05-08",
+           "yes"
+          ],
+          [
+           "Write the safety checklist",
+           "Chen",
+           "2026-05-11",
+           ""
+          ],
+          [
+           "Book the PCR room",
+           "Dara",
+           "2026-05-06",
+           "yes"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "taskList",
+      "content": [
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Send the minutes"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": false
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Add actions to the calendar"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "meeting-actions",
+   "created": "2026-05-04T10:00:00.000Z",
+   "modified": "2026-05-04T10:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "GRP-2026-001",
+   "title": "Group meeting 11 May",
+   "date": "2026-05-11T10:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "meeting"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Follow-up"
+       }
+      ]
+     },
+     {
+      "type": "taskList",
+      "content": [
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ar+ gun filament ordered"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Safety checklist drafted"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": false
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Six films prepared"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "New actions"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Actions",
+         "columns": [
+          {
+           "name": "Action",
+           "unit": ""
+          },
+          {
+           "name": "Owner",
+           "unit": ""
+          },
+          {
+           "name": "Due",
+           "unit": ""
+          },
+          {
+           "name": "Done",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "Review the safety checklist",
+           "Ana",
+           "2026-05-15",
+           ""
+          ],
+          [
+           "Calibrate the pipettes",
+           "Dara",
+           "2026-05-18",
+           ""
+          ]
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "",
+   "created": "2026-05-11T10:00:00.000Z",
+   "modified": "2026-05-11T10:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-05-04T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "Group meeting action list",
+   "prev": "",
+   "rec": "513431ce10b7334dc6473194f92fd8aec530b18c56d730ceffde40c86133490b"
+  },
+  {
+   "seq": 2,
+   "time": "2026-05-04T10:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "GRP-2026-001",
+   "hash": "3da3091f7722734b5a1cb9627ea72f164b01c10ab6f48eb42efb86a1bdc868ca",
+   "detail": "Group meeting 4 May",
+   "prev": "513431ce10b7334dc6473194f92fd8aec530b18c56d730ceffde40c86133490b",
+   "rec": "e1cddc0e3bf6212dedad0f11092b0efeeba4c2706229609ad62b1c67a309a45e"
+  },
+  {
+   "seq": 3,
+   "time": "2026-05-11T10:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "GRP-2026-001",
+   "hash": "1552f1d42c9a20273c9c3c650c991145cdcea6d661a4796b1f3ef203ddb70301",
+   "detail": "Group meeting 11 May",
+   "prev": "e1cddc0e3bf6212dedad0f11092b0efeeba4c2706229609ad62b1c67a309a45e",
+   "rec": "1fd08306488c54a9bd321122ca0e6f619c7b8f1c9e4d66aae5714ab8ad4a877c"
+  }
+ ]
+}

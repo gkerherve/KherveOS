@@ -1,0 +1,47 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "cam",
+  "model": {
+    "name": "Cam: flat-face follower, modified trapezoid",
+    "program": {
+      "segments": [
+        {
+          "kind": "rise",
+          "beta": 140,
+          "lift": 12,
+          "law": "trapezoid"
+        },
+        {
+          "kind": "dwell",
+          "beta": 40,
+          "lift": 0,
+          "law": "trapezoid"
+        },
+        {
+          "kind": "return",
+          "beta": 140,
+          "lift": 12,
+          "law": "trapezoid"
+        },
+        {
+          "kind": "dwell",
+          "beta": 40,
+          "lift": 0,
+          "law": "trapezoid"
+        }
+      ]
+    },
+    "follower": "flat",
+    "motion": "translating",
+    "baseRadius": 30,
+    "rollerRadius": 0,
+    "offset": 0,
+    "pivotDistance": 90,
+    "armLength": 70,
+    "direction": "ccw",
+    "bore": 10,
+    "maxPressure": 30,
+    "notes": "The face half-width must cover the largest |ds/dθ|."
+  }
+}

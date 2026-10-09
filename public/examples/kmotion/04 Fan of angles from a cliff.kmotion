@@ -1,0 +1,21 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "projectile",
+  "title": "Fan of angles from a cliff",
+  "description": "Five launch angles from a 30 m cliff at 20 m/s. From a height the farthest shot is flatter than 45°: atan(v / √(v² + 2 g h)).",
+  "params": {
+    "mode": "fan",
+    "v0": 20,
+    "h0": 30,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "drag": "none",
+    "k": 0.3,
+    "kq": 0.005,
+    "wind": 0,
+    "mass": 1,
+    "target": 0,
+    "targetR": 2
+  }
+}

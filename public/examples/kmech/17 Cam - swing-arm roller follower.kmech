@@ -1,0 +1,47 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "cam",
+  "model": {
+    "name": "Cam: swing-arm roller follower",
+    "program": {
+      "segments": [
+        {
+          "kind": "rise",
+          "beta": 150,
+          "lift": 25,
+          "law": "harmonic"
+        },
+        {
+          "kind": "dwell",
+          "beta": 30,
+          "lift": 0,
+          "law": "harmonic"
+        },
+        {
+          "kind": "return",
+          "beta": 150,
+          "lift": 25,
+          "law": "harmonic"
+        },
+        {
+          "kind": "dwell",
+          "beta": 30,
+          "lift": 0,
+          "law": "harmonic"
+        }
+      ]
+    },
+    "follower": "roller",
+    "motion": "swing",
+    "baseRadius": 35,
+    "rollerRadius": 8,
+    "offset": 0,
+    "pivotDistance": 90,
+    "armLength": 70,
+    "direction": "ccw",
+    "bore": 10,
+    "maxPressure": 45,
+    "notes": "The program’s lift is in degrees of arm rotation. Pressure angle limit 45° for swing arms."
+  }
+}

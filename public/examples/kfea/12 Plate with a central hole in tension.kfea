@@ -1,0 +1,163 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Plate with a central hole in tension",
+  "description": "A 100 × 200 mm steel plate (10 mm thick) with a 10 mm hole, 100 MPa tension. One quarter is modelled with symmetry supports. Expected: the stress at the hole edge is Kt σ with Kt ≈ 3 for a small hole (Kirsch); with the finite width (Peterson) σ_max = 302.3 MPa = 3.02 σ. The mesh is refined at the edge of the hole (refinement points); the triangles give the peak within a few percent.",
+  "analysis": "plane-stress",
+  "units": {
+    "length": "mm",
+    "force": "N"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [],
+  "nodes": [],
+  "members": [],
+  "supports": [],
+  "nodeLoads": [],
+  "memberLoads": [],
+  "gravity": 0,
+  "plate": {
+    "outline": [
+      {
+        "x": 0.005,
+        "y": 0
+      },
+      {
+        "x": 0.05,
+        "y": 0
+      },
+      {
+        "x": 0.05,
+        "y": 0.1
+      },
+      {
+        "x": 0,
+        "y": 0.1
+      },
+      {
+        "x": 0,
+        "y": 0.005
+      },
+      {
+        "x": 0.0006526309611,
+        "y": 0.00495722430687
+      },
+      {
+        "x": 0.00129409522551,
+        "y": 0.00482962913145
+      },
+      {
+        "x": 0.00191341716183,
+        "y": 0.00461939766256
+      },
+      {
+        "x": 0.0025,
+        "y": 0.00433012701892
+      },
+      {
+        "x": 0.00304380714504,
+        "y": 0.00396676670146
+      },
+      {
+        "x": 0.00353553390593,
+        "y": 0.00353553390593
+      },
+      {
+        "x": 0.00396676670146,
+        "y": 0.00304380714504
+      },
+      {
+        "x": 0.00433012701892,
+        "y": 0.0025
+      },
+      {
+        "x": 0.00461939766256,
+        "y": 0.00191341716183
+      },
+      {
+        "x": 0.00482962913145,
+        "y": 0.00129409522551
+      },
+      {
+        "x": 0.00495722430687,
+        "y": 0.0006526309611
+      }
+    ],
+    "holes": [],
+    "thickness": 0.01,
+    "material": "S235",
+    "mesh": {
+      "size": 0.005,
+      "type": "tri",
+      "holeFactor": 1,
+      "refine": [
+        {
+          "x": 0.005,
+          "y": 0,
+          "size": 0.0004
+        },
+        {
+          "x": 0,
+          "y": 0.005,
+          "size": 0.0012
+        }
+      ],
+      "structured": false,
+      "smooth": 6
+    },
+    "supports": [
+      {
+        "id": "ps1",
+        "target": {
+          "kind": "line",
+          "x1": 0.005,
+          "y1": 0,
+          "x2": 0.05,
+          "y2": 0
+        },
+        "ux": false,
+        "uy": true
+      },
+      {
+        "id": "ps2",
+        "target": {
+          "kind": "line",
+          "x1": 0,
+          "y1": 0.005,
+          "x2": 0,
+          "y2": 0.1
+        },
+        "ux": true,
+        "uy": false
+      }
+    ],
+    "loads": [
+      {
+        "id": "pl1",
+        "type": "traction",
+        "target": {
+          "kind": "line",
+          "x1": 0,
+          "y1": 0.1,
+          "x2": 0.05,
+          "y2": 0.1
+        },
+        "tx": 0,
+        "ty": 100000000
+      }
+    ]
+  },
+  "expected": {
+    "maxsy": 302349222.222
+  }
+}

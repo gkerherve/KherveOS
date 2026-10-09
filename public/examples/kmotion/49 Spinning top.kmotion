@@ -1,0 +1,19 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "circular",
+  "title": "Spinning top",
+  "description": "A fast top (150 rad/s) precesses slowly at m g d / (I₃ ω₃) = 3.9 rad/s while it nutates at about I₃ω₃/I₁ = 100 rad/s.",
+  "params": {
+    "mode": "gyro",
+    "m": 0.4,
+    "d": 0.06,
+    "I3": 0.0004,
+    "I1": 0.0006,
+    "w3": 150,
+    "tilt": 30,
+    "start": "rest",
+    "gravity": "earth",
+    "gcustom": 9.81
+  }
+}

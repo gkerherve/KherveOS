@@ -1,0 +1,135 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "L-bracket, inner corner stress concentration",
+  "description": "An aluminium L-bracket, 10 mm thick, 30 mm wide legs, fixed at the top of the vertical leg, 2 kN down on the end of the horizontal leg. The inner corner has a 5 mm fillet. Expected: beam theory gives a nominal stress of 120 MPa in the vertical leg; the corner concentrates it, so the peak von Mises stress is expected to be about 1.5 to 2.5 times higher. Try the convergence study: without the fillet the peak would grow without limit.",
+  "analysis": "plane-stress",
+  "units": {
+    "length": "mm",
+    "force": "N"
+  },
+  "materials": [
+    {
+      "id": "AL6061",
+      "name": "Aluminium 6061-T6",
+      "E": 68900000000,
+      "nu": 0.33,
+      "rho": 2700,
+      "sy": 276000000,
+      "alpha": 0.0000236
+    }
+  ],
+  "sections": [],
+  "nodes": [],
+  "members": [],
+  "supports": [],
+  "nodeLoads": [],
+  "memberLoads": [],
+  "gravity": 0,
+  "plate": {
+    "outline": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 0.1,
+        "y": 0
+      },
+      {
+        "x": 0.1,
+        "y": 0.03
+      },
+      {
+        "x": 0.035,
+        "y": 0.03
+      },
+      {
+        "x": 0.0340245483899,
+        "y": 0.030096073598
+      },
+      {
+        "x": 0.0330865828382,
+        "y": 0.0303806023374
+      },
+      {
+        "x": 0.0322221488349,
+        "y": 0.0308426519385
+      },
+      {
+        "x": 0.0314644660941,
+        "y": 0.0314644660941
+      },
+      {
+        "x": 0.0308426519385,
+        "y": 0.0322221488349
+      },
+      {
+        "x": 0.0303806023374,
+        "y": 0.0330865828382
+      },
+      {
+        "x": 0.030096073598,
+        "y": 0.0340245483899
+      },
+      {
+        "x": 0.03,
+        "y": 0.035
+      },
+      {
+        "x": 0.03,
+        "y": 0.1
+      },
+      {
+        "x": 0,
+        "y": 0.1
+      }
+    ],
+    "holes": [],
+    "thickness": 0.01,
+    "material": "AL6061",
+    "mesh": {
+      "size": 0.005,
+      "type": "tri",
+      "holeFactor": 1,
+      "refine": [
+        {
+          "x": 0.0325,
+          "y": 0.0325,
+          "size": 0.0008
+        }
+      ],
+      "structured": false,
+      "smooth": 6
+    },
+    "supports": [
+      {
+        "id": "ps1",
+        "target": {
+          "kind": "line",
+          "x1": 0,
+          "y1": 0.1,
+          "x2": 0.03,
+          "y2": 0.1
+        },
+        "ux": true,
+        "uy": true
+      }
+    ],
+    "loads": [
+      {
+        "id": "pl1",
+        "type": "edge-force",
+        "target": {
+          "kind": "line",
+          "x1": 0.1,
+          "y1": 0,
+          "x2": 0.1,
+          "y2": 0.03
+        },
+        "fx": 0,
+        "fy": -2000
+      }
+    ]
+  }
+}

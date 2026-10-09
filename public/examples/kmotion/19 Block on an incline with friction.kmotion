@@ -1,0 +1,19 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "oscillator",
+  "title": "Block on an incline with friction",
+  "description": "θ = 35°, μs = 0.5, μk = 0.3: tan 35° = 0.70 > μs so the block slides with a = g (sin θ − μk cos θ) = 3.2 m/s². Lower the angle below 26.6° (arctan 0.5) and it stays put.",
+  "params": {
+    "mode": "incline",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "theta": 35,
+    "mus": 0.5,
+    "muk": 0.3,
+    "slen": 6,
+    "mi": 2,
+    "v0i": 0,
+    "object": "block"
+  }
+}

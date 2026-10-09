@@ -1,0 +1,111 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "sandbox",
+  "title": "Motorised slider and a welded T",
+  "description": "Motorised slider and a welded T: a rigid-body world (planck). Press Play, drag a body with the mouse to throw it, or edit it in the Sandbox tools.",
+  "params": {
+    "mode": "world",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "friction": 0.5,
+    "restitution": 0.1,
+    "snap": true,
+    "world": {
+      "bodies": [
+        {
+          "id": "b1",
+          "kind": "box",
+          "x": 0,
+          "y": -0.25,
+          "angle": 0,
+          "w": 14,
+          "h": 0.5,
+          "type": "static",
+          "density": 1,
+          "friction": 0.8,
+          "restitution": 0.1,
+          "color": "#64748b"
+        },
+        {
+          "id": "rail",
+          "kind": "box",
+          "x": 0,
+          "y": 3,
+          "angle": 0,
+          "w": 5,
+          "h": 0.2,
+          "type": "static",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "slider",
+          "kind": "box",
+          "x": -1.5,
+          "y": 2.6,
+          "angle": 0,
+          "w": 0.8,
+          "h": 0.6,
+          "type": "dynamic",
+          "density": 2,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "mast",
+          "kind": "box",
+          "x": 2.5,
+          "y": 0.6,
+          "angle": 0,
+          "w": 0.6,
+          "h": 1.2,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        },
+        {
+          "id": "arm",
+          "kind": "box",
+          "x": 2.5,
+          "y": 1.5,
+          "angle": 0,
+          "w": 1.6,
+          "h": 0.2,
+          "type": "dynamic",
+          "density": 1,
+          "friction": 0.5,
+          "restitution": 0.1
+        }
+      ],
+      "joints": [
+        {
+          "kind": "prismatic",
+          "a": "rail",
+          "b": "slider",
+          "ax": -1.5,
+          "ay": 2.6,
+          "axisX": 1,
+          "axisY": 0,
+          "motor": true,
+          "speed": 1.5,
+          "maxForce": 60,
+          "limit": true,
+          "lower": -2,
+          "upper": 2,
+          "id": "j1"
+        },
+        {
+          "kind": "weld",
+          "a": "mast",
+          "b": "arm",
+          "ax": 2.5,
+          "ay": 1.2,
+          "id": "j2"
+        }
+      ]
+    }
+  }
+}

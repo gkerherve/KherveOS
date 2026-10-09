@@ -1,0 +1,113 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Peaucellier-Lipkin inversor",
+    "points": [
+      {
+        "id": "O",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "O"
+      },
+      {
+        "id": "Q",
+        "x": 50,
+        "y": 0,
+        "ground": true,
+        "label": "Q"
+      },
+      {
+        "id": "A",
+        "x": 99.456916936247,
+        "y": -10.407769863737,
+        "label": "A"
+      },
+      {
+        "id": "C",
+        "x": 75.500685278203,
+        "y": 65.571689947124,
+        "label": "C"
+      },
+      {
+        "id": "R",
+        "x": 90.95760221445,
+        "y": 28.678821817552,
+        "label": "R"
+      },
+      {
+        "id": "P",
+        "x": 84,
+        "y": 26.485098265835,
+        "label": "P",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "OA",
+        "pts": [
+          "O",
+          "A"
+        ]
+      },
+      {
+        "id": "OC",
+        "pts": [
+          "O",
+          "C"
+        ]
+      },
+      {
+        "id": "AR",
+        "pts": [
+          "A",
+          "R"
+        ]
+      },
+      {
+        "id": "RC",
+        "pts": [
+          "R",
+          "C"
+        ]
+      },
+      {
+        "id": "CP",
+        "pts": [
+          "C",
+          "P"
+        ]
+      },
+      {
+        "id": "PA",
+        "pts": [
+          "P",
+          "A"
+        ]
+      },
+      {
+        "id": "crank",
+        "pts": [
+          "Q",
+          "R"
+        ],
+        "label": "crank"
+      }
+    ],
+    "sliders": [],
+    "driver": {
+      "from": "Q",
+      "to": "R",
+      "rpm": 20
+    },
+    "notes": "R is held on a circle through O by the crank QR (QR = QO = 50), so P, the inverse of R about O, moves on the exact straight line x = (L² − s²)/(2·QO) = 84 mm. The crank rocks (it cannot turn fully).",
+    "output": {
+      "kind": "point",
+      "point": "P",
+      "axis": "x"
+    }
+  }
+}

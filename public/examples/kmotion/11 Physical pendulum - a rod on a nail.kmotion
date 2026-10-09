@@ -1,0 +1,19 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "pendulum",
+  "title": "Physical pendulum: a rod on a nail",
+  "description": "A uniform rod swinging about its end behaves like a simple pendulum of length 2L/3. Move the pivot toward the centre to see the period pass through a minimum at L/√12 from the centre.",
+  "params": {
+    "mode": "compound",
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "theta0": 30,
+    "omega0": 0,
+    "c": 0,
+    "mass": 1,
+    "shape": "rod",
+    "size": 1,
+    "pivot": 0.5
+  }
+}

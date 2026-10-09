@@ -1,0 +1,17 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Disc galaxy",
+  "description": "120 light bodies on circular orbits around a heavy centre, with softened gravity. Switch on Barnes–Hut and the 3-D view.",
+  "method": "verlet",
+  "params": {
+    "mode": "nbody",
+    "layout": "disc",
+    "N": 120,
+    "soft": 0.02,
+    "bh": false,
+    "theta": 0.5,
+    "seed": 3
+  }
+}

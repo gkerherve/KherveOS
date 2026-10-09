@@ -1,0 +1,92 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "FM modulation spectrum",
+  "description": "Synthetic: a 2000 Hz carrier frequency-modulated by 200 Hz with a 400 Hz deviation, so the modulation index is beta = 2. The lines at 2000 +/- n x 200 Hz have the Bessel amplitudes J0(2) = 0.224 at the carrier, J1(2) = 0.577, J2(2) = 0.353, J3(2) = 0.129, J4(2) = 0.034.",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 16384,
+    "duration": 1,
+    "components": [
+      {
+        "type": "fm",
+        "amp": 1,
+        "freq": 440,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 2000,
+        "mod": 200,
+        "depth": 0.5,
+        "deviation": 400,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0,
+      "seed": 1,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "flattop",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 3600,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "original",
+    "peakRangeDb": 40,
+    "maxPeaks": 12,
+    "fundamental": 0,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 2048,
+    "f2": 4096,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "none"
+  },
+  "tab": "spectrum",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

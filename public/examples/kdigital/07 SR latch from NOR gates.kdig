@@ -1,0 +1,285 @@
+{
+  "format": "kdig",
+  "version": 1,
+  "name": "SR latch from NOR gates",
+  "description": "The simplest memory: two cross-coupled NOR gates. Set it, reset it, then press S and R together to see the forbidden state (both outputs 0).",
+  "tab": "circuit",
+  "circuit": {
+    "parts": [
+      {
+        "id": "p1",
+        "kind": "switch",
+        "ref": "SW1",
+        "x": 0,
+        "y": 0,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "R",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "switch",
+        "ref": "SW2",
+        "x": 0,
+        "y": 170,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "S",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "nor",
+        "ref": "U1",
+        "x": 240,
+        "y": 40,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "nor",
+        "ref": "U2",
+        "x": 240,
+        "y": 130,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p5",
+        "kind": "led",
+        "ref": "LED1",
+        "x": 420,
+        "y": 40,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "Q"
+        }
+      },
+      {
+        "id": "p6",
+        "kind": "led",
+        "ref": "LED2",
+        "x": 420,
+        "y": 130,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "red",
+          "name": "QN"
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "x1": 30,
+        "y1": 0,
+        "x2": 120,
+        "y2": 0
+      },
+      {
+        "id": "w2",
+        "x1": 120,
+        "y1": 0,
+        "x2": 120,
+        "y2": 30
+      },
+      {
+        "id": "w3",
+        "x1": 120,
+        "y1": 30,
+        "x2": 210,
+        "y2": 30
+      },
+      {
+        "id": "w4",
+        "x1": 30,
+        "y1": 170,
+        "x2": 120,
+        "y2": 170
+      },
+      {
+        "id": "w5",
+        "x1": 120,
+        "y1": 170,
+        "x2": 120,
+        "y2": 140
+      },
+      {
+        "id": "w6",
+        "x1": 120,
+        "y1": 140,
+        "x2": 210,
+        "y2": 140
+      },
+      {
+        "id": "w7",
+        "x1": 270,
+        "y1": 40,
+        "x2": 300,
+        "y2": 40
+      },
+      {
+        "id": "w8",
+        "x1": 300,
+        "y1": 40,
+        "x2": 300,
+        "y2": 85
+      },
+      {
+        "id": "w9",
+        "x1": 300,
+        "y1": 85,
+        "x2": 200,
+        "y2": 85
+      },
+      {
+        "id": "w10",
+        "x1": 200,
+        "y1": 85,
+        "x2": 200,
+        "y2": 120
+      },
+      {
+        "id": "w11",
+        "x1": 200,
+        "y1": 120,
+        "x2": 210,
+        "y2": 120
+      },
+      {
+        "id": "w12",
+        "x1": 270,
+        "y1": 130,
+        "x2": 330,
+        "y2": 130
+      },
+      {
+        "id": "w13",
+        "x1": 330,
+        "y1": 130,
+        "x2": 330,
+        "y2": 70
+      },
+      {
+        "id": "w14",
+        "x1": 330,
+        "y1": 70,
+        "x2": 190,
+        "y2": 70
+      },
+      {
+        "id": "w15",
+        "x1": 190,
+        "y1": 70,
+        "x2": 190,
+        "y2": 50
+      },
+      {
+        "id": "w16",
+        "x1": 190,
+        "y1": 50,
+        "x2": 210,
+        "y2": 50
+      },
+      {
+        "id": "w17",
+        "x1": 300,
+        "y1": 40,
+        "x2": 390,
+        "y2": 40
+      },
+      {
+        "id": "w18",
+        "x1": 330,
+        "y1": 130,
+        "x2": 390,
+        "y2": 130
+      }
+    ],
+    "labels": [],
+    "notes": [
+      {
+        "id": "n1",
+        "text": "SR latch from two NOR gates (Q = NOR(R, QN), QN = NOR(S, Q))",
+        "x": 0,
+        "y": -50
+      },
+      {
+        "id": "n2",
+        "text": "S=1: set. R=1: reset. S=R=0: remember. S=R=1: forbidden (both outputs 0).",
+        "x": 0,
+        "y": 230
+      }
+    ]
+  },
+  "stimulus": [
+    {
+      "t": 0,
+      "set": {
+        "S": 0,
+        "R": 0
+      }
+    },
+    {
+      "t": 20,
+      "set": {
+        "S": 1
+      }
+    },
+    {
+      "t": 40,
+      "set": {
+        "S": 0
+      }
+    },
+    {
+      "t": 60,
+      "set": {
+        "R": 1
+      }
+    },
+    {
+      "t": 80,
+      "set": {
+        "R": 0
+      }
+    },
+    {
+      "t": 100,
+      "set": {
+        "S": 1,
+        "R": 1
+      }
+    },
+    {
+      "t": 120,
+      "set": {
+        "R": 0
+      }
+    },
+    {
+      "t": 140,
+      "set": {
+        "S": 0
+      }
+    }
+  ],
+  "until": 170
+}

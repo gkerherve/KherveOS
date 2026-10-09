@@ -1,0 +1,522 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "Reagents and solutions",
+ "description": "Chemical inventory (CAS, supplier, hazard), solution preparations and a risk assessment.",
+ "owner": "Ana Martin",
+ "created": "2026-02-23T08:00:00.000Z",
+ "modified": "2026-02-24T11:03:00.000Z",
+ "settings": {
+  "samplePrefix": "SOL",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "SOL",
+   "name": "Solutions",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "SOL-2026-001",
+   "title": "0.1 mol/L NaOH, 500 mL",
+   "date": "2026-02-23T09:15:00",
+   "author": "Ana Martin",
+   "tags": [
+    "solution",
+    "base"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Target"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "500 mL of 0.1 mol/L NaOH: "
+       },
+       {
+        "type": "mathInline",
+        "attrs": {
+         "latex": "m = c\\,V\\,M = 0.1 \\times 0.500 \\times 40.00 = 2.000\\ \\mathrm{g}"
+        }
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "materials",
+        "data": {
+         "title": "Materials",
+         "items": [
+          {
+           "name": "Sodium hydroxide, pellets",
+           "cas": "1310-73-2",
+           "supplier": "Merck",
+           "lot": "",
+           "amount": "2.00 g",
+           "hazard": "Corrosive"
+          },
+          {
+           "name": "Water, deionised",
+           "cas": "7732-18-5",
+           "supplier": "",
+           "lot": "",
+           "amount": "to 500 mL",
+           "hazard": ""
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Preparation",
+         "items": [
+          {
+           "text": "Weigh 2.00 g NaOH quickly (hygroscopic)",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-23T09:25:00"
+          },
+          {
+           "text": "Dissolve in about 400 mL boiled, cooled water",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-23T09:35:00"
+          },
+          {
+           "text": "Make up to 500 mL, mix, store in a PE bottle",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-23T09:50:00"
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Standardise against KHP before use (see the titration notebook); the true concentration is typically 0.098 mol/L because NaOH absorbs CO"
+       },
+       {
+        "type": "text",
+        "text": "2",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " and water."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "solution-prep",
+   "created": "2026-02-23T09:15:00.000Z",
+   "modified": "2026-02-23T09:15:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "SOL-2026-002",
+   "title": "Risk assessment: working with silver nitrate and toluene",
+   "date": "2026-02-24T11:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "risk",
+    "safety"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Activity"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Preparation of 0.01 mol/L AgNO"
+       },
+       {
+        "type": "text",
+        "text": "3",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " for argentometric titration; toluene used for rinsing glassware."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "safety",
+        "data": {
+         "hazards": [
+          "AgNO3: oxidiser, corrosive, stains skin",
+          "Toluene: flammable, reproductive toxicity"
+         ],
+         "ppe": [
+          "Lab coat",
+          "Goggles",
+          "Nitrile gloves",
+          "Fume hood"
+         ],
+         "pictograms": [
+          "Oxidising",
+          "Corrosive",
+          "Flammable",
+          "Health hazard",
+          "Environmental hazard"
+         ],
+         "controls": "Weigh AgNO3 over a tray; toluene only in the hood, away from ignition sources",
+         "waste": "Silver waste in the heavy-metal bottle; toluene in the halogen-free organic waste",
+         "risk": "medium"
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Risk matrix",
+         "columns": [
+          {
+           "name": "Hazard",
+           "unit": ""
+          },
+          {
+           "name": "Likelihood (1-5)",
+           "unit": ""
+          },
+          {
+           "name": "Severity (1-5)",
+           "unit": ""
+          },
+          {
+           "name": "Risk",
+           "unit": ""
+          },
+          {
+           "name": "Control",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "Skin contact with AgNO3",
+           "2",
+           "2",
+           "4",
+           "gloves, tray"
+          ],
+          [
+           "Toluene vapour",
+           "2",
+           "3",
+           "6",
+           "fume hood"
+          ],
+          [
+           "Silver waste in drain",
+           "1",
+           "4",
+           "4",
+           "collection bottle"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "taskList",
+      "content": [
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Reviewed by the supervisor"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": false
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Reviewed by the safety officer"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "risk-assessment",
+   "created": "2026-02-24T11:00:00.000Z",
+   "modified": "2026-02-24T11:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [
+  {
+   "id": "inv-001",
+   "name": "Sodium hydroxide, pellets",
+   "formula": "NaOH",
+   "cas": "1310-73-2",
+   "mw": null,
+   "density": null,
+   "supplier": "Merck",
+   "lot": "",
+   "amount": "1 kg",
+   "hazard": "Corrosive: severe skin burns",
+   "location": "Base cabinet"
+  },
+  {
+   "id": "inv-002",
+   "name": "Hydrochloric acid, 37 %",
+   "formula": "HCl",
+   "cas": "7647-01-0",
+   "mw": null,
+   "density": 1.19,
+   "supplier": "VWR",
+   "lot": "",
+   "amount": "2.5 L",
+   "hazard": "Corrosive; respiratory irritant",
+   "location": "Acid cabinet"
+  },
+  {
+   "id": "inv-003",
+   "name": "Potassium hydrogen phthalate",
+   "formula": "KHC8H4O4",
+   "cas": "877-24-7",
+   "mw": null,
+   "density": null,
+   "supplier": "Merck",
+   "lot": "",
+   "amount": "250 g",
+   "hazard": "",
+   "location": "Shelf C1"
+  },
+  {
+   "id": "inv-004",
+   "name": "Sodium chloride",
+   "formula": "NaCl",
+   "cas": "7647-14-5",
+   "mw": null,
+   "density": null,
+   "supplier": "Sigma-Aldrich",
+   "lot": "",
+   "amount": "1 kg",
+   "hazard": "",
+   "location": "Shelf C2"
+  },
+  {
+   "id": "inv-005",
+   "name": "Ethanol, absolute",
+   "formula": "C2H6O",
+   "cas": "64-17-5",
+   "mw": null,
+   "density": 0.789,
+   "supplier": "VWR",
+   "lot": "",
+   "amount": "2.5 L",
+   "hazard": "Highly flammable",
+   "location": "Flammables cabinet"
+  },
+  {
+   "id": "inv-006",
+   "name": "Acetone",
+   "formula": "C3H6O",
+   "cas": "67-64-1",
+   "mw": null,
+   "density": 0.791,
+   "supplier": "VWR",
+   "lot": "",
+   "amount": "2.5 L",
+   "hazard": "Highly flammable; eye irritation",
+   "location": "Flammables cabinet"
+  },
+  {
+   "id": "inv-007",
+   "name": "Tris base",
+   "formula": "C4H11NO3",
+   "cas": "77-86-1",
+   "mw": null,
+   "density": null,
+   "supplier": "Sigma-Aldrich",
+   "lot": "",
+   "amount": "500 g",
+   "hazard": "Irritant",
+   "location": "Shelf C3"
+  },
+  {
+   "id": "inv-008",
+   "name": "Copper(II) sulfate pentahydrate",
+   "formula": "CuSO4·5H2O",
+   "cas": "7758-99-8",
+   "mw": null,
+   "density": null,
+   "supplier": "Merck",
+   "lot": "",
+   "amount": "500 g",
+   "hazard": "Harmful; very toxic to aquatic life",
+   "location": "Shelf D1"
+  },
+  {
+   "id": "inv-009",
+   "name": "Toluene",
+   "formula": "C7H8",
+   "cas": "108-88-3",
+   "mw": null,
+   "density": 0.867,
+   "supplier": "Fisher",
+   "lot": "",
+   "amount": "1 L",
+   "hazard": "Flammable; reproductive toxicity; aspiration hazard",
+   "location": "Flammables cabinet"
+  },
+  {
+   "id": "inv-010",
+   "name": "Silver nitrate",
+   "formula": "AgNO3",
+   "cas": "7761-88-8",
+   "mw": null,
+   "density": null,
+   "supplier": "Sigma-Aldrich",
+   "lot": "",
+   "amount": "25 g",
+   "hazard": "Oxidiser; corrosive; very toxic to aquatic life",
+   "location": "Locked cabinet"
+  }
+ ],
+ "savedSearches": [],
+ "instruments": [],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-02-23T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "Reagents and solutions",
+   "prev": "",
+   "rec": "089e9082fd825a9b4b50fef62d01b6678851f22376f5e5de4ce4557678e5191f"
+  },
+  {
+   "seq": 2,
+   "time": "2026-02-23T09:18:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "SOL-2026-001",
+   "hash": "4e9954bdb15ba39612bfcaf7e79f49c294440e0c179d4eaf0119ed4dd85ee0c8",
+   "detail": "0.1 mol/L NaOH, 500 mL",
+   "prev": "089e9082fd825a9b4b50fef62d01b6678851f22376f5e5de4ce4557678e5191f",
+   "rec": "f5cf41ab14fa371c78f455628c2d3538e860791255b9c745e138e5a9a0360293"
+  },
+  {
+   "seq": 3,
+   "time": "2026-02-24T11:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "SOL-2026-002",
+   "hash": "7eddb9745904512f4c8671f25d676e92435dfce989eb85797786bac714c1e4ca",
+   "detail": "Risk assessment: working with silver nitrate and toluene",
+   "prev": "f5cf41ab14fa371c78f455628c2d3538e860791255b9c745e138e5a9a0360293",
+   "rec": "317c2d0ff22ba3217f8d8b2a12c2f93e971a8b79425a746fb376147ac8245775"
+  }
+ ]
+}

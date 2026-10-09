@@ -1,0 +1,22 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "projectile",
+  "title": "Jump on Earth",
+  "description": "A 3.5 m/s take-off at 60° from a standing height of 1 m: the jump lasts 0.86 s and covers 1.50 m.",
+  "params": {
+    "mode": "flight",
+    "v0": 3.5,
+    "angle": 60,
+    "h0": 1,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "drag": "none",
+    "k": 0.3,
+    "kq": 0.005,
+    "wind": 0,
+    "mass": 1,
+    "target": 0,
+    "targetR": 2
+  }
+}

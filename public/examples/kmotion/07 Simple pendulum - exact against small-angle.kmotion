@@ -1,0 +1,16 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "pendulum",
+  "title": "Simple pendulum: exact against small-angle",
+  "description": "L = 1 m released at 80°. The small-angle cosine (pink) drifts out of step; the exact elliptic-function solution (green) stays on the simulation. The period is 2.2823 s instead of 2π√(L/g) = 2.0061 s.",
+  "params": {
+    "mode": "simple",
+    "L": 1,
+    "gravity": "earth",
+    "gcustom": 9.81,
+    "theta0": 80,
+    "omega0": 0,
+    "mass": 1
+  }
+}

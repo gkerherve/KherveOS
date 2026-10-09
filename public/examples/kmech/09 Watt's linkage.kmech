@@ -1,0 +1,82 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Watt's linkage",
+    "points": [
+      {
+        "id": "O1",
+        "x": -80,
+        "y": 15,
+        "ground": true,
+        "label": "O1"
+      },
+      {
+        "id": "O2",
+        "x": 80,
+        "y": -15,
+        "ground": true,
+        "label": "O2"
+      },
+      {
+        "id": "A",
+        "x": 0,
+        "y": 15,
+        "label": "A"
+      },
+      {
+        "id": "B",
+        "x": 0,
+        "y": -15,
+        "label": "B"
+      },
+      {
+        "id": "M",
+        "x": 0,
+        "y": 0,
+        "label": "M",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "left",
+        "pts": [
+          "O1",
+          "A"
+        ],
+        "label": "arm"
+      },
+      {
+        "id": "coupler",
+        "pts": [
+          "A",
+          "B",
+          "M"
+        ],
+        "label": "coupler"
+      },
+      {
+        "id": "right",
+        "pts": [
+          "O2",
+          "B"
+        ],
+        "label": "arm"
+      }
+    ],
+    "sliders": [],
+    "driver": {
+      "from": "O1",
+      "to": "A",
+      "rpm": 20
+    },
+    "notes": "Two equal arms joined by a short coupler: with the arms level, the coupler midpoint M follows a figure-eight whose crossing is very nearly a straight vertical line (an approximate straight-line mechanism: the sideways error grows with the fourth power of the swing).",
+    "output": {
+      "kind": "point",
+      "point": "M",
+      "axis": "x"
+    }
+  }
+}

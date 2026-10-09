@@ -1,0 +1,15 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "oscillator",
+  "title": "Damped oscillator: overdamped",
+  "description": "ζ > 1: no oscillation, a slow creep back to equilibrium.",
+  "params": {
+    "mode": "spring",
+    "m": 1,
+    "k": 20,
+    "c": 20,
+    "x0": 1,
+    "v0": 0
+  }
+}

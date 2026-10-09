@@ -1,0 +1,87 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Cantilever beam with a tip load",
+  "description": "IPE 200 in S235, 3 m long, fixed at A, 10 kN down at the tip. Expected: tip deflection PL³/3EI = 22.057 mm, tip rotation PL²/2EI = 0.01103 rad, fixed-end moment PL = 30 kN·m.",
+  "analysis": "beam",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "IPE200",
+      "name": "IPE 200",
+      "shape": "ibeam",
+      "params": {
+        "h": 0.2,
+        "b": 0.1,
+        "tw": 0.0056,
+        "tf": 0.0085
+      },
+      "A": 0.00285,
+      "I": 0.00001943,
+      "Z": 0.0001943,
+      "h": 0.2
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "B",
+      "x": 3,
+      "y": 0
+    }
+  ],
+  "members": [
+    {
+      "id": "M1",
+      "n1": "A",
+      "n2": "B",
+      "section": "IPE200",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A",
+      "ux": true,
+      "uy": true,
+      "rz": true
+    }
+  ],
+  "nodeLoads": [
+    {
+      "id": "l1",
+      "node": "B",
+      "fx": 0,
+      "fy": -10000,
+      "mz": 0
+    }
+  ],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "uy:B": -0.0220572016763,
+    "ry:A": 10000,
+    "mz:A": 30000,
+    "rz:B": -0.0110286008382,
+    "Mmax:M1": 30000
+  }
+}

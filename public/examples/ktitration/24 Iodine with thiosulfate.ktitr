@@ -1,0 +1,203 @@
+{
+  "format": "ktitr",
+  "version": 1,
+  "name": "Iodine with thiosulfate",
+  "description": "Iodometry: 25.00 mL of 0.0500 M I₂ (in iodide solution) with 0.1000 M sodium thiosulfate, two S₂O₃²⁻ per I₂. Equivalence at 25.00 mL. In the lab starch is added near the end: the blue colour vanishes at the equivalence point.",
+  "mode": "redox",
+  "tab": "titration",
+  "acidbase": {
+    "items": [
+      {
+        "kind": "weak",
+        "label": "Acetic acid",
+        "pKa": [
+          4.76
+        ],
+        "z0": 0,
+        "form": 0,
+        "conc": 0.1,
+        "volume": 25,
+        "dpKadT": [
+          0.0002
+        ],
+        "lib": "acetic"
+      }
+    ],
+    "water": 0,
+    "titrant": {
+      "kind": "strong-base",
+      "label": "NaOH",
+      "conc": 0.1
+    },
+    "temperature": 25,
+    "activity": "none",
+    "background": 0,
+    "vmax": null,
+    "indicator": "phenolphthalein"
+  },
+  "redox": {
+    "analyte": {
+      "couple": {
+        "label": "I₂ / I⁻",
+        "ox": "I₂",
+        "red": "I⁻",
+        "E0": 0.5355,
+        "n": 2,
+        "m": 0,
+        "b": 2
+      },
+      "start": "ox",
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrant": {
+      "couple": {
+        "label": "S₄O₆²⁻ / S₂O₃²⁻",
+        "ox": "S₄O₆²⁻",
+        "red": "S₂O₃²⁻",
+        "E0": 0.08,
+        "n": 2,
+        "m": 0,
+        "b": 2
+      },
+      "conc": 0.1
+    },
+    "water": 0,
+    "pH": 7,
+    "temperature": 25,
+    "indicator": "starch",
+    "vmax": null
+  },
+  "edta": {
+    "metal": {
+      "symbol": "Ca",
+      "ion": "Ca²⁺",
+      "logKMY": 10.65,
+      "hydroxo": [
+        1.3
+      ],
+      "ammine": []
+    },
+    "conc": 0.003,
+    "volume": 100,
+    "water": 0,
+    "titrantConc": 0.01,
+    "pH": 10,
+    "ammonia": 0.1,
+    "indicator": "ebt",
+    "customLogK": 5,
+    "vmax": null
+  },
+  "precip": {
+    "mode": "silver-titrant",
+    "anions": [
+      {
+        "salt": "agcl",
+        "conc": 0.05,
+        "volume": 25
+      }
+    ],
+    "silver": {
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrantConc": 0.05,
+    "water": 0,
+    "indicator": "mohr",
+    "chromate": 0.0025,
+    "iron": 0.01,
+    "vmax": null
+  },
+  "speciation": {
+    "lib": "phosphoric",
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "conc": 0.1,
+    "ionic": 0,
+    "activity": "none",
+    "temperature": 25
+  },
+  "analyse": {
+    "text": "",
+    "setup": {
+      "npk": 1,
+      "z0": 0,
+      "form": 0,
+      "titrant": "base",
+      "aliquot": 25,
+      "V0": 25,
+      "Ct": 0.1,
+      "temperature": 25,
+      "activity": "none",
+      "background": 0,
+      "fitCt": false,
+      "fitDV": false,
+      "guessC": null,
+      "pKa": [
+        {
+          "value": 5,
+          "fit": true
+        }
+      ],
+      "sigmaV": 0
+    },
+    "gran": "weak",
+    "source": "",
+    "view": "curve"
+  },
+  "buffer": {
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "lib": "phosphoric",
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "mode": "salts",
+    "formA": 1,
+    "formB": 2,
+    "pH": 7.4,
+    "conc": 0.1,
+    "volume": 1000,
+    "temperature": 25,
+    "activity": "davies",
+    "ionicStrength": null,
+    "stockA": 1,
+    "stockB": 1,
+    "cation": "Na",
+    "anion": "Cl"
+  },
+  "notes": ""
+}

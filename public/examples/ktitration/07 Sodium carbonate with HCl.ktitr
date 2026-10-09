@@ -1,0 +1,205 @@
+{
+  "format": "ktitr",
+  "version": 1,
+  "name": "Sodium carbonate with HCl",
+  "description": "25.00 mL of 0.0500 M Na₂CO₃ with 0.1000 M HCl. Carbonate is protonated to hydrogencarbonate (first equivalence point, 12.50 mL, pH 8.3: a gentle bend that phenolphthalein shows only roughly) and then to carbonic acid (second, 25.00 mL, pH 4.0: sharper, methyl orange). Between them bicarbonate is the main species.",
+  "mode": "acidbase",
+  "tab": "titration",
+  "acidbase": {
+    "items": [
+      {
+        "kind": "weak",
+        "label": "Carbonic acid (CO₂ + H₂O)",
+        "pKa": [
+          6.35,
+          10.33
+        ],
+        "z0": 0,
+        "form": 2,
+        "conc": 0.05,
+        "volume": 25,
+        "dpKadT": [
+          -0.008,
+          -0.009
+        ],
+        "lib": "carbonic"
+      }
+    ],
+    "water": 0,
+    "titrant": {
+      "kind": "strong-acid",
+      "label": "HCl",
+      "conc": 0.1
+    },
+    "temperature": 25,
+    "activity": "none",
+    "background": 0,
+    "vmax": null,
+    "indicator": "methylorange"
+  },
+  "redox": {
+    "analyte": {
+      "couple": {
+        "label": "Fe³⁺ / Fe²⁺",
+        "ox": "Fe³⁺",
+        "red": "Fe²⁺",
+        "E0": 0.68,
+        "n": 1,
+        "m": 0,
+        "b": 1
+      },
+      "start": "red",
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrant": {
+      "couple": {
+        "label": "Ce⁴⁺ / Ce³⁺",
+        "ox": "Ce⁴⁺",
+        "red": "Ce³⁺",
+        "E0": 1.44,
+        "n": 1,
+        "m": 0,
+        "b": 1
+      },
+      "conc": 0.1
+    },
+    "water": 0,
+    "pH": 0,
+    "temperature": 25,
+    "indicator": "ferroin",
+    "vmax": null
+  },
+  "edta": {
+    "metal": {
+      "symbol": "Ca",
+      "ion": "Ca²⁺",
+      "logKMY": 10.65,
+      "hydroxo": [
+        1.3
+      ],
+      "ammine": []
+    },
+    "conc": 0.003,
+    "volume": 100,
+    "water": 0,
+    "titrantConc": 0.01,
+    "pH": 10,
+    "ammonia": 0.1,
+    "indicator": "ebt",
+    "customLogK": 5,
+    "vmax": null
+  },
+  "precip": {
+    "mode": "silver-titrant",
+    "anions": [
+      {
+        "salt": "agcl",
+        "conc": 0.05,
+        "volume": 25
+      }
+    ],
+    "silver": {
+      "conc": 0.05,
+      "volume": 25
+    },
+    "titrantConc": 0.05,
+    "water": 0,
+    "indicator": "mohr",
+    "chromate": 0.0025,
+    "iron": 0.01,
+    "vmax": null
+  },
+  "speciation": {
+    "lib": "phosphoric",
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "conc": 0.1,
+    "ionic": 0,
+    "activity": "none",
+    "temperature": 25
+  },
+  "analyse": {
+    "text": "",
+    "setup": {
+      "npk": 1,
+      "z0": 0,
+      "form": 0,
+      "titrant": "base",
+      "aliquot": 25,
+      "V0": 25,
+      "Ct": 0.1,
+      "temperature": 25,
+      "activity": "none",
+      "background": 0,
+      "fitCt": false,
+      "fitDV": false,
+      "guessC": null,
+      "pKa": [
+        {
+          "value": 5,
+          "fit": true
+        }
+      ],
+      "sigmaV": 0
+    },
+    "gran": "weak",
+    "source": "",
+    "view": "curve"
+  },
+  "buffer": {
+    "sys": {
+      "label": "Phosphoric acid",
+      "pKa": [
+        2.15,
+        7.2,
+        12.35
+      ],
+      "z0": 0,
+      "dpKadT": [
+        0.005,
+        -0.0028,
+        -0.026
+      ]
+    },
+    "lib": "phosphoric",
+    "forms": [
+      "H₃PO₄",
+      "H₂PO₄⁻",
+      "HPO₄²⁻",
+      "PO₄³⁻"
+    ],
+    "mode": "salts",
+    "formA": 1,
+    "formB": 2,
+    "pH": 7.4,
+    "conc": 0.1,
+    "volume": 1000,
+    "temperature": 25,
+    "activity": "davies",
+    "ionicStrength": null,
+    "stockA": 1,
+    "stockB": 1,
+    "cation": "Na",
+    "anion": "Cl"
+  },
+  "notes": ""
+}

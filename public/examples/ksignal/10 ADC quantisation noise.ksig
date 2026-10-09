@@ -1,0 +1,92 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "ADC quantisation noise",
+  "description": "Synthetic: a 1031 Hz sine at 99% of full scale, rounded to 10 bits. The ideal converter gives SNR = 6.02 N + 1.76 = 61.96 dB for a full-scale sine (61.9 dB here with the 1 % headroom) and ENOB = 10. Change the bit depth in the Source panel: every bit adds 6.02 dB.",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 8192,
+    "duration": 1,
+    "components": [
+      {
+        "type": "sine",
+        "amp": 0.99,
+        "freq": 1031,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 8,
+        "rolloff": 1,
+        "tau": 0,
+        "attack": 0,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0,
+      "seed": 1,
+      "color": "white"
+    },
+    "bits": 10,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "rectangular",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -140,
+    "dbMax": null,
+    "fMax": null,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "original",
+    "peakRangeDb": 60,
+    "maxPeaks": 10,
+    "fundamental": 1031,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 1024,
+    "f2": 2048,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "none"
+  },
+  "tab": "spectrum",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

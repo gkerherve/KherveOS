@@ -1,0 +1,90 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Heated bar between two walls",
+  "description": "A 50×50 mm steel bar, 2 m long, fixed in two walls and heated by 40 K. Expected: it cannot expand, so it is compressed: N = −E A α ΔT = -252 kN, a stress of E α ΔT = 100.8 MPa.",
+  "analysis": "frame",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "SQ50",
+      "name": "Square 50×50 mm",
+      "shape": "rect",
+      "params": {
+        "b": 0.05,
+        "h": 0.05
+      },
+      "A": 0.0025,
+      "I": 5.20833333333e-7,
+      "Z": 0.0000208333333333,
+      "h": 0.05
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "B",
+      "x": 2,
+      "y": 0
+    }
+  ],
+  "members": [
+    {
+      "id": "M1",
+      "n1": "A",
+      "n2": "B",
+      "section": "SQ50",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A",
+      "ux": true,
+      "uy": true,
+      "rz": true
+    },
+    {
+      "id": "s2",
+      "node": "B",
+      "ux": true,
+      "uy": true,
+      "rz": true
+    }
+  ],
+  "nodeLoads": [],
+  "memberLoads": [
+    {
+      "id": "t1",
+      "member": "M1",
+      "type": "thermal",
+      "dT": 40,
+      "dTg": 0
+    }
+  ],
+  "gravity": 0,
+  "expected": {
+    "N:M1": -252000,
+    "rx:A": 252000,
+    "maxStress": 100800000
+  }
+}

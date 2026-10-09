@@ -1,0 +1,640 @@
+{
+  "format": "kdig",
+  "version": 1,
+  "name": "Ring and Johnson counters",
+  "description": "A shift register fed back on itself. The ring counter circulates a single 1 (4 states); the Johnson counter feeds back the inverse of the last stage (8 states). RST goes back to the start.",
+  "tab": "circuit",
+  "circuit": {
+    "parts": [
+      {
+        "id": "p1",
+        "kind": "clock",
+        "ref": "CK1",
+        "x": 0,
+        "y": 60,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "duty": "50",
+          "name": "CLK",
+          "offset": "0",
+          "period": "20"
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "button",
+        "ref": "PB1",
+        "x": 0,
+        "y": 150,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "RST",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "shift",
+        "ref": "U1",
+        "x": 240,
+        "y": 60,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "bits": "4",
+          "delay": "",
+          "dir": "right",
+          "init": "1000",
+          "parallel": "no"
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "led",
+        "ref": "LED1",
+        "x": 440,
+        "y": 0,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "R3"
+        }
+      },
+      {
+        "id": "p5",
+        "kind": "led",
+        "ref": "LED2",
+        "x": 440,
+        "y": 40,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "R2"
+        }
+      },
+      {
+        "id": "p6",
+        "kind": "led",
+        "ref": "LED3",
+        "x": 440,
+        "y": 80,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "R1"
+        }
+      },
+      {
+        "id": "p7",
+        "kind": "led",
+        "ref": "LED4",
+        "x": 440,
+        "y": 120,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "R0"
+        }
+      },
+      {
+        "id": "p8",
+        "kind": "shift",
+        "ref": "U2",
+        "x": 240,
+        "y": 300,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "bits": "4",
+          "delay": "",
+          "dir": "right",
+          "init": "0000",
+          "parallel": "no"
+        }
+      },
+      {
+        "id": "p9",
+        "kind": "not",
+        "ref": "U3",
+        "x": 100,
+        "y": 290,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": ""
+        }
+      },
+      {
+        "id": "p10",
+        "kind": "led",
+        "ref": "LED5",
+        "x": 440,
+        "y": 240,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "yellow",
+          "name": "J3"
+        }
+      },
+      {
+        "id": "p11",
+        "kind": "led",
+        "ref": "LED6",
+        "x": 440,
+        "y": 280,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "yellow",
+          "name": "J2"
+        }
+      },
+      {
+        "id": "p12",
+        "kind": "led",
+        "ref": "LED7",
+        "x": 440,
+        "y": 320,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "yellow",
+          "name": "J1"
+        }
+      },
+      {
+        "id": "p13",
+        "kind": "led",
+        "ref": "LED8",
+        "x": 440,
+        "y": 360,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "yellow",
+          "name": "J0"
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "x1": 30,
+        "y1": 60,
+        "x2": 50,
+        "y2": 60
+      },
+      {
+        "id": "w2",
+        "x1": 30,
+        "y1": 150,
+        "x2": 50,
+        "y2": 150
+      },
+      {
+        "id": "w3",
+        "x1": 180,
+        "y1": 70,
+        "x2": 160,
+        "y2": 70
+      },
+      {
+        "id": "w4",
+        "x1": 240,
+        "y1": 120,
+        "x2": 240,
+        "y2": 140
+      },
+      {
+        "id": "w5",
+        "x1": 180,
+        "y1": 50,
+        "x2": 160,
+        "y2": 50
+      },
+      {
+        "id": "w6",
+        "x1": 300,
+        "y1": 90,
+        "x2": 320,
+        "y2": 90
+      },
+      {
+        "id": "w7",
+        "x1": 300,
+        "y1": 30,
+        "x2": 320,
+        "y2": 30
+      },
+      {
+        "id": "w8",
+        "x1": 410,
+        "y1": 0,
+        "x2": 390,
+        "y2": 0
+      },
+      {
+        "id": "w9",
+        "x1": 300,
+        "y1": 50,
+        "x2": 320,
+        "y2": 50
+      },
+      {
+        "id": "w10",
+        "x1": 410,
+        "y1": 40,
+        "x2": 390,
+        "y2": 40
+      },
+      {
+        "id": "w11",
+        "x1": 300,
+        "y1": 70,
+        "x2": 320,
+        "y2": 70
+      },
+      {
+        "id": "w12",
+        "x1": 410,
+        "y1": 80,
+        "x2": 390,
+        "y2": 80
+      },
+      {
+        "id": "w13",
+        "x1": 300,
+        "y1": 90,
+        "x2": 300,
+        "y2": 110
+      },
+      {
+        "id": "w14",
+        "x1": 410,
+        "y1": 120,
+        "x2": 390,
+        "y2": 120
+      },
+      {
+        "id": "w15",
+        "x1": 180,
+        "y1": 310,
+        "x2": 160,
+        "y2": 310
+      },
+      {
+        "id": "w16",
+        "x1": 240,
+        "y1": 360,
+        "x2": 240,
+        "y2": 380
+      },
+      {
+        "id": "w17",
+        "x1": 70,
+        "y1": 290,
+        "x2": 50,
+        "y2": 290
+      },
+      {
+        "id": "w18",
+        "x1": 300,
+        "y1": 330,
+        "x2": 320,
+        "y2": 330
+      },
+      {
+        "id": "w19",
+        "x1": 130,
+        "y1": 290,
+        "x2": 150,
+        "y2": 290
+      },
+      {
+        "id": "w20",
+        "x1": 180,
+        "y1": 290,
+        "x2": 160,
+        "y2": 290
+      },
+      {
+        "id": "w21",
+        "x1": 300,
+        "y1": 270,
+        "x2": 320,
+        "y2": 270
+      },
+      {
+        "id": "w22",
+        "x1": 410,
+        "y1": 240,
+        "x2": 390,
+        "y2": 240
+      },
+      {
+        "id": "w23",
+        "x1": 300,
+        "y1": 290,
+        "x2": 320,
+        "y2": 290
+      },
+      {
+        "id": "w24",
+        "x1": 410,
+        "y1": 280,
+        "x2": 390,
+        "y2": 280
+      },
+      {
+        "id": "w25",
+        "x1": 300,
+        "y1": 310,
+        "x2": 320,
+        "y2": 310
+      },
+      {
+        "id": "w26",
+        "x1": 410,
+        "y1": 320,
+        "x2": 390,
+        "y2": 320
+      },
+      {
+        "id": "w27",
+        "x1": 300,
+        "y1": 330,
+        "x2": 300,
+        "y2": 350
+      },
+      {
+        "id": "w28",
+        "x1": 410,
+        "y1": 360,
+        "x2": 390,
+        "y2": 360
+      }
+    ],
+    "labels": [
+      {
+        "id": "l1",
+        "name": "CLK",
+        "x": 50,
+        "y": 60,
+        "flip": false
+      },
+      {
+        "id": "l2",
+        "name": "RST",
+        "x": 50,
+        "y": 150,
+        "flip": false
+      },
+      {
+        "id": "l3",
+        "name": "CLK",
+        "x": 160,
+        "y": 70,
+        "flip": true
+      },
+      {
+        "id": "l4",
+        "name": "RST",
+        "x": 240,
+        "y": 140,
+        "flip": false
+      },
+      {
+        "id": "l5",
+        "name": "R0",
+        "x": 160,
+        "y": 50,
+        "flip": true
+      },
+      {
+        "id": "l6",
+        "name": "R0",
+        "x": 320,
+        "y": 90,
+        "flip": false
+      },
+      {
+        "id": "l7",
+        "name": "R3x",
+        "x": 320,
+        "y": 30,
+        "flip": false
+      },
+      {
+        "id": "l8",
+        "name": "R3x",
+        "x": 390,
+        "y": 0,
+        "flip": true
+      },
+      {
+        "id": "l9",
+        "name": "R2x",
+        "x": 320,
+        "y": 50,
+        "flip": false
+      },
+      {
+        "id": "l10",
+        "name": "R2x",
+        "x": 390,
+        "y": 40,
+        "flip": true
+      },
+      {
+        "id": "l11",
+        "name": "R1x",
+        "x": 320,
+        "y": 70,
+        "flip": false
+      },
+      {
+        "id": "l12",
+        "name": "R1x",
+        "x": 390,
+        "y": 80,
+        "flip": true
+      },
+      {
+        "id": "l13",
+        "name": "R0x",
+        "x": 300,
+        "y": 110,
+        "flip": false
+      },
+      {
+        "id": "l14",
+        "name": "R0x",
+        "x": 390,
+        "y": 120,
+        "flip": true
+      },
+      {
+        "id": "l15",
+        "name": "CLK",
+        "x": 160,
+        "y": 310,
+        "flip": true
+      },
+      {
+        "id": "l16",
+        "name": "RST",
+        "x": 240,
+        "y": 380,
+        "flip": false
+      },
+      {
+        "id": "l17",
+        "name": "J0",
+        "x": 50,
+        "y": 290,
+        "flip": true
+      },
+      {
+        "id": "l18",
+        "name": "J0",
+        "x": 320,
+        "y": 330,
+        "flip": false
+      },
+      {
+        "id": "l19",
+        "name": "Jin",
+        "x": 150,
+        "y": 290,
+        "flip": false
+      },
+      {
+        "id": "l20",
+        "name": "Jin",
+        "x": 160,
+        "y": 290,
+        "flip": true
+      },
+      {
+        "id": "l21",
+        "name": "J3x",
+        "x": 320,
+        "y": 270,
+        "flip": false
+      },
+      {
+        "id": "l22",
+        "name": "J3x",
+        "x": 390,
+        "y": 240,
+        "flip": true
+      },
+      {
+        "id": "l23",
+        "name": "J2x",
+        "x": 320,
+        "y": 290,
+        "flip": false
+      },
+      {
+        "id": "l24",
+        "name": "J2x",
+        "x": 390,
+        "y": 280,
+        "flip": true
+      },
+      {
+        "id": "l25",
+        "name": "J1x",
+        "x": 320,
+        "y": 310,
+        "flip": false
+      },
+      {
+        "id": "l26",
+        "name": "J1x",
+        "x": 390,
+        "y": 320,
+        "flip": true
+      },
+      {
+        "id": "l27",
+        "name": "J0x",
+        "x": 300,
+        "y": 350,
+        "flip": false
+      },
+      {
+        "id": "l28",
+        "name": "J0x",
+        "x": 390,
+        "y": 360,
+        "flip": true
+      }
+    ],
+    "notes": [
+      {
+        "id": "n1",
+        "text": "Ring counter: 1000 → 0100 → 0010 → 0001 → 1000 …",
+        "x": 200,
+        "y": -50
+      },
+      {
+        "id": "n2",
+        "text": "Johnson (twisted-ring) counter: 8 states from 4 flip-flops",
+        "x": 200,
+        "y": 190
+      }
+    ]
+  },
+  "stimulus": [
+    {
+      "t": 0,
+      "set": {
+        "RST": 1
+      }
+    },
+    {
+      "t": 8,
+      "set": {
+        "RST": 0
+      }
+    }
+  ],
+  "until": 320,
+  "probes": [
+    {
+      "name": "CLK",
+      "bits": [
+        "CLK"
+      ]
+    },
+    {
+      "name": "ring",
+      "bits": [
+        "U1.Q3",
+        "U1.Q2",
+        "U1.Q1",
+        "U1.Q0"
+      ],
+      "radix": "binary"
+    },
+    {
+      "name": "johnson",
+      "bits": [
+        "U2.Q3",
+        "U2.Q2",
+        "U2.Q1",
+        "U2.Q0"
+      ],
+      "radix": "binary"
+    }
+  ]
+}

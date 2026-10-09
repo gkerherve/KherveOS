@@ -1,0 +1,133 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Cantilever bracket frame",
+  "description": "A wall bracket: a continuous IPE 160 arm pinned at A and hung at B on a hinged tube brace from C; 5 kN down at the tip D, 1 m beyond B. Expected (statics): the brace carries -13.34 kN (compression), the arm has a hogging moment of 5 kN·m at B and a tension of 10.417 kN, the wall reaction at A is -10.417 kN horizontally and -3.3333 kN vertically.",
+  "analysis": "frame",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "IPE160",
+      "name": "IPE 160",
+      "shape": "ibeam",
+      "params": {
+        "h": 0.16,
+        "b": 0.082,
+        "tw": 0.005,
+        "tf": 0.0074
+      },
+      "A": 0.00201,
+      "I": 0.00000869,
+      "Z": 0.000108625,
+      "h": 0.16
+    },
+    {
+      "id": "TUBE60x4",
+      "name": "Tube Ø60.3×4 mm",
+      "shape": "tube",
+      "params": {
+        "D": 0.0603,
+        "t": 0.004
+      },
+      "A": 0.000707486665588,
+      "I": 2.81729149462e-7,
+      "Z": 0.00000934425039676,
+      "h": 0.0603
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A",
+      "x": 0,
+      "y": 1.2
+    },
+    {
+      "id": "B",
+      "x": 1.5,
+      "y": 1.2
+    },
+    {
+      "id": "D",
+      "x": 2.5,
+      "y": 1.2
+    },
+    {
+      "id": "C",
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "members": [
+    {
+      "id": "arm1",
+      "n1": "A",
+      "n2": "B",
+      "section": "IPE160",
+      "material": "S235"
+    },
+    {
+      "id": "arm2",
+      "n1": "B",
+      "n2": "D",
+      "section": "IPE160",
+      "material": "S235"
+    },
+    {
+      "id": "brace",
+      "n1": "C",
+      "n2": "B",
+      "section": "TUBE60x4",
+      "material": "S235",
+      "releaseStart": true,
+      "releaseEnd": true
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A",
+      "ux": true,
+      "uy": true,
+      "rz": false
+    },
+    {
+      "id": "s2",
+      "node": "C",
+      "ux": true,
+      "uy": true,
+      "rz": false
+    }
+  ],
+  "nodeLoads": [
+    {
+      "id": "l1",
+      "node": "D",
+      "fx": 0,
+      "fy": -5000,
+      "mz": 0
+    }
+  ],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "N:brace": -13339.8421613,
+    "rx:A": -10416.6666667,
+    "ry:A": -3333.33333333,
+    "M:arm1@1": -5000,
+    "N:arm1": 10416.6666667
+  }
+}

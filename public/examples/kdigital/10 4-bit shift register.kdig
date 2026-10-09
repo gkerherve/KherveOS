@@ -1,0 +1,501 @@
+{
+  "format": "kdig",
+  "version": 1,
+  "name": "4-bit shift register",
+  "description": "Four D flip-flops in a row: the bit on SIN moves one place per clock. Watch 1011 travel through.",
+  "tab": "circuit",
+  "circuit": {
+    "parts": [
+      {
+        "id": "p1",
+        "kind": "switch",
+        "ref": "SW1",
+        "x": 0,
+        "y": 0,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "SIN",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "clock",
+        "ref": "CK1",
+        "x": 0,
+        "y": 130,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "duty": "50",
+          "name": "CLK",
+          "offset": "0",
+          "period": "20"
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "dff",
+        "ref": "FF1",
+        "x": 200,
+        "y": 20,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "edge": "rising",
+          "en": "no",
+          "init": "0",
+          "name": ""
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "led",
+        "ref": "LED1",
+        "x": 200,
+        "y": 150,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "Q0"
+        }
+      },
+      {
+        "id": "p5",
+        "kind": "dff",
+        "ref": "FF2",
+        "x": 370,
+        "y": 20,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "edge": "rising",
+          "en": "no",
+          "init": "0",
+          "name": ""
+        }
+      },
+      {
+        "id": "p6",
+        "kind": "led",
+        "ref": "LED2",
+        "x": 370,
+        "y": 150,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "yellow",
+          "name": "Q1"
+        }
+      },
+      {
+        "id": "p7",
+        "kind": "dff",
+        "ref": "FF3",
+        "x": 540,
+        "y": 20,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "edge": "rising",
+          "en": "no",
+          "init": "0",
+          "name": ""
+        }
+      },
+      {
+        "id": "p8",
+        "kind": "led",
+        "ref": "LED3",
+        "x": 540,
+        "y": 150,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "green",
+          "name": "Q2"
+        }
+      },
+      {
+        "id": "p9",
+        "kind": "dff",
+        "ref": "FF4",
+        "x": 710,
+        "y": 20,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "edge": "rising",
+          "en": "no",
+          "init": "0",
+          "name": ""
+        }
+      },
+      {
+        "id": "p10",
+        "kind": "led",
+        "ref": "LED4",
+        "x": 710,
+        "y": 150,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "yellow",
+          "name": "Q3"
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "x1": 30,
+        "y1": 130,
+        "x2": 50,
+        "y2": 130
+      },
+      {
+        "id": "w2",
+        "x1": 160,
+        "y1": 30,
+        "x2": 140,
+        "y2": 30
+      },
+      {
+        "id": "w3",
+        "x1": 240,
+        "y1": 10,
+        "x2": 260,
+        "y2": 10
+      },
+      {
+        "id": "w4",
+        "x1": 170,
+        "y1": 150,
+        "x2": 150,
+        "y2": 150
+      },
+      {
+        "id": "w5",
+        "x1": 330,
+        "y1": 30,
+        "x2": 310,
+        "y2": 30
+      },
+      {
+        "id": "w6",
+        "x1": 410,
+        "y1": 10,
+        "x2": 430,
+        "y2": 10
+      },
+      {
+        "id": "w7",
+        "x1": 340,
+        "y1": 150,
+        "x2": 320,
+        "y2": 150
+      },
+      {
+        "id": "w8",
+        "x1": 500,
+        "y1": 30,
+        "x2": 480,
+        "y2": 30
+      },
+      {
+        "id": "w9",
+        "x1": 580,
+        "y1": 10,
+        "x2": 600,
+        "y2": 10
+      },
+      {
+        "id": "w10",
+        "x1": 510,
+        "y1": 150,
+        "x2": 490,
+        "y2": 150
+      },
+      {
+        "id": "w11",
+        "x1": 670,
+        "y1": 30,
+        "x2": 650,
+        "y2": 30
+      },
+      {
+        "id": "w12",
+        "x1": 750,
+        "y1": 10,
+        "x2": 770,
+        "y2": 10
+      },
+      {
+        "id": "w13",
+        "x1": 680,
+        "y1": 150,
+        "x2": 660,
+        "y2": 150
+      },
+      {
+        "id": "w14",
+        "x1": 30,
+        "y1": 0,
+        "x2": 100,
+        "y2": 0
+      },
+      {
+        "id": "w15",
+        "x1": 100,
+        "y1": 0,
+        "x2": 100,
+        "y2": 10
+      },
+      {
+        "id": "w16",
+        "x1": 100,
+        "y1": 10,
+        "x2": 160,
+        "y2": 10
+      },
+      {
+        "id": "w17",
+        "x1": 330,
+        "y1": 10,
+        "x2": 330,
+        "y2": -20
+      },
+      {
+        "id": "w18",
+        "x1": 500,
+        "y1": 10,
+        "x2": 500,
+        "y2": -20
+      },
+      {
+        "id": "w19",
+        "x1": 670,
+        "y1": 10,
+        "x2": 670,
+        "y2": -20
+      }
+    ],
+    "labels": [
+      {
+        "id": "l1",
+        "name": "CLK",
+        "x": 50,
+        "y": 130,
+        "flip": false
+      },
+      {
+        "id": "l2",
+        "name": "CLK",
+        "x": 140,
+        "y": 30,
+        "flip": true
+      },
+      {
+        "id": "l3",
+        "name": "Q0",
+        "x": 260,
+        "y": 10,
+        "flip": false
+      },
+      {
+        "id": "l4",
+        "name": "Q0",
+        "x": 150,
+        "y": 150,
+        "flip": true
+      },
+      {
+        "id": "l5",
+        "name": "CLK",
+        "x": 310,
+        "y": 30,
+        "flip": true
+      },
+      {
+        "id": "l6",
+        "name": "Q1",
+        "x": 430,
+        "y": 10,
+        "flip": false
+      },
+      {
+        "id": "l7",
+        "name": "Q1",
+        "x": 320,
+        "y": 150,
+        "flip": true
+      },
+      {
+        "id": "l8",
+        "name": "CLK",
+        "x": 480,
+        "y": 30,
+        "flip": true
+      },
+      {
+        "id": "l9",
+        "name": "Q2",
+        "x": 600,
+        "y": 10,
+        "flip": false
+      },
+      {
+        "id": "l10",
+        "name": "Q2",
+        "x": 490,
+        "y": 150,
+        "flip": true
+      },
+      {
+        "id": "l11",
+        "name": "CLK",
+        "x": 650,
+        "y": 30,
+        "flip": true
+      },
+      {
+        "id": "l12",
+        "name": "Q3",
+        "x": 770,
+        "y": 10,
+        "flip": false
+      },
+      {
+        "id": "l13",
+        "name": "Q3",
+        "x": 660,
+        "y": 150,
+        "flip": true
+      },
+      {
+        "id": "l14",
+        "name": "Q0",
+        "x": 330,
+        "y": -20,
+        "flip": false
+      },
+      {
+        "id": "l15",
+        "name": "Q1",
+        "x": 500,
+        "y": -20,
+        "flip": false
+      },
+      {
+        "id": "l16",
+        "name": "Q2",
+        "x": 670,
+        "y": -20,
+        "flip": false
+      }
+    ],
+    "notes": [
+      {
+        "id": "n1",
+        "text": "4-bit serial-in shift register: every clock edge moves the data one flip-flop to the right",
+        "x": 0,
+        "y": -50
+      }
+    ]
+  },
+  "stimulus": [
+    {
+      "t": 0,
+      "set": {
+        "SIN": 1
+      }
+    },
+    {
+      "t": 20,
+      "set": {
+        "SIN": 0
+      }
+    },
+    {
+      "t": 40,
+      "set": {
+        "SIN": 1
+      }
+    },
+    {
+      "t": 60,
+      "set": {
+        "SIN": 1
+      }
+    },
+    {
+      "t": 80,
+      "set": {
+        "SIN": 0
+      }
+    },
+    {
+      "t": 100,
+      "set": {
+        "SIN": 0
+      }
+    },
+    {
+      "t": 120,
+      "set": {
+        "SIN": 0
+      }
+    },
+    {
+      "t": 140,
+      "set": {
+        "SIN": 0
+      }
+    }
+  ],
+  "until": 190,
+  "probes": [
+    {
+      "name": "CLK",
+      "bits": [
+        "CLK"
+      ]
+    },
+    {
+      "name": "SIN",
+      "bits": [
+        "SIN"
+      ]
+    },
+    {
+      "name": "Q0",
+      "bits": [
+        "FF1.Q"
+      ]
+    },
+    {
+      "name": "Q1",
+      "bits": [
+        "FF2.Q"
+      ]
+    },
+    {
+      "name": "Q2",
+      "bits": [
+        "FF3.Q"
+      ]
+    },
+    {
+      "name": "Q3",
+      "bits": [
+        "FF4.Q"
+      ]
+    }
+  ]
+}

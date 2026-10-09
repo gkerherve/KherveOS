@@ -1,0 +1,259 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Pratt truss",
+  "description": "A Pratt truss, 4 panels of 3 m, 3 m deep, 100 kN at each lower joint. Expected: reactions 150 kN; end post -150 kN (compression), first diagonal +212.13 kN, the first bottom chord is unloaded and the next one carries +150 kN.",
+  "analysis": "truss",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "TUBE114x6",
+      "name": "Tube Ø114.3×6 mm",
+      "shape": "tube",
+      "params": {
+        "D": 0.1143,
+        "t": 0.006
+      },
+      "A": 0.0020414069063,
+      "I": 0.00000300211596224,
+      "Z": 0.0000525304630313,
+      "h": 0.1143
+    }
+  ],
+  "nodes": [
+    {
+      "id": "B0",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "B1",
+      "x": 3,
+      "y": 0
+    },
+    {
+      "id": "B2",
+      "x": 6,
+      "y": 0
+    },
+    {
+      "id": "B3",
+      "x": 9,
+      "y": 0
+    },
+    {
+      "id": "B4",
+      "x": 12,
+      "y": 0
+    },
+    {
+      "id": "T0",
+      "x": 0,
+      "y": 3
+    },
+    {
+      "id": "T1",
+      "x": 3,
+      "y": 3
+    },
+    {
+      "id": "T2",
+      "x": 6,
+      "y": 3
+    },
+    {
+      "id": "T3",
+      "x": 9,
+      "y": 3
+    },
+    {
+      "id": "T4",
+      "x": 12,
+      "y": 3
+    }
+  ],
+  "members": [
+    {
+      "id": "bb1",
+      "n1": "B0",
+      "n2": "B1",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "bb2",
+      "n1": "B1",
+      "n2": "B2",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "bb3",
+      "n1": "B2",
+      "n2": "B3",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "bb4",
+      "n1": "B3",
+      "n2": "B4",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "tt1",
+      "n1": "T0",
+      "n2": "T1",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "tt2",
+      "n1": "T1",
+      "n2": "T2",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "tt3",
+      "n1": "T2",
+      "n2": "T3",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "tt4",
+      "n1": "T3",
+      "n2": "T4",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "v0",
+      "n1": "B0",
+      "n2": "T0",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "v1",
+      "n1": "B1",
+      "n2": "T1",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "v2",
+      "n1": "B2",
+      "n2": "T2",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "v3",
+      "n1": "B3",
+      "n2": "T3",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "v4",
+      "n1": "B4",
+      "n2": "T4",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "d1",
+      "n1": "T0",
+      "n2": "B1",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "d2",
+      "n1": "T1",
+      "n2": "B2",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "d3",
+      "n1": "T3",
+      "n2": "B2",
+      "section": "TUBE114x6",
+      "material": "S235"
+    },
+    {
+      "id": "d4",
+      "n1": "T4",
+      "n2": "B3",
+      "section": "TUBE114x6",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "B0",
+      "ux": true,
+      "uy": true,
+      "rz": false
+    },
+    {
+      "id": "s2",
+      "node": "B4",
+      "ux": false,
+      "uy": true,
+      "rz": false
+    }
+  ],
+  "nodeLoads": [
+    {
+      "id": "l1",
+      "node": "B1",
+      "fx": 0,
+      "fy": -100000,
+      "mz": 0
+    },
+    {
+      "id": "l2",
+      "node": "B2",
+      "fx": 0,
+      "fy": -100000,
+      "mz": 0
+    },
+    {
+      "id": "l3",
+      "node": "B3",
+      "fx": 0,
+      "fy": -100000,
+      "mz": 0
+    }
+  ],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "ry:B0": 150000,
+    "ry:B4": 150000,
+    "N:v0": -150000,
+    "N:d1": 212132.034356,
+    "N:bb1": 0,
+    "N:bb2": 150000
+  }
+}

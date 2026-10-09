@@ -1,0 +1,84 @@
+{
+  "app": "keln",
+  "folder": "kELN Examples",
+  "examples": [
+    {
+      "file": "01 Aspirin synthesis.keln",
+      "title": "Aspirin synthesis",
+      "description": "Reaction table with limiting reagent and % yield (2.00 g salicylic acid, 2.61 g theoretical), attached IR peak list.",
+      "group": "Chemistry"
+    },
+    {
+      "file": "02 Titration lab (NaOH standardisation).keln",
+      "title": "Titration lab (NaOH standardisation)",
+      "description": "Replicate titres with mean ± sd, calculations with KaTeX maths and a link to the kTitration example files.",
+      "group": "Chemistry"
+    },
+    {
+      "file": "03 TGA run log (calcium oxalate).keln",
+      "title": "TGA run log (calcium oxalate)",
+      "description": "Instrument-run blocks, mass-loss table checked against theory computed from formulas, a TGA curve, linked samples.",
+      "group": "Measurements"
+    },
+    {
+      "file": "04 XPS session with sample lineage.keln",
+      "title": "XPS session with sample lineage",
+      "description": "A wafer → film → annealed / sputtered lineage, instrument runs with parameters, core-level tables.",
+      "group": "Measurements"
+    },
+    {
+      "file": "05 pH meter calibration log.keln",
+      "title": "pH meter calibration log",
+      "description": "Four weekly calibration entries from the calibration template, with a failed week and the corrective action.",
+      "group": "Measurements"
+    },
+    {
+      "file": "06 PCR plate set-up and gel.keln",
+      "title": "PCR plate set-up and gel",
+      "description": "Master-mix calculation, cycling programme, plate map and the checking gel.",
+      "group": "Biology"
+    },
+    {
+      "file": "07 Thin-film deposition series.keln",
+      "title": "Thin-film deposition series",
+      "description": "A substrate with three films and an annealed child: lineage tree, deposition parameters, rate plot, label printing.",
+      "group": "Measurements"
+    },
+    {
+      "file": "08 Instrument maintenance log.keln",
+      "title": "Instrument maintenance log",
+      "description": "Maintenance template filled in three times: checklists with who/when ticks and parts replaced.",
+      "group": "Lab management"
+    },
+    {
+      "file": "09 Group meeting action list.keln",
+      "title": "Group meeting action list",
+      "description": "Meeting notes with a checklist and an action table (owner, due date, done).",
+      "group": "Lab management"
+    },
+    {
+      "file": "10 Cell culture passages.keln",
+      "title": "Cell culture passages",
+      "description": "Three passages from the cell-culture template with steps, counts and observations.",
+      "group": "Biology"
+    },
+    {
+      "file": "11 Reagents and solutions.keln",
+      "title": "Reagents and solutions",
+      "description": "A ten-line chemical inventory that feeds the reaction table, a solution preparation and a risk assessment.",
+      "group": "Chemistry"
+    },
+    {
+      "file": "12 Audit chain demo (signed, witnessed, amended).keln",
+      "title": "Audit chain demo (signed, witnessed, amended)",
+      "description": "One entry signed, witnessed and amended; one signed; one draft. Verify notebook confirms the chain.",
+      "group": "Integrity"
+    },
+    {
+      "file": "13 Tamper demo (one altered record).keln",
+      "title": "Tamper demo (one altered record)",
+      "description": "Deliberately altered: Verify notebook reports the exact audit record that no longer matches.",
+      "group": "Integrity"
+    }
+  ]
+}

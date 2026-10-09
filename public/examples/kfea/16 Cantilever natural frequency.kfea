@@ -1,0 +1,76 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Cantilever natural frequency",
+  "description": "A steel cantilever, 1 m long, 20×40 mm (bending in the 40 mm direction). Expected: ω₁ = (1.875)² √(EI/ρAL⁴) = 209.988 rad/s = 33.421 Hz; the second mode is (4.694/1.875)² = 6.267 times higher. Use Solve to see the mode shapes.",
+  "analysis": "beam",
+  "study": "modal",
+  "units": {
+    "length": "mm",
+    "force": "N"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "R20x40",
+      "name": "Rectangle 20×40 mm",
+      "shape": "rect",
+      "params": {
+        "b": 0.02,
+        "h": 0.04
+      },
+      "A": 0.0008,
+      "I": 1.06666666667e-7,
+      "Z": 0.00000533333333333,
+      "h": 0.04
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "B",
+      "x": 1,
+      "y": 0
+    }
+  ],
+  "members": [
+    {
+      "id": "M1",
+      "n1": "A",
+      "n2": "B",
+      "section": "R20x40",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A",
+      "ux": true,
+      "uy": true,
+      "rz": true
+    }
+  ],
+  "nodeLoads": [],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "omega1": 209.988223602,
+    "omega2": 1315.97371551,
+    "freq1": 33.4206637773
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Restricted three-body: the Arenstorf orbit",
+  "description": "A light spacecraft in the rotating Earth-Moon frame follows a periodic orbit (period 17.065) that visits the Moon twice per lap. The Jacobi constant stays fixed.",
+  "method": "rk45",
+  "params": {
+    "mode": "restricted3",
+    "mu": 0.0121505856,
+    "ic": "arenstorf",
+    "off": -0.02,
+    "cx": 0.5,
+    "cy": 0.3,
+    "cvx": 0,
+    "cvy": 0.3,
+    "inertial": false
+  }
+}

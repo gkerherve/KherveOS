@@ -1,0 +1,17 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "oscillator",
+  "title": "Driven oscillator at resonance",
+  "description": "Driven at its natural frequency √(k/m) = 4.47 rad/s. The amplitude F₀ / (c ω₀) is reached after about 2m/c seconds; the phase lag is 90°.",
+  "params": {
+    "mode": "driven",
+    "m": 1,
+    "k": 20,
+    "c": 0.8,
+    "x0": 0,
+    "v0": 0,
+    "F0": 4,
+    "Om": 4.47
+  }
+}

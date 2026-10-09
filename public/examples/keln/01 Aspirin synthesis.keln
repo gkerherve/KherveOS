@@ -1,0 +1,738 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "Aspirin synthesis",
+ "description": "Teaching-lab synthesis of acetylsalicylic acid: reaction table with % yield, recrystallisation, purity test.",
+ "owner": "Ana Martin",
+ "created": "2026-02-09T08:00:00.000Z",
+ "modified": "2026-02-10T11:39:00.000Z",
+ "settings": {
+  "samplePrefix": "ASP",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "ASP",
+   "name": "Aspirin",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "ASP-2026-001",
+   "title": "Synthesis of acetylsalicylic acid",
+   "date": "2026-02-09T09:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "synthesis",
+    "teaching",
+    "esterification",
+    "yield"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Aim"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Acetylate salicylic acid with acetic anhydride (sulfuric acid as catalyst) to give aspirin, and determine the percentage yield."
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Reaction"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "reaction",
+        "data": {
+         "title": "Salicylic acid + acetic anhydride",
+         "smiles": "OC(=O)c1ccccc1O.CC(=O)OC(C)=O>>CC(=O)Oc1ccccc1C(O)=O.CC(O)=O",
+         "notes": "Acetic anhydride in excess (about 3.7 equiv) drives the reaction.",
+         "reagents": [
+          {
+           "name": "Salicylic acid",
+           "formula": "C7H6O3",
+           "mw": null,
+           "role": "reactant",
+           "coef": 1,
+           "mass": 2,
+           "volume": null,
+           "density": null,
+           "mmol": null,
+           "purity": null,
+           "actual": null,
+           "cas": "69-72-7"
+          },
+          {
+           "name": "Acetic anhydride",
+           "formula": "C4H6O3",
+           "mw": null,
+           "role": "reactant",
+           "coef": 1,
+           "mass": null,
+           "volume": 5,
+           "density": 1.082,
+           "mmol": null,
+           "purity": null,
+           "actual": null,
+           "cas": "108-24-7"
+          },
+          {
+           "name": "Sulfuric acid, 96 %",
+           "formula": "H2SO4",
+           "mw": null,
+           "role": "catalyst",
+           "coef": 1,
+           "mass": null,
+           "volume": 0.1,
+           "density": 1.84,
+           "mmol": null,
+           "purity": null,
+           "actual": null,
+           "cas": "7664-93-9"
+          },
+          {
+           "name": "Aspirin (crude)",
+           "formula": "C9H8O4",
+           "mw": null,
+           "role": "product",
+           "coef": 1,
+           "mass": null,
+           "volume": null,
+           "density": null,
+           "mmol": null,
+           "purity": null,
+           "actual": 2.12
+          },
+          {
+           "name": "Acetic acid",
+           "formula": "C2H4O2",
+           "mw": null,
+           "role": "product",
+           "coef": 1,
+           "mass": null,
+           "volume": null,
+           "density": null,
+           "mmol": null,
+           "purity": null,
+           "actual": null
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Safety"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "safety",
+        "data": {
+         "hazards": [
+          "Acetic anhydride: corrosive, lachrymator",
+          "Sulfuric acid: severe burns"
+         ],
+         "ppe": [
+          "Lab coat",
+          "Goggles",
+          "Nitrile gloves",
+          "Fume hood"
+         ],
+         "pictograms": [
+          "Corrosive",
+          "Flammable"
+         ],
+         "controls": "Add the acid dropwise; work in the hood",
+         "waste": "Aqueous filtrate to the acidic aqueous waste",
+         "risk": "medium"
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Procedure"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Procedure",
+         "items": [
+          {
+           "text": "Weigh 2.00 g of salicylic acid into a 50 mL Erlenmeyer flask",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-09T09:40:00"
+          },
+          {
+           "text": "Add 5.0 mL acetic anhydride and 5 drops of concentrated sulfuric acid (fume hood)",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-09T09:48:00"
+          },
+          {
+           "text": "Warm in a water bath at 75 °C for 15 min, swirling",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-09T10:05:00"
+          },
+          {
+           "text": "Cool, add 20 mL cold water slowly, then chill in an ice bath",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-09T10:30:00"
+          },
+          {
+           "text": "Filter on a Buchner funnel and wash with cold water",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-02-09T10:50:00"
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "timeline",
+        "data": {
+         "title": "Observations",
+         "items": [
+          {
+           "time": "2026-02-09T09:52:00",
+           "text": "Solid dissolved on warming; faint yellow tint."
+          },
+          {
+           "time": "2026-02-09T10:22:00",
+           "text": "White needles started to crystallise on cooling."
+          },
+          {
+           "time": "2026-02-09T11:10:00",
+           "text": "Dry crude product: white crystalline solid, 2.12 g."
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Characterisation"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "FTIR (ATR)",
+         "method": "ATR, 32 scans, 4 cm-1",
+         "operator": "Ana Martin",
+         "started": "2026-02-09T14:15:00",
+         "file": "att-003",
+         "path": "",
+         "parameters": "",
+         "notes": "No broad phenol O-H near 3200 cm-1: the starting material is consumed."
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "IR peaks are in the attached file ("
+       },
+       {
+        "type": "text",
+        "text": "aspirin-ir-peaks.csv",
+        "marks": [
+         {
+          "type": "link",
+          "attrs": {
+           "href": "keln-att:att-003"
+          }
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "). Melting point of the crude product: 133-136 °C (literature 136 °C)."
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Yield"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "The reaction table gives the theoretical yield from the limiting reagent (salicylic acid): 2.61 g. Isolated: 2.12 g, so about 81 %. Losses: transfers and the mother liquor."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [
+    {
+     "id": "att-003",
+     "name": "aspirin-ir-peaks.csv",
+     "size": 196,
+     "sha256": "1c8efb18bdb7b94cf29a130b41e7194045773ee00e5eb77f5b97808e336251d8",
+     "mime": "text/csv",
+     "added": "2026-02-09T14:20:00",
+     "addedBy": "Ana Martin",
+     "path": "",
+     "data": "d2F2ZW51bWJlcl9jbS0xLHRyYW5zbWl0dGFuY2VfcGN0LGFzc2lnbm1lbnQKMzAwMCw0MixPLUggc3RyZXRjaCAoY2FyYm94eWxpYyBhY2lkIGRpbWVyKQoxNzUwLDEyLEM9TyBzdHJldGNoIChlc3RlcikKMTY5MCwxMCxDPU8gc3RyZXRjaCAoY2FyYm94eWxpYyBhY2lkKQoxNjA1LDM1LEM9QyBhcm9tYXRpYwoxMTkwLDE4LEMtTyBzdHJldGNoCg=="
+    }
+   ],
+   "links": [
+    {
+     "kind": "url",
+     "target": "https://pubchem.ncbi.nlm.nih.gov/compound/Aspirin",
+     "label": "PubChem: aspirin"
+    }
+   ],
+   "samples": [],
+   "template": "organic-synthesis",
+   "created": "2026-02-09T09:30:00.000Z",
+   "modified": "2026-02-10T11:36:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-005",
+   "projectId": "prj-002",
+   "experiment": "ASP-2026-001",
+   "title": "Recrystallisation and melting point",
+   "date": "2026-02-10T09:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "purification"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Procedure"
+       }
+      ]
+     },
+     {
+      "type": "orderedList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Dissolve the crude aspirin in the minimum hot ethanol (about 8 mL)."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Add warm water until cloudy, reheat to clear, cool slowly."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Filter, wash with ice-cold 1:1 ethanol/water, dry overnight."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Melting point",
+         "columns": [
+          {
+           "name": "Sample",
+           "unit": ""
+          },
+          {
+           "name": "Onset",
+           "unit": "°C"
+          },
+          {
+           "name": "Clear point",
+           "unit": "°C"
+          }
+         ],
+         "rows": [
+          [
+           "Crude",
+           "133",
+           "136"
+          ],
+          [
+           "Recrystallised",
+           "135",
+           "136.5"
+          ],
+          [
+           "Literature",
+           "135",
+           "136"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "The recrystallised material melts sharply at the literature value. Recovery: 1.78 g from 2.12 g (84 %)."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "",
+   "created": "2026-02-10T09:00:00.000Z",
+   "modified": "2026-02-10T09:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-006",
+   "projectId": "prj-002",
+   "experiment": "ASP-2026-001",
+   "title": "Ferric chloride test for free phenol",
+   "date": "2026-02-10T11:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "analysis",
+    "purity"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Small amount of each solid dissolved in 1 mL ethanol, 2 drops of 1 % FeCl"
+       },
+       {
+        "type": "text",
+        "text": "3",
+        "marks": [
+         {
+          "type": "subscript"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " added."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Colour test",
+         "columns": [
+          {
+           "name": "Sample",
+           "unit": ""
+          },
+          {
+           "name": "Colour",
+           "unit": ""
+          },
+          {
+           "name": "Phenol present",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "Salicylic acid (reference)",
+           "deep violet",
+           "yes"
+          ],
+          [
+           "Crude aspirin",
+           "pale violet",
+           "trace"
+          ],
+          [
+           "Recrystallised aspirin",
+           "yellow",
+           "no"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Conclusion: recrystallisation removes the residual salicylic acid."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "",
+   "created": "2026-02-10T11:30:00.000Z",
+   "modified": "2026-02-10T11:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [
+  {
+   "id": "inv-sal",
+   "name": "Salicylic acid",
+   "formula": "C7H6O3",
+   "cas": "69-72-7",
+   "mw": null,
+   "density": null,
+   "supplier": "Sigma-Aldrich",
+   "lot": "MKCP1234",
+   "amount": "500 g",
+   "hazard": "Harmful if swallowed; eye damage",
+   "location": "Cabinet A2"
+  },
+  {
+   "id": "inv-ac2o",
+   "name": "Acetic anhydride",
+   "formula": "C4H6O3",
+   "cas": "108-24-7",
+   "mw": null,
+   "density": 1.082,
+   "supplier": "Fisher",
+   "lot": "2283104",
+   "amount": "1 L",
+   "hazard": "Flammable; corrosive; harmful if inhaled",
+   "location": "Flammables cabinet"
+  },
+  {
+   "id": "inv-h2so4",
+   "name": "Sulfuric acid, 96 %",
+   "formula": "H2SO4",
+   "cas": "7664-93-9",
+   "mw": null,
+   "density": 1.84,
+   "supplier": "VWR",
+   "lot": "K51873",
+   "amount": "2.5 L",
+   "hazard": "Severe skin burns and eye damage",
+   "location": "Acid cabinet"
+  },
+  {
+   "id": "inv-etoh",
+   "name": "Ethanol, absolute",
+   "formula": "C2H6O",
+   "cas": "64-17-5",
+   "mw": null,
+   "density": 0.789,
+   "supplier": "VWR",
+   "lot": "E22091",
+   "amount": "2.5 L",
+   "hazard": "Highly flammable",
+   "location": "Flammables cabinet"
+  }
+ ],
+ "savedSearches": [],
+ "instruments": [
+  "FTIR (ATR)",
+  "Melting point apparatus"
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-02-09T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "Aspirin synthesis",
+   "prev": "",
+   "rec": "5315266fee47fd445bf4b03dced90f8c4778078a98d308fcc25f82680d82e6b3"
+  },
+  {
+   "seq": 2,
+   "time": "2026-02-09T09:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "ASP-2026-001",
+   "hash": "0694f1ccb9ef7f1a779b32c928bfad2f862768bf1e7ce8a35f8ceca1c901e666",
+   "detail": "Synthesis of acetylsalicylic acid",
+   "prev": "5315266fee47fd445bf4b03dced90f8c4778078a98d308fcc25f82680d82e6b3",
+   "rec": "e50d4a7e7d8fbfbc94d6c3c428622e2a7ec884ab689475a6c04e728b41eb4538"
+  },
+  {
+   "seq": 3,
+   "time": "2026-02-10T09:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-005",
+   "number": "ASP-2026-001",
+   "hash": "438b201aef9fdbb079a2f68e2f2bb2c12bee170243bf0222277a982b7c60a574",
+   "detail": "Recrystallisation and melting point",
+   "prev": "e50d4a7e7d8fbfbc94d6c3c428622e2a7ec884ab689475a6c04e728b41eb4538",
+   "rec": "186dccffc2e3c2f7c7da9b62ca7dca9d7a9e7cc8237066d5182f5f2dbe390030"
+  },
+  {
+   "seq": 4,
+   "time": "2026-02-10T11:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-006",
+   "number": "ASP-2026-001",
+   "hash": "2e58111a66b662db5a467298eebc51e00d981831ddaccd0d804303532ca1b5b2",
+   "detail": "Ferric chloride test for free phenol",
+   "prev": "186dccffc2e3c2f7c7da9b62ca7dca9d7a9e7cc8237066d5182f5f2dbe390030",
+   "rec": "6dec3b1f193cb58589c1d1d9c63bdf691cf43d0dfd1ea68370d154b88b680523"
+  },
+  {
+   "seq": 5,
+   "time": "2026-02-10T11:39:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-edited",
+   "entryId": "ent-004",
+   "number": "ASP-2026-001",
+   "hash": "302d1fa3a3ef751601dc353e62aa209fc10d9f92bcae9f77fcaf3051b999b8f6",
+   "detail": "Synthesis of acetylsalicylic acid",
+   "prev": "6dec3b1f193cb58589c1d1d9c63bdf691cf43d0dfd1ea68370d154b88b680523",
+   "rec": "354d0a658e0d5f52bce00736e5586c2616853486a5a61b82cd5f0e5620271cad"
+  }
+ ]
+}

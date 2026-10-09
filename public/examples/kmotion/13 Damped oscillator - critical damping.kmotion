@@ -1,0 +1,15 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "oscillator",
+  "title": "Damped oscillator: critical damping",
+  "description": "c = 2√(km): the fastest return to rest without overshooting.",
+  "params": {
+    "mode": "spring",
+    "m": 1,
+    "k": 20,
+    "c": 8.944,
+    "x0": 1,
+    "v0": 0
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "format": "ksig",
+  "version": 1,
+  "name": "Guitar string: harmonic series",
+  "description": "Synthetic (not a recording): a plucked A2 string at 110 Hz with 12 harmonics of amplitude 1/k, the higher ones dying faster (decay time 1 s / k). The peaks sit at 110, 220, 330 Hz... and the harmonic table of the Spectrum tab shows the series. The estimated fundamental is 110 Hz.",
+  "synthetic": true,
+  "source": {
+    "kind": "generator",
+    "fs": 11025,
+    "duration": 2,
+    "components": [
+      {
+        "type": "harmonics",
+        "amp": 0.5,
+        "freq": 110,
+        "phase": 0,
+        "duty": 0.5,
+        "f0": 100,
+        "f1": 1000,
+        "sweep": "linear",
+        "carrier": 1000,
+        "mod": 100,
+        "depth": 0.5,
+        "deviation": 200,
+        "count": 12,
+        "rolloff": 1,
+        "tau": 1,
+        "attack": 0.005,
+        "partials": [],
+        "bpm": 72,
+        "variability": 0,
+        "seed": 1,
+        "center": 0.5,
+        "width": 0.02
+      }
+    ],
+    "noise": {
+      "sigma": 0,
+      "seed": 1,
+      "color": "white"
+    },
+    "bits": 0,
+    "fullScale": 1
+  },
+  "analysis": {
+    "window": "blackmanharris",
+    "beta": 8.6,
+    "fftSize": 0,
+    "start": 0,
+    "mode": "fft",
+    "scale": "db",
+    "logFreq": false,
+    "dbMin": -120,
+    "dbMax": null,
+    "fMax": 1500,
+    "stftSize": 512,
+    "overlap": 0.75,
+    "compare": [],
+    "analyse": "original",
+    "peakRangeDb": 50,
+    "maxPeaks": 12,
+    "fundamental": 110,
+    "timePeaks": {
+      "enabled": false,
+      "height": 0.5,
+      "minDistance": 0.3
+    },
+    "specMin": -100,
+    "specMax": null
+  },
+  "filter": {
+    "family": "butter",
+    "type": "lowpass",
+    "order": 4,
+    "f1": 1378,
+    "f2": 2756,
+    "rp": 1,
+    "rs": 40,
+    "window": "hamming",
+    "beta": 8.6,
+    "q": 30,
+    "zeroPhase": false
+  },
+  "process": {
+    "type": "none"
+  },
+  "tab": "spectrum",
+  "cursors": {
+    "a": null,
+    "b": null
+  }
+}

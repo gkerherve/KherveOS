@@ -1,0 +1,78 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Crank-rocker four-bar",
+    "points": [
+      {
+        "id": "O2",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "O2"
+      },
+      {
+        "id": "O4",
+        "x": 90,
+        "y": 0,
+        "ground": true,
+        "label": "O4"
+      },
+      {
+        "id": "A",
+        "x": 20,
+        "y": 34.641016151378,
+        "label": "A"
+      },
+      {
+        "id": "B",
+        "x": 115.179476023938,
+        "y": 65.3145771414,
+        "label": "B"
+      },
+      {
+        "id": "P",
+        "x": 49.185601417955,
+        "y": 107.085482260752,
+        "label": "P",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "crank",
+        "pts": [
+          "O2",
+          "A"
+        ],
+        "label": "crank"
+      },
+      {
+        "id": "coupler",
+        "pts": [
+          "A",
+          "B",
+          "P"
+        ],
+        "label": "coupler",
+        "shape": "plate"
+      },
+      {
+        "id": "rocker",
+        "pts": [
+          "O4",
+          "B"
+        ],
+        "label": "output"
+      }
+    ],
+    "sliders": [],
+    "driver": {
+      "from": "O2",
+      "to": "A",
+      "rpm": 30
+    },
+    "notes": "Shortest link (the crank) + longest link < sum of the other two: Grashof. The crank turns fully; the rocker swings between its two toggle positions."
+  }
+}

@@ -1,0 +1,435 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "Titration lab",
+ "description": "Standardisation of NaOH against KHP, and the acetic acid content of vinegar.",
+ "owner": "Ana Martin",
+ "created": "2026-03-02T08:00:00.000Z",
+ "modified": "2026-03-04T10:18:00.000Z",
+ "settings": {
+  "samplePrefix": "TIT",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "TIT",
+   "name": "Titrations",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "TIT-2026-001",
+   "title": "Standardisation of NaOH with potassium hydrogen phthalate",
+   "date": "2026-03-02T09:00:00",
+   "author": "Ana Martin",
+   "tags": [
+    "titration",
+    "standardisation"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Aim"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Find the exact concentration of the ~0.1 mol/L NaOH solution with the primary standard KHP ("
+       },
+       {
+        "type": "mathInline",
+        "attrs": {
+         "latex": "M = 204.22\\ \\mathrm{g/mol}"
+        }
+       },
+       {
+        "type": "text",
+        "text": ")."
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Solutions"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "materials",
+        "data": {
+         "title": "Solutions",
+         "items": [
+          {
+           "name": "NaOH (about 0.1 mol/L)",
+           "cas": "1310-73-2",
+           "supplier": "prepared 2026-02-27",
+           "lot": "",
+           "amount": "burette",
+           "hazard": "Corrosive"
+          },
+          {
+           "name": "Potassium hydrogen phthalate (KHP)",
+           "cas": "877-24-7",
+           "supplier": "Merck, primary standard",
+           "lot": "HC27481",
+           "amount": "0.5 g per run",
+           "hazard": ""
+          },
+          {
+           "name": "Phenolphthalein, 1 %",
+           "cas": "77-09-8",
+           "supplier": "",
+           "lot": "",
+           "amount": "2 drops",
+           "hazard": ""
+          }
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Results"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "KHP titrations",
+         "columns": [
+          {
+           "name": "Run",
+           "unit": ""
+          },
+          {
+           "name": "m(KHP)",
+           "unit": "g"
+          },
+          {
+           "name": "Titre of NaOH",
+           "unit": "mL"
+          },
+          {
+           "name": "c(NaOH)",
+           "unit": "mol/L"
+          }
+         ],
+         "rows": [
+          [
+           "1",
+           "0.5106",
+           "24.92",
+           "0.1003"
+          ],
+          [
+           "2",
+           "0.5231",
+           "25.55",
+           "0.1003"
+          ],
+          [
+           "3",
+           "0.5017",
+           "24.51",
+           "0.1002"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Each run: "
+       },
+       {
+        "type": "mathInline",
+        "attrs": {
+         "latex": "c_{\\mathrm{NaOH}} = \\frac{m_{\\mathrm{KHP}}}{M_{\\mathrm{KHP}}\\,V_{\\mathrm{NaOH}}}"
+        }
+       },
+       {
+        "type": "text",
+        "text": ". Run 2 used a slightly larger sample. The three results agree to 0.5 %."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "plot",
+        "data": {
+         "title": "Concentration by run",
+         "xLabel": "Run",
+         "yLabel": "c(NaOH) (mol/L)",
+         "kind": "scatter",
+         "series": [
+          "c"
+         ],
+         "rows": [
+          [
+           "1",
+           "0.1003"
+          ],
+          [
+           "2",
+           "0.1003"
+          ],
+          [
+           "3",
+           "0.1002"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Comparison with the simulator"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Open the kTitration examples (link on the right) for the full pH curve of this titration: the equivalence point near pH 8.7 matches the phenolphthalein end point."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [
+    {
+     "kind": "path",
+     "target": "/home/user/Documents/kTitration Examples",
+     "label": "kTitration example curves (strong base into weak acid)"
+    }
+   ],
+   "samples": [],
+   "template": "titration",
+   "created": "2026-03-02T09:00:00.000Z",
+   "modified": "2026-03-02T09:00:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "TIT-2026-002",
+   "title": "Acetic acid in vinegar",
+   "date": "2026-03-04T10:15:00",
+   "author": "Ana Martin",
+   "tags": [
+    "titration",
+    "assay",
+    "food"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Method"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "10.00 mL of vinegar diluted to 100.0 mL; 25.00 mL aliquots titrated with the standardised NaOH from "
+       },
+       {
+        "type": "text",
+        "text": "TIT-2026-001",
+        "marks": [
+         {
+          "type": "italic"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Vinegar aliquots",
+         "columns": [
+          {
+           "name": "Run",
+           "unit": ""
+          },
+          {
+           "name": "Titre",
+           "unit": "mL"
+          }
+         ],
+         "rows": [
+          [
+           "1",
+           "17.85"
+          ],
+          [
+           "2",
+           "17.90"
+          ],
+          [
+           "3",
+           "17.80"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Mean titre 17.85 mL → acetic acid "
+       },
+       {
+        "type": "mathInline",
+        "attrs": {
+         "latex": "\\approx 4.5\\ \\%\\ (m/V)"
+        }
+       },
+       {
+        "type": "text",
+        "text": ", matching the label (4.5 %)."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [
+    {
+     "kind": "path",
+     "target": "/home/user/Documents/kTitration Examples",
+     "label": "kTitration example curves (strong base into weak acid)"
+    }
+   ],
+   "samples": [],
+   "template": "",
+   "created": "2026-03-04T10:15:00.000Z",
+   "modified": "2026-03-04T10:15:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-03-02T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "Titration lab",
+   "prev": "",
+   "rec": "da6a237db578f841ac5031543bbbedbe2b3db97c5a4bb4ee4f0a9fd93609f760"
+  },
+  {
+   "seq": 2,
+   "time": "2026-03-02T09:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "TIT-2026-001",
+   "hash": "9698fbde5d9837f322a56d07bab75123e672b0a84421c5fe363ad66eb3d5f0b8",
+   "detail": "Standardisation of NaOH with potassium hydrogen phthalate",
+   "prev": "da6a237db578f841ac5031543bbbedbe2b3db97c5a4bb4ee4f0a9fd93609f760",
+   "rec": "eee6a33a8d07765a7016ed1d3b825c4b886e3acd80a264d888a74b28011d3791"
+  },
+  {
+   "seq": 3,
+   "time": "2026-03-04T10:18:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "TIT-2026-002",
+   "hash": "88c30c987d7fc017b53221f91c7da1d6c59775306d423feff23161a04da4ab4d",
+   "detail": "Acetic acid in vinegar",
+   "prev": "eee6a33a8d07765a7016ed1d3b825c4b886e3acd80a264d888a74b28011d3791",
+   "rec": "fc4c8d1ac99c83bd55298e2de5b63c0b64cc9c883a344961e61f40dad2a6edb8"
+  }
+ ]
+}

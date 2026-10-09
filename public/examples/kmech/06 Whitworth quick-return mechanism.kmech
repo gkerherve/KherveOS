@@ -1,0 +1,107 @@
+{
+  "format": "kmech",
+  "version": 1,
+  "workbench": "linkage",
+  "model": {
+    "name": "Whitworth quick-return",
+    "points": [
+      {
+        "id": "O1",
+        "x": 0,
+        "y": 0,
+        "ground": true,
+        "label": "lever pivot"
+      },
+      {
+        "id": "O2",
+        "x": 0,
+        "y": -40,
+        "ground": true,
+        "label": "crank pivot"
+      },
+      {
+        "id": "P",
+        "x": -40.150350544573,
+        "y": 17.340643100229,
+        "label": "block"
+      },
+      {
+        "id": "L",
+        "x": -201.968240146485,
+        "y": 87.228607532917,
+        "label": "lever end"
+      },
+      {
+        "id": "Rm",
+        "x": -110.164494625356,
+        "y": 47.5792404725,
+        "label": "ram pin"
+      },
+      {
+        "id": "S",
+        "x": 145.445004173222,
+        "y": 0,
+        "label": "ram",
+        "tracer": true
+      }
+    ],
+    "links": [
+      {
+        "id": "crank",
+        "pts": [
+          "O2",
+          "P"
+        ],
+        "label": "crank"
+      },
+      {
+        "id": "lever",
+        "pts": [
+          "O1",
+          "Rm",
+          "L"
+        ],
+        "label": "slotted lever"
+      },
+      {
+        "id": "ram",
+        "pts": [
+          "Rm",
+          "S"
+        ],
+        "label": "ram link"
+      }
+    ],
+    "sliders": [
+      {
+        "id": "block",
+        "point": "P",
+        "line": {
+          "kind": "link",
+          "a": "O1",
+          "b": "L"
+        },
+        "label": "block in slot",
+        "mass": 0.15
+      },
+      {
+        "id": "ramslide",
+        "point": "S",
+        "line": {
+          "kind": "ground",
+          "x": 0,
+          "y": 0,
+          "angle": 0
+        },
+        "label": "ram",
+        "mass": 1
+      }
+    ],
+    "driver": {
+      "from": "O2",
+      "to": "P",
+      "rpm": 30
+    },
+    "notes": "Crank R = 70 mm turns about a point d = 40 mm from the lever pivot (d < R, so the slotted lever turns all the way round). The ram goes forward slowly and back quickly: Q = (π + 2 asin(d/R)) / (π − 2 asin(d/R)) = 2.26."
+  }
+}

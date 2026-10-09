@@ -1,0 +1,131 @@
+{
+  "format": "kclim",
+  "version": 1,
+  "title": "Doubling CO2",
+  "notes": "Concentration jumps from 280 to 560 ppm in 1850–1851. The dotted line is the equilibrium warming for that CO₂. Move the sensitivity slider: 1.1 K is what you get with no feedback at all; the textbook range is 2.5–4 K.",
+  "datasets": [],
+  "views": {
+    "tab": "model",
+    "series": {
+      "lines": [
+        {
+          "ref": "hadcrut5.anomaly",
+          "axis": "left"
+        }
+      ],
+      "from": null,
+      "to": null,
+      "baseline": "1961-1990",
+      "smooth": {
+        "kind": "none"
+      },
+      "trendLine": "none"
+    },
+    "trend": {
+      "series": "hadcrut5.anomaly",
+      "from": 1970,
+      "to": null,
+      "baseline": "native",
+      "model": "linear",
+      "annual": true,
+      "ar1": true,
+      "breakpoint": false,
+      "periods": [
+        [
+          1970,
+          1990
+        ],
+        [
+          1991,
+          2010
+        ],
+        [
+          2011,
+          2025
+        ]
+      ]
+    },
+    "seasonal": {
+      "series": "co2_mlo.co2",
+      "from": null,
+      "to": null,
+      "harmonics": 4,
+      "degree": 2,
+      "windowYears": 5
+    },
+    "relate": {
+      "mode": "lag",
+      "x": "oni.oni",
+      "y": "gistemp.global",
+      "step": "monthly",
+      "maxLag": 24,
+      "detrend": true,
+      "from": 1960,
+      "to": null,
+      "target": "gistemp.global",
+      "predictors": [
+        {
+          "ref": "co2_mlo.co2",
+          "transform": "log2",
+          "lag": 0
+        },
+        {
+          "ref": "oni.oni",
+          "transform": "none",
+          "lag": 3
+        }
+      ],
+      "trend": false
+    },
+    "stripes": {
+      "series": "hadcrut5.anomaly",
+      "from": null,
+      "to": null,
+      "baseline": "1961-1990",
+      "kind": "stripes",
+      "periodA": [
+        1951,
+        1980
+      ],
+      "periodB": [
+        1991,
+        2020
+      ]
+    }
+  },
+  "model": {
+    "params": {
+      "solar": 1361,
+      "albedo": 0.3,
+      "emissivity": 0.61,
+      "ecs": 3,
+      "mixedDepth": 400,
+      "oceanFraction": 0.71,
+      "deepOcean": false,
+      "deepDepth": 1000,
+      "exchange": 0.7,
+      "c0": 280,
+      "ice": false,
+      "iceAlbedo": 0.62,
+      "tCold": 250,
+      "tWarm": 280
+    },
+    "scenario": {
+      "mode": "concentration",
+      "preset": "custom",
+      "startYear": 1850,
+      "growthPct": 1,
+      "peakYear": 2040,
+      "declineYears": 40,
+      "zeroYear": 2050,
+      "points": [
+        [
+          1851,
+          560
+        ]
+      ]
+    },
+    "tool": "response",
+    "observed": ""
+  }
+}

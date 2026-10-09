@@ -1,0 +1,818 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "PCR plate set-up and gel",
+ "description": "Amplification of a 612 bp fragment in 12 reactions, checked on an agarose gel.",
+ "owner": "Ana Martin",
+ "created": "2026-04-06T08:00:00.000Z",
+ "modified": "2026-04-06T13:33:00.000Z",
+ "settings": {
+  "samplePrefix": "DNA",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "PCR",
+   "name": "Genotyping",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "PCR-2026-001",
+   "title": "PCR set-up: 612 bp amplicon, 12 reactions",
+   "date": "2026-04-06T09:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "PCR",
+    "genotyping"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Target"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Exon 4 of the test locus, expected size 612 bp. Primers F4/R4 (Tm 58 °C)."
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Master mix"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Master mix, 20 µL reactions (+10 % overage)",
+         "columns": [
+          {
+           "name": "Component",
+           "unit": ""
+          },
+          {
+           "name": "Stock",
+           "unit": ""
+          },
+          {
+           "name": "Final",
+           "unit": ""
+          },
+          {
+           "name": "Per reaction",
+           "unit": "µL"
+          },
+          {
+           "name": "× 13.2",
+           "unit": "µL"
+          }
+         ],
+         "rows": [
+          [
+           "Water",
+           "",
+           "",
+           "13.3",
+           "175.6"
+          ],
+          [
+           "Buffer",
+           "10×",
+           "1×",
+           "2.5",
+           "33.0"
+          ],
+          [
+           "dNTPs",
+           "10 mM",
+           "0.2 mM",
+           "0.5",
+           "6.6"
+          ],
+          [
+           "Forward primer",
+           "10 µM",
+           "0.4 µM",
+           "1.0",
+           "13.2"
+          ],
+          [
+           "Reverse primer",
+           "10 µM",
+           "0.4 µM",
+           "1.0",
+           "13.2"
+          ],
+          [
+           "Polymerase",
+           "5 U/µL",
+           "1 U",
+           "0.2",
+           "2.6"
+          ],
+          [
+           "Template DNA",
+           "20 ng/µL",
+           "1 ng/µL",
+           "1.0",
+           "added per well"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Cycling"
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Thermal cycler programme",
+         "columns": [
+          {
+           "name": "Step",
+           "unit": ""
+          },
+          {
+           "name": "Temperature",
+           "unit": "°C"
+          },
+          {
+           "name": "Time",
+           "unit": "s"
+          },
+          {
+           "name": "Cycles",
+           "unit": ""
+          }
+         ],
+         "rows": [
+          [
+           "Initial denaturation",
+           "95",
+           "180",
+           "1"
+          ],
+          [
+           "Denaturation",
+           "95",
+           "30",
+           "30"
+          ],
+          [
+           "Annealing",
+           "58",
+           "30",
+           ""
+          ],
+          [
+           "Extension",
+           "72",
+           "45",
+           ""
+          ],
+          [
+           "Final extension",
+           "72",
+           "300",
+           "1"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "level": 2
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Plate map"
+       }
+      ]
+     },
+     {
+      "type": "table",
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": []
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "1"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "2"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "3"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "4"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "A"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "NTC"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "positive"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S1"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S2"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "B"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S3"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S4"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S5"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S6"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "C"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S7"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S8"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S9"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "S10"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "steps",
+        "data": {
+         "title": "Set-up",
+         "items": [
+          {
+           "text": "Thaw reagents on ice, vortex and spin",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-04-06T09:40:00"
+          },
+          {
+           "text": "Prepare the master mix on ice",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-04-06T09:55:00"
+          },
+          {
+           "text": "Dispense 19 µL per well, add 1 µL template",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-04-06T10:15:00"
+          },
+          {
+           "text": "Seal, spin, load cycler",
+           "doneBy": "Ana Martin",
+           "doneAt": "2026-04-06T10:25:00"
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "pcr-setup",
+   "created": "2026-04-06T09:30:00.000Z",
+   "modified": "2026-04-06T09:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "PCR-2026-001",
+   "title": "Agarose gel of the PCR products",
+   "date": "2026-04-06T13:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "gel",
+    "PCR"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Gel: ",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "1.5 % agarose in 1× TAE with SYBR Safe"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Run: ",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "100 V, 45 min"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ladder: ",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "100 bp, 5 µL"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "Gel imager",
+         "method": "Blue-light transilluminator",
+         "operator": "Ana Martin",
+         "started": "2026-04-06T14:30:00",
+         "file": "",
+         "path": "",
+         "parameters": "",
+         "notes": "Exposure 0.5 s"
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Lanes",
+         "columns": [
+          {
+           "name": "Lane",
+           "unit": ""
+          },
+          {
+           "name": "Sample",
+           "unit": ""
+          },
+          {
+           "name": "Band",
+           "unit": "bp"
+          }
+         ],
+         "rows": [
+          [
+           "1",
+           "Ladder",
+           ""
+          ],
+          [
+           "2",
+           "NTC",
+           "none"
+          ],
+          [
+           "3",
+           "Positive",
+           "612"
+          ],
+          [
+           "4",
+           "S1",
+           "612"
+          ],
+          [
+           "5",
+           "S2",
+           "612"
+          ],
+          [
+           "6",
+           "S3",
+           "none"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "S3 failed to amplify (primer-site variant suspected): repeat with the second primer pair."
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "gel-electrophoresis",
+   "created": "2026-04-06T13:30:00.000Z",
+   "modified": "2026-04-06T13:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [
+  "Gel imager",
+  "Thermal cycler (Bio-Rad T100)"
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-04-06T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "PCR plate set-up and gel",
+   "prev": "",
+   "rec": "5b7691962fcd6dffdc5192bafcfbc87c9ff43207a0ad469bc3786b7dda0d41af"
+  },
+  {
+   "seq": 2,
+   "time": "2026-04-06T09:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "PCR-2026-001",
+   "hash": "d53749a5848a675802fa5f0445753a6ec85e0bce920f72e1ddb570b9d1e963e6",
+   "detail": "PCR set-up: 612 bp amplicon, 12 reactions",
+   "prev": "5b7691962fcd6dffdc5192bafcfbc87c9ff43207a0ad469bc3786b7dda0d41af",
+   "rec": "5b0fe28efbdd37ac26532ddf8490c9e342a41d6f614c8c4280990ecd9d6ce001"
+  },
+  {
+   "seq": 3,
+   "time": "2026-04-06T13:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "PCR-2026-001",
+   "hash": "46fd01c6bdd1075b1bdbd9a6e2016d030f1f8eb06f55c760146f7ab27be00dff",
+   "detail": "Agarose gel of the PCR products",
+   "prev": "5b0fe28efbdd37ac26532ddf8490c9e342a41d6f614c8c4280990ecd9d6ce001",
+   "rec": "9290b9fa67221fa04701f91cc2979bd04bc56d3fa799a1b287edada169076ca7"
+  }
+ ]
+}

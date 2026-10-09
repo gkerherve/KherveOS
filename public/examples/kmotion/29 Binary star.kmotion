@@ -1,0 +1,14 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Binary star",
+  "description": "Two equal masses orbiting their common centre of mass.",
+  "params": {
+    "mode": "kepler",
+    "M": 1,
+    "q": 1,
+    "rp": 1,
+    "ecc": 0.3
+  }
+}

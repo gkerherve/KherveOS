@@ -1,0 +1,92 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Euler column buckling",
+  "description": "A pinned–pinned HEA 200 column, 3 m, loaded by 1 kN (the buckling factor is the critical load in kN). Expected: Euler P_cr = π² E I / L² = 8502.34 kN (weak-axis buckling is not modelled: the frame is 2-D, bending about the strong axis); the second mode is four times higher.",
+  "analysis": "frame",
+  "study": "buckling",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "HEA200",
+      "name": "HEA 200",
+      "shape": "ibeam",
+      "params": {
+        "h": 0.19,
+        "b": 0.2,
+        "tw": 0.0065,
+        "tf": 0.01
+      },
+      "A": 0.00538,
+      "I": 0.00003692,
+      "Z": 0.000388631578947,
+      "h": 0.19
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "B",
+      "x": 0,
+      "y": 3
+    }
+  ],
+  "members": [
+    {
+      "id": "M1",
+      "n1": "A",
+      "n2": "B",
+      "section": "HEA200",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A",
+      "ux": true,
+      "uy": true,
+      "rz": false
+    },
+    {
+      "id": "s2",
+      "node": "B",
+      "ux": true,
+      "uy": false,
+      "rz": false
+    }
+  ],
+  "nodeLoads": [
+    {
+      "id": "l1",
+      "node": "B",
+      "fx": 0,
+      "fy": -1000,
+      "mz": 0
+    }
+  ],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "lambda1": 8502.33520473,
+    "lambda2": 34009.3408189
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Two-span continuous beam",
+  "description": "IPE 240, two equal spans of 4 m, 15 kN/m on both. Expected (three-moment equation): R_B = 5wL/4 = 75 kN, R_A = R_C = 3wL/8 = 22.5 kN, hogging moment over the middle support wL²/8 = 30 kN·m.",
+  "analysis": "beam",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "IPE240",
+      "name": "IPE 240",
+      "shape": "ibeam",
+      "params": {
+        "h": 0.24,
+        "b": 0.12,
+        "tw": 0.0062,
+        "tf": 0.0098
+      },
+      "A": 0.00391,
+      "I": 0.00003892,
+      "Z": 0.000324333333333,
+      "h": 0.24
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "B",
+      "x": 4,
+      "y": 0
+    },
+    {
+      "id": "C",
+      "x": 8,
+      "y": 0
+    }
+  ],
+  "members": [
+    {
+      "id": "M1",
+      "n1": "A",
+      "n2": "B",
+      "section": "IPE240",
+      "material": "S235"
+    },
+    {
+      "id": "M2",
+      "n1": "B",
+      "n2": "C",
+      "section": "IPE240",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A",
+      "ux": true,
+      "uy": true,
+      "rz": false
+    },
+    {
+      "id": "s2",
+      "node": "B",
+      "ux": false,
+      "uy": true,
+      "rz": false
+    },
+    {
+      "id": "s3",
+      "node": "C",
+      "ux": false,
+      "uy": true,
+      "rz": false
+    }
+  ],
+  "nodeLoads": [],
+  "memberLoads": [
+    {
+      "id": "q1",
+      "member": "M1",
+      "type": "dist",
+      "dir": "y",
+      "w1": -15000,
+      "w2": -15000
+    },
+    {
+      "id": "q2",
+      "member": "M2",
+      "type": "dist",
+      "dir": "y",
+      "w1": -15000,
+      "w2": -15000
+    }
+  ],
+  "gravity": 0,
+  "expected": {
+    "ry:B": 75000,
+    "ry:A": 22500,
+    "ry:C": 22500,
+    "M:M1@1": -30000
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "format": "kmotion",
+  "version": 1,
+  "scene": "orbit",
+  "title": "Tadpole orbit around L4",
+  "description": "A body just inside the Lagrange point L4 of the Earth-Moon system circles it in a small, stable tadpole orbit (L4 is stable for μ < 0.0385). The Jacobi constant stays fixed.",
+  "method": "rk45",
+  "params": {
+    "mode": "restricted3",
+    "mu": 0.0121505856,
+    "ic": "l4",
+    "off": -0.02,
+    "cx": 0.5,
+    "cy": 0.3,
+    "cvx": 0,
+    "cvy": 0.3,
+    "inertial": false
+  }
+}

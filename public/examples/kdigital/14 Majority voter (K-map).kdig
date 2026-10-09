@@ -1,0 +1,395 @@
+{
+  "format": "kdig",
+  "version": 1,
+  "name": "Majority voter (K-map)",
+  "description": "The output is 1 when at least two of the three inputs are 1. The K-map shows three overlapping pairs — and why this cover has no hazards.",
+  "tab": "boolean",
+  "circuit": {
+    "parts": [
+      {
+        "id": "p1",
+        "kind": "switch",
+        "ref": "SW1",
+        "x": 0,
+        "y": 0,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "A",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "switch",
+        "ref": "SW2",
+        "x": 0,
+        "y": 50,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "B",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "switch",
+        "ref": "SW3",
+        "x": 0,
+        "y": 100,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "name": "C",
+          "value": "0"
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "and",
+        "ref": "U1",
+        "x": 140,
+        "y": 0,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p5",
+        "kind": "and",
+        "ref": "U2",
+        "x": 140,
+        "y": 70,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p6",
+        "kind": "and",
+        "ref": "U3",
+        "x": 140,
+        "y": 140,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "2"
+        }
+      },
+      {
+        "id": "p7",
+        "kind": "or",
+        "ref": "U4",
+        "x": 310,
+        "y": 70,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "delay": "",
+          "inputs": "3"
+        }
+      },
+      {
+        "id": "p8",
+        "kind": "led",
+        "ref": "LED1",
+        "x": 410,
+        "y": 0,
+        "rot": 0,
+        "mirror": false,
+        "props": {
+          "color": "red",
+          "name": "M"
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "x1": 30,
+        "y1": 0,
+        "x2": 50,
+        "y2": 0
+      },
+      {
+        "id": "w2",
+        "x1": 30,
+        "y1": 50,
+        "x2": 50,
+        "y2": 50
+      },
+      {
+        "id": "w3",
+        "x1": 30,
+        "y1": 100,
+        "x2": 50,
+        "y2": 100
+      },
+      {
+        "id": "w4",
+        "x1": 110,
+        "y1": -10,
+        "x2": 90,
+        "y2": -10
+      },
+      {
+        "id": "w5",
+        "x1": 110,
+        "y1": 10,
+        "x2": 90,
+        "y2": 10
+      },
+      {
+        "id": "w6",
+        "x1": 110,
+        "y1": 60,
+        "x2": 90,
+        "y2": 60
+      },
+      {
+        "id": "w7",
+        "x1": 110,
+        "y1": 80,
+        "x2": 90,
+        "y2": 80
+      },
+      {
+        "id": "w8",
+        "x1": 110,
+        "y1": 130,
+        "x2": 90,
+        "y2": 130
+      },
+      {
+        "id": "w9",
+        "x1": 110,
+        "y1": 150,
+        "x2": 90,
+        "y2": 150
+      },
+      {
+        "id": "w10",
+        "x1": 170,
+        "y1": 0,
+        "x2": 230,
+        "y2": 0
+      },
+      {
+        "id": "w11",
+        "x1": 230,
+        "y1": 0,
+        "x2": 230,
+        "y2": 50
+      },
+      {
+        "id": "w12",
+        "x1": 230,
+        "y1": 50,
+        "x2": 280,
+        "y2": 50
+      },
+      {
+        "id": "w13",
+        "x1": 170,
+        "y1": 70,
+        "x2": 280,
+        "y2": 70
+      },
+      {
+        "id": "w14",
+        "x1": 170,
+        "y1": 140,
+        "x2": 230,
+        "y2": 140
+      },
+      {
+        "id": "w15",
+        "x1": 230,
+        "y1": 140,
+        "x2": 230,
+        "y2": 90
+      },
+      {
+        "id": "w16",
+        "x1": 230,
+        "y1": 90,
+        "x2": 280,
+        "y2": 90
+      },
+      {
+        "id": "w17",
+        "x1": 340,
+        "y1": 70,
+        "x2": 360,
+        "y2": 70
+      },
+      {
+        "id": "w18",
+        "x1": 360,
+        "y1": 70,
+        "x2": 360,
+        "y2": 0
+      },
+      {
+        "id": "w19",
+        "x1": 360,
+        "y1": 0,
+        "x2": 380,
+        "y2": 0
+      }
+    ],
+    "labels": [
+      {
+        "id": "l1",
+        "name": "A",
+        "x": 50,
+        "y": 0,
+        "flip": false
+      },
+      {
+        "id": "l2",
+        "name": "B",
+        "x": 50,
+        "y": 50,
+        "flip": false
+      },
+      {
+        "id": "l3",
+        "name": "C",
+        "x": 50,
+        "y": 100,
+        "flip": false
+      },
+      {
+        "id": "l4",
+        "name": "A",
+        "x": 90,
+        "y": -10,
+        "flip": true
+      },
+      {
+        "id": "l5",
+        "name": "B",
+        "x": 90,
+        "y": 10,
+        "flip": true
+      },
+      {
+        "id": "l6",
+        "name": "A",
+        "x": 90,
+        "y": 60,
+        "flip": true
+      },
+      {
+        "id": "l7",
+        "name": "C",
+        "x": 90,
+        "y": 80,
+        "flip": true
+      },
+      {
+        "id": "l8",
+        "name": "B",
+        "x": 90,
+        "y": 130,
+        "flip": true
+      },
+      {
+        "id": "l9",
+        "name": "C",
+        "x": 90,
+        "y": 150,
+        "flip": true
+      }
+    ],
+    "notes": [
+      {
+        "id": "n1",
+        "text": "Majority voter: M = AB + AC + BC (a 2-out-of-3 vote)",
+        "x": -10,
+        "y": -80
+      }
+    ]
+  },
+  "boolean": {
+    "text": "M(A,B,C) = Σm(3,5,6,7)",
+    "style": "as-is",
+    "focus": "M"
+  },
+  "stimulus": [
+    {
+      "t": 0,
+      "set": {
+        "A": 0,
+        "B": 0,
+        "C": 0
+      }
+    },
+    {
+      "t": 20,
+      "set": {
+        "A": 0,
+        "B": 0,
+        "C": 1
+      }
+    },
+    {
+      "t": 40,
+      "set": {
+        "A": 0,
+        "B": 1,
+        "C": 0
+      }
+    },
+    {
+      "t": 60,
+      "set": {
+        "A": 0,
+        "B": 1,
+        "C": 1
+      }
+    },
+    {
+      "t": 80,
+      "set": {
+        "A": 1,
+        "B": 0,
+        "C": 0
+      }
+    },
+    {
+      "t": 100,
+      "set": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      }
+    },
+    {
+      "t": 120,
+      "set": {
+        "A": 1,
+        "B": 1,
+        "C": 0
+      }
+    },
+    {
+      "t": 140,
+      "set": {
+        "A": 1,
+        "B": 1,
+        "C": 1
+      }
+    }
+  ],
+  "until": 160
+}

@@ -1,0 +1,716 @@
+{
+ "format": "keln",
+ "version": 1,
+ "id": "nb-001",
+ "title": "pH meter calibration log",
+ "description": "Weekly two- and three-point calibration of the bench pH meter.",
+ "owner": "Ana Martin",
+ "created": "2026-01-05T08:00:00.000Z",
+ "modified": "2026-01-26T08:33:00.000Z",
+ "settings": {
+  "samplePrefix": "CAL",
+  "sampleDigits": 4
+ },
+ "projects": [
+  {
+   "id": "prj-002",
+   "code": "CAL",
+   "name": "Calibrations",
+   "description": ""
+  }
+ ],
+ "entries": [
+  {
+   "id": "ent-003",
+   "projectId": "prj-002",
+   "experiment": "CAL-2026-001",
+   "title": "pH meter calibration 2026-01-05",
+   "date": "2026-01-05T08:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "calibration",
+    "pH"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "pH meter (Mettler SevenCompact)",
+         "method": "Three-point calibration",
+         "operator": "Ana Martin",
+         "started": "2026-01-05T08:30:00",
+         "file": "",
+         "path": "",
+         "parameters": "Buffers pH 4.01, 7.00, 10.01 at 25.0 °C; slope 98.1 %",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Buffer check",
+         "columns": [
+          {
+           "name": "Buffer",
+           "unit": "pH"
+          },
+          {
+           "name": "Reading",
+           "unit": "pH"
+          },
+          {
+           "name": "Slope",
+           "unit": "%"
+          },
+          {
+           "name": "Deviation",
+           "unit": "pH"
+          }
+         ],
+         "rows": [
+          [
+           "4.01",
+           "4.02",
+           "98.1",
+           "0.01"
+          ],
+          [
+           "7.00",
+           "7.00",
+           "",
+           "0.00"
+          ],
+          [
+           "10.01",
+           "10.04",
+           "",
+           "0.03"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Result: "
+       },
+       {
+        "type": "text",
+        "text": "pass",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Acceptance: slope 95-105 %, deviation ≤ 0.05 pH at pH 4 and 7."
+       }
+      ]
+     },
+     {
+      "type": "taskList",
+      "content": [
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Slope within 95-105 %"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Label updated with the next due date"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "calibration-log",
+   "created": "2026-01-05T08:30:00.000Z",
+   "modified": "2026-01-05T08:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-004",
+   "projectId": "prj-002",
+   "experiment": "CAL-2026-002",
+   "title": "pH meter calibration 2026-01-12",
+   "date": "2026-01-12T08:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "calibration",
+    "pH"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "pH meter (Mettler SevenCompact)",
+         "method": "Three-point calibration",
+         "operator": "Ana Martin",
+         "started": "2026-01-12T08:30:00",
+         "file": "",
+         "path": "",
+         "parameters": "Buffers pH 4.01, 7.00, 10.01 at 25.0 °C; slope 97.6 %",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Buffer check",
+         "columns": [
+          {
+           "name": "Buffer",
+           "unit": "pH"
+          },
+          {
+           "name": "Reading",
+           "unit": "pH"
+          },
+          {
+           "name": "Slope",
+           "unit": "%"
+          },
+          {
+           "name": "Deviation",
+           "unit": "pH"
+          }
+         ],
+         "rows": [
+          [
+           "4.01",
+           "4.00",
+           "97.6",
+           "-0.01"
+          ],
+          [
+           "7.00",
+           "7.01",
+           "",
+           "0.01"
+          ],
+          [
+           "10.01",
+           "10.02",
+           "",
+           "0.01"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Result: "
+       },
+       {
+        "type": "text",
+        "text": "pass",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Acceptance: slope 95-105 %, deviation ≤ 0.05 pH at pH 4 and 7."
+       }
+      ]
+     },
+     {
+      "type": "taskList",
+      "content": [
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Slope within 95-105 %"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Label updated with the next due date"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "calibration-log",
+   "created": "2026-01-12T08:30:00.000Z",
+   "modified": "2026-01-12T08:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-005",
+   "projectId": "prj-002",
+   "experiment": "CAL-2026-003",
+   "title": "pH meter calibration 2026-01-19",
+   "date": "2026-01-19T08:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "calibration",
+    "pH"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "pH meter (Mettler SevenCompact)",
+         "method": "Three-point calibration",
+         "operator": "Ana Martin",
+         "started": "2026-01-19T08:30:00",
+         "file": "",
+         "path": "",
+         "parameters": "Buffers pH 4.01, 7.00, 10.01 at 25.0 °C; slope 95.2 %",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Buffer check",
+         "columns": [
+          {
+           "name": "Buffer",
+           "unit": "pH"
+          },
+          {
+           "name": "Reading",
+           "unit": "pH"
+          },
+          {
+           "name": "Slope",
+           "unit": "%"
+          },
+          {
+           "name": "Deviation",
+           "unit": "pH"
+          }
+         ],
+         "rows": [
+          [
+           "4.01",
+           "4.08",
+           "95.2",
+           "0.07"
+          ],
+          [
+           "7.00",
+           "7.03",
+           "",
+           "0.03"
+          ],
+          [
+           "10.01",
+           "10.11",
+           "",
+           "0.10"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Result: "
+       },
+       {
+        "type": "text",
+        "text": "fail: electrode replaced",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Acceptance: slope 95-105 %, deviation ≤ 0.05 pH at pH 4 and 7."
+       }
+      ]
+     },
+     {
+      "type": "taskList",
+      "content": [
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": false
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Slope within 95-105 %"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Label updated with the next due date"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "calibration-log",
+   "created": "2026-01-19T08:30:00.000Z",
+   "modified": "2026-01-19T08:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  },
+  {
+   "id": "ent-006",
+   "projectId": "prj-002",
+   "experiment": "CAL-2026-004",
+   "title": "pH meter calibration 2026-01-26",
+   "date": "2026-01-26T08:30:00",
+   "author": "Ana Martin",
+   "tags": [
+    "calibration",
+    "pH"
+   ],
+   "status": "draft",
+   "favourite": false,
+   "content": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "instrument",
+        "data": {
+         "instrument": "pH meter (Mettler SevenCompact)",
+         "method": "Three-point calibration",
+         "operator": "Ana Martin",
+         "started": "2026-01-26T08:30:00",
+         "file": "",
+         "path": "",
+         "parameters": "Buffers pH 4.01, 7.00, 10.01 at 25.0 °C; slope 99.0 %",
+         "notes": ""
+        }
+       }
+      }
+     },
+     {
+      "type": "elnBlock",
+      "attrs": {
+       "block": {
+        "kind": "measurements",
+        "data": {
+         "title": "Buffer check",
+         "columns": [
+          {
+           "name": "Buffer",
+           "unit": "pH"
+          },
+          {
+           "name": "Reading",
+           "unit": "pH"
+          },
+          {
+           "name": "Slope",
+           "unit": "%"
+          },
+          {
+           "name": "Deviation",
+           "unit": "pH"
+          }
+         ],
+         "rows": [
+          [
+           "4.01",
+           "4.01",
+           "99.0",
+           "0.00"
+          ],
+          [
+           "7.00",
+           "7.00",
+           "",
+           "0.00"
+          ],
+          [
+           "10.01",
+           "10.01",
+           "",
+           "0.00"
+          ]
+         ]
+        }
+       }
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Result: "
+       },
+       {
+        "type": "text",
+        "text": "pass (new electrode)",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Acceptance: slope 95-105 %, deviation ≤ 0.05 pH at pH 4 and 7."
+       }
+      ]
+     },
+     {
+      "type": "taskList",
+      "content": [
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Slope within 95-105 %"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "taskItem",
+        "attrs": {
+         "checked": true
+        },
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Label updated with the next due date"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "attachments": [],
+   "links": [],
+   "samples": [],
+   "template": "calibration-log",
+   "created": "2026-01-26T08:30:00.000Z",
+   "modified": "2026-01-26T08:30:00.000Z",
+   "signature": null,
+   "witness": null,
+   "addenda": []
+  }
+ ],
+ "samples": [],
+ "inventory": [],
+ "savedSearches": [],
+ "instruments": [
+  "pH meter (Mettler SevenCompact)"
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "time": "2026-01-05T08:03:00.000Z",
+   "user": "Ana Martin",
+   "action": "notebook-created",
+   "entryId": "",
+   "number": "",
+   "hash": "",
+   "detail": "pH meter calibration log",
+   "prev": "",
+   "rec": "924bbc7d9166af9de76663c4a6bcb82b9ba3d8b1ce3cb4deb6f78518068b9763"
+  },
+  {
+   "seq": 2,
+   "time": "2026-01-05T08:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-003",
+   "number": "CAL-2026-001",
+   "hash": "f8650eb3facc5e54d7e05adf1943d586b0e8d4a56ed8ddf131fec853c60a5985",
+   "detail": "pH meter calibration 2026-01-05",
+   "prev": "924bbc7d9166af9de76663c4a6bcb82b9ba3d8b1ce3cb4deb6f78518068b9763",
+   "rec": "9ce1c4716bbeac674b3ee3d1c98f19f1ead655ff845e0071bce16d41c08dcd0f"
+  },
+  {
+   "seq": 3,
+   "time": "2026-01-12T08:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-004",
+   "number": "CAL-2026-002",
+   "hash": "fc4dd44858df2b8e7546ed27b54e7f79b287ac552b470f80c23abe33bcdbc519",
+   "detail": "pH meter calibration 2026-01-12",
+   "prev": "9ce1c4716bbeac674b3ee3d1c98f19f1ead655ff845e0071bce16d41c08dcd0f",
+   "rec": "757a2d42bb25198b147765103a0e21b73b3f6f019e2e89ce15178a86b3621f28"
+  },
+  {
+   "seq": 4,
+   "time": "2026-01-19T08:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-005",
+   "number": "CAL-2026-003",
+   "hash": "a0c557e1891ef485715e5e544a61b03784b4e38b6bdc5307ce4cd30e7fe86601",
+   "detail": "pH meter calibration 2026-01-19",
+   "prev": "757a2d42bb25198b147765103a0e21b73b3f6f019e2e89ce15178a86b3621f28",
+   "rec": "5833dfd5eb253a276de8152245fe6ca9eb835959ed8a04a40afa1652103d7dcd"
+  },
+  {
+   "seq": 5,
+   "time": "2026-01-26T08:33:00.000Z",
+   "user": "Ana Martin",
+   "action": "entry-created",
+   "entryId": "ent-006",
+   "number": "CAL-2026-004",
+   "hash": "cba0f48fe5959df53f2262408f9c30e56a9e750f267a9974b2899f9b269611bb",
+   "detail": "pH meter calibration 2026-01-26",
+   "prev": "5833dfd5eb253a276de8152245fe6ca9eb835959ed8a04a40afa1652103d7dcd",
+   "rec": "b2fc8c3f5aae4f3c5ce2c5447a95a3f7041dea4b6bfbb76bab5bb78635ec7bf4"
+  }
+ ]
+}

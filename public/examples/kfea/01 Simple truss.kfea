@@ -1,0 +1,111 @@
+{
+  "format": "kfea",
+  "version": 1,
+  "name": "Simple truss (method of joints)",
+  "description": "A triangular truss: pin at A, roller at B, 10 kN down at the apex C. Expected (method of joints): reactions 5 kN each; AB = +3.3333 kN (tension), AC = BC = -6.0093 kN (compression); the apex moves 0.07393 mm down.",
+  "analysis": "truss",
+  "units": {
+    "length": "m",
+    "force": "kN"
+  },
+  "materials": [
+    {
+      "id": "S235",
+      "name": "Structural steel S235",
+      "E": 210000000000,
+      "nu": 0.3,
+      "rho": 7850,
+      "sy": 235000000,
+      "alpha": 0.000012
+    }
+  ],
+  "sections": [
+    {
+      "id": "CIRC50",
+      "name": "Round bar Ø50 mm",
+      "shape": "circle",
+      "params": {
+        "d": 0.05
+      },
+      "A": 0.00196349540849,
+      "I": 3.06796157577e-7,
+      "Z": 0.0000122718463031,
+      "h": 0.05
+    }
+  ],
+  "nodes": [
+    {
+      "id": "A",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "B",
+      "x": 4,
+      "y": 0
+    },
+    {
+      "id": "C",
+      "x": 2,
+      "y": 3
+    }
+  ],
+  "members": [
+    {
+      "id": "AB",
+      "n1": "A",
+      "n2": "B",
+      "section": "CIRC50",
+      "material": "S235"
+    },
+    {
+      "id": "AC",
+      "n1": "A",
+      "n2": "C",
+      "section": "CIRC50",
+      "material": "S235"
+    },
+    {
+      "id": "BC",
+      "n1": "B",
+      "n2": "C",
+      "section": "CIRC50",
+      "material": "S235"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s1",
+      "node": "A",
+      "ux": true,
+      "uy": true,
+      "rz": false
+    },
+    {
+      "id": "s2",
+      "node": "B",
+      "ux": false,
+      "uy": true,
+      "rz": false
+    }
+  ],
+  "nodeLoads": [
+    {
+      "id": "l1",
+      "node": "C",
+      "fx": 0,
+      "fy": -10000,
+      "mz": 0
+    }
+  ],
+  "memberLoads": [],
+  "gravity": 0,
+  "expected": {
+    "ry:A": 5000,
+    "ry:B": 5000,
+    "N:AB": 3333.33333333,
+    "N:AC": -6009.25212577,
+    "N:BC": -6009.25212577,
+    "uy:C": -0.0000739316533294
+  }
+}
