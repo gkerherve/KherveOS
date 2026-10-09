@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Cpu, HardDrive, Info, Palette, Server, Sparkles, type LucideIcon } from 'lucide-react'
 import { os, fs, formatSize, useFsVersion, type AppProps } from '@/os'
 import { UI_SCALES, useSettings } from '@/os/settings'
+import { DESKTOP_LOOKS } from '@/os/themes'
 import { WALLPAPERS, WALLPAPER_FITS, wallpaperCss, wallpaperOf } from '@/shell/wallpapers'
 import { APPS, GROUPS } from '@/os/registry'
 import { AppIcon } from '@/os/ui/AppIcon'
@@ -67,7 +68,7 @@ export default function Settings({ win, args }: AppProps) {
 }
 
 function Appearance() {
-  const { wallpaperOpacity, wallpaperFit, wallpaper, uiScale, desktopIcons, dockZoom, lightApps, set } = useSettings()
+  const { wallpaperOpacity, wallpaperFit, wallpaper, uiScale, desktopIcons, dockZoom, lightApps, theme, set } = useSettings()
 
   return (
     <>
@@ -128,6 +129,19 @@ function Appearance() {
       </label>
 
       <h2>Desktop</h2>
+      <div className="st-inline st-slider">
+        Look
+        <div className="st-seg" role="radiogroup" aria-label="Desktop look">
+          {DESKTOP_LOOKS.map((l) => (
+            <button key={l.id} role="radio" aria-checked={theme === l.id} className={theme === l.id ? 'on' : ''} onClick={() => set({ theme: l.id })}>
+              {l.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="k-muted st-note">
+        Dark keeps the menu bar, the Dock, the desktop and the windows black and green. Light makes them all white and green. Apps set to Light below stay light either way.
+      </p>
       <div className="st-inline st-slider">
         Interface size
         <div className="st-seg" role="radiogroup" aria-label="Interface size">

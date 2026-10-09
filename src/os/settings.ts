@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
 export interface SettingsState {
-  /** "Auto" follows the system light/dark setting; otherwise a theme name. */
+  /** The desktop's look: 'Kherve Green' (dark, the default) or 'Kherve Light' (white and green). */
   theme: string
   /** The wallpaper's id (see src/shell/wallpapers.ts): 'ktools-lab', 'graphene', 'molecules'… */
   wallpaper: string

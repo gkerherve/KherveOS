@@ -4,11 +4,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  CELL_H, CELL_W, PAD_X, PAD_Y, arrangeInOrder, cellPos, cleanUp, gridSize, layout, moveIcons, nearestCell, sortItems,
+  CELL_H, CELL_W, ICON_H, ICON_W, PAD_X, PAD_Y, arrangeInOrder, cellPos, cleanUp, gridSize, layout, moveIcons, nearestCell, sortItems,
 } from '../desktopLayout.ts'
 
-// 3 rows (12 + 3 × 104 ≤ 340) and plenty of columns.
-const area = { w: 1000, h: 340 }
+// 3 rows (12 + 3 × 120 ≤ 380) and plenty of columns.
+const area = { w: 1000, h: 380 }
 
 test('grid size', () => {
   assert.deepEqual(gridSize(area), { cols: 10, rows: 3 })
@@ -25,7 +25,7 @@ test('new icons fill columns from the top right, saved ones keep their place', (
 
 test('a saved position off screen is brought back inside', () => {
   const pos = layout(['a'], { a: { x: 5000, y: 5000 } }, area)
-  assert.ok(pos.a.x <= area.w - 92 && pos.a.y <= area.h - 100)
+  assert.ok(pos.a.x <= area.w - ICON_W && pos.a.y <= area.h - ICON_H)
 })
 
 test('dragging snaps to the nearest free cell', () => {

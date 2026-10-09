@@ -7,9 +7,9 @@
   z-index: 1;
   width: min(300px, calc(100vw - 24px));
   padding: 9px 12px 10px;
-  background: rgba(14, 18, 16, 0.42);
-  color: #f1f7f3;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--k-glass);
+  color: var(--k-glass-text);
+  border: 1px solid var(--k-glass-border);
   border-radius: 12px;
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35), inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(28px) saturate(1.8);
@@ -34,19 +34,19 @@
   border: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
-  color: rgba(241, 247, 243, 0.75);
+  color: color-mix(in srgb, var(--k-glass-text) 75%, transparent);
   cursor: pointer;
   padding: 0;
 }
 .k-clipcard-close:hover {
   background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: var(--k-glass-text);
 }
 .k-clipcard p {
   display: flex;
   gap: 8px;
   margin: 0 0 5px;
-  color: rgba(241, 247, 243, 0.86);
+  color: color-mix(in srgb, var(--k-glass-text) 86%, transparent);
 }
 .k-clipcard p > svg {
   flex: none;
@@ -54,7 +54,7 @@
   color: var(--k-accent);
 }
 .k-clipcard b {
-  color: #fff;
+  color: var(--k-glass-text);
   font-weight: 600;
 }
 .k-clipcard-btn {
@@ -66,7 +66,7 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 6px;
   background: color-mix(in srgb, var(--k-accent) 70%, transparent);
-  color: #fff;
+  color: var(--k-glass-text);
   font: inherit;
   font-size: 11.5px;
   cursor: pointer;
@@ -83,8 +83,8 @@
   gap: 6px;
   margin-top: 7px;
   padding-top: 7px;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-  color: rgba(241, 247, 243, 0.78);
+  border-top: 1px solid var(--k-glass-sep);
+  color: color-mix(in srgb, var(--k-glass-text) 78%, transparent);
 }
 .k-clipcard-actions {
   display: inline-flex;
@@ -95,7 +95,7 @@
   width: 100%;
   height: 4px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--k-glass-sep);
   overflow: hidden;
 }
 .k-clipcard-bar > span {
@@ -142,7 +142,7 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  color: rgba(241, 247, 243, 0.7);
+  color: color-mix(in srgb, var(--k-glass-text) 70%, transparent);
   font-size: 11px;
 }
 .k-paste-detail > span:first-child {

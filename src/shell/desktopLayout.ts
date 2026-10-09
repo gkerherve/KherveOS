@@ -16,11 +16,11 @@ export interface Area {
   h: number
 }
 
-/** One grid cell: an icon (92 × 100) plus the gap. */
+/** One grid cell: an icon (92 × 116, its name up to three lines) plus the gap. */
 export const CELL_W = 96
-export const CELL_H = 104
+export const CELL_H = 120
 export const ICON_W = 92
-export const ICON_H = 100
+export const ICON_H = 116
 /** The icon area's padding: icons start this far from its top and right edges. */
 export const PAD_X = 14
 export const PAD_Y = 12

@@ -17,8 +17,10 @@ server in `server/`. See README.md for the layout.
 ## Look
 
 macOS-flavoured: thin menu bar (`src/shell/TopBar.tsx`) showing the focused app's menus
-(`win.setMenus`), a Dock (`Dock.tsx`), Launchpad, traffic-light window buttons. One theme,
-"Kherve Green" (dark black + green, `src/os/themes.extra.ts`): no theme or style choices.
+(`win.setMenus`), a Dock (`Dock.tsx`), Launchpad, traffic-light window buttons. Two looks for the
+desktop, chosen in Settings › Appearance › Desktop: "Kherve Green" (dark black + green, the default)
+or "Kherve Light" (white + green), both in `src/os/themes.extra.ts`. The shell's glass panels and
+desktop names use the `--k-glass*`, `--k-shell-text` and `--k-scrim` tokens (`src/os/themes.ts`), never fixed colours.
 Wallpapers: the list in `src/shell/wallpapers.ts` (files in `public/wallpapers/`): the user's
 "kTools – Advanced Tech Lab" artwork (`ktools-tech-lab.webp`, with a fading floor reflection added
 below so its caption clears the Dock), and the green science pictures drawn by

@@ -21,10 +21,14 @@ export const ALL_THEMES: Record<string, Record<string, string>> = { ...KHERVEOS_
 export const THEME_NAMES = Object.keys(ALL_THEMES)
 export const KHERVEOS_THEME_NAMES = Object.keys(KHERVEOS_THEMES)
 
-/** KherveOS has one look: black and green. */
+/** The desktop's look, chosen in Settings › Appearance: black and green (the default) or white and green. */
 export const THEME = 'Kherve Green'
 export const DEFAULT_DARK = THEME
 export const DEFAULT_LIGHT = 'Kherve Light'
+export const DESKTOP_LOOKS = [
+  { id: DEFAULT_DARK, name: 'Dark' },
+  { id: DEFAULT_LIGHT, name: 'Light' },
+]
 /** "Auto" follows the system: these two. */
 export const AUTO_DARK = DEFAULT_DARK
 export const AUTO_LIGHT = DEFAULT_LIGHT
@@ -57,12 +61,20 @@ export function themeVars(name: string): Record<string, string> {
     '--k-danger': dark ? '#ff6b6b' : '#d33a3a',
     '--k-success': dark ? '#4ade80' : '#15803d',
     '--k-warning': dark ? '#fbbf24' : '#b45309',
+    // Frosted panels (menus, the Files & Clipboard card) and the text drawn straight on the desktop.
+    '--k-glass': dark ? 'rgba(14, 18, 16, 0.42)' : 'rgba(255, 255, 255, 0.66)',
+    '--k-glass-text': dark ? '#f1f7f3' : t.text,
+    '--k-glass-border': dark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.12)',
+    '--k-glass-sep': dark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.1)',
+    '--k-shell-text': dark ? '#ffffff' : t.text,
+    '--k-scrim': dark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 255, 255, 0.5)',
   }
 }
 
-/** The theme in use — always the KherveOS black-and-green. */
+/** The desktop's theme, as chosen in Settings › Appearance (dark by default). */
 export function useResolvedTheme(): string {
-  return THEME
+  const look = useSettings((s) => s.theme)
+  return ALL_THEMES[look] ? look : THEME
 }
 
 export function applyTheme(name: string) {
