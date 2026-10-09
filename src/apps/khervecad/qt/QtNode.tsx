@@ -45,11 +45,49 @@ const isLayout = (x: unknown): x is LayoutNode => !!x && typeof x === 'object' &
 
 // ------------------------------------------------------------------ layout
 
+/** Some widget under this item expands (a tree, a table, a splitter…). */
+function hasExpanding(item: Node | LayoutNode | null): boolean {
+  if (!item || (!isLayout(item) && item.hid)) return false
+  if (isLayout(item)) {
+    if (item.k === 'form') return (item.rows ?? []).some(([, f]) => hasExpanding(f))
+    if (item.k === 'grid') return (item.cells ?? []).some((c) => hasExpanding(c[4]))
+    return (item.items ?? []).some(hasExpanding)
+  }
+  return !!item.t && EXPANDING.has(item.t)
+}
+
+/**
+ * Whether `item`, inside the box `box`, takes spare room along `axis`, as Qt's
+ * size policies decide: a stretch or a stretch factor counts only along the box's
+ * own direction; an expanding widget counts either way.
+ */
+function takesSpare(item: Node | LayoutNode | null, box: LayoutNode, axis: 'v' | 'h'): boolean {
+  if (!item) return false
+  const along = box.k === axis
+  if (isLayout(item)) {
+    if (item.k === 'stretch') return along
+    if (item.k === 'space') return false
+    if (item.k === 'h' || item.k === 'v') return (item.items ?? []).some((c) => takesSpare(c, item, axis))
+    return hasExpanding(item)
+  }
+  if (item.hid) return false
+  return hasExpanding(item) || (along && !!item.str)
+}
+
 function LayoutItem({ item, dir }: { item: Node | LayoutNode | null; dir: 'v' | 'h' | 'cell' }) {
   if (!item) return null
   if (isLayout(item)) {
     if (item.k === 'stretch') return <div className="kc-stretch" style={{ flex: `${item.n ?? 1} 1 0` }} />
     if (item.k === 'space') return <div style={{ flex: `0 0 ${item.n ?? 6}px` }} />
+    // A nested box keeps its own size unless it holds something that takes spare room along the parent's direction.
+    if (item.k === 'h' || item.k === 'v') {
+      const spare = dir === 'cell' || (item.items ?? []).some((c) => takesSpare(c, item, dir))
+      return (
+        <div className={`kc-li kc-li-${dir}`} style={{ flex: spare ? '1 1 0' : '0 0 auto' }}>
+          <Layout l={item} nested />
+        </div>
+      )
+    }
     return <Layout l={item} nested />
   }
   const n = item
@@ -698,7 +736,7 @@ export const QtNode = memo(function QtNode({ n }: { n: Node }) {
       else body = <Container n={n} />
   }
   return (
-    <div className={`kc-w kc-w-${n.t ?? 'w'}`} style={style} {...tip} data-kc-name={n.name}>
+    <div className={`kc-w kc-w-${n.t ?? 'w'}${n.t && EXPANDING.has(n.t) ? ' kc-x' : ''}`} style={style} {...tip} data-kc-name={n.name}>
       {body}
     </div>
   )

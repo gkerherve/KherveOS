@@ -226,6 +226,13 @@
   flex: 0 0 auto;
 }
 
+/* An expanding widget (tree, table, tabs, splitter…) fills the item it sits in, like Qt's expanding policy. */
+.kc-li > .kc-x {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
 .kc-stretch {
   min-width: 0;
   min-height: 0;
