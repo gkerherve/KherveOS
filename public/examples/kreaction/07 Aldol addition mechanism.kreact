@@ -1,0 +1,111 @@
+{
+  "format": "kreact",
+  "version": 1,
+  "title": "Aldol addition mechanism",
+  "description": "Base-catalysed addition of ethanal to itself: enolate formation, attack on a second carbonyl and protonation of the alkoxide to 3-hydroxybutanal.",
+  "tool": "mechanism",
+  "builder": {
+    "reactants": [
+      "acetaldehyde"
+    ],
+    "products": [
+      "3-hydroxybutanal"
+    ],
+    "arrow": "equilibrium",
+    "above": "NaOH (cat.)",
+    "below": "water, 5–10 °C",
+    "coeffs": [
+      2,
+      1
+    ],
+    "fromId": "aldol"
+  },
+  "library": {
+    "selected": null,
+    "query": "",
+    "cls": ""
+  },
+  "mechanism": {
+    "reactionId": "aldol",
+    "step": 1
+  },
+  "predict": {
+    "reactants": [
+      "CC(=O)O",
+      "CCO"
+    ]
+  },
+  "kinetics": {
+    "tab": "simulate",
+    "text": "A = 1\nB = 0\nA -> B ; k = 0.05",
+    "tEnd": "100",
+    "logTime": false,
+    "method": "auto",
+    "presetId": "first-order",
+    "hidden": [],
+    "orderData": "# t (s)   [A] (mol/L)\n0   1.000\n10  0.607\n20  0.368\n30  0.223\n40  0.135\n50  0.082\n60  0.050",
+    "arrData": "# T (K)   k (s^-1)\n300  0.0013\n320  0.0098\n340  0.057\n360  0.27\n380  1.05",
+    "arrKind": "arrhenius",
+    "mm": {
+      "k1": "10",
+      "km1": "1",
+      "kcat": "2",
+      "e0": "0.01",
+      "s0": "0.1, 0.2, 0.5, 1, 2, 5"
+    }
+  },
+  "energy": {
+    "tab": "profile",
+    "profile": {
+      "points": [
+        {
+          "label": "N₂ + 3 H₂",
+          "energy": 0,
+          "kind": "reactant"
+        },
+        {
+          "label": "Transition state",
+          "energy": 230,
+          "kind": "ts"
+        },
+        {
+          "label": "2 NH₃",
+          "energy": -92,
+          "kind": "product"
+        }
+      ]
+    },
+    "showCatalysed": true,
+    "lower": "80",
+    "source": "haber",
+    "thermo": {
+      "dH": "-92",
+      "dS": "-199",
+      "T": "298",
+      "T2": "700",
+      "K1": "6e5",
+      "dHvh": "-92"
+    },
+    "ice": {
+      "equation": "N2O4 <=> 2 NO2",
+      "initial": "N2O4 = 0.100, NO2 = 0",
+      "K": "0.0059",
+      "mode": "Kc",
+      "T": "298",
+      "add": "0.05",
+      "addSpecies": "N2O4",
+      "volume": "0.5",
+      "T2": "350",
+      "dH": "57"
+    }
+  },
+  "notebook": [
+    {
+      "id": "example",
+      "label": "About this example",
+      "tool": "Mechanism",
+      "text": "Aldol addition mechanism\n\nBase-catalysed addition of ethanal to itself: enolate formation, attack on a second carbonyl and protonation of the alkoxide to 3-hydroxybutanal.\n\nAldol addition of ethanal: 1 reactant(s) → 1 product(s), 4 states.\nStates: Reactants → Enolate → Alkoxide → Products.\nOverall ΔH = -10 kJ/mol; highest transition state 45 kJ/mol above the reactants (the rate-determining step is Enolate → Alkoxide).\nThe enolate (state 2) is the nucleophile; its attack on the second ethanal (the highest barrier) is the rate-determining step.",
+      "time": 0
+    }
+  ]
+}

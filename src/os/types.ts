@@ -5,7 +5,9 @@ import type { MenuBarMenu } from './ui/Menu'
 export type AppCategory = 'system' | 'kherve' | 'internet' | 'games'
 
 /** The submenu of the Applications menu (bottom-left of the Dock) an app sits in. */
-export type AppGroup = 'Office' | 'Science' | 'Development' | 'Internet' | 'Tools' | 'Games'
+export type AppGroup =
+  | 'Office' | 'Electricity' | 'Physics' | 'Chemistry' | 'Programming' | 'Materials' | 'Earth' | 'Mechanicals' | 'Management'
+  | 'Internet' | 'Tools' | 'Games'
 
 /** What an app is opened with. Apps read the fields they understand. */
 export interface AppArgs {

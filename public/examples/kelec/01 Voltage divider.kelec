@@ -1,0 +1,143 @@
+{
+  "format": "kelec",
+  "version": 1,
+  "parts": [
+    {
+      "id": "p1",
+      "kind": "battery",
+      "ref": "V1",
+      "value": "10",
+      "x": 100,
+      "y": 200,
+      "rot": 0,
+      "mirror": false,
+      "props": {
+        "ac": ""
+      }
+    },
+    {
+      "id": "p2",
+      "kind": "resistor",
+      "ref": "R1",
+      "value": "1k",
+      "x": 240,
+      "y": 140,
+      "rot": 90,
+      "mirror": false,
+      "props": {}
+    },
+    {
+      "id": "p3",
+      "kind": "resistor",
+      "ref": "R2",
+      "value": "3k",
+      "x": 240,
+      "y": 230,
+      "rot": 90,
+      "mirror": false,
+      "props": {}
+    },
+    {
+      "id": "p4",
+      "kind": "ground",
+      "ref": "GND1",
+      "value": "",
+      "x": 100,
+      "y": 270,
+      "rot": 0,
+      "mirror": false,
+      "props": {}
+    }
+  ],
+  "wires": [
+    {
+      "id": "w1",
+      "x1": 100,
+      "y1": 270,
+      "x2": 100,
+      "y2": 260
+    },
+    {
+      "id": "w2",
+      "x1": 100,
+      "y1": 260,
+      "x2": 100,
+      "y2": 230
+    },
+    {
+      "id": "w3",
+      "x1": 240,
+      "y1": 260,
+      "x2": 100,
+      "y2": 260
+    },
+    {
+      "id": "w4",
+      "x1": 240,
+      "y1": 110,
+      "x2": 170,
+      "y2": 110
+    },
+    {
+      "id": "w5",
+      "x1": 170,
+      "y1": 110,
+      "x2": 100,
+      "y2": 110
+    },
+    {
+      "id": "w6",
+      "x1": 100,
+      "y1": 110,
+      "x2": 100,
+      "y2": 170
+    },
+    {
+      "id": "w7",
+      "x1": 240,
+      "y1": 200,
+      "x2": 240,
+      "y2": 190
+    },
+    {
+      "id": "w8",
+      "x1": 240,
+      "y1": 190,
+      "x2": 240,
+      "y2": 170
+    }
+  ],
+  "labels": [
+    {
+      "id": "l1",
+      "name": "in",
+      "x": 170,
+      "y": 110
+    },
+    {
+      "id": "l2",
+      "name": "out",
+      "x": 240,
+      "y": 190
+    }
+  ],
+  "notes": [],
+  "sim": {
+    "analysis": "op",
+    "dcSource": "V1",
+    "dcStart": "0",
+    "dcStop": "5",
+    "dcStep": "0.1",
+    "acStart": "1",
+    "acStop": "1meg",
+    "acPoints": "20",
+    "tranStop": "10m",
+    "tranStep": "",
+    "tranMax": "",
+    "uic": false
+  },
+  "name": "Voltage divider",
+  "show": [
+    "V(out)"
+  ]
+}

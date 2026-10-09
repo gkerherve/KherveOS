@@ -1,4 +1,5 @@
-// The .kelec file: JSON  {format: "kelec", version: 1, parts, wires, labels, notes, sim}.
+// The .kelec file: JSON  {format: "kelec", version: 1, parts, wires, labels, notes, sim}, and for the example files
+// also {show: ["V(out)"], stacked: true}: the traces the scope shows first (the app then runs the analysis on opening).
 
 import { PART_DEFS, defaultProps, emptyDoc, type Doc, type Note, type Part, type PartKind, type Rot } from './model.ts'
 import { DEFAULT_SETTINGS, type SimSettings } from './settings.ts'
@@ -14,21 +15,29 @@ export interface KelecFile {
   sim: SimSettings
   /** the text of the netlist tab, when it was used */
   netlist?: string
+  /** traces to show first, and whether to stack them (example files) */
+  show?: string[]
+  stacked?: boolean
 }
 
-export function toKelec(doc: Doc, sim: SimSettings, name?: string, netlist?: string): KelecFile {
+/** What an example file adds: the scope traces and their layout. */
+export interface FileView { show?: string[]; stacked?: boolean }
+
+export function toKelec(doc: Doc, sim: SimSettings, name?: string, netlist?: string, view?: FileView): KelecFile {
   const f: KelecFile = { format: 'kelec', version: 1, parts: doc.parts, wires: doc.wires, labels: doc.labels, notes: doc.notes, sim }
   if (name) f.name = name
   if (netlist?.trim()) f.netlist = netlist
+  if (view?.show?.length) f.show = view.show
+  if (view?.stacked) f.stacked = true
   return f
 }
 
-export const serializeKelec = (doc: Doc, sim: SimSettings, name?: string, netlist?: string): string => JSON.stringify(toKelec(doc, sim, name, netlist), null, 2) + '\n'
+export const serializeKelec = (doc: Doc, sim: SimSettings, name?: string, netlist?: string, view?: FileView): string => JSON.stringify(toKelec(doc, sim, name, netlist, view), null, 2) + '\n'
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 const str = (v: unknown, d = ''): string => (typeof v === 'string' ? v : isNum(v) ? String(v) : d)
 
-export interface Loaded { doc: Doc; sim: SimSettings; name: string; netlist: string }
+export interface Loaded { doc: Doc; sim: SimSettings; name: string; netlist: string; show: string[]; stacked: boolean }
 
 /** Reads a .kelec file; throws a readable error when it is not one. Unknown parts are skipped. */
 export function parseKelec(text: string): Loaded {
@@ -78,5 +87,6 @@ export function parseKelec(text: string): Loaded {
       else if (k === 'analysis') { if (['op', 'dc', 'ac', 'tran'].includes(str(s.analysis))) sim.analysis = s.analysis as SimSettings['analysis'] } else if (s[k] !== undefined) (sim as unknown as Record<string, string>)[k] = str(s[k])
     }
   }
-  return { doc, sim, name: str(o.name), netlist: str(o.netlist) }
+  const show = Array.isArray(o.show) ? o.show.filter((x): x is string => typeof x === 'string') : []
+  return { doc, sim, name: str(o.name), netlist: str(o.netlist), show, stacked: o.stacked === true }
 }

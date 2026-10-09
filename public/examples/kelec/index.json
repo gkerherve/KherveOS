@@ -1,0 +1,174 @@
+{
+  "app": "kelec",
+  "folder": "kElec Examples",
+  "examples": [
+    {
+      "file": "01 Voltage divider.kelec",
+      "title": "Voltage divider",
+      "description": "Two resistors share 10 V in the ratio R2/(R1+R2): the output is 7.5 V. Run DC and read the node voltages on the schematic; change R2 and run again.",
+      "group": "Basics"
+    },
+    {
+      "file": "02 RC charge and discharge.kelec",
+      "title": "RC charge and discharge",
+      "description": "A 5 V square wave drives a 1 kΩ / 1 µF network (τ = 1 ms). The capacitor charges during the high half and discharges during the low half. Run a transient and read the 63 % point.",
+      "group": "Basics"
+    },
+    {
+      "file": "03 RC low-pass filter (Bode plot).kelec",
+      "title": "RC low-pass filter (Bode plot)",
+      "description": "A 1.59 kΩ / 100 nF low-pass: −3 dB at 1 kHz, falling 20 dB per decade, with 45° of phase lag at the corner. Run the AC sweep and place the cursors on the curve.",
+      "group": "Filters"
+    },
+    {
+      "file": "04 RLC resonance (band-pass).kelec",
+      "title": "RLC resonance (band-pass)",
+      "description": "A series RLC circuit with the output across the resistor peaks at f₀ = 1/(2π√LC) ≈ 5.03 kHz. The quality factor Q = √(L/C)/R ≈ 31.6 sets how narrow the peak is.",
+      "group": "Filters"
+    },
+    {
+      "file": "05 RLC step response.kelec",
+      "title": "RLC step response",
+      "description": "A 1 V step into a series RLC (R = 20 Ω, L = 10 mH, C = 1 µF) rings at about 1.6 kHz and overshoots before settling: an under-damped second-order system.",
+      "group": "Filters"
+    },
+    {
+      "file": "06 Half-wave rectifier with smoothing.kelec",
+      "title": "Half-wave rectifier with smoothing",
+      "description": "One diode passes only the positive half-cycles; the 100 µF capacitor holds the peak between them, leaving a ripple. The peak is Vpk − 0.65 V.",
+      "group": "Rectifiers"
+    },
+    {
+      "file": "07 Full-wave bridge rectifier.kelec",
+      "title": "Full-wave bridge rectifier",
+      "description": "Four diodes steer both half-cycles the same way round the load. The output is a rectified sine, smoothed by the 100 µF capacitor; the floating source is shown as V(a) − V(b).",
+      "group": "Rectifiers"
+    },
+    {
+      "file": "08 Zener voltage regulator.kelec",
+      "title": "Zener voltage regulator",
+      "description": "A 5.1 V Zener and a 470 Ω resistor hold the output nearly constant while the input sweeps from 0 to 20 V. Run the DC sweep of V1 and watch the output flatten above 5.5 V.",
+      "group": "Rectifiers"
+    },
+    {
+      "file": "09 Diode clipper.kelec",
+      "title": "Diode clipper",
+      "description": "Two anti-parallel diodes limit the output to about ±0.65 V however large the 5 V sine input is. The resistor takes the difference.",
+      "group": "Rectifiers"
+    },
+    {
+      "file": "10 Voltage doubler.kelec",
+      "title": "Voltage doubler",
+      "description": "The first capacitor and diode clamp the waveform; the second diode and capacitor then peak-detect it, so the output approaches twice the input peak (about 8.5 V from 5 V).",
+      "group": "Rectifiers"
+    },
+    {
+      "file": "11 LED with a resistor.kelec",
+      "title": "LED with a resistor",
+      "description": "A red LED drops about 1.9 V, so a 330 Ω resistor from 5 V gives roughly 9 mA. The schematic shows the current; try other colours in the LED’s properties.",
+      "group": "Basics"
+    },
+    {
+      "file": "12 BJT common-emitter amplifier.kelec",
+      "title": "BJT common-emitter amplifier",
+      "description": "A 2N3904 biased by a divider (R1/R2) amplifies a 2 mV, 1 kHz signal by about 200 with the emitter bypassed. Run DC to see the bias point, then a transient to see input and output stacked.",
+      "group": "Transistors"
+    },
+    {
+      "file": "13 MOSFET switch.kelec",
+      "title": "MOSFET switch",
+      "description": "A 2N7000 pulls a 100 Ω load to ground when its gate is driven to 5 V and lets it float to 5 V when the gate is low. Watch the drain voltage follow the inverted gate pulse.",
+      "group": "Transistors"
+    },
+    {
+      "file": "14 Inverting op-amp amplifier.kelec",
+      "title": "Inverting op-amp amplifier",
+      "description": "Gain = −Rf/Rin = −10: a 100 mV, 1 kHz sine comes out inverted and ten times larger. The inverting input is a virtual ground.",
+      "group": "Op-amps"
+    },
+    {
+      "file": "15 Non-inverting op-amp amplifier.kelec",
+      "title": "Non-inverting op-amp amplifier",
+      "description": "Gain = 1 + Rf/Rg = 10, with the output in phase with the input and a very high input impedance.",
+      "group": "Op-amps"
+    },
+    {
+      "file": "16 Op-amp integrator.kelec",
+      "title": "Op-amp integrator",
+      "description": "A ±1 V square wave into R = 10 kΩ and C = 100 nF integrates into a triangle wave (slope V/RC = 1000 V/s). The 1 MΩ resistor stops the output drifting; the run starts from zero.",
+      "group": "Op-amps"
+    },
+    {
+      "file": "17 Differential amplifier.kelec",
+      "title": "Differential amplifier",
+      "description": "Out = (R2/R1)·(V2 − V1) = 10 × (2.1 V − 2.0 V) = 1.0 V: the amplifier ignores what the two inputs have in common and magnifies their difference.",
+      "group": "Op-amps"
+    },
+    {
+      "file": "18 Op-amp relaxation oscillator.kelec",
+      "title": "Op-amp relaxation oscillator",
+      "description": "The op-amp compares the capacitor voltage with a fraction of its own output (positive feedback), so it flips each time the capacitor reaches the threshold: a square wave of f = 1/(2RC·ln3) ≈ 455 Hz. The capacitor starts with 0.5 V to tip it out of its balanced state.",
+      "group": "Oscillators"
+    },
+    {
+      "file": "19 Transistor astable multivibrator.kelec",
+      "title": "Transistor astable multivibrator",
+      "description": "Two cross-coupled transistors take turns to conduct, each held off by a capacitor that charges through a 47 kΩ resistor: a square wave at about 1/(1.38·R·C) ≈ 1.5 kHz at each collector. The caps start empty (initial conditions) so the circuit starts in a definite state.",
+      "group": "Oscillators"
+    },
+    {
+      "file": "20 555 timer (built from comparators).kelec",
+      "title": "555 timer (built from comparators)",
+      "description": "A 555 astable from its parts: a three-resistor divider, two comparators, an SR latch of two NOR gates and a discharge transistor. f ≈ 1.44/((R1 + 2·R2)·C) ≈ 690 Hz. Nets joined by name (labels) keep the drawing readable.",
+      "group": "Oscillators"
+    },
+    {
+      "file": "21 Wheatstone bridge.kelec",
+      "title": "Wheatstone bridge",
+      "description": "Two dividers side by side: the voltmeter reads the difference between their midpoints. With R4 = 2.2 kΩ the bridge is slightly unbalanced (−0.10 V); set R4 to 2k and it reads 0.",
+      "group": "Basics"
+    },
+    {
+      "file": "22 Thevenin equivalent.kelec",
+      "title": "Thevenin equivalent",
+      "description": "Looking back from the load, the source and divider act like 8 V behind 667 Ω. With RL = 1 kΩ the load gets 8 × 1k/(1.667k) = 4.8 V. Run DC to check.",
+      "group": "Basics"
+    },
+    {
+      "file": "23 H-bridge motor driver.kelec",
+      "title": "H-bridge motor driver",
+      "description": "Four timed switches reverse the current through a motor modelled as 10 Ω + 5 mH. The diagonal pairs close in turn with a 0.1 ms dead time; the freewheel diodes carry the inductor current during it (and make the brief ±13.7 V spikes).",
+      "group": "Power"
+    },
+    {
+      "file": "24 3-stage RC ladder low-pass.kelec",
+      "title": "3-stage RC ladder low-pass",
+      "description": "Three 1 kΩ / 100 nF sections one after the other. Each section loads the one before it, so the corner (−3 dB at about 0.2 / (2πRC) ≈ 320 Hz) is far below that of a single RC (1.59 kHz), the roll-off steepens to 60 dB per decade and the phase lag reaches 105° at 1 kHz. Run the AC sweep and compare V(n1), V(n2) and V(out).",
+      "group": "Filters"
+    },
+    {
+      "file": "25 LC low-pass, Butterworth 3rd order.kelec",
+      "title": "LC low-pass, Butterworth 3rd order",
+      "description": "A doubly terminated C–L–C ladder (1 kΩ source and load, 15.9 nF, 31.8 mH, 15.9 nF) with a maximally flat response: −3 dB at 10 kHz (the 0.5 V at DC falls to 0.35 V), then 60 dB per decade. The sweep is the Bode plot; compare it with the RC ladder, which has no flat top.",
+      "group": "Filters"
+    },
+    {
+      "file": "26 Common-collector (emitter follower).kelec",
+      "title": "Common-collector (emitter follower)",
+      "description": "A 2N3904 with its collector on the supply and the output taken from the emitter: the gain is just under 1, the emitter sits about 0.7 V below the base (5.0 V), and the input impedance is high while the output impedance is low (about re ≈ 25 Ω here), so it drives the 10 kΩ load without loss. Run a transient and compare V(in) with V(out).",
+      "group": "Transistors"
+    },
+    {
+      "file": "27 Schmitt trigger (op-amp).kelec",
+      "title": "Schmitt trigger (op-amp)",
+      "description": "Positive feedback (18 kΩ / 2 kΩ) gives the comparator two thresholds, ±10 V × 2k/20k = ±1 V. A 3 V, 1 kHz sine drives the inverting input; the output flips to the opposite rail each time the input crosses the threshold that the output itself has just set (V(pos)), so noise smaller than the 2 V hysteresis cannot make it chatter.",
+      "group": "Op-amps"
+    },
+    {
+      "file": "28 Precision full-wave rectifier.kelec",
+      "title": "Precision full-wave rectifier",
+      "description": "Two op-amps and two diodes remove the 0.65 V diode drop: U1 is an inverting half-wave stage (D1 and D2 inside its feedback), U2 adds that half-wave to the input in the ratio 2 : 1 and so gives |Vin| exactly, even for a 1 V sine that a plain diode bridge would cut to 0.35 V. Run the transient and compare V(in) and V(out).",
+      "group": "Rectifiers"
+    }
+  ]
+}

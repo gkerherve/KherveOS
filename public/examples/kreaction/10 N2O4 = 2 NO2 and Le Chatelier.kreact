@@ -1,0 +1,111 @@
+{
+  "format": "kreact",
+  "version": 1,
+  "title": "N2O4 ⇌ 2 NO2 and Le Chatelier",
+  "description": "The brown/colourless gas equilibrium N2O4 ⇌ 2 NO2 (Kc = 0.0059 at 298 K, ΔH = +57 kJ/mol) with the Le Chatelier panel ready: add N2O4, halve the volume or heat to 350 K and press Apply.",
+  "tool": "energy",
+  "builder": {
+    "reactants": [
+      "dinitrogen tetroxide"
+    ],
+    "products": [
+      "nitrogen dioxide"
+    ],
+    "arrow": "equilibrium",
+    "above": "",
+    "below": "gas phase, 25 °C",
+    "coeffs": [
+      1,
+      2
+    ],
+    "fromId": "n2o4"
+  },
+  "library": {
+    "selected": null,
+    "query": "",
+    "cls": ""
+  },
+  "mechanism": {
+    "reactionId": "sn2",
+    "step": 0
+  },
+  "predict": {
+    "reactants": [
+      "CC(=O)O",
+      "CCO"
+    ]
+  },
+  "kinetics": {
+    "tab": "simulate",
+    "text": "A = 1\nB = 0\nA -> B ; k = 0.05",
+    "tEnd": "100",
+    "logTime": false,
+    "method": "auto",
+    "presetId": "first-order",
+    "hidden": [],
+    "orderData": "# t (s)   [A] (mol/L)\n0   1.000\n10  0.607\n20  0.368\n30  0.223\n40  0.135\n50  0.082\n60  0.050",
+    "arrData": "# T (K)   k (s^-1)\n300  0.0013\n320  0.0098\n340  0.057\n360  0.27\n380  1.05",
+    "arrKind": "arrhenius",
+    "mm": {
+      "k1": "10",
+      "km1": "1",
+      "kcat": "2",
+      "e0": "0.01",
+      "s0": "0.1, 0.2, 0.5, 1, 2, 5"
+    }
+  },
+  "energy": {
+    "tab": "equilibrium",
+    "profile": {
+      "points": [
+        {
+          "label": "N₂ + 3 H₂",
+          "energy": 0,
+          "kind": "reactant"
+        },
+        {
+          "label": "Transition state",
+          "energy": 230,
+          "kind": "ts"
+        },
+        {
+          "label": "2 NH₃",
+          "energy": -92,
+          "kind": "product"
+        }
+      ]
+    },
+    "showCatalysed": true,
+    "lower": "80",
+    "source": "n2o4",
+    "thermo": {
+      "dH": "-92",
+      "dS": "-199",
+      "T": "298",
+      "T2": "700",
+      "K1": "6e5",
+      "dHvh": "-92"
+    },
+    "ice": {
+      "equation": "N2O4 <=> 2 NO2",
+      "initial": "N2O4 = 0.100, NO2 = 0",
+      "K": "0.0059",
+      "mode": "Kc",
+      "T": "298",
+      "add": "0.05",
+      "addSpecies": "N2O4",
+      "volume": "0.5",
+      "T2": "350",
+      "dH": "57"
+    }
+  },
+  "notebook": [
+    {
+      "id": "example",
+      "label": "About this example",
+      "tool": "Energy & equilibrium",
+      "text": "N2O4 ⇌ 2 NO2 and Le Chatelier\n\nThe brown/colourless gas equilibrium N2O4 ⇌ 2 NO2 (Kc = 0.0059 at 298 K, ΔH = +57 kJ/mol) with the Le Chatelier panel ready: add N2O4, halve the volume or heat to 350 K and press Apply.\n\nStart: 0.100 mol/L N2O4 only. At equilibrium N2O4 = 0.08857, NO2 = 0.02286 mol/L; 11.43 % of the N2O4 has dissociated.\nAdd 0.05 mol/L N2O4: moves forward; new equilibrium N2O4 = 0.1358, NO2 = 0.02831 mol/L.\nCompress to half the volume: moves reverse; new equilibrium N2O4 = 0.1835, NO2 = 0.03291 mol/L.\nHeat from 298 K to 350 K (ΔH = +57 kJ/mol): moves forward; new equilibrium N2O4 = 0.05175, NO2 = 0.09651 mol/L.\nPress Apply in the Le Chatelier panel to see each shift in the app.",
+      "time": 0
+    }
+  ]
+}

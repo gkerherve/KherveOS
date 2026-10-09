@@ -1,0 +1,46 @@
+{
+  "app": "kpcb",
+  "folder": "kPCB Examples",
+  "examples": [
+    {
+      "file": "01 LED blinker with a 555.kpcb",
+      "title": "LED blinker with a 555",
+      "description": "An astable NE555 flashing an LED, with a ground plane on the back. Through-hole parts, 46 x 30 mm."
+    },
+    {
+      "file": "02 Arduino Uno shield.kpcb",
+      "title": "Arduino Uno shield",
+      "description": "A shield for the Uno (68.6 x 53.3 mm, four mounting holes): an LED on D13 with its resistor and a button on D2."
+    },
+    {
+      "file": "03 ESP32 breakout.kpcb",
+      "title": "ESP32 breakout",
+      "description": "An ESP32-WROOM-32 module with decoupling, an enable pull-up and sixteen GPIOs on two headers."
+    },
+    {
+      "file": "04 5 V power supply (LM7805).kpcb",
+      "title": "5 V power supply (LM7805)",
+      "description": "A linear 5 V supply: LM7805 in a TO-220, a reverse-polarity diode, an input and an output electrolytic, a power LED with its resistor and screw terminals, 58 x 34 mm with a ground plane."
+    },
+    {
+      "file": "05 ATtiny85 breakout.kpcb",
+      "title": "ATtiny85 breakout",
+      "description": "An ATtiny85 in a DIP-8 socket with a decoupling capacitor, a reset pull-up, an LED on PB1 and every pin on a header, 42 x 30 mm."
+    },
+    {
+      "file": "06 LED bar graph (10 LEDs).kpcb",
+      "title": "LED bar graph (10 LEDs)",
+      "description": "Ten LEDs in a row, each with its 220 ohm resistor, driven from one 1x10 header (Arduino pins D2 to D11) on a two-layer board with a ground plane, 72 x 34 mm."
+    },
+    {
+      "file": "07 USB-to-UART header breakout.kpcb",
+      "title": "USB-to-UART header breakout",
+      "description": "Moves the six-pin FTDI cable header (GND CTS VCC TXD RXD DTR) to a four-pin UART header with TX and RX crossed over and a 100 nF bypass capacitor. The reference names on the silkscreen label the headers."
+    },
+    {
+      "file": "08 LM358 non-inverting amplifier.kpcb",
+      "title": "LM358 non-inverting amplifier",
+      "description": "One half of an LM358 (DIP-8) as a gain-of-11 amplifier: 10 k and 1 k set the gain, the second op-amp is parked as a follower, with input, output and supply headers and ground planes on both sides, 44 x 32 mm."
+    }
+  ]
+}

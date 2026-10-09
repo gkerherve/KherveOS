@@ -171,6 +171,62 @@ for _i, _item in enumerate(_DATA.replace("\n", "|").split("|"), start=1):
 assert len(ELEMENTS) == 118
 
 
+_ORDER = "1s 2s 2p 3s 3p 4s 3d 4p 5s 4d 5p 6s 4f 5d 6p 7s 5f 6d 7p".split()
+_CAP = {"s": 2, "p": 6, "d": 10, "f": 14}
+# Ground states that break the filling order (changed orbitals only)
+_EXCEPT = {
+    24: {"4s": 1, "3d": 5}, 29: {"4s": 1, "3d": 10}, 41: {"5s": 1, "4d": 4}, 42: {"5s": 1, "4d": 5},
+    44: {"5s": 1, "4d": 7}, 45: {"5s": 1, "4d": 8}, 46: {"5s": 0, "4d": 10}, 47: {"5s": 1, "4d": 10},
+    57: {"4f": 0, "5d": 1}, 58: {"4f": 1, "5d": 1}, 64: {"4f": 7, "5d": 1}, 78: {"6s": 1, "5d": 9},
+    79: {"6s": 1, "5d": 10}, 89: {"5f": 0, "6d": 1}, 90: {"5f": 0, "6d": 2}, 91: {"5f": 2, "6d": 1},
+    92: {"5f": 3, "6d": 1}, 93: {"5f": 4, "6d": 1}, 96: {"5f": 7, "6d": 1}, 103: {"6d": 0, "7p": 1},
+}
+_NOBLE = {2: "He", 10: "Ne", 18: "Ar", 36: "Kr", 54: "Xe", 86: "Rn"}
+
+
+def config(z):
+    """Electron configuration as [(orbital, electrons)], behind a noble-gas core: ('[Ar]', None), ('3d', 5)..."""
+    occ, left = {}, z
+    for o in _ORDER:
+        occ[o] = min(_CAP[o[1]], left)
+        left -= occ[o]
+    occ.update(_EXCEPT.get(z, {}))
+    core = max([n for n in _NOBLE if n < z], default=0)
+    out = [("[%s]" % _NOBLE[core], None)] if core else []
+    skip = 0
+    if core:  # drop the orbitals of the core (they hold exactly `core` electrons)
+        for o in _ORDER:
+            skip += _CAP[o[1]]
+            occ[o] = 0 if skip <= core else occ[o]
+            if skip >= core:
+                break
+    for o in sorted((o for o in occ if occ[o]), key=lambda o: (int(o[0]), "spdf".index(o[1]))):
+        out.append((o, occ[o]))
+    return out
+
+
+def draw_config(td, cx, y, z, width, fill):
+    """Centre the configuration at (cx, y) with superscript electron counts, shrunk to fit `width`."""
+    parts = config(z)
+    size = 15
+    while True:
+        fn, fs = font(SANS, size), font(SANS, max(6, round(size * 0.65)))
+        segs = []
+        for o, n in parts:
+            segs.append((o, fn, 0))
+            if n is not None:
+                segs.append((str(n), fs, -size * 0.45 * S))
+            segs.append((" ", fn, 0))
+        total = sum(td.textlength(t, font=f) for t, f, _ in segs[:-1])
+        if total <= width or size <= 7:
+            break
+        size -= 1
+    x = cx - total / 2
+    for t, f, dy in segs[:-1]:
+        td.text((x, y + dy), t, font=f, fill=fill, anchor="ls")
+        x += td.textlength(t, font=f)
+
+
 def _position(z):
     """(row, column) of element z: columns 0-17 are the groups; rows 0-6 the periods, 7 and 8 the f-block."""
     if z == 1:
@@ -217,12 +273,7 @@ def periodic():
         cx = x + cell / 2
         td.text((x + 8 * S, y + 5 * S), str(z), font=f_num, fill=160)
         td.text((cx, y + cell * 0.39), sym, font=f_sym, fill=255, anchor="mm")  # centred in the box
-        size = 14
-        fn = f_name
-        while td.textlength(name, font=fn) > cell - 8 * S and size > 7:
-            size -= 1
-            fn = font(SANS, size)
-        td.text((cx, y + cell * 0.67), name, font=fn, fill=190, anchor="mm")
+        draw_config(td, cx, y + cell * 0.70, z, cell - 8 * S, 190)
         td.text((cx, y + cell * 0.865), mass, font=f_mass, fill=140, anchor="mm")
     # Markers where the f-block belongs: "57-71" and "89-103" in group 3 of periods 6 and 7.
     for row, label in ((5, "57\u201371"), (6, "89\u2013103")):

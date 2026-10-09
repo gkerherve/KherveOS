@@ -1,0 +1,195 @@
+{
+  "format": "kelec",
+  "version": 1,
+  "parts": [
+    {
+      "id": "p1",
+      "kind": "battery",
+      "ref": "V1",
+      "value": "12",
+      "x": 100,
+      "y": 200,
+      "rot": 0,
+      "mirror": false,
+      "props": {
+        "ac": ""
+      }
+    },
+    {
+      "id": "p2",
+      "kind": "resistor",
+      "ref": "R1",
+      "value": "1k",
+      "x": 220,
+      "y": 140,
+      "rot": 0,
+      "mirror": false,
+      "props": {}
+    },
+    {
+      "id": "p3",
+      "kind": "resistor",
+      "ref": "R2",
+      "value": "2k",
+      "x": 320,
+      "y": 200,
+      "rot": 90,
+      "mirror": false,
+      "props": {}
+    },
+    {
+      "id": "p4",
+      "kind": "resistor",
+      "ref": "RL",
+      "value": "1k",
+      "x": 420,
+      "y": 200,
+      "rot": 90,
+      "mirror": false,
+      "props": {}
+    },
+    {
+      "id": "p5",
+      "kind": "ground",
+      "ref": "GND1",
+      "value": "",
+      "x": 210,
+      "y": 270,
+      "rot": 0,
+      "mirror": false,
+      "props": {}
+    }
+  ],
+  "wires": [
+    {
+      "id": "w1",
+      "x1": 210,
+      "y1": 270,
+      "x2": 100,
+      "y2": 270
+    },
+    {
+      "id": "w2",
+      "x1": 100,
+      "y1": 270,
+      "x2": 100,
+      "y2": 230
+    },
+    {
+      "id": "w3",
+      "x1": 320,
+      "y1": 230,
+      "x2": 210,
+      "y2": 230
+    },
+    {
+      "id": "w4",
+      "x1": 210,
+      "y1": 230,
+      "x2": 210,
+      "y2": 270
+    },
+    {
+      "id": "w5",
+      "x1": 420,
+      "y1": 230,
+      "x2": 320,
+      "y2": 230
+    },
+    {
+      "id": "w6",
+      "x1": 190,
+      "y1": 140,
+      "x2": 150,
+      "y2": 140
+    },
+    {
+      "id": "w7",
+      "x1": 150,
+      "y1": 140,
+      "x2": 100,
+      "y2": 140
+    },
+    {
+      "id": "w8",
+      "x1": 100,
+      "y1": 140,
+      "x2": 100,
+      "y2": 170
+    },
+    {
+      "id": "w9",
+      "x1": 320,
+      "y1": 170,
+      "x2": 250,
+      "y2": 170
+    },
+    {
+      "id": "w10",
+      "x1": 250,
+      "y1": 170,
+      "x2": 250,
+      "y2": 140
+    },
+    {
+      "id": "w11",
+      "x1": 420,
+      "y1": 170,
+      "x2": 370,
+      "y2": 170
+    },
+    {
+      "id": "w12",
+      "x1": 370,
+      "y1": 170,
+      "x2": 320,
+      "y2": 170
+    }
+  ],
+  "labels": [
+    {
+      "id": "l1",
+      "name": "in",
+      "x": 150,
+      "y": 140
+    },
+    {
+      "id": "l2",
+      "name": "load",
+      "x": 370,
+      "y": 170
+    }
+  ],
+  "notes": [
+    {
+      "id": "n1",
+      "text": "Open circuit: Vth = 12 V × 2k/3k = 8 V;  Rth = 1k ‖ 2k = 667 Ω",
+      "x": 100,
+      "y": 330
+    },
+    {
+      "id": "n2",
+      "text": "With RL = 1k: VL = 8 V × 1k/(667 + 1k) = 4.8 V",
+      "x": 100,
+      "y": 350
+    }
+  ],
+  "sim": {
+    "analysis": "op",
+    "dcSource": "V1",
+    "dcStart": "0",
+    "dcStop": "5",
+    "dcStep": "0.1",
+    "acStart": "1",
+    "acStop": "1meg",
+    "acPoints": "20",
+    "tranStop": "10m",
+    "tranStep": "",
+    "tranMax": "",
+    "uic": false
+  },
+  "name": "Thevenin equivalent",
+  "show": [
+    "V(load)"
+  ]
+}

@@ -299,6 +299,71 @@ export const EXAMPLES: Example[] = [
     },
     sim: { analysis: 'tran', tranStop: '8m', tranMax: '10u' }, show: ['V(oa)-V(ob)', 'I(R1)'], stacked: true, expect: [{ signal: 'V(oa)-V(ob)', kind: 'max', value: 13.7, tol: 0.05 }, { signal: 'V(oa)-V(ob)', kind: 'min', value: -13.7, tol: 0.05 }],
   },
+  {
+    id: 'rc-ladder', title: '3-stage RC ladder low-pass', category: 'Filters',
+    description: 'Three 1 kΩ / 100 nF sections one after the other. Each section loads the one before it, so the corner (−3 dB at about 0.2 / (2πRC) ≈ 320 Hz) is far below that of a single RC (1.59 kHz), the roll-off steepens to 60 dB per decade and the phase lag reaches 105° at 1 kHz. Run the AC sweep and compare V(n1), V(n2) and V(out).',
+    layout: {
+      parts: [
+        P('V1', 'vsine', 80, 200, '1', 0, { freq: '1k', ac: '1' }), P('R1', 'resistor', 190, 140, '1k'), P('C1', 'capacitor', 260, 200, '100n', 90),
+        P('R2', 'resistor', 330, 140, '1k'), P('C2', 'capacitor', 400, 200, '100n', 90), P('R3', 'resistor', 470, 140, '1k'), P('C3', 'capacitor', 540, 200, '100n', 90), GND('GND1', 300, 270),
+      ],
+      nets: { in: ['V1.+', 'R1.1'], n1: ['R1.2', 'C1.1', 'R2.1'], n2: ['R2.2', 'C2.1', 'R3.1'], out: ['R3.2', 'C3.1'], '0': ['V1.-', 'C1.2', 'C2.2', 'C3.2', 'GND1.GND'] },
+    },
+    sim: { analysis: 'ac', acStart: '10', acStop: '100k', acPoints: '40' }, show: ['V(n1)', 'V(n2)', 'V(out)'], expect: [{ signal: 'V(out)', kind: 'op', value: 1, tol: 1e-2 }],
+  },
+  {
+    id: 'lc-butterworth', title: 'LC low-pass, Butterworth 3rd order', category: 'Filters',
+    description: 'A doubly terminated C–L–C ladder (1 kΩ source and load, 15.9 nF, 31.8 mH, 15.9 nF) with a maximally flat response: −3 dB at 10 kHz (the 0.5 V at DC falls to 0.35 V), then 60 dB per decade. The sweep is the Bode plot; compare it with the RC ladder, which has no flat top.',
+    layout: {
+      parts: [
+        P('V1', 'vsine', 80, 200, '1', 0, { freq: '1k', ac: '1' }), P('Rs', 'resistor', 190, 140, '1k'), P('C1', 'capacitor', 270, 200, '15.9n', 90), P('L1', 'inductor', 360, 140, '31.8m'),
+        P('C2', 'capacitor', 450, 200, '15.9n', 90), P('RL', 'resistor', 540, 200, '1k', 90), GND('GND1', 300, 270),
+      ],
+      nets: { in: ['V1.+', 'Rs.1'], a: ['Rs.2', 'C1.1', 'L1.1'], out: ['L1.2', 'C2.1', 'RL.1'], '0': ['V1.-', 'C1.2', 'C2.2', 'RL.2', 'GND1.GND'] },
+    },
+    sim: { analysis: 'ac', acStart: '100', acStop: '1meg', acPoints: '40' }, show: ['V(out)'], expect: [{ signal: 'V(out)', kind: 'op', value: 0.5, tol: 1e-2 }],
+  },
+  {
+    id: 'emitter-follower', title: 'Common-collector (emitter follower)', category: 'Transistors',
+    description: 'A 2N3904 with its collector on the supply and the output taken from the emitter: the gain is just under 1, the emitter sits about 0.7 V below the base (5.0 V), and the input impedance is high while the output impedance is low (about re ≈ 25 Ω here), so it drives the 10 kΩ load without loss. Run a transient and compare V(in) with V(out).',
+    layout: {
+      parts: [
+        P('VCC', 'battery', 40, 140, '12'), P('VIN', 'vsine', 60, 270, '1', 0, { freq: '1k', ac: '1' }), P('C1', 'capacitor', 130, 200, '10u'), P('R1', 'resistor', 200, 110, '47k', 90),
+        P('R2', 'resistor', 200, 230, '47k', 90), P('Q1', 'npn', 320, 200, '2N3904'), P('RE', 'resistor', 330, 260, '1k', 90), P('C2', 'capacitor', 410, 230, '10u'),
+        P('RL', 'resistor', 500, 260, '10k', 90), GND('GND1', 200, 330),
+      ],
+      nets: { vcc: ['VCC.+', 'R1.1', 'Q1.C'], in: ['VIN.+', 'C1.1'], b: ['C1.2', 'R1.2', 'R2.1', 'Q1.B'], e: ['Q1.E', 'RE.1', 'C2.1'], out: ['C2.2', 'RL.1'], '0': ['VCC.-', 'VIN.-', 'R2.2', 'RE.2', 'RL.2', 'GND1.GND'] },
+    },
+    sim: { analysis: 'tran', tranStop: '5m' }, show: ['V(in)', 'V(out)'], stacked: true,
+    expect: [{ signal: 'V(out)', kind: 'pp', value: 1.99, tol: 0.03, from: 2e-3 }, { signal: 'V(e)', kind: 'mean', value: 5.03, tol: 0.03, from: 2e-3 }],
+  },
+  {
+    id: 'schmitt', title: 'Schmitt trigger (op-amp)', category: 'Op-amps',
+    description: 'Positive feedback (18 kΩ / 2 kΩ) gives the comparator two thresholds, ±10 V × 2k/20k = ±1 V. A 3 V, 1 kHz sine drives the inverting input; the output flips to the opposite rail each time the input crosses the threshold that the output itself has just set (V(pos)), so noise smaller than the 2 V hysteresis cannot make it chatter.',
+    layout: {
+      parts: [P('V1', 'vsine', 100, 200, '3', 0, { freq: '1k', ac: '' }), P('U1', 'opamp', 330, 200, undefined, 0, { rail: '10' }), P('Rf', 'resistor', 360, 290, '18k'), P('Rg', 'resistor', 240, 300, '2k', 90), GND('GND1', 100, 290)],
+      nets: { in: ['V1.+', 'U1.IN-'], out: ['U1.OUT', 'Rf.2'], pos: ['U1.IN+', 'Rf.1', 'Rg.1'], '0': ['V1.-', 'Rg.2', 'GND1.GND'] },
+    },
+    sim: { analysis: 'tran', tranStop: '4m' }, show: ['V(in)', 'V(out)', 'V(pos)'], stacked: true,
+    expect: [{ signal: 'V(out)', kind: 'max', value: 10, tol: 0.02 }, { signal: 'V(out)', kind: 'min', value: -10, tol: 0.02 }, { signal: 'V(pos)', kind: 'max', value: 1, tol: 0.03 }, { signal: 'V(out)', kind: 'freq', value: 1000, tol: 0.02, from: 1e-3 }],
+  },
+  {
+    id: 'precision-rectifier', title: 'Precision full-wave rectifier', category: 'Rectifiers',
+    description: 'Two op-amps and two diodes remove the 0.65 V diode drop: U1 is an inverting half-wave stage (D1 and D2 inside its feedback), U2 adds that half-wave to the input in the ratio 2 : 1 and so gives |Vin| exactly, even for a 1 V sine that a plain diode bridge would cut to 0.35 V. Run the transient and compare V(in) and V(out).',
+    layout: {
+      parts: [
+        P('V1', 'vsine', 60, 220, '1', 0, { freq: '1k', ac: '' }), P('R1', 'resistor', 160, 160, '10k'), P('U1', 'opamp', 300, 170, undefined, 0, { rail: '15' }),
+        P('D1', 'diode', 300, 90, '1N4148', 180), P('R2', 'resistor', 250, 40, '10k'), P('D2', 'diode', 350, 40, '1N4148', 0),
+        P('R3', 'resistor', 470, 230, '5k'), P('R4', 'resistor', 470, 290, '10k'), P('U2', 'opamp', 600, 190, undefined, 0, { rail: '15' }), P('R5', 'resistor', 610, 110, '10k'), GND('GND1', 200, 330),
+      ],
+      nets: {
+        '@in': ['V1.+', 'R1.1', 'R4.1'], n1: ['R1.2', 'U1.IN-', 'D1.2', 'R2.1'], o1: ['U1.OUT', 'D1.1', 'D2.2'], '@a': ['R2.2', 'D2.1', 'R3.1'],
+        n2: ['R3.2', 'R4.2', 'U2.IN-', 'R5.1'], out: ['U2.OUT', 'R5.2'], '0': ['V1.-', 'U1.IN+', 'U2.IN+', 'GND1.GND'],
+      },
+    },
+    sim: { analysis: 'tran', tranStop: '4m' }, show: ['V(in)', 'V(out)'], stacked: true,
+    expect: [{ signal: 'V(out)', kind: 'max', value: 1, tol: 0.03 }, { signal: 'V(out)', kind: 'min', value: 0, tol: 0.03, from: 1e-3 }],
+  },
 ]
 
 export function exampleById(id: string): Example | undefined {

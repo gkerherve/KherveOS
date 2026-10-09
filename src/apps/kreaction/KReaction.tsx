@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent }
 import { ArrowRightLeft, BookOpen, Clock3, NotebookPen, Sparkles, Workflow, Zap, type LucideIcon } from 'lucide-react'
 import { os, HOME, path as ospath, type AppProps, type MenuBarMenu } from '@/os'
 import { useAppTools } from '@/os/ai/appTools'
+import { exampleFolderPath, groupExamples, seedExampleFolder, type ExampleFile } from '@/os/exampleFiles'
 import { kreactionTools } from './aiTools'
 import { BuilderTool } from './BuilderTool'
 import { EnergyTool, profileOfReaction } from './EnergyTool'
@@ -48,6 +49,7 @@ const PREFS_KEY = 'kherveos.kreaction.prefs'
 const NOTEBOOK_KEY = 'kherveos.kreaction.notebook'
 const RECENT_KEY = 'kherveos.kreaction.recent'
 const SIG_CHOICES = [3, 4, 5, 6, 8]
+const EXAMPLES_FOLDER = 'kReaction Examples'
 
 interface Prefs {
   tool: ToolId
@@ -128,6 +130,13 @@ export default function KReaction({ win, args }: AppProps) {
   const [ws, setWs] = useState<Workspace>(() => ({ ...defaultWorkspace(), tool: loadPrefs().tool, notebook: loadNotebook() }))
   const [filePath, setFilePath] = useState<string | null>(null)
   const [recent, setRecent] = useState<string[]>(loadRecent)
+  // the example workspaces copied to ~/Documents/kReaction Examples (File > Open example)
+  const [exampleFiles, setExampleFiles] = useState<ExampleFile[]>([])
+  useEffect(() => {
+    let alive = true
+    void seedExampleFolder({ app: 'kreaction', folderName: EXAMPLES_FOLDER, fs: os.fs }).then((files) => alive && setExampleFiles(files))
+    return () => { alive = false }
+  }, [])
   const [flash, setFlash] = useState('')
   const { rd, status: rdStatus } = useRDKit()
 
@@ -501,6 +510,15 @@ export default function KReaction({ win, args }: AppProps) {
             disabled: recent.length === 0,
             submenu: recent.map((p) => ({ label: ospath.basename(p), onClick: () => void confirmDiscard().then((ok) => { if (ok) void loadPath(p) }) })),
           },
+          {
+            label: 'Open example',
+            disabled: exampleFiles.length === 0,
+            submenu: groupExamples(exampleFiles).map((g) => ({
+              label: g.group || 'Examples',
+              submenu: g.files.map((f) => ({ label: f.title, onClick: () => void confirmDiscard().then((ok) => { if (ok) void loadPath(f.path) }) })),
+            })),
+          },
+          { label: 'Open examples folder', onClick: () => void seedExampleFolder({ app: 'kreaction', folderName: EXAMPLES_FOLDER, fs: os.fs }).then((files) => { setExampleFiles(files); os.open('files', { path: exampleFolderPath(EXAMPLES_FOLDER) }) }) },
           '-',
           { label: 'Save', shortcut: '⌘S', onClick: () => void save() },
           { label: 'Save as…', shortcut: '⇧⌘S', onClick: () => void saveAs() },
@@ -534,7 +552,7 @@ export default function KReaction({ win, args }: AppProps) {
       },
     ]
     win.setMenus(menus)
-  }, [win, tool, recent, noteCount, prefs.sig, newFile, openFile, save, saveAs, exportReport, exportNotebook, copyResult, pinResult, notebook, go, setPrefs, loadPath, confirmDiscard])
+  }, [win, tool, recent, exampleFiles, noteCount, prefs.sig, newFile, openFile, save, saveAs, exportReport, exportNotebook, copyResult, pinResult, notebook, go, setPrefs, loadPath, confirmDiscard])
   useEffect(() => () => win.setMenus(null), [win])
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {

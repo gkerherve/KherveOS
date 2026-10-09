@@ -11,6 +11,7 @@ import {
 import { os, fs, path, HOME, type AppProps, type MenuBarMenu } from '@/os'
 import type { MenuItem } from '@/os/ui/Menu'
 import { useAppTools } from '@/os/ai/appTools'
+import { exampleFolderPath, groupExamples, seedExampleFolder, type ExampleFile } from '@/os/exampleFiles'
 import { kelecTools, type ExportFormat, type Hooks } from './aiTools'
 import { annotations } from './annotate'
 import { bomCsv, bomMarkdown } from './bom'
@@ -43,6 +44,7 @@ import { docToSvg, LIGHT_COLORS } from './svg'
 import './kelec.css'
 
 const DIR = `${HOME}/Documents/kElec`
+const EXAMPLES_FOLDER = 'kElec Examples'
 const PREFS_KEY = 'kherveos.kelec.prefs'
 
 type Tab = 'schematic' | 'netlist' | 'calc' | 'examples'
@@ -88,6 +90,13 @@ export default function KElec({ win, args }: AppProps) {
   const [run, setRun] = useState<RunState>({ status: 'idle', out: null, error: null, docVer: -1, msg: null })
   const [traces, setTraces] = useState<string[]>([])
   const [stacked, setStacked] = useState(false)
+  // the circuits copied to ~/Documents/kElec Examples (File > Open example file)
+  const [exampleFiles, setExampleFiles] = useState<ExampleFile[]>([])
+  useEffect(() => {
+    let alive = true
+    void seedExampleFolder({ app: 'kelec', folderName: EXAMPLES_FOLDER, fs }).then((files) => alive && setExampleFiles(files))
+    return () => { alive = false }
+  }, [])
   const [prefs, setPrefsState] = useState<Prefs>(loadPrefs)
   const [hover, setHover] = useState<Hit | null>(null)
   const [zoom, setZoom] = useState(1)
@@ -189,6 +198,12 @@ export default function KElec({ win, args }: AppProps) {
     if (trimmed.startsWith('{')) {
       const l = parseKelec(text)
       load({ ...l, name: l.name || fileName }, p)
+      if (l.show.length) {
+        // an example file: show its traces and run its analysis, like Open example
+        preferred.current = l.show
+        setStacked(l.stacked)
+        setTimeout(() => { void runSim() }, 60)
+      }
       return
     }
     // a SPICE netlist: draw it and keep the text
@@ -622,6 +637,11 @@ export default function KElec({ win, args }: AppProps) {
   useEffect(() => {
     const placeItems = (cat: (typeof CATEGORIES)[number]): MenuItem[] => PART_LIST.filter((d) => d.category === cat).map((d) => ({ label: d.name, onClick: () => armPart(d.kind) }))
     const examples: MenuItem[] = EXAMPLES.map((ex) => ({ label: ex.title, onClick: () => void loadExample(ex) }))
+    const openExampleFile = (f: ExampleFile) => void confirmDiscard().then((ok) => { if (ok) void openPath(f.path) })
+    const exampleGroups = groupExamples(exampleFiles)
+    const exampleFileItems: MenuItem[] = exampleGroups.length > 1 || exampleGroups[0]?.group
+      ? exampleGroups.map((g) => ({ label: g.group || 'Other', submenu: g.files.map((f) => ({ label: f.title, onClick: () => openExampleFile(f) })) }))
+      : exampleFiles.map((f) => ({ label: f.title, onClick: () => openExampleFile(f) }))
     const menus: MenuBarMenu[] = [
       {
         label: 'File',
@@ -629,6 +649,8 @@ export default function KElec({ win, args }: AppProps) {
           { label: 'New', icon: FilePlus, shortcut: '⌘N', onClick: () => void newDocument() },
           { label: 'Open…', icon: FolderOpen, shortcut: '⌘O', onClick: () => void openDialog() },
           { label: 'Open example', icon: Library, submenu: examples },
+          { label: 'Open example file', disabled: exampleFiles.length === 0, submenu: exampleFileItems },
+          { label: 'Open examples folder', onClick: () => void seedExampleFolder({ app: 'kelec', folderName: EXAMPLES_FOLDER, fs }).then((files) => { setExampleFiles(files); os.open('files', { path: exampleFolderPath(EXAMPLES_FOLDER) }) }) },
           '-',
           { label: 'Save', icon: Save, shortcut: '⌘S', onClick: () => void save().catch((e) => os.dialog.alert(msgOf(e))) },
           { label: 'Save as…', shortcut: '⇧⌘S', onClick: () => void saveAs().catch((e) => os.dialog.alert(msgOf(e))) },
@@ -719,7 +741,7 @@ export default function KElec({ win, args }: AppProps) {
     ]
     win.setMenus(menus)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefs, tool.kind, tab, run.status, selection.size, rev, name, compact, docVer])
+  }, [prefs, tool.kind, tab, run.status, selection.size, rev, name, compact, docVer, exampleFiles])
 
   // ------------------------------------------------------------ keyboard
 

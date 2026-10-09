@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { os, fs, path as osPath, HOME, type AppProps, type MenuBarMenu, type MenuItem } from '@/os'
 import { useAppTools } from '@/os/ai/appTools'
+import { exampleFolderPath, seedExampleFolder, type ExampleFile } from '@/os/exampleFiles'
 import { kpcbTools } from './aiTools'
 import type { Hooks } from './aiTools'
 import { History } from './history'
@@ -46,6 +47,7 @@ import type { Editor, Tool, UIState } from './ui'
 import './kpcb.css'
 
 const DIR = `${HOME}/Documents/kPCB`
+const EXAMPLES_FOLDER = 'kPCB Examples'
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e))
 const tick = (ms = 30) => new Promise<void>((r) => setTimeout(r, ms))
 const TOOLS: Array<{ id: Tool; label: string; key: string; icon: typeof Box }> = [
@@ -113,6 +115,13 @@ export default function KPCB({ win, args }: AppProps) {
   const [dialog, setDialog] = useState<null | { kind: 'netlist' } | { kind: 'help' }>(null)
   const [netMode, setNetMode] = useState<'replace' | 'update'>('update')
   const [recent, setRecent] = useState<string[]>(loadRecent)
+  // the example boards copied to ~/Documents/kPCB Examples (File > Open example file)
+  const [exampleFiles, setExampleFiles] = useState<ExampleFile[]>([])
+  useEffect(() => {
+    let alive = true
+    void seedExampleFolder({ app: 'kpcb', folderName: EXAMPLES_FOLDER, fs }).then((files) => alive && setExampleFiles(files))
+    return () => { alive = false }
+  }, [])
   const root = useRef<HTMLDivElement>(null)
   const view = useRef<BoardViewHandle>(null)
   const search = useRef<HTMLInputElement>(null)
@@ -787,6 +796,12 @@ export default function KPCB({ win, args }: AppProps) {
           { label: 'Open…', icon: FolderOpen, shortcut: '⌘O', onClick: () => void openFile() },
           { label: 'Open recent', submenu: recent.length ? recent.map((p) => ({ label: osPath.pretty(p), onClick: () => void confirmDiscard().then(async (ok) => { if (ok) await openFile(p) }) })) : [{ label: 'No recent boards', disabled: true }] },
           { label: 'Open example', submenu: EXAMPLES.map((e) => ({ label: e.title, onClick: () => void loadExample(e.id) })) },
+          {
+            label: 'Open example file',
+            disabled: exampleFiles.length === 0,
+            submenu: exampleFiles.map((f) => ({ label: f.title, onClick: () => void confirmDiscard().then(async (ok) => { if (ok) await openFile(f.path) }) })),
+          },
+          { label: 'Open examples folder', onClick: () => void seedExampleFolder({ app: 'kpcb', folderName: EXAMPLES_FOLDER, fs }).then((files) => { setExampleFiles(files); os.open('files', { path: exampleFolderPath(EXAMPLES_FOLDER) }) }) },
           '-',
           { label: 'Save', icon: Save, shortcut: '⌘S', onClick: () => void save() },
           { label: 'Save as…', shortcut: '⇧⌘S', onClick: () => void saveAs() },
@@ -923,7 +938,7 @@ export default function KPCB({ win, args }: AppProps) {
     ]
     win.setMenus(menus)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ui, canUndo, canRedo, hasSel, hasTrackSel, hasParts, recent, leftOpen, rightOpen, win])
+  }, [ui, canUndo, canRedo, hasSel, hasTrackSel, hasParts, recent, exampleFiles, leftOpen, rightOpen, win])
 
   // ------------------------------------------------------------ pieces
 

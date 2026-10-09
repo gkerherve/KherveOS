@@ -1,0 +1,113 @@
+{
+  "format": "kreact",
+  "version": 1,
+  "title": "Haber–Bosch equilibrium (Kp)",
+  "description": "N2 + 3 H2 ⇌ 2 NH3 at 400 °C (673 K) with Kp = 1.6e-4 atm⁻² from 50 atm N2 and 150 atm H2: the ICE table gives the partial pressures at equilibrium and the conversion.",
+  "tool": "energy",
+  "builder": {
+    "reactants": [
+      "nitrogen",
+      "hydrogen"
+    ],
+    "products": [
+      "ammonia"
+    ],
+    "arrow": "equilibrium",
+    "above": "Fe catalyst (K2O, Al2O3 promoters)",
+    "below": "400–500 °C, 150–300 atm",
+    "coeffs": [
+      1,
+      3,
+      2
+    ],
+    "fromId": "haber"
+  },
+  "library": {
+    "selected": null,
+    "query": "",
+    "cls": ""
+  },
+  "mechanism": {
+    "reactionId": "sn2",
+    "step": 0
+  },
+  "predict": {
+    "reactants": [
+      "CC(=O)O",
+      "CCO"
+    ]
+  },
+  "kinetics": {
+    "tab": "simulate",
+    "text": "A = 1\nB = 0\nA -> B ; k = 0.05",
+    "tEnd": "100",
+    "logTime": false,
+    "method": "auto",
+    "presetId": "first-order",
+    "hidden": [],
+    "orderData": "# t (s)   [A] (mol/L)\n0   1.000\n10  0.607\n20  0.368\n30  0.223\n40  0.135\n50  0.082\n60  0.050",
+    "arrData": "# T (K)   k (s^-1)\n300  0.0013\n320  0.0098\n340  0.057\n360  0.27\n380  1.05",
+    "arrKind": "arrhenius",
+    "mm": {
+      "k1": "10",
+      "km1": "1",
+      "kcat": "2",
+      "e0": "0.01",
+      "s0": "0.1, 0.2, 0.5, 1, 2, 5"
+    }
+  },
+  "energy": {
+    "tab": "equilibrium",
+    "profile": {
+      "points": [
+        {
+          "label": "N₂ + 3 H₂",
+          "energy": 0,
+          "kind": "reactant"
+        },
+        {
+          "label": "Transition state",
+          "energy": 230,
+          "kind": "ts"
+        },
+        {
+          "label": "2 NH₃",
+          "energy": -92,
+          "kind": "product"
+        }
+      ]
+    },
+    "showCatalysed": true,
+    "lower": "80",
+    "source": "haber",
+    "thermo": {
+      "dH": "-92",
+      "dS": "-199",
+      "T": "298",
+      "T2": "700",
+      "K1": "6e5",
+      "dHvh": "-92"
+    },
+    "ice": {
+      "equation": "N2 + 3 H2 <=> 2 NH3",
+      "initial": "N2 = 50, H2 = 150, NH3 = 0",
+      "K": "0.00016",
+      "mode": "Kp",
+      "T": "673",
+      "add": "50",
+      "addSpecies": "H2",
+      "volume": "0.5",
+      "T2": "773",
+      "dH": "-92"
+    }
+  },
+  "notebook": [
+    {
+      "id": "example",
+      "label": "About this example",
+      "tool": "Energy & equilibrium",
+      "text": "Haber–Bosch equilibrium (Kp)\n\nN2 + 3 H2 ⇌ 2 NH3 at 400 °C (673 K) with Kp = 1.6e-4 atm⁻² from 50 atm N2 and 150 atm H2: the ICE table gives the partial pressures at equilibrium and the conversion.\n\nKp = 0.00016 atm⁻² (Δn(gas) = -2), initial partial pressures: N2 = 50, H2 = 150, NH3 = 0.\nAt equilibrium: N2 = 26.65 atm, H2 = 79.96 atm, NH3 = 46.69 atm; total 153.3 atm (from 200 atm).\nMole fraction of ammonia 30.46 %; conversion of the limiting reactant 46.69 %; extent ξ = 23.35 atm.\nThe reaction is exothermic (ΔH = −92 kJ/mol): at 773 K, van 't Hoff gives Kp = 1.91e-5, much less ammonia. Compressing the mixture to half its volume (the \"volume\" box) or adding H2 shifts it forward.",
+      "time": 0
+    }
+  ]
+}

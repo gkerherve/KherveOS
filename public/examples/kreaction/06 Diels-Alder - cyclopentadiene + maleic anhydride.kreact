@@ -1,0 +1,113 @@
+{
+  "format": "kreact",
+  "version": 1,
+  "title": "Diels–Alder: cyclopentadiene + maleic anhydride",
+  "description": "A concerted [4+2] cycloaddition giving the endo adduct: six electrons move in one cyclic transition state.",
+  "tool": "mechanism",
+  "builder": {
+    "reactants": [
+      "cyclopentadiene",
+      "maleic anhydride"
+    ],
+    "products": [
+      "norbornene anhydride"
+    ],
+    "arrow": "forward",
+    "above": "",
+    "below": "ethyl acetate / hexane, 25 °C",
+    "coeffs": [
+      1,
+      1,
+      1
+    ],
+    "fromId": "diels-alder-cp"
+  },
+  "library": {
+    "selected": null,
+    "query": "",
+    "cls": ""
+  },
+  "mechanism": {
+    "reactionId": "diels-alder-cp",
+    "step": 1
+  },
+  "predict": {
+    "reactants": [
+      "CC(=O)O",
+      "CCO"
+    ]
+  },
+  "kinetics": {
+    "tab": "simulate",
+    "text": "A = 1\nB = 0\nA -> B ; k = 0.05",
+    "tEnd": "100",
+    "logTime": false,
+    "method": "auto",
+    "presetId": "first-order",
+    "hidden": [],
+    "orderData": "# t (s)   [A] (mol/L)\n0   1.000\n10  0.607\n20  0.368\n30  0.223\n40  0.135\n50  0.082\n60  0.050",
+    "arrData": "# T (K)   k (s^-1)\n300  0.0013\n320  0.0098\n340  0.057\n360  0.27\n380  1.05",
+    "arrKind": "arrhenius",
+    "mm": {
+      "k1": "10",
+      "km1": "1",
+      "kcat": "2",
+      "e0": "0.01",
+      "s0": "0.1, 0.2, 0.5, 1, 2, 5"
+    }
+  },
+  "energy": {
+    "tab": "profile",
+    "profile": {
+      "points": [
+        {
+          "label": "N₂ + 3 H₂",
+          "energy": 0,
+          "kind": "reactant"
+        },
+        {
+          "label": "Transition state",
+          "energy": 230,
+          "kind": "ts"
+        },
+        {
+          "label": "2 NH₃",
+          "energy": -92,
+          "kind": "product"
+        }
+      ]
+    },
+    "showCatalysed": true,
+    "lower": "80",
+    "source": "haber",
+    "thermo": {
+      "dH": "-92",
+      "dS": "-199",
+      "T": "298",
+      "T2": "700",
+      "K1": "6e5",
+      "dHvh": "-92"
+    },
+    "ice": {
+      "equation": "N2O4 <=> 2 NO2",
+      "initial": "N2O4 = 0.100, NO2 = 0",
+      "K": "0.0059",
+      "mode": "Kc",
+      "T": "298",
+      "add": "0.05",
+      "addSpecies": "N2O4",
+      "volume": "0.5",
+      "T2": "350",
+      "dH": "57"
+    }
+  },
+  "notebook": [
+    {
+      "id": "example",
+      "label": "About this example",
+      "tool": "Mechanism",
+      "text": "Diels–Alder: cyclopentadiene + maleic anhydride\n\nA concerted [4+2] cycloaddition giving the endo adduct: six electrons move in one cyclic transition state.\n\nDiels–Alder: cyclopentadiene + maleic anhydride: 2 reactant(s) → 1 product(s), 2 states.\nStates: Reactants → Endo adduct.\nOverall ΔH = -150 kJ/mol; highest transition state 55 kJ/mol above the reactants (the rate-determining step is Reactants → Endo adduct).\nOne barrier (55 kJ/mol) and a strongly exothermic step (−150 kJ/mol): the reaction is fast at room temperature.",
+      "time": 0
+    }
+  ]
+}

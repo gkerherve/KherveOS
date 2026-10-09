@@ -723,5 +723,13 @@ import { KCALENDAR_TOOL_SET } from './manifests/kcalendar.ts'
 import { KREACTION_TOOL_SET } from './manifests/kreaction.ts'
 import { KELEC_TOOL_SET } from './manifests/kelec.ts'
 import { KPCB_TOOL_SET } from './manifests/kpcb.ts'
-APP_TOOL_SETS.push(KSTATS_TOOL_SET, KPLOT_TOOL_SET, KCHEM_TOOL_SET, KCODE_TOOL_SET, KARDUINO_TOOL_SET, KCALENDAR_TOOL_SET, KREACTION_TOOL_SET, KELEC_TOOL_SET, KPCB_TOOL_SET)
+import { KSIGNAL_TOOL_SET } from './manifests/ksignal.ts'
+import { KDIGITAL_TOOL_SET } from './manifests/kdigital.ts'
+import { KMOTION_TOOL_SET } from './manifests/kmotion.ts'
+import { KTITRATION_TOOL_SET } from './manifests/ktitration.ts'
+import { KCLIMATE_TOOL_SET } from './manifests/kclimate.ts'
+import { KFEA_TOOL_SET } from './manifests/kfea.ts'
+import { KMECH_TOOL_SET } from './manifests/kmech.ts'
+import { KELN_TOOL_SET } from './manifests/keln.ts'
+APP_TOOL_SETS.push(KSTATS_TOOL_SET, KPLOT_TOOL_SET, KCHEM_TOOL_SET, KCODE_TOOL_SET, KARDUINO_TOOL_SET, KCALENDAR_TOOL_SET, KREACTION_TOOL_SET, KELEC_TOOL_SET, KPCB_TOOL_SET, KSIGNAL_TOOL_SET, KDIGITAL_TOOL_SET, KMOTION_TOOL_SET, KTITRATION_TOOL_SET, KCLIMATE_TOOL_SET, KFEA_TOOL_SET, KMECH_TOOL_SET, KELN_TOOL_SET)
 

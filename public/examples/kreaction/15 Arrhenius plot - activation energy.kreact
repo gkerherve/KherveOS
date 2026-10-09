@@ -1,0 +1,110 @@
+{
+  "format": "kreact",
+  "version": 1,
+  "title": "Arrhenius plot: activation energy",
+  "description": "Rate constants measured from 300 to 380 K (synthetic, with 1 % scatter): ln k against 1/T is a straight line whose slope gives the activation energy and whose intercept gives the pre-exponential factor.",
+  "tool": "kinetics",
+  "builder": {
+    "reactants": [
+      "ethanol",
+      "oxygen"
+    ],
+    "products": [
+      "carbon dioxide",
+      "water"
+    ],
+    "arrow": "forward",
+    "above": "",
+    "below": "",
+    "coeffs": null,
+    "fromId": null
+  },
+  "library": {
+    "selected": null,
+    "query": "",
+    "cls": ""
+  },
+  "mechanism": {
+    "reactionId": "sn2",
+    "step": 0
+  },
+  "predict": {
+    "reactants": [
+      "CC(=O)O",
+      "CCO"
+    ]
+  },
+  "kinetics": {
+    "tab": "arrhenius",
+    "text": "A = 1\nB = 0\nA -> B ; k = 0.05",
+    "tEnd": "100",
+    "logTime": false,
+    "method": "auto",
+    "presetId": "first-order",
+    "hidden": [],
+    "orderData": "# t (s)   [A] (mol/L)\n0   1.000\n10  0.607\n20  0.368\n30  0.223\n40  0.135\n50  0.082\n60  0.050",
+    "arrData": "# T (K)   k (s^-1)\n300\t0.0361\n310\t0.0767\n320\t0.162\n330\t0.316\n340\t0.615\n350\t1.10\n360\t1.98\n370\t3.34\n380\t5.72",
+    "arrKind": "arrhenius",
+    "mm": {
+      "k1": "10",
+      "km1": "1",
+      "kcat": "2",
+      "e0": "0.01",
+      "s0": "0.1, 0.2, 0.5, 1, 2, 5"
+    }
+  },
+  "energy": {
+    "tab": "profile",
+    "profile": {
+      "points": [
+        {
+          "label": "N₂ + 3 H₂",
+          "energy": 0,
+          "kind": "reactant"
+        },
+        {
+          "label": "Transition state",
+          "energy": 230,
+          "kind": "ts"
+        },
+        {
+          "label": "2 NH₃",
+          "energy": -92,
+          "kind": "product"
+        }
+      ]
+    },
+    "showCatalysed": true,
+    "lower": "80",
+    "source": "haber",
+    "thermo": {
+      "dH": "-92",
+      "dS": "-199",
+      "T": "298",
+      "T2": "700",
+      "K1": "6e5",
+      "dHvh": "-92"
+    },
+    "ice": {
+      "equation": "N2O4 <=> 2 NO2",
+      "initial": "N2O4 = 0.100, NO2 = 0",
+      "K": "0.0059",
+      "mode": "Kc",
+      "T": "298",
+      "add": "0.05",
+      "addSpecies": "N2O4",
+      "volume": "0.5",
+      "T2": "350",
+      "dH": "57"
+    }
+  },
+  "notebook": [
+    {
+      "id": "example",
+      "label": "About this example",
+      "tool": "Kinetics",
+      "text": "Arrhenius plot: activation energy\n\nRate constants measured from 300 to 380 K (synthetic, with 1 % scatter): ln k against 1/T is a straight line whose slope gives the activation energy and whose intercept gives the pre-exponential factor.\n\nData:\n# T (K)   k (s^-1)\n300\t0.0361\n310\t0.0767\n320\t0.162\n330\t0.316\n340\t0.615\n350\t1.10\n360\t1.98\n370\t3.34\n380\t5.72\nFit: Ea = 59.99 ± 0.15 kJ/mol, A = 9.96e+8 s⁻¹, k(298 K) = 3.08e-2 s⁻¹, R² = 0.999957.\nThe data were made with Ea = 60 kJ/mol and A = 1e9 s⁻¹. Switch to the Eyring plot for ΔH‡ and ΔS‡.",
+      "time": 0
+    }
+  ]
+}

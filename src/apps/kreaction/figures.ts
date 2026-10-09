@@ -30,6 +30,9 @@ export const DEFAULT_PALETTE: Palette = {
   success: '#4ade80', warning: '#fbbf24', surface: '#1f2937',
 }
 
+const SERIES = ['#60a5fa', '#fbbf24', '#f472b6', '#a78bfa', '#22d3ee', '#f87171']
+const PRINT_SERIES = ['#1d4ed8', '#b45309', '#be185d', '#6d28d9', '#0e7490', '#b91c1c']
+
 /** Dark ink on white, for the PNG / SVG files. */
 export const PRINT_PALETTE: Palette = {
   text: '#111827', muted: '#4b5563', border: '#d1d5db', accent: '#047857', link: '#1d4ed8', danger: '#b91c1c',
@@ -55,7 +58,10 @@ export function withAlpha(color: string, alpha: number): string {
 
 /** Series colours, cycling with a dash style once the palette is used up. */
 export function seriesStyle(i: number, pal: Palette): { color: string; dash: string } {
-  const colours = [pal.accent, pal.link, pal.danger, pal.warning, pal.success, pal.muted]
+  // The theme's accent first, then fixed colours that stay apart in every theme (a green theme makes
+  // its link and success colours green too), lighter on the dark screen and darker in the print palette.
+  const print = pal.surface === PRINT_PALETTE.surface
+  const colours = [pal.accent, ...(print ? PRINT_SERIES : SERIES)]
   const dashes = ['solid', 'dash', 'dot', 'dashdot']
   return { color: colours[i % colours.length], dash: dashes[Math.floor(i / colours.length) % dashes.length] }
 }

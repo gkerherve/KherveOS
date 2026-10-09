@@ -1,0 +1,96 @@
+{
+  "app": "kreaction",
+  "folder": "kReaction Examples",
+  "examples": [
+    {
+      "file": "01 Ethanol combustion, balanced.kreact",
+      "title": "Ethanol combustion, balanced",
+      "description": "Ethanol burning in oxygen, balanced by the exact balancer (nullspace of the atom matrix): C2H6O + 3 O2 → 2 CO2 + 3 H2O.",
+      "group": "Reactions"
+    },
+    {
+      "file": "02 Industrial processes in the library.kreact",
+      "title": "Industrial processes in the library",
+      "description": "The reaction library filtered to the industrial class (Haber–Bosch, the contact process, N2O4): open one in the builder, the mechanism viewer or the energy profile from here.",
+      "group": "Reactions"
+    },
+    {
+      "file": "03 SN2 mechanism - bromoethane + hydroxide.kreact",
+      "title": "SN2 mechanism: bromoethane + hydroxide",
+      "description": "Bimolecular substitution in one concerted step with back-side attack and inversion; step through it in the mechanism viewer.",
+      "group": "Mechanisms"
+    },
+    {
+      "file": "04 SN1 mechanism - tert-butyl bromide hydrolysis.kreact",
+      "title": "SN1 mechanism: tert-butyl bromide hydrolysis",
+      "description": "Unimolecular substitution: the slow ionisation to a tertiary carbocation, then capture by water. Four states with the energy of each.",
+      "group": "Mechanisms"
+    },
+    {
+      "file": "05 Fischer esterification mechanism.kreact",
+      "title": "Fischer esterification mechanism",
+      "description": "Acid-catalysed ester formation from acetic acid and ethanol in six states: protonation, addition, proton transfer and loss of water, all reversible.",
+      "group": "Mechanisms"
+    },
+    {
+      "file": "06 Diels-Alder - cyclopentadiene + maleic anhydride.kreact",
+      "title": "Diels–Alder: cyclopentadiene + maleic anhydride",
+      "description": "A concerted [4+2] cycloaddition giving the endo adduct: six electrons move in one cyclic transition state.",
+      "group": "Mechanisms"
+    },
+    {
+      "file": "07 Aldol addition mechanism.kreact",
+      "title": "Aldol addition mechanism",
+      "description": "Base-catalysed addition of ethanal to itself: enolate formation, attack on a second carbonyl and protonation of the alkoxide to 3-hydroxybutanal.",
+      "group": "Mechanisms"
+    },
+    {
+      "file": "08 Hydrogenation of ethene - catalysed or not.kreact",
+      "title": "Hydrogenation of ethene: catalysed or not",
+      "description": "The energy profile of C2H4 + H2 → C2H6 with and without a metal catalyst (Pd, Pt, Ni): the catalyst opens a path with a far lower barrier and leaves ΔH unchanged.",
+      "group": "Energy and equilibrium"
+    },
+    {
+      "file": "09 Haber-Bosch equilibrium (Kp).kreact",
+      "title": "Haber–Bosch equilibrium (Kp)",
+      "description": "N2 + 3 H2 ⇌ 2 NH3 at 400 °C (673 K) with Kp = 1.6e-4 atm⁻² from 50 atm N2 and 150 atm H2: the ICE table gives the partial pressures at equilibrium and the conversion.",
+      "group": "Energy and equilibrium"
+    },
+    {
+      "file": "10 N2O4 = 2 NO2 and Le Chatelier.kreact",
+      "title": "N2O4 ⇌ 2 NO2 and Le Chatelier",
+      "description": "The brown/colourless gas equilibrium N2O4 ⇌ 2 NO2 (Kc = 0.0059 at 298 K, ΔH = +57 kJ/mol) with the Le Chatelier panel ready: add N2O4, halve the volume or heat to 350 K and press Apply.",
+      "group": "Energy and equilibrium"
+    },
+    {
+      "file": "11 Consecutive reactions A to B to C.kreact",
+      "title": "Consecutive reactions A → B → C",
+      "description": "Two first-order steps in a row (k1 = 0.5, k2 = 0.2): the intermediate B rises, peaks and falls while C appears after an induction period.",
+      "group": "Kinetics"
+    },
+    {
+      "file": "12 Michaelis-Menten enzyme kinetics.kreact",
+      "title": "Michaelis–Menten enzyme kinetics",
+      "description": "E + S ⇌ ES → E + P with k1 = 10, k−1 = 1, kcat = 2 and [E]0 = 0.01: the initial velocities at six substrate concentrations follow the hyperbola v = Vmax·S / (KM + S), and the Lineweaver–Burk plot recovers KM and Vmax.",
+      "group": "Kinetics"
+    },
+    {
+      "file": "13 Brusselator oscillator.kreact",
+      "title": "Brusselator oscillator",
+      "description": "A model chemical oscillator: with B > 1 + A² (here 3 > 2) the concentrations of X and Y settle onto a limit cycle and oscillate for ever.",
+      "group": "Kinetics"
+    },
+    {
+      "file": "14 Reaction order from data.kreact",
+      "title": "Reaction order from data",
+      "description": "Concentration against time for an unknown reaction (synthetic, with scatter): the order analysis fits zero, first and second order and picks the straight line, which is second order here.",
+      "group": "Kinetics"
+    },
+    {
+      "file": "15 Arrhenius plot - activation energy.kreact",
+      "title": "Arrhenius plot: activation energy",
+      "description": "Rate constants measured from 300 to 380 K (synthetic, with 1 % scatter): ln k against 1/T is a straight line whose slope gives the activation energy and whose intercept gives the pre-exponential factor.",
+      "group": "Kinetics"
+    }
+  ]
+}
