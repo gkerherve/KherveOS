@@ -305,6 +305,9 @@ export function Plot(props: PlotProps) {
   const bkg = view.bkg ?? []
   const peaks = peaksOf(view.grid)
   const rev = reversedAxis(view.sheet)
+  // Survey and wide scans draw their raw data as a line, the other sheets as dots
+  // (Plot_Operations: "survey" or "wide" in the sheet name, any case).
+  const lineScan = /survey|wide/i.test(view.sheet)
   const hide = new Set(props.dparam?.hide ?? [])
   if (props.areaFills && !props.areaFills.envelope) {
     hide.add('envelope')
@@ -578,7 +581,8 @@ export function Plot(props: PlotProps) {
   if (o.legend && o.showFit && !hide.has('legend')) {
     const shown = legendPeaks(labels, view.sheet).filter((e) => curves[e.index])
     if (o.legend === 1) {
-      legendEntries.push({ text: 'Raw Data', h: { kind: 'dots' } })
+      // The desktop labels the raw data only on the dot plots: a survey's line has no legend entry.
+      if (!lineScan) legendEntries.push({ text: 'Raw Data', h: { kind: 'dots' } })
       if (view.background?.type) legendEntries.push({ text: 'Background', h: { kind: 'dash' } })
       if (view.envelope) legendEntries.push({ text: 'Overall Fit', h: { kind: 'env' } })
       for (const e of shown) legendEntries.push({ text: labels[e.index].replace(/(\d+\/\d+)/g, '$_{$1}$'), h: handleBox(e.index) })
@@ -928,7 +932,12 @@ export function Plot(props: PlotProps) {
           {bkgShown && (
             <path d={pathOf(xs, bkg, X, Y)} fill="none" stroke={PLOT_STYLE.backgroundColor} strokeOpacity={PLOT_STYLE.backgroundAlpha} strokeWidth={lw} strokeDasharray={DASH(1)} />
           )}
-          <path d={dots} fill={PLOT_STYLE.scatterColor} />
+          {lineScan ? (
+            // the survey's raw data: a black line, 1 pt, alpha 0.7 (line_width, line_alpha)
+            <path d={pathOf(xs, ys, X, Y)} fill="none" stroke={PLOT_STYLE.scatterColor} strokeOpacity={0.7} strokeWidth={lw} />
+          ) : (
+            <path d={dots} fill={PLOT_STYLE.scatterColor} />
+          )}
           {o.showFit && view.envelope && !hide.has('envelope') && (
             <path d={pathOf(xs, view.envelope, X, Y)} fill="none" stroke={PLOT_STYLE.envelopeColor} strokeOpacity={PLOT_STYLE.envelopeAlpha} strokeWidth={lw} />
           )}

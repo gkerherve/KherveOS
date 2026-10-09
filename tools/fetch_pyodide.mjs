@@ -25,7 +25,7 @@ const OUT = join(ROOT, 'public/pyodide', `v${version}`, 'full')
 const CORE = ['pyodide.mjs', 'pyodide.asm.mjs', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json']
 const DEFAULT_PACKAGES = [
   'numpy', 'scipy', 'pandas', 'matplotlib', 'scikit-learn', 'sympy', 'mpmath', 'h5py', 'pillow', 'micropip',
-  'networkx', 'statsmodels', 'pyyaml',
+  'networkx', 'statsmodels', 'pyyaml', 'uncertainties',
 ]
 
 const args = process.argv.slice(2)
