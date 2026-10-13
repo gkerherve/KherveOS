@@ -101,8 +101,8 @@ export default function LastTrain({ win }: AppProps) {
     let engine: LastTrainEngine | null = null
     let ro: ResizeObserver | null = null
     retainAudio()
-    void import('./lastTrainEngine')
-      .then(({ LastTrainEngine }) => {
+    void Promise.all([import('./lastTrainEngine'), import('./rkModels').then((m) => m.loadModels(['zombie']).catch(() => {}))])
+      .then(([{ LastTrainEngine }]) => {
         if (!alive || !canvasRef.current) return
         engine = new LastTrainEngine(canvasRef.current, (r) => {
           const name = lastName() || DEFAULT_NAME

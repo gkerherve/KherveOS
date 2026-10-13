@@ -15,6 +15,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { noise, sfx, tone } from './sound'
+import { hasModel, instanceModel, type ModelInstance } from './rkModels'
 import {
   buildStation, buildTrain, CAR, DOORS, drawBoard, PILLARS, PLATFORM, rng, sprite, STAIRS, stationAt, texture, TRACK_Y, TRAVEL,
   updateTrainMap, type StationBuild, type TrainBuild,
@@ -66,6 +67,8 @@ type ZState = 'track' | 'climb' | 'stairs' | 'chase' | 'dead'
 
 interface Zombie {
   kind: Kind
+  /** An animated model (rkModels.ts) instead of the code-posed body. */
+  model?: ModelInstance
   root: THREE.Group
   hips: THREE.Object3D
   spine: THREE.Object3D
@@ -1231,7 +1234,9 @@ export class LastTrainEngine {
       if (!hit) continue
       const z = hit.object.userData.zombie as Zombie | undefined
       if (z) {
-        const isHead = hit.object.userData.part === 'head'
+        const isHead = z.model
+          ? hit.point.y - (z.root.position.y + this.world.position.y) > z.model.height * KINDS[z.kind].scale * 0.8
+          : hit.object.userData.part === 'head'
         const falloff = d.id === 'shotgun' ? clamp(1.3 - hit.distance / 18, 0.25, 1) : 1
         this.damage(z, d.damage * falloff * (isHead ? 2.4 : 1), isHead, this.raycaster.ray.direction, hit.point)
         hits++
@@ -1404,6 +1409,7 @@ export class LastTrainEngine {
   }
 
   private makeZombie(kind: Kind): Zombie {
+    if (hasModel('zombie')) return this.modelZombie(kind)
     const r = Math.random
     const pick = <T,>(a: T[]) => a[Math.floor(r() * a.length)]
     const skin = new THREE.MeshStandardMaterial({ map: pick(this.skins), roughness: 0.85 })
@@ -1513,6 +1519,26 @@ export class LastTrainEngine {
     return z as Zombie
   }
 
+  /** A zombie from the animated models: same game state, the model animates itself. */
+  private modelZombie(kind: Kind): Zombie {
+    const model = instanceModel('zombie')
+    const root = new THREE.Group()
+    root.rotation.order = 'YXZ'
+    model.root.scale.setScalar(KINDS[kind].scale)
+    root.add(model.root)
+    const dummy = () => new THREE.Object3D()
+    const shadow = new THREE.Mesh(new THREE.BufferGeometry(), this.shadowMat)
+    shadow.visible = false
+    const z = {
+      kind, model, root, hips: dummy(), spine: dummy(), head: dummy(), arms: [dummy(), dummy()], fores: [dummy(), dummy()],
+      thighs: [dummy(), dummy()], shins: [dummy(), dummy()], mats: model.mats, eyes: [], meshes: model.meshes, shadow,
+      hp: 100, maxHp: 100, speed: 1, state: 'chase', t: 0, phase: Math.random() * 10, attack: 0, hitT: 0, flash: 0,
+      deadT: 0, fall: 1, groan: 1 + Math.random() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points,
+    } as unknown as Zombie
+    for (const m of model.meshes) m.userData.zombie = z
+    return z
+  }
+
   private removeZombie(z: Zombie) {
     z.root.removeFromParent()
     for (const m of z.mats) m.dispose()
@@ -1568,15 +1594,20 @@ export class LastTrainEngine {
       z.t += dt
       z.flash = Math.max(0, z.flash - dt * 6)
       z.hitT = Math.max(0, z.hitT - dt)
-      for (const m of z.mats) m.emissive.setRGB(z.flash * 0.5, 0, 0)
+      for (const m of z.mats) if (!m.userData.glow) m.emissive.setRGB(z.flash * 0.5, 0, 0)
 
       if (z.state === 'dead') {
         z.deadT += dt
         const k = ease.out(clamp(z.deadT / 0.55, 0, 1))
-        z.root.rotation.x = z.fall * k * (Math.PI / 2 - 0.08)
-        z.hips.position.y = 0.95 - k * 0.55
-        z.arms[0].rotation.x = z.arms[1].rotation.x = -k * 2.5 * z.fall
-        z.shins[0].rotation.x = k * 0.5
+        if (z.model) {
+          z.model.play('death')
+          z.model.mixer.update(dt)
+        } else {
+          z.root.rotation.x = z.fall * k * (Math.PI / 2 - 0.08)
+          z.hips.position.y = 0.95 - k * 0.55
+          z.arms[0].rotation.x = z.arms[1].rotation.x = -k * 2.5 * z.fall
+          z.shins[0].rotation.x = k * 0.5
+        }
         if (z.deadT > 6) {
           const fade = clamp(1 - (z.deadT - 6) / 1.5, 0, 1)
           for (const m of z.mats) {
@@ -1700,6 +1731,18 @@ export class LastTrainEngine {
   }
 
   private animateZombie(z: Zombie, dt: number, speed: number, dist: number) {
+    if (z.model) {
+      const m = z.model
+      if (z.state === 'climb') m.play('walk')
+      else if (z.attack > 0 && dist < 1.6 && z.t < 0.5) m.play('attack', 0.5)
+      else if (z.hitT > 0.15) m.play('hit', 0.3)
+      else if (speed > 2.6) m.play('run')
+      else if (speed > 0.2) m.play('walk')
+      else m.play('idle')
+      m.pace(speed / (z.kind === 'runner' ? 4 : 1.5))
+      m.mixer.update(dt)
+      return
+    }
     if (z.state === 'climb') return
     const runner = z.kind === 'runner'
     z.phase += dt * (speed * (runner ? 2.6 : 3.4) + 0.4)

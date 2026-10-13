@@ -103,7 +103,7 @@ export default function RuneKeep({ win }: AppProps) {
     let engine: RuneKeepEngine | null = null
     let ro: ResizeObserver | null = null
     retainAudio()
-    void Promise.all([import('./rkEngine'), import('./rkModels').then((m) => m.loadModels(['grunt', 'knight', 'brute', 'ravager', 'hound', 'wraith']))])
+    void Promise.all([import('./rkEngine'), import('./rkModels').then((m) => m.loadModels(['grunt', 'knight', 'brute', 'ravager', 'hound', 'wraith']).catch(() => {}))])
       .then(([{ RuneKeepEngine }]) => {
         if (!alive || !canvasRef.current) return
         engine = new RuneKeepEngine(canvasRef.current, (r) => {
