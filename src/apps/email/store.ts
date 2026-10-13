@@ -4,9 +4,13 @@
 
 import { createContext, useContext } from 'react'
 import { createStore, useStore, type StoreApi } from 'zustand'
-import { errorMessage, mail, MailApiError, type Account, type Folder, type MessageDetail, type MessageSummary } from './api'
+import {
+  errorMessage, mail, MailApiError, type Account, type Folder, type MessageDetail, type MessageFilter, type MessageSummary,
+} from './api'
 
 export const PAGE = 50
+/** How long a delete or move can be taken back before it is sent to the mail server. */
+export const UNDO_MS = 6000
 
 export interface FolderRef {
   accountId: number
@@ -23,6 +27,11 @@ export interface MailState {
 
   current: FolderRef | null
   query: string
+  filter: MessageFilter
+  /** uids ticked for a bulk action. */
+  checked: number[]
+  /** Something just deleted or moved that can still be taken back. */
+  undo: { id: number; label: string } | null
   items: MessageSummary[]
   total: number
   listLoading: boolean
@@ -41,12 +50,24 @@ export interface MailState {
   loadFolders(accountId: number): Promise<void>
   openFolder(ref: FolderRef): void
   search(query: string): void
+  setFilter(filter: MessageFilter): void
+  toggleCheck(uid: number): void
+  /** Tick everything between the last ticked message (or the open one) and this one. */
+  checkRange(uid: number): void
+  checkAll(): void
+  clearChecks(): void
   refresh(): Promise<void>
   loadMore(): Promise<void>
   select(uid: number | null): Promise<void>
   setFlags(uid: number, flags: Flags): Promise<void>
-  /** Delete (to the Trash) or move a message out of the open folder. */
-  takeOut(uid: number, to: string | null): Promise<void>
+  /** The same flags on several messages at once. */
+  setFlagsMany(uids: number[], flags: Flags): Promise<void>
+  /** Delete (to the Trash) or move messages out of the open folder. The mail server hears of it after
+   *  UNDO_MS, unless `undoTakeOut` comes first. */
+  takeOut(uids: number | number[], to: string | null): Promise<void>
+  undoTakeOut(): void
+  /** Send what is waiting for the undo time out right now (the window is closing). */
+  flush(): void
   /** Look for new mail in every inbox; `notify` announces it. */
   check(notify: boolean): Promise<void>
   accountAdded(account: Account): void
@@ -68,6 +89,19 @@ export function createMailStore(deps: MailDeps): MailStore {
   let detailSeq = 0
   /** The newest INBOX message we know of, per account: anything above it is new mail. */
   const baselines = new Map<number, { uidvalidity: number | null; maxUid: number }>()
+
+  /** A delete or move waiting out its undo time. */
+  interface Pending {
+    id: number
+    ref: FolderRef
+    uids: number[]
+    removed: { item: MessageSummary; index: number }[]
+    to: string | null
+    timer: number
+  }
+  let pending: Pending | null = null
+  let pendingId = 0
+  const sameRef = (a: FolderRef, b: FolderRef) => a.accountId === b.accountId && a.folder === b.folder
 
   return createStore<MailState>()((set, get) => {
     const isCurrent = (ref: FolderRef) => {
@@ -91,15 +125,18 @@ export function createMailStore(deps: MailDeps): MailStore {
     }
 
     const loadList = async (mode: 'open' | 'refresh' | 'more') => {
-      const { current, query, items } = get()
+      const { current, query, items, filter } = get()
       if (!current) return
       const seq = mode === 'more' ? listSeq : ++listSeq
       const offset = mode === 'more' ? items.length : 0
       const limit = mode === 'refresh' ? Math.min(200, Math.max(PAGE, items.length)) : PAGE
       set(mode === 'more' ? { loadingMore: true } : { listLoading: true })
       try {
-        const page = await mail.messages(current.accountId, current.folder, { offset, limit, q: query })
+        const fetched = await mail.messages(current.accountId, current.folder, { offset, limit, q: query, filter })
         if (seq !== listSeq) return // another folder, search or refresh started meanwhile
+        // Messages deleted or moved a moment ago are not on the server yet: keep them out of sight.
+        const hidden = pending && sameRef(pending.ref, current) ? new Set(pending.uids) : null
+        const page = hidden ? { ...fetched, messages: fetched.messages.filter((m) => !hidden.has(m.uid)) } : fetched
         if (mode === 'more') {
           const known = new Set(get().items.map((m) => m.uid))
           set({ items: [...get().items, ...page.messages.filter((m) => !known.has(m.uid))], total: page.total, loadingMore: false })
@@ -109,7 +146,7 @@ export function createMailStore(deps: MailDeps): MailStore {
           const items = page.messages.map((m) => (m.uid === open && !m.seen ? { ...m, seen: true } : m))
           set({ items, total: page.total, listLoading: false, listError: null })
         }
-        if (current.folder === 'INBOX' && !query && offset === 0) noteBaseline(current.accountId, page.uidvalidity, page.messages)
+        if (current.folder === 'INBOX' && !query && filter === 'all' && offset === 0) noteBaseline(current.accountId, page.uidvalidity, page.messages)
       } catch (err) {
         if (seq !== listSeq) return
         if (mode === 'more') {
@@ -121,6 +158,23 @@ export function createMailStore(deps: MailDeps): MailStore {
 
     const clearReader = { selected: null, detail: null, detailError: null, detailLoading: false }
 
+    /** Send the waiting delete / move to the mail server. */
+    const commit = async (p: Pending) => {
+      window.clearTimeout(p.timer)
+      if (pending === p) {
+        pending = null
+        if (get().undo?.id === p.id) set({ undo: null })
+      }
+      try {
+        await mail.batch(p.ref.accountId, p.ref.folder, p.uids, p.to === null ? 'delete' : 'move', p.to ?? undefined)
+      } catch (err) {
+        deps.onError(p.to === null ? 'Could not delete the messages' : 'Could not move the messages', err)
+        if (isCurrent(p.ref)) void loadList('refresh')
+      }
+      void get().loadFolders(p.ref.accountId)
+    }
+    const noChecks = { checked: [] as number[] }
+
     return {
       accounts: null,
       accountsError: null,
@@ -128,6 +182,9 @@ export function createMailStore(deps: MailDeps): MailStore {
       folderErrors: {},
       current: null,
       query: '',
+      filter: 'all',
+      checked: [],
+      undo: null,
       items: [],
       total: 0,
       listLoading: false,
@@ -170,7 +227,7 @@ export function createMailStore(deps: MailDeps): MailStore {
 
       openFolder(ref) {
         detailSeq++
-        set({ current: ref, query: '', items: [], total: 0, listError: null, loadingMore: false, ...clearReader })
+        set({ current: ref, query: '', filter: 'all', items: [], total: 0, listError: null, loadingMore: false, ...noChecks, ...clearReader })
         void loadList('open')
       },
 
@@ -178,9 +235,35 @@ export function createMailStore(deps: MailDeps): MailStore {
         const q = query.trim()
         if (q === get().query) return
         detailSeq++
-        set({ query: q, items: [], total: 0, listError: null, loadingMore: false, ...clearReader })
+        set({ query: q, items: [], total: 0, listError: null, loadingMore: false, ...noChecks, ...clearReader })
         void loadList('open')
       },
+
+      setFilter(filter) {
+        if (filter === get().filter) return
+        detailSeq++
+        set({ filter, items: [], total: 0, listError: null, loadingMore: false, ...noChecks, ...clearReader })
+        void loadList('open')
+      },
+
+      toggleCheck(uid) {
+        const checked = get().checked
+        set({ checked: checked.includes(uid) ? checked.filter((u) => u !== uid) : [...checked, uid] })
+      },
+
+      checkRange(uid) {
+        const { items, checked, selected } = get()
+        const anchor = checked.length ? checked[checked.length - 1] : selected
+        const a = items.findIndex((m) => m.uid === anchor)
+        const b = items.findIndex((m) => m.uid === uid)
+        if (b < 0) return
+        if (a < 0) return set({ checked: checked.includes(uid) ? checked : [...checked, uid] })
+        const range = items.slice(Math.min(a, b), Math.max(a, b) + 1).map((m) => m.uid)
+        set({ checked: [...checked.filter((u) => !range.includes(u)), ...range] })
+      },
+
+      checkAll: () => set({ checked: get().items.map((m) => m.uid) }),
+      clearChecks: () => set(noChecks),
 
       async refresh() {
         const cur = get().current
@@ -246,24 +329,70 @@ export function createMailStore(deps: MailDeps): MailStore {
         }
       },
 
-      async takeOut(uid, to) {
+      async setFlagsMany(uids, flags) {
+        const cur = get().current
+        if (!cur || !uids.length) return
+        const before = new Map(get().items.filter((m) => uids.includes(m.uid)).map((m) => [m.uid, m]))
+        let unread = 0
+        for (const m of before.values()) if (flags.seen !== undefined && flags.seen !== m.seen) unread += flags.seen ? -1 : 1
+        set({ items: get().items.map((m) => (before.has(m.uid) ? { ...m, ...flags } : m)) })
+        const d = get().detail
+        if (d && before.has(d.uid)) set({ detail: { ...d, ...flags } })
+        if (unread) bumpUnread(cur, unread)
+        try {
+          if (flags.seen !== undefined) await mail.batch(cur.accountId, cur.folder, uids, flags.seen ? 'seen' : 'unseen')
+          if (flags.flagged !== undefined) await mail.batch(cur.accountId, cur.folder, uids, flags.flagged ? 'flag' : 'unflag')
+        } catch (err) {
+          deps.onError('Could not update the messages', err)
+          if (isCurrent(cur)) void loadList('refresh')
+          void get().loadFolders(cur.accountId)
+        }
+      },
+
+      async takeOut(which, to) {
         const cur = get().current
         if (!cur) return
+        const uids = Array.isArray(which) ? which : [which]
+        if (pending) void commit(pending) // one undo at a time: the earlier action goes through now
         const items = get().items
-        const index = items.findIndex((m) => m.uid === uid)
-        const item = items[index]
-        const next = items[index + 1] ?? items[index - 1] ?? null
-        set({ items: items.filter((m) => m.uid !== uid), total: Math.max(0, get().total - (item ? 1 : 0)) })
-        if (item && !item.seen) bumpUnread(cur, -1)
-        if (get().selected === uid) void get().select(next ? next.uid : null)
-        try {
-          if (to === null) await mail.remove(cur.accountId, cur.folder, uid)
-          else await mail.move(cur.accountId, cur.folder, uid, to)
-        } catch (err) {
-          deps.onError(to === null ? 'Could not delete the message' : 'Could not move the message', err)
-          if (isCurrent(cur)) void loadList('refresh')
-        }
-        void get().loadFolders(cur.accountId)
+        const removed = items.flatMap((item, index) => (uids.includes(item.uid) ? [{ item, index }] : []))
+        const gone = new Set(uids)
+        // After the open message goes, the one below it (or above) is shown.
+        const open = get().selected
+        const at = open == null ? -1 : items.findIndex((m) => m.uid === open)
+        const next = at < 0 || !gone.has(open!) ? null : (items.slice(at + 1).find((m) => !gone.has(m.uid)) ?? items.slice(0, at).reverse().find((m) => !gone.has(m.uid)) ?? null)
+        set({
+          items: items.filter((m) => !gone.has(m.uid)),
+          total: Math.max(0, get().total - removed.length),
+          checked: get().checked.filter((u) => !gone.has(u)),
+        })
+        const unread = removed.filter((r) => !r.item.seen).length
+        if (unread) bumpUnread(cur, -unread)
+        if (open != null && gone.has(open)) void get().select(next ? next.uid : null)
+        const id = ++pendingId
+        const timer = window.setTimeout(() => pending?.id === id && void commit(pending), UNDO_MS)
+        pending = { id, ref: cur, uids, removed, to, timer }
+        const n = uids.length
+        set({ undo: { id, label: `${n === 1 ? 'Message' : `${n} messages`} ${to === null ? 'deleted' : 'moved'}` } })
+      },
+
+      undoTakeOut() {
+        const p = pending
+        if (!p) return
+        window.clearTimeout(p.timer)
+        pending = null
+        set({ undo: null })
+        if (!isCurrent(p.ref) || get().query) return void (isCurrent(p.ref) && loadList('refresh'))
+        const have = new Set(get().items.map((m) => m.uid))
+        const back = p.removed.filter((r) => !have.has(r.item.uid)).map((r) => r.item)
+        const items = [...get().items, ...back].sort((a, b) => b.uid - a.uid)
+        set({ items, total: get().total + back.length })
+        const unread = back.filter((m) => !m.seen).length
+        if (unread) bumpUnread(p.ref, unread)
+      },
+
+      flush() {
+        if (pending) void commit(pending)
       },
 
       async check(notify) {
@@ -278,7 +407,7 @@ export function createMailStore(deps: MailDeps): MailStore {
             noteBaseline(account.id, page.uidvalidity, page.messages)
             if (fresh.length && notify) deps.onNewMail(account, fresh)
             const cur = get().current
-            if (cur && cur.accountId === account.id && cur.folder === 'INBOX' && !get().query) {
+            if (cur && cur.accountId === account.id && cur.folder === 'INBOX' && !get().query && get().filter === 'all') {
               // Merge: new messages on top, flags changed elsewhere (another device) updated.
               const byUid = new Map(page.messages.map((m) => [m.uid, m]))
               const items = get().items

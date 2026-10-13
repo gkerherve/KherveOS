@@ -101,6 +101,7 @@ class FakeServer:
         self.boxes = {}
         self.commands = []
         self.logins = 0
+        self.token = "access-1"
         self.connections = []
         self.add_box("INBOX")
 
@@ -150,6 +151,15 @@ class FakeIMAP:
             raise imaplib.IMAP4.error(b"[AUTHENTICATIONFAILED] Invalid credentials (Failure)")
         self.server.logins += 1
         return "OK", [b"[CAPABILITY " + " ".join(self.server.caps).encode() + b"] Logged in"]
+
+    def authenticate(self, mechanism, authobject):
+        self._log("AUTHENTICATE", mechanism)
+        blob = authobject(None)
+        if mechanism != "XOAUTH2" or blob != f"user={self.server.credentials[0]}\x01auth=Bearer {self.server.token}\x01\x01".encode():
+            authobject(b"{}")  # the server's error blob is answered with an empty line
+            raise imaplib.IMAP4.error(b"AUTHENTICATE failed.")
+        self.server.logins += 1
+        return "OK", [b"[CAPABILITY " + " ".join(self.server.caps).encode() + b"] Authenticated"]
 
     def capability(self):
         return "OK", [" ".join(self.server.caps).encode()]
@@ -217,11 +227,19 @@ class FakeIMAP:
         if command == "FETCH":
             return self._fetch(self._by_uid(args[0]), args[1])
         if command == "SEARCH":
+            crit = [a.upper() for a in args]
+            pool = self.box.messages
+            if "UNSEEN" in crit:
+                pool = [m for m in pool if "\\Seen" not in m.flags]
+            if "FLAGGED" in crit:
+                pool = [m for m in pool if "\\Flagged" in m.flags]
             if self.literal is not None:
                 needle, self.literal = self.literal.decode("utf-8"), None
-            else:
+            elif "TEXT" in crit:
                 needle = unquote(args[-1])
-            hits = [str(m.uid) for m in self.box.messages if needle.lower() in m.raw.decode("utf-8", "replace").lower()]
+            else:
+                needle = ""
+            hits = [str(m.uid) for m in pool if needle.lower() in m.raw.decode("utf-8", "replace").lower()]
             return "OK", [" ".join(hits).encode()]
         if command == "STORE":
             uid, how, flags = args
@@ -241,7 +259,7 @@ class FakeIMAP:
                     self.box.messages.remove(m)
             return "OK", [None]
         if command == "EXPUNGE":
-            uids = {int(args[0])}
+            uids = {int(u) for u in args[0].split(",")}
             self.box.messages = [m for m in self.box.messages if not (m.uid in uids and "\\Deleted" in m.flags)]
             return "OK", [None]
         raise imaplib.IMAP4.error(f"unexpected UID {command}")
@@ -606,7 +624,7 @@ def test_providers(client):
     assert providers["gmail"]["imap"] == {"host": "imap.gmail.com", "port": 993, "security": "ssl"}
     assert providers["icloud"]["smtp"] == {"host": "smtp.mail.me.com", "port": 587, "security": "starttls"}
     assert "app password" in providers["gmail"]["note"].lower()
-    assert providers["outlook"]["supported"] is False
+    assert providers["outlook"]["supported"] and providers["outlook"]["auth"] == "microsoft"
     assert set(providers) >= {"gmail", "icloud", "fastmail", "yahoo", "outlook", "other"}
 
 
@@ -663,7 +681,7 @@ def test_add_account_errors(client, imap, smtp_server, monkeypatch):
     assert (status, kind) == (502, "connect") and "imap.example.com" in detail
 
     status, kind, detail = post(email="someone@outlook.com", imap_host="", smtp_host="", provider="")
-    assert (status, kind) == (400, "unsupported") and "OAuth" in detail
+    assert (status, kind) == (400, "unsupported") and "Microsoft" in detail
     status, kind, detail = post(email="not-an-email")
     assert status == 400
     status, kind, detail = post(imap_host="bad host!")
@@ -799,7 +817,7 @@ def test_search(client, imap, smtp_server):
     assert [m["subject"] for m in page["messages"]] == ["Déjeuner vendredi"]
     assert ("UID", "SEARCH", "CHARSET", "UTF-8", "TEXT") in imap.commands
     assert client.get(base, params={"folder": "INBOX", "q": "nothing-like-this"}).json() == {
-        "folder": "INBOX", "query": "nothing-like-this", "offset": 0, "limit": 50, "total": 0, "uidvalidity": 7, "messages": [],
+        "folder": "INBOX", "query": "nothing-like-this", "filter": "all", "offset": 0, "limit": 50, "total": 0, "uidvalidity": 7, "messages": [],
     }
 
 
@@ -1057,3 +1075,162 @@ def test_end_to_end_with_pymap(client, pymap_port, smtp_server):
     uid = rows[1]["uid"]
     assert client.post(f"{base}/messages/{uid}/move", json={"folder": "INBOX", "to": "Sent"}).json() == {"ok": True}
     assert client.get(f"{base}/messages", params={"folder": "INBOX"}).json()["total"] == 2
+
+
+def test_filter_and_batch_actions(client, imap, smtp_server):
+    _, smtp_port = smtp_server
+    make_user(client)
+    account = add_account(client, smtp_port)
+    base = f"/api/mail/accounts/{account['id']}/messages"
+    for i in range(5):
+        imap.deliver("INBOX", make_raw(subject=f"m{i}"), flags=("\\Seen",) if i < 2 else ())
+    inbox = imap.boxes["INBOX"]
+
+    unread = client.get(base, params={"folder": "INBOX", "filter": "unread"}).json()
+    assert [m["uid"] for m in unread["messages"]] == [5, 4, 3] and unread["total"] == 3 and unread["filter"] == "unread"
+    assert client.get(base, params={"folder": "INBOX", "filter": "flagged"}).json()["messages"] == []
+
+    def run(action, uids, **extra):
+        r = client.post(f"{base}/batch", json={"folder": "INBOX", "uids": uids, "action": action, **extra})
+        assert r.status_code == 200, r.text
+        return r.json()
+
+    assert run("flag", [1, 3, 3])["count"] == 2
+    assert [m.uid for m in inbox.messages if "\\Flagged" in m.flags] == [1, 3]
+    flagged = client.get(base, params={"folder": "INBOX", "filter": "flagged", "q": "m0"}).json()
+    assert [m["uid"] for m in flagged["messages"]] == [1]
+    run("unflag", [1])
+    run("seen", [3, 4, 5])
+    assert all("\\Seen" in m.flags for m in inbox.messages[2:])
+    run("unseen", [4])
+    assert "\\Seen" not in inbox.messages[3].flags
+
+    assert run("move", [1, 2], to="Entw&APw-rfe")["count"] == 2
+    assert [m.uid for m in inbox.messages] == [3, 4, 5] and len(imap.boxes["Entw&APw-rfe"].messages) == 2
+    assert run("delete", [3, 4]) == {"ok": True, "count": 2, "moved_to": "Trash"}
+    assert [m.uid for m in inbox.messages] == [5] and len(imap.boxes["Trash"].messages) == 2
+    assert ("UID", "MOVE", "3,4", '"Trash"') in imap.commands
+    # From the Trash it is for good.
+    r = client.post(f"{base}/batch", json={"folder": "Trash", "uids": [1, 2], "action": "delete"})
+    assert r.json()["moved_to"] is None and imap.boxes["Trash"].messages == []
+
+    assert client.post(f"{base}/batch", json={"folder": "INBOX", "uids": [], "action": "flag"}).status_code == 400
+    assert client.post(f"{base}/batch", json={"folder": "INBOX", "uids": [5], "action": "move"}).status_code == 400
+
+
+def test_xoauth2_string():
+    assert mail.xoauth2("me@outlook.com", "tok") == "user=me@outlook.com\x01auth=Bearer tok\x01\x01"
+
+
+class MicrosoftFake:
+    """Microsoft's sign-in service: what _ms_request would answer."""
+
+    def __init__(self):
+        self.pending = 2
+        self.calls = []
+        self.refreshed = 0
+
+    def __call__(self, url, form):
+        self.calls.append((url.rsplit("/", 1)[-1], form))
+        if url.endswith("/devicecode"):
+            return {"device_code": "dev-123", "user_code": "ABCD-EFGH", "verification_uri": "https://microsoft.com/devicelogin",
+                    "expires_in": 900, "interval": 5}
+        if form["grant_type"].endswith("device_code"):
+            if self.pending:
+                self.pending -= 1
+                return {"error": "authorization_pending"}
+            claims = base64.urlsafe_b64encode(b'{"email": "Me@Outlook.com", "name": "Me Outlook"}').decode().rstrip("=")
+            return {"access_token": "access-1", "refresh_token": "refresh-1", "expires_in": 3600, "id_token": f"x.{claims}.y"}
+        assert form["grant_type"] == "refresh_token" and form["refresh_token"] in ("refresh-1", "refresh-2")
+        self.refreshed += 1
+        return {"access_token": "access-2", "refresh_token": "refresh-2", "expires_in": 3600}
+
+
+CLIENT_ID = "0a1b2c3d-1111-2222-3333-444455556666"
+
+
+@pytest.fixture()
+def microsoft(monkeypatch, imap):
+    fake = MicrosoftFake()
+    monkeypatch.setattr(mail, "_ms_request", fake)
+    imap.credentials = ("Me@Outlook.com", "unused")
+    imap.caps = ["IMAP4rev1", "MOVE", "UIDPLUS", "SPECIAL-USE", "AUTH=XOAUTH2"]
+    from contextlib import contextmanager
+
+    @contextmanager
+    def smtp_ok(settings, secret):
+        assert mail._is_oauth(settings) and secret.startswith("access-")
+        yield None
+
+    monkeypatch.setattr(mail, "_smtp_session", smtp_ok)
+    return fake
+
+
+def test_microsoft_sign_in(client, microsoft, imap):
+    from kherveos_server import db
+
+    make_user(client)
+    r = client.post("/api/mail/oauth/microsoft/start", json={"client_id": "not-a-guid"})
+    assert r.status_code == 400 and "Application (client) ID" in r.json()["detail"]
+    r = client.post("/api/mail/oauth/microsoft/start", json={"client_id": CLIENT_ID, "email": "me@outlook.com"})
+    assert r.status_code == 200
+    start = r.json()
+    assert start["user_code"] == "ABCD-EFGH" and start["verification_uri"].startswith("https://microsoft.com")
+    kind, form = microsoft.calls[0]
+    assert form["client_id"] == CLIENT_ID and form["login_hint"] == "me@outlook.com"
+    assert "IMAP.AccessAsUser.All" in form["scope"] and "SMTP.Send" in form["scope"] and "offline_access" in form["scope"]
+
+    poll = lambda: client.post("/api/mail/oauth/microsoft/poll", json={"flow_id": start["flow_id"]})
+    assert poll().json()["status"] == "pending" and poll().json()["status"] == "pending"
+    done = poll().json()
+    assert done["status"] == "done"
+    account = done["account"]
+    assert account["email"] == "Me@Outlook.com" and account["provider"] == "outlook" and account["oauth"] is True
+    assert account["display_name"] == "Me Outlook"
+    assert not any("token" in k or "password" in k for k in account)
+    assert ("AUTHENTICATE", "XOAUTH2") in imap.commands
+
+    with db.connect() as conn:
+        row = conn.execute("SELECT * FROM mail_oauth").fetchone()
+    assert row["client_id"] == CLIENT_ID and "refresh-1" not in row["refresh_enc"]
+    assert mail.decrypt_password(row["refresh_enc"]) == "refresh-1"
+    # The flow is used up, and the account shows in the list as a Microsoft one.
+    assert poll().status_code == 400
+    assert client.get("/api/mail/accounts").json()["accounts"][0]["oauth"] is True
+
+    # Reading mail uses the access token from the sign-in; an expired one is refreshed
+    # and the new refresh token is kept.
+    imap.deliver("INBOX", make_raw(subject="From Outlook"))
+    assert client.get(f"/api/mail/accounts/{account['id']}/messages").json()["total"] == 1
+    mail.reset_connections()
+    imap.token = "access-2"
+    mail._ms_tokens.clear()
+    assert client.get(f"/api/mail/accounts/{account['id']}/messages").json()["total"] == 1
+    assert microsoft.refreshed == 1
+    with db.connect() as conn:
+        assert mail.decrypt_password(conn.execute("SELECT refresh_enc FROM mail_oauth").fetchone()["refresh_enc"]) == "refresh-2"
+
+    # Adding it again is refused; a password can't be set on it.
+    again = client.post("/api/mail/oauth/microsoft/start", json={"client_id": CLIENT_ID}).json()
+    microsoft.pending = 0
+    imap.token = "access-1"  # what the sign-in hands out
+    r = client.post("/api/mail/oauth/microsoft/poll", json={"flow_id": again["flow_id"]})
+    assert r.status_code == 409
+    r = client.patch(f"/api/mail/accounts/{account['id']}", json={"password": "nope"})
+    assert r.status_code == 400 and "Microsoft" in r.json()["detail"]
+
+
+def test_microsoft_errors(client, microsoft, monkeypatch):
+    make_user(client)
+    r = client.post("/api/mail/oauth/microsoft/start", json={})
+    assert r.status_code == 400 and "client" in r.json()["detail"].lower()
+    monkeypatch.setenv("KHERVEOS_MS_CLIENT_ID", CLIENT_ID)
+    assert {p["id"]: p for p in client.get("/api/mail/providers").json()["providers"]}["outlook"]["client_id_configured"] is True
+    start = client.post("/api/mail/oauth/microsoft/start", json={}).json()
+    assert microsoft.calls[-1][1]["client_id"] == CLIENT_ID
+    monkeypatch.setattr(mail, "_ms_request", lambda url, form: {"error": "authorization_declined", "error_description": "The user said no."})
+    r = client.post("/api/mail/oauth/microsoft/poll", json={"flow_id": start["flow_id"]})
+    assert r.status_code == 400 and r.headers["x-mail-error"] == "auth" and "declined" in r.json()["detail"]
+    # Someone else's flow id is no good.
+    other = client.post("/api/mail/oauth/microsoft/poll", json={"flow_id": "nope"})
+    assert other.status_code == 400

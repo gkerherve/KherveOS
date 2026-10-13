@@ -26,6 +26,10 @@ export interface Provider {
   password_label: string
   note: string
   help_url: string | null
+  /** "microsoft": sign in on microsoft.com with a code instead of a password. */
+  auth?: 'microsoft'
+  /** The server already knows an Application (client) ID (KHERVEOS_MS_CLIENT_ID). */
+  client_id_configured?: boolean
 }
 
 export interface Account {
@@ -41,6 +45,8 @@ export interface Account {
   username: string
   created_at: number
   provider: string
+  /** Signed in with Microsoft (no password). */
+  oauth: boolean
 }
 
 export type FolderRole = 'inbox' | 'sent' | 'drafts' | 'trash' | 'junk' | 'archive' | 'all' | 'flagged' | 'important'
@@ -81,6 +87,20 @@ export interface MessageSummary {
   has_attachments: boolean
   size: number
 }
+
+export type MessageFilter = 'all' | 'unread' | 'flagged'
+
+export type BatchAction = 'seen' | 'unseen' | 'flag' | 'unflag' | 'move' | 'delete'
+
+export interface MicrosoftFlow {
+  flow_id: string
+  user_code: string
+  verification_uri: string
+  expires_in: number
+  interval: number
+}
+
+export type MicrosoftPoll = { status: 'pending'; interval: number } | { status: 'done'; account: Account }
 
 export interface MessagePage {
   folder: string
@@ -239,9 +259,15 @@ export const mail = {
     request<{ account: Account }>(acc(id), { method: 'PATCH', body }).then((r) => r.account),
   removeAccount: (id: number) => request<{ ok: true }>(acc(id), { method: 'DELETE' }),
   folders: (id: number) => request<{ folders: Folder[] }>(`${acc(id)}/folders`).then((r) => r.folders),
-  messages: (id: number, folder: string, opts: { offset?: number; limit?: number; q?: string } = {}) =>
+  messages: (id: number, folder: string, opts: { offset?: number; limit?: number; q?: string; filter?: MessageFilter } = {}) =>
     request<MessagePage>(`${acc(id)}/messages`, {
-      query: { folder, offset: opts.offset ?? 0, limit: opts.limit ?? 50, q: opts.q || undefined },
+      query: {
+        folder,
+        offset: opts.offset ?? 0,
+        limit: opts.limit ?? 50,
+        q: opts.q || undefined,
+        filter: opts.filter && opts.filter !== 'all' ? opts.filter : undefined,
+      },
     }),
   message: (id: number, folder: string, uid: number) => request<MessageDetail>(msg(id, uid), { query: { folder } }),
   setFlags: (id: number, folder: string, uid: number, flags: { seen?: boolean; flagged?: boolean; answered?: boolean }) =>
@@ -250,6 +276,15 @@ export const mail = {
     request<{ ok: true }>(`${msg(id, uid)}/move`, { body: { folder, to } }),
   remove: (id: number, folder: string, uid: number) =>
     request<{ ok: true; moved_to: string | null }>(`${msg(id, uid)}/delete`, { body: { folder } }),
+  /** One action on many messages of a folder. */
+  batch: (id: number, folder: string, uids: number[], action: BatchAction, to?: string) =>
+    request<{ ok: true; count: number; moved_to: string | null }>(`${acc(id)}/messages/batch`, { body: { folder, uids, action, to } }),
+  /** Outlook.com / Microsoft 365: ask Microsoft for a sign-in code… */
+  microsoftStart: (body: { client_id?: string; email?: string; account_id?: number }) =>
+    request<MicrosoftFlow>('/oauth/microsoft/start', { body }),
+  /** …and ask whether the user has approved it yet. */
+  microsoftPoll: (flowId: string, displayName: string) =>
+    request<MicrosoftPoll>('/oauth/microsoft/poll', { body: { flow_id: flowId, display_name: displayName } }),
   send: (id: number, body: SendRequest) => request<SendResult>(`${acc(id)}/send`, { body }),
   /** An attachment's bytes. */
   async attachment(id: number, folder: string, uid: number, index: number): Promise<Blob> {

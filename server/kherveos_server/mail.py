@@ -9,16 +9,25 @@ the server talks to the user's own mail providers on their behalf:
     PATCH  /api/mail/accounts/{id}                   change the name, password or servers (re-tested)
     DELETE /api/mail/accounts/{id}
     GET    /api/mail/accounts/{id}/folders
-    GET    /api/mail/accounts/{id}/messages?folder=INBOX&offset=0&limit=50&q=
+    GET    /api/mail/accounts/{id}/messages?folder=INBOX&offset=0&limit=50&q=&filter=all|unread|flagged
     GET    /api/mail/accounts/{id}/messages/{uid}?folder=            (marks it read)
     GET    /api/mail/accounts/{id}/messages/{uid}/attachments/{index}?folder=
     POST   /api/mail/accounts/{id}/messages/{uid}/flags   {folder, seen?, flagged?, answered?}
     POST   /api/mail/accounts/{id}/messages/{uid}/move    {folder, to}
     POST   /api/mail/accounts/{id}/messages/{uid}/delete  {folder}
+    POST   /api/mail/accounts/{id}/messages/batch         {folder, uids, action, to?}  (read, flag, move, delete many at once)
+    POST   /api/mail/oauth/microsoft/start                Outlook.com / Microsoft 365: sign in with a code (device flow)
+    POST   /api/mail/oauth/microsoft/poll                 …and finish once the user has approved it
     POST   /api/mail/accounts/{id}/send                   {to, cc, bcc, subject, text, html?, …}
 
 Passwords (normally the provider's "app passwords") are encrypted with Fernet
 under the key in config.SECRET_KEY_PATH and never leave the server again.
+
+Outlook.com / Hotmail / Live / Microsoft 365 don't take passwords over IMAP any more: they want an OAuth
+token (XOAUTH2). The user signs in on microsoft.com with a short code (the "device code" flow, which
+needs no redirect address), and only the refresh token is kept, encrypted like a password, in mail_oauth.
+It needs an Azure app registration (a free "Application (client) ID", public client) that the user
+makes once: KHERVEOS_MS_CLIENT_ID sets a default for the whole server.
 
 Errors meant for the user are MailErrors: 400 for things they can fix (wrong
 password, bad address), 404 for folders/messages that are gone, 502 when a mail
@@ -42,6 +51,7 @@ import email.utils
 import functools
 import hashlib
 import imaplib
+import json
 import logging
 import mimetypes
 import os
@@ -51,8 +61,11 @@ import smtplib
 import socket
 import ssl
 import threading
+import secrets
 import time
+import urllib.error
 import urllib.parse
+import urllib.request
 from collections import OrderedDict
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -98,6 +111,12 @@ db.register_schema(
         created_at    REAL NOT NULL
     );
     CREATE INDEX IF NOT EXISTS mail_accounts_user ON mail_accounts(user_id);
+    CREATE TABLE IF NOT EXISTS mail_oauth (
+        account_id  INTEGER PRIMARY KEY REFERENCES mail_accounts(id) ON DELETE CASCADE,
+        provider    TEXT NOT NULL,
+        client_id   TEXT NOT NULL,
+        refresh_enc TEXT NOT NULL
+    );
     """
 )
 
@@ -180,19 +199,24 @@ PROVIDERS: list[dict[str, Any]] = [
     {
         "id": "outlook",
         "name": "Outlook.com",
-        "supported": False,
+        "supported": True,
+        "auth": "microsoft",
         "domains": [
             "outlook.com", "hotmail.com", "live.com", "msn.com", "outlook.fr", "hotmail.fr", "live.fr",
-            "hotmail.co.uk", "live.co.uk", "outlook.de", "hotmail.de",
+            "hotmail.co.uk", "live.co.uk", "outlook.de", "hotmail.de", "outlook.es", "hotmail.es", "outlook.it",
+            "hotmail.it", "outlook.ie", "outlook.be", "outlook.pt", "live.ca", "hotmail.ca",
         ],
         "imap": {"host": "outlook.office365.com", "port": 993, "security": "ssl"},
         "smtp": {"host": "smtp-mail.outlook.com", "port": 587, "security": "starttls"},
         "password_label": "Password",
         "note": (
-            "Not supported yet: Microsoft only lets apps sign in to Outlook.com, Hotmail and Live accounts "
-            "with OAuth (a Microsoft sign-in page), which KherveOS doesn't do yet."
+            "Outlook.com, Hotmail, Live and Microsoft 365 let apps in through a Microsoft sign-in, not a password. "
+            "KherveOS shows you a short code to type on microsoft.com. It needs an Application (client) ID from a "
+            "free app registration in Microsoft Entra (portal.azure.com › App registrations › New registration: "
+            "accounts in any organizational directory and personal Microsoft accounts, then Authentication › "
+            "Allow public client flows = Yes). Microsoft 365 work accounts also need IMAP enabled by your admin."
         ),
-        "help_url": None,
+        "help_url": "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade",
     },
     {
         "id": "other",
@@ -229,6 +253,16 @@ def _provider_id_for_host(imap_host: str) -> str:
 def _is_gmail(account: dict) -> bool:
     hosts = (account["imap_host"].lower(), account["smtp_host"].lower())
     return any(h.endswith(("gmail.com", "googlemail.com")) for h in hosts)
+
+
+def _files_sent_itself(account: dict) -> bool:
+    """Gmail and Outlook put what was sent through SMTP into Sent by themselves: no second copy."""
+    hosts = (account["imap_host"].lower(), account["smtp_host"].lower())
+    return _is_gmail(account) or any(h.endswith(("outlook.com", "office365.com", "hotmail.com", "live.com")) for h in hosts)
+
+
+def _is_oauth(account: dict) -> bool:
+    return bool(account.get("oauth_provider") or account.get("oauth"))
 
 
 # ----------------------------------------------------------- password storage
@@ -1153,6 +1187,8 @@ def _auth_error(service: str, host: str, server_said: str) -> MailError:
         message += " Gmail needs an app password (Google Account › Security › App passwords), not your normal password."
     elif host.endswith("mail.me.com"):
         message += " iCloud needs an app-specific password from account.apple.com."
+    elif host.endswith(("outlook.com", "office365.com")):
+        message += " Microsoft needs a sign-in (Edit Account › Sign in with Microsoft); if you did that, IMAP may be switched off for the account."
     elif "yahoo" in host or "fastmail" in host:
         message += " This provider needs an app password, not your normal password."
     return MailError(400, message, "auth")
@@ -1338,24 +1374,32 @@ class ImapSession:
 
     # -- messages
 
-    def search(self, query: str) -> list[int]:
+    FILTERS = {"unread": ("UNSEEN",), "flagged": ("FLAGGED",)}
+
+    def search(self, query: str, flt: str = "all") -> list[int]:
         q = _one_line(query)[:200]
-        if q.isascii():
-            _, data = self.call("search", self.imap.uid, "SEARCH", "TEXT", _quote(q))
+        criteria = self.FILTERS.get(flt, ())
+        if not q:
+            _, data = self.call("search", self.imap.uid, "SEARCH", *(criteria or ("ALL",)))
+        elif q.isascii():
+            _, data = self.call("search", self.imap.uid, "SEARCH", *criteria, "TEXT", _quote(q))
         else:
             self.imap.literal = q.encode("utf-8")
-            _, data = self.call("search", self.imap.uid, "SEARCH", "CHARSET", "UTF-8", "TEXT")
+            _, data = self.call("search", self.imap.uid, "SEARCH", "CHARSET", "UTF-8", *criteria, "TEXT")
         uids: list[int] = []
         for chunk in data or ():
             if isinstance(chunk, (bytes, bytearray)):
                 uids += [int(x) for x in bytes(chunk).split() if x.isdigit()]
         return uids
 
-    def messages(self, folder: str, offset: int, limit: int, query: str = "") -> tuple[list[dict], int, int | None]:
-        """A page of the folder, newest first, read with BODY.PEEK so nothing gets marked as read."""
+    def messages(
+        self, folder: str, offset: int, limit: int, query: str = "", flt: str = "all"
+    ) -> tuple[list[dict], int, int | None]:
+        """A page of the folder, newest first, read with BODY.PEEK so nothing gets marked as read.
+        `flt` ("unread", "flagged") and `query` narrow it down."""
         exists, uidvalidity = self.select(folder, readonly=True)
-        if query.strip():
-            uids = sorted(set(self.search(query)), reverse=True)
+        if query.strip() or flt in self.FILTERS:
+            uids = sorted(set(self.search(query, flt)), reverse=True)
             total, page = len(uids), uids[offset:offset + limit]
             if not page:
                 return [], total, uidvalidity
@@ -1390,17 +1434,17 @@ class ImapSession:
                 return _flag_set(item.get("FLAGS"))
         raise MailError(404, "This message isn't there any more — it may have been moved or deleted.", "gone")
 
-    def set_flag(self, uid: int, flag: str, on: bool) -> None:
+    def set_flag(self, uid: int | str, flag: str, on: bool) -> None:
         self.call("update the message", self.imap.uid, "STORE", str(uid), "+FLAGS.SILENT" if on else "-FLAGS.SILENT", f"({flag})")
 
-    def expunge(self, uid: int) -> None:
+    def expunge(self, uid: int | str) -> None:
         if "UIDPLUS" in self.caps:
             self.call("delete the message", self.imap.uid, "EXPUNGE", str(uid))
         else:
             self.call("delete the message", self.imap.expunge)
 
-    def move(self, uid: int, dest: str) -> None:
-        """Move a message out of the selected folder (MOVE, else COPY + delete)."""
+    def move(self, uid: int | str, dest: str) -> None:
+        """Move a message (or a UID set like "4,7,9") out of the selected folder (MOVE, else COPY + delete)."""
         target = _mailbox_arg(dest)
         if "MOVE" in self.caps:
             typ, data = self.call("move the message", self.imap.uid, "MOVE", str(uid), target, check=False)
@@ -1457,7 +1501,11 @@ def _capabilities_after_login(imap: Any, login_reply: Any) -> set[str]:
     return set()
 
 
-def _login_imap(host: str, port: int, security: str, username: str, password: str) -> ImapSession:
+def xoauth2(username: str, token: str) -> str:
+    return f"user={username}\x01auth=Bearer {token}\x01\x01"
+
+
+def _login_imap(host: str, port: int, security: str, username: str, password: str, oauth: bool = False) -> ImapSession:
     with _network_errors("IMAP", host, port, security):
         imap = _imap_connect(host, port, security)
         try:
@@ -1467,7 +1515,17 @@ def _login_imap(host: str, port: int, security: str, username: str, password: st
                     400, f"{_LABEL['IMAP']}: this server only accepts passwords over an encrypted connection. Choose SSL/TLS or STARTTLS.", "tls"
                 )
             try:
-                if (username + password).isascii():
+                if oauth:
+                    sent: list[bool] = []
+
+                    def initial(_challenge: Any) -> bytes:
+                        if sent:  # the server answered with an error blob: end the exchange, it says NO
+                            return b""
+                        sent.append(True)
+                        return xoauth2(username, password).encode()
+
+                    _, reply = imap.authenticate("XOAUTH2", initial)
+                elif (username + password).isascii():
                     _, reply = imap.login(username, password)
                 else:
                     blob = b"\0" + username.encode() + b"\0" + password.encode()
@@ -1531,7 +1589,10 @@ def _smtp_session(settings: dict, password: str) -> Iterator[smtplib.SMTP]:
         try:
             if smtp.has_extn("auth"):
                 try:
-                    smtp.login(username, password)
+                    if _is_oauth(settings):
+                        smtp.auth("XOAUTH2", lambda challenge=None: "" if challenge else xoauth2(username, password))
+                    else:
+                        smtp.login(username, password)
                 except smtplib.SMTPAuthenticationError as e:
                     raise _auth_error("SMTP", host, _text(e.smtp_error)) from None
                 except UnicodeEncodeError:
@@ -1639,6 +1700,7 @@ def _forget_account(account_id: int) -> None:
     for s in doomed:
         s.close()
     _raw_cache.forget(account_id)
+    _ms_tokens.pop(account_id, None)
 
 
 def reset_connections() -> None:
@@ -1649,12 +1711,19 @@ def reset_connections() -> None:
     for s in doomed:
         s.close()
     _raw_cache.clear()
+    _ms_tokens.clear()
+    _ms_flows.clear()
+
+
+def _secret(account: dict) -> str:
+    """What logs in: the password, or for a Microsoft account a fresh access token."""
+    return _access_token(account) if _is_oauth(account) else decrypt_password(account["password_enc"])
 
 
 def _connect_account(account: dict) -> ImapSession:
     return _login_imap(
         account["imap_host"], int(account["imap_port"]), account["imap_security"],
-        account["username"] or account["email"], decrypt_password(account["password_enc"]),
+        account["username"] or account["email"], _secret(account), oauth=_is_oauth(account),
     )
 
 
@@ -1775,12 +1844,19 @@ class AccountPatch(BaseModel):
 def _public(account: dict) -> dict:
     out = {k: account[k] for k in _PUBLIC_FIELDS}
     out["provider"] = _provider_id_for_host(account["imap_host"])
+    out["oauth"] = _is_oauth(account)
     return out
+
+
+_ACCOUNT_SQL = """
+    SELECT a.*, o.provider AS oauth_provider, o.client_id AS oauth_client_id, o.refresh_enc AS oauth_refresh_enc
+    FROM mail_accounts a LEFT JOIN mail_oauth o ON o.account_id = a.id
+"""
 
 
 def _account(user: User, account_id: int) -> dict:
     with db.connect() as conn:
-        row = conn.execute("SELECT * FROM mail_accounts WHERE id = ? AND user_id = ?", (account_id, user.id)).fetchone()
+        row = conn.execute(_ACCOUNT_SQL + " WHERE a.id = ? AND a.user_id = ?", (account_id, user.id)).fetchone()
     if row is None:
         raise HTTPException(404, "No such mail account.")
     return dict(row)
@@ -1831,7 +1907,8 @@ def _resolve_settings(body: AccountIn) -> dict:
 def _check_login(settings: dict, password: str) -> ImapSession:
     """Log in to IMAP and to SMTP with these settings; returns the IMAP session."""
     session = _login_imap(
-        settings["imap_host"], int(settings["imap_port"]), settings["imap_security"], settings["username"], password
+        settings["imap_host"], int(settings["imap_port"]), settings["imap_security"], settings["username"], password,
+        oauth=_is_oauth(settings),
     )
     try:
         with _smtp_session(settings, password):
@@ -1842,22 +1919,240 @@ def _check_login(settings: dict, password: str) -> ImapSession:
     return session
 
 
+# ------------------------------------------------- Microsoft sign-in (OAuth)
+#
+# The "device code" flow: the app asks Microsoft for a short code, the user types it on
+# microsoft.com/devicelogin and signs in there (password and two-step checks happen at Microsoft,
+# never here), and the server polls until Microsoft hands over tokens. The refresh token is kept
+# encrypted; access tokens (about an hour) are fetched when needed and held in memory.
+
+MS_AUTHORITY = "https://login.microsoftonline.com/common/oauth2/v2.0"
+MS_SCOPES = (
+    "offline_access openid email profile "
+    "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send"
+)
+_GUID = re.compile(r"^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
+_ms_tokens: dict[int, tuple[str, float]] = {}  # account id -> (access token, expires at)
+_ms_flows: dict[str, dict] = {}  # flow id -> the sign-in being waited for
+_ms_lock = threading.Lock()
+
+
+def _default_client_id() -> str:
+    return os.environ.get("KHERVEOS_MS_CLIENT_ID", "").strip()
+
+
+def _ms_request(url: str, form: dict[str, str]) -> dict:
+    """POST a form to Microsoft; returns its JSON (errors like authorization_pending come back as JSON too)."""
+    req = urllib.request.Request(
+        url, data=urllib.parse.urlencode(form).encode(), headers={"Content-Type": "application/x-www-form-urlencoded"}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=TIMEOUT, context=_ssl_context()) as res:
+            raw = res.read()
+    except urllib.error.HTTPError as e:
+        raw = e.read()
+    except (urllib.error.URLError, OSError) as e:
+        why = getattr(e, "reason", None) or e
+        raise MailError(502, f"Could not reach Microsoft's sign-in service ({_text(why)}).", "connect") from None
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        raise MailError(502, "Microsoft's sign-in service gave an answer KherveOS could not read.", "server") from None
+    return data if isinstance(data, dict) else {}
+
+
+def _ms_error(data: dict, fallback: str) -> MailError:
+    said = _text(data.get("error_description") or data.get("error") or "", 300)
+    return MailError(400, f"{fallback} Microsoft said: {said}" if said else fallback, "auth")
+
+
+def _client_id_for(requested: str, account: dict | None = None) -> str:
+    client_id = requested.strip() or (account or {}).get("oauth_client_id") or _default_client_id()
+    if not client_id:
+        raise MailError(400, "Enter the Application (client) ID of your Microsoft app registration first.", "input")
+    if not _GUID.match(client_id):
+        raise MailError(400, "The Application (client) ID looks like 8-4-4-4-12 letters and digits, for example 0a1b2c3d-….", "input")
+    return client_id
+
+
+def _id_claims(id_token: Any) -> dict:
+    try:
+        payload = str(id_token).split(".")[1]
+        return json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
+    except (IndexError, ValueError, binascii.Error):
+        return {}
+
+
+def _access_token(account: dict) -> str:
+    """A valid access token for a Microsoft account, refreshed (and the new refresh token kept) when needed."""
+    with _ms_lock:
+        cached = _ms_tokens.get(account["id"])
+        if cached and cached[1] > time.time() + 120:
+            return cached[0]
+        refresh = decrypt_password(account["oauth_refresh_enc"])
+        data = _ms_request(
+            f"{MS_AUTHORITY}/token",
+            {"client_id": account["oauth_client_id"], "grant_type": "refresh_token", "refresh_token": refresh, "scope": MS_SCOPES},
+        )
+        token = data.get("access_token")
+        if not token:
+            _ms_tokens.pop(account["id"], None)
+            raise _ms_error(data, "Microsoft no longer accepts the saved sign-in. Open Edit Account and sign in with Microsoft again.")
+        _ms_tokens[account["id"]] = (token, time.time() + int(data.get("expires_in") or 3600))
+        new_refresh = data.get("refresh_token")
+        if new_refresh and new_refresh != refresh:
+            account["oauth_refresh_enc"] = encrypt_password(new_refresh)
+            with db.connect() as conn:
+                conn.execute("UPDATE mail_oauth SET refresh_enc = ? WHERE account_id = ?", (account["oauth_refresh_enc"], account["id"]))
+        return token
+
+
+class MicrosoftStart(BaseModel):
+    client_id: str = ""
+    email: str = ""
+    account_id: int | None = None  # sign in again for this account
+
+
+class MicrosoftPoll(BaseModel):
+    flow_id: str
+    display_name: str = ""
+
+
+@router.post("/oauth/microsoft/start")
+def microsoft_start(body: MicrosoftStart, user: User = Depends(current_user)):
+    account = _account(user, body.account_id) if body.account_id else None
+    client_id = _client_id_for(body.client_id, account)
+    form = {"client_id": client_id, "scope": MS_SCOPES}
+    hint = (account or {}).get("email") or body.email.strip()
+    if hint and _EMAIL.match(hint):
+        form["login_hint"] = hint
+    data = _ms_request(f"{MS_AUTHORITY}/devicecode", form)
+    if "device_code" not in data:
+        raise _ms_error(data, "Microsoft would not start the sign-in. Check the Application (client) ID and that “Allow public client flows” is on.")
+    flow_id = secrets.token_urlsafe(24)
+    now = time.time()
+    with _ms_lock:
+        for k in [k for k, f in _ms_flows.items() if f["expires"] < now]:
+            del _ms_flows[k]
+        _ms_flows[flow_id] = {
+            "user_id": user.id, "client_id": client_id, "device_code": data["device_code"], "email": hint,
+            "account_id": body.account_id, "interval": int(data.get("interval") or 5),
+            "expires": now + int(data.get("expires_in") or 900),
+        }
+    return {
+        "flow_id": flow_id,
+        "user_code": data.get("user_code", ""),
+        "verification_uri": data.get("verification_uri") or "https://microsoft.com/devicelogin",
+        "expires_in": int(data.get("expires_in") or 900),
+        "interval": int(data.get("interval") or 5),
+    }
+
+
+@router.post("/oauth/microsoft/poll")
+def microsoft_poll(body: MicrosoftPoll, user: User = Depends(current_user)):
+    with _ms_lock:
+        flow = _ms_flows.get(body.flow_id)
+    if not flow or flow["user_id"] != user.id or flow["expires"] < time.time():
+        with _ms_lock:
+            _ms_flows.pop(body.flow_id, None)
+        raise MailError(400, "The sign-in code expired. Start again to get a new one.", "auth")
+    data = _ms_request(
+        f"{MS_AUTHORITY}/token",
+        {"client_id": flow["client_id"], "grant_type": "urn:ietf:params:oauth:grant-type:device_code", "device_code": flow["device_code"]},
+    )
+    error = data.get("error")
+    if error == "authorization_pending":
+        return {"status": "pending", "interval": flow["interval"]}
+    if error == "slow_down":
+        flow["interval"] += 5
+        return {"status": "pending", "interval": flow["interval"]}
+    with _ms_lock:
+        _ms_flows.pop(body.flow_id, None)
+    if error or not data.get("access_token") or not data.get("refresh_token"):
+        reasons = {
+            "authorization_declined": "The sign-in was declined on microsoft.com.",
+            "expired_token": "The sign-in code expired. Start again to get a new one.",
+        }
+        raise _ms_error(data, reasons.get(error or "", "Microsoft did not finish the sign-in."))
+
+    claims = _id_claims(data.get("id_token"))
+    address = str(claims.get("email") or claims.get("preferred_username") or flow["email"] or "").strip()
+    if not _EMAIL.match(address):
+        raise MailError(400, "Microsoft did not say which address signed in. Type your address and try again.", "input")
+    preset = _PROVIDERS_BY_ID["outlook"]
+    settings: dict[str, Any] = {"email": address, "username": address, "oauth": True}
+    for service in ("imap", "smtp"):
+        settings[f"{service}_host"] = preset[service]["host"]
+        settings[f"{service}_port"] = preset[service]["port"]
+        settings[f"{service}_security"] = preset[service]["security"]
+    access = data["access_token"]
+    session = _check_login(settings, access)
+    refresh_enc = encrypt_password(data["refresh_token"])
+    try:
+        account_id = flow["account_id"]
+        with db.connect() as conn:
+            if account_id:
+                row = conn.execute("SELECT 1 FROM mail_accounts WHERE id = ? AND user_id = ?", (account_id, user.id)).fetchone()
+                if row is None:
+                    raise HTTPException(404, "No such mail account.")
+                if conn.execute("SELECT lower(email) AS e FROM mail_accounts WHERE id = ?", (account_id,)).fetchone()["e"] != address.lower():
+                    raise MailError(400, f"That Microsoft sign-in is for {address}, not for this account.", "input")
+                conn.execute("UPDATE mail_accounts SET password_enc = ? WHERE id = ?", (encrypt_password(""), account_id))
+            else:
+                if conn.execute(
+                    "SELECT 1 FROM mail_accounts WHERE user_id = ? AND lower(email) = lower(?)", (user.id, address)
+                ).fetchone():
+                    raise MailError(409, f"{address} is already in your accounts.", "duplicate")
+                cur = conn.execute(
+                    """INSERT INTO mail_accounts (user_id, email, display_name, imap_host, imap_port, imap_security,
+                           smtp_host, smtp_port, smtp_security, username, password_enc, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        user.id, address, _one_line(body.display_name or str(claims.get("name") or ""))[:120],
+                        settings["imap_host"], settings["imap_port"], settings["imap_security"],
+                        settings["smtp_host"], settings["smtp_port"], settings["smtp_security"],
+                        address, encrypt_password(""), time.time(),
+                    ),
+                )
+                account_id = cur.lastrowid
+            conn.execute(
+                "INSERT OR REPLACE INTO mail_oauth (account_id, provider, client_id, refresh_enc) VALUES (?, 'microsoft', ?, ?)",
+                (account_id, flow["client_id"], refresh_enc),
+            )
+    except BaseException:
+        session.close()
+        raise
+    _forget_account(account_id)
+    account = _account(user, account_id)
+    _ms_tokens[account_id] = (access, time.time() + int(data.get("expires_in") or 3600))
+    _checkin(_pool_key(account), session)
+    return {"status": "done", "account": _public(account)}
+
+
 # ----------------------------------------------------------------- endpoints
 
 @router.get("/providers")
 def providers(user: User = Depends(current_user)):
-    return {"providers": PROVIDERS}
+    out = []
+    for p in PROVIDERS:
+        if p.get("auth") == "microsoft":
+            p = {**p, "client_id_configured": bool(_default_client_id())}
+        out.append(p)
+    return {"providers": out}
 
 
 @router.get("/accounts")
 def list_accounts(user: User = Depends(current_user)):
     with db.connect() as conn:
-        rows = conn.execute("SELECT * FROM mail_accounts WHERE user_id = ? ORDER BY created_at, id", (user.id,)).fetchall()
+        rows = conn.execute(_ACCOUNT_SQL + " WHERE a.user_id = ? ORDER BY a.created_at, a.id", (user.id,)).fetchall()
     return {"accounts": [_public(dict(r)) for r in rows]}
 
 
 @router.post("/accounts")
 def add_account(body: AccountIn, user: User = Depends(current_user)):
+    preset = _provider_for(body.provider, body.email.strip().rsplit("@", 1)[-1].lower())
+    if preset and preset.get("auth") == "microsoft" and not (body.imap_host.strip() and body.smtp_host.strip()):
+        raise MailError(400, "Outlook.com accounts sign in with Microsoft (the “Sign in with Microsoft” button), not a password.", "unsupported")
     settings = _resolve_settings(body)
     with db.connect() as conn:
         if conn.execute(
@@ -1895,8 +2190,10 @@ def update_account(account_id: int, body: AccountPatch, user: User = Depends(cur
             updated[field] = value.strip() if isinstance(value, str) else value
     updated["username"] = updated["username"] or updated["email"]
     _validate(updated)
+    if body.password and _is_oauth(account):
+        raise MailError(400, "This account signs in with Microsoft; there is no password to change.", "input")
     if body.password or any(updated[f] != account[f] for f in _CONNECTION_FIELDS):
-        password = body.password or decrypt_password(account["password_enc"])
+        password = body.password or _secret(account)
         _check_login(updated, password).close()
         if body.password:
             updated["password_enc"] = encrypt_password(body.password)
@@ -1935,13 +2232,14 @@ def list_messages(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=PAGE_MAX),
     q: str = "",
+    filter: Literal["all", "unread", "flagged"] = "all",
     user: User = Depends(current_user),
 ):
     account = _account(user, account_id)
     with imap_session(account) as s:
-        rows, total, uidvalidity = s.messages(folder, offset, limit, q)
+        rows, total, uidvalidity = s.messages(folder, offset, limit, q, filter)
     return {
-        "folder": folder, "query": q, "offset": offset, "limit": limit,
+        "folder": folder, "query": q, "filter": filter, "offset": offset, "limit": limit,
         "total": total, "uidvalidity": uidvalidity, "messages": rows,
     }
 
@@ -2055,18 +2353,57 @@ def delete_message(account_id: int, uid: int, body: FolderBody, user: User = Dep
     return {"ok": True, "moved_to": None}
 
 
+class BatchBody(BaseModel):
+    folder: str = "INBOX"
+    uids: list[int]
+    action: Literal["seen", "unseen", "flag", "unflag", "move", "delete"]
+    to: str = ""
+
+
+@router.post("/accounts/{account_id}/messages/batch")
+def batch(account_id: int, body: BatchBody, user: User = Depends(current_user)):
+    """One action on many messages of a folder: read / unread, flag / unflag, move, delete (like /delete)."""
+    uids = sorted({u for u in body.uids if u > 0})
+    if not uids:
+        raise MailError(400, "No messages were chosen.", "input")
+    if len(uids) > 1000:
+        raise MailError(400, "That is too many messages at once (the limit is 1000).", "input")
+    if body.action == "move" and not body.to:
+        raise MailError(400, "Choose the folder to move the messages to.", "input")
+    account = _account(user, account_id)
+    uid_set = ",".join(map(str, uids))
+    moved_to = None
+    with imap_session(account) as s:
+        trash = s.role_folder("trash") if body.action == "delete" else None
+        s.select(body.folder, readonly=False)
+        if body.action in ("seen", "unseen"):
+            s.set_flag(uid_set, "\\Seen", body.action == "seen")
+        elif body.action in ("flag", "unflag"):
+            s.set_flag(uid_set, "\\Flagged", body.action == "flag")
+        elif body.action == "move":
+            if body.to != body.folder:
+                s.move(uid_set, body.to)
+        elif trash and trash != body.folder:
+            s.move(uid_set, trash)
+            moved_to = trash
+        else:
+            s.set_flag(uid_set, "\\Deleted", True)
+            s.expunge(uid_set)
+    return {"ok": True, "count": len(uids), "moved_to": moved_to}
+
+
 @router.post("/accounts/{account_id}/send")
 def send(account_id: int, body: SendBody, user: User = Depends(current_user)):
     account = _account(user, account_id)
     msg, recipients = build_message(account, body)
     raw = msg.as_bytes()
-    with _smtp_session(account, decrypt_password(account["password_enc"])) as smtp:
+    with _smtp_session(account, _secret(account)) as smtp:
         refused = _sendmail(smtp, account["email"], recipients, raw)
     warnings = []
     if refused:
         warnings.append("Not delivered to " + ", ".join(refused) + ".")
     saved = False
-    if not _is_gmail(account):  # Gmail files sent mail by itself
+    if not _files_sent_itself(account):  # Gmail and Outlook file sent mail by themselves
         try:
             with imap_session(account) as s:
                 sent = s.role_folder("sent")

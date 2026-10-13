@@ -7,7 +7,7 @@
 // every two minutes and new mail is announced with a notification.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { CircleAlert, Forward, Mail, Pencil, Plus, RefreshCw, Reply, ReplyAll, SquarePen } from 'lucide-react'
+import { CheckCheck, CircleAlert, Forward, Mail, Pencil, Plus, RefreshCw, Reply, ReplyAll, SquarePen } from 'lucide-react'
 import { os } from '@/os'
 import type { AppArgs, AppProps, MenuBarMenu, WindowApi } from '@/os'
 import { useAuth } from '@/os/server'
@@ -72,6 +72,8 @@ function MailApp({ win, args, host }: { win: WindowApi; args: AppArgs; host: Hos
     })
     return created
   })
+  // Closing the window: what was deleted a moment ago must still reach the mail server.
+  useEffect(() => () => store.getState().flush(), [store])
   return (
     <MailContext.Provider value={store}>
       <MailLayout win={win} args={args} host={host} />
@@ -167,7 +169,7 @@ function Welcome({ onAdd }: { onAdd(): void }) {
         </span>
         <h2>Bring your email to KherveOS</h2>
         <p>
-          Read and send mail from your own accounts — Gmail, iCloud, Fastmail, Yahoo or any IMAP/SMTP server. KherveOS
+          Read and send mail from your own accounts — Gmail, Outlook, iCloud, Fastmail, Yahoo or any IMAP/SMTP server. KherveOS
           connects through your own server, which keeps your password encrypted.
         </p>
         <button className="k-btn primary" onClick={onAdd} autoFocus>
@@ -194,6 +196,7 @@ function MailLayout({ win, args, host }: { win: WindowApi; args: AppArgs; host: 
   const checking = useMail((s) => s.checking)
   const lastChecked = useMail((s) => s.lastChecked)
   const unread = useMail(unreadInboxes)
+  const unreadInList = useMail((s) => s.items.some((m) => !m.seen))
   const [compose, setCompose] = useState<ComposeInit | null>(null)
   const [dialog, setDialog] = useState<{ account?: Account } | null>(null)
   const [drawer, setDrawer] = useState(false)
@@ -309,6 +312,15 @@ function MailLayout({ win, args, host }: { win: WindowApi; args: AppArgs; host: 
               void store.getState().check(true)
             },
           },
+          {
+            label: 'Mark All as Read',
+            icon: CheckCheck,
+            disabled: !has || !unreadInList,
+            onClick: () => {
+              const s = store.getState()
+              void s.setFlagsMany(s.items.filter((m) => !m.seen).map((m) => m.uid), { seen: true })
+            },
+          },
           '-',
           { label: 'Add Account…', icon: Plus, onClick: () => setDialog({}) },
           {
@@ -339,7 +351,7 @@ function MailLayout({ win, args, host }: { win: WindowApi; args: AppArgs; host: 
       },
     ]
     win.setMenus(menus)
-  }, [win, store, accounts, currentAccount, reading, folders, newMessage, reply, forwardMessage])
+  }, [win, store, accounts, currentAccount, reading, folders, unreadInList, newMessage, reply, forwardMessage])
 
   useEffect(() => () => win.setMenus(null), [win])
 

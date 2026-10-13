@@ -2,9 +2,9 @@
 // advice about app passwords, and the server settings under "Advanced".
 
 import { useEffect, useId, useState } from 'react'
-import { ChevronRight, CircleAlert, ExternalLink, Info, LoaderCircle, Lock, Mail, TriangleAlert, X } from 'lucide-react'
+import { ChevronRight, CircleAlert, Copy, ExternalLink, Info, LoaderCircle, Lock, Mail, TriangleAlert, X } from 'lucide-react'
 import { os } from '@/os'
-import { errorMessage, mail, MailApiError, type Account, type Provider, type Security } from './api'
+import { errorMessage, mail, MailApiError, type Account, type MicrosoftFlow, type Provider, type Security } from './api'
 
 let providersCache: Promise<Provider[]> | null = null
 
@@ -25,6 +25,16 @@ interface ServerFields {
   host: string
   port: string
   security: Security
+}
+
+const MS_CLIENT_KEY = 'kherveos.email.msClientId'
+
+function savedClientId(): string {
+  try {
+    return localStorage.getItem(MS_CLIENT_KEY) ?? ''
+  } catch {
+    return ''
+  }
 }
 
 function domainOf(email: string): string {
@@ -68,6 +78,8 @@ export function AccountDialog({ account, defaultName, onClose, onSaved }: Accoun
   const [guessed, setGuessed] = useState(!editing)
   const [advanced, setAdvanced] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [clientId, setClientId] = useState(savedClientId)
+  const [flow, setFlow] = useState<MicrosoftFlow | null>(null)
   const [error, setError] = useState<{ message: string; kind: string | null } | null>(null)
 
   useEffect(() => {
@@ -76,6 +88,63 @@ export function AccountDialog({ account, defaultName, onClose, onSaved }: Accoun
 
   const provider = providers?.find((p) => p.id === providerId) ?? null
   const unsupported = !!provider && !provider.supported
+  // Outlook.com / Microsoft 365: no password, a sign-in on microsoft.com with a short code.
+  const microsoft = provider?.auth === 'microsoft' || !!account?.oauth
+
+  // While the code is shown, ask the server every few seconds whether it has been approved.
+  useEffect(() => {
+    if (!flow) return
+    let alive = true
+    let timer = 0
+    const until = Date.now() + flow.expires_in * 1000
+    const ask = async (wait: number) => {
+      timer = window.setTimeout(async () => {
+        if (!alive) return
+        try {
+          const r = await mail.microsoftPoll(flow.flow_id, name.trim())
+          if (!alive) return
+          if (r.status === 'done') {
+            setFlow(null)
+            onSaved(r.account, !account)
+          } else if (Date.now() > until) {
+            throw new Error('The sign-in code expired. Start again to get a new one.')
+          } else void ask(Math.max(3, r.interval) * 1000)
+        } catch (err) {
+          if (!alive) return
+          setFlow(null)
+          setBusy(false)
+          setError({ message: errorMessage(err), kind: err instanceof MailApiError ? err.kind : null })
+        }
+      }, wait)
+    }
+    void ask(Math.max(3, flow.interval) * 1000)
+    return () => {
+      alive = false
+      window.clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flow])
+
+  const startMicrosoft = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const id = clientId.trim()
+      const started = await mail.microsoftStart({ client_id: id || undefined, email: email.trim() || undefined, account_id: account?.id })
+      if (id) {
+        try {
+          localStorage.setItem(MS_CLIENT_KEY, id)
+        } catch {
+          // not remembered
+        }
+      }
+      setFlow(started)
+      os.openUrl(started.verification_uri)
+    } catch (err) {
+      setError({ message: errorMessage(err), kind: err instanceof MailApiError ? err.kind : null })
+      setBusy(false)
+    }
+  }
 
   const fillServers = (p: Provider | null, domain: string) => {
     if (p?.imap && p.smtp) {
@@ -121,11 +190,14 @@ export function AccountDialog({ account, defaultName, onClose, onSaved }: Accoun
     setGuessed(false)
   }
 
-  const canSubmit = editing || (email.includes('@') && !!password && !unsupported)
+  const canSubmit = microsoft
+    ? !flow && (!!clientId.trim() || !!provider?.client_id_configured || !!account)
+    : editing || (email.includes('@') && !!password && !unsupported)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (busy || !canSubmit) return
+    if (microsoft) return void startMicrosoft()
     setBusy(true)
     setError(null)
     const settings = {
@@ -161,7 +233,7 @@ export function AccountDialog({ account, defaultName, onClose, onSaved }: Accoun
         aria-labelledby={`${id}-title`}
         onSubmit={submit}
         onKeyDown={(e) => {
-          if (e.key === 'Escape' && !busy) {
+          if (e.key === 'Escape' && (!busy || flow)) {
             e.preventDefault()
             onClose()
           }
@@ -173,9 +245,9 @@ export function AccountDialog({ account, defaultName, onClose, onSaved }: Accoun
           </span>
           <div className="mail-dialog-titles">
             <h2 id={`${id}-title`}>{editing ? 'Edit account' : 'Add a mail account'}</h2>
-            <p>{editing ? account.email : 'Gmail, iCloud, Fastmail, Yahoo — or any IMAP/SMTP server.'}</p>
+            <p>{editing ? account.email : 'Gmail, Outlook, iCloud, Fastmail, Yahoo — or any IMAP/SMTP server.'}</p>
           </div>
-          <button type="button" className="k-icon-btn" onClick={onClose} disabled={busy} aria-label="Close" title="Close">
+          <button type="button" className="k-icon-btn" onClick={onClose} aria-label="Close" title="Close">
             <X size={16} />
           </button>
         </div>
@@ -228,7 +300,74 @@ export function AccountDialog({ account, defaultName, onClose, onSaved }: Accoun
             </div>
           )}
 
-          {!unsupported && (
+          {microsoft && (
+            <div className="mail-form">
+              <label htmlFor={`${id}-name`}>Your name</label>
+              <input
+                id={`${id}-name`}
+                className="k-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Shown to the people you write to"
+                autoComplete="name"
+              />
+              {!editing && (
+                <>
+                  <label htmlFor={`${id}-email`}>Email address</label>
+                  <input
+                    id={`${id}-email`}
+                    className="k-input"
+                    type="email"
+                    value={email}
+                    onChange={(e) => onEmail(e.target.value)}
+                    placeholder="you@outlook.com (optional: Microsoft asks anyway)"
+                    spellCheck={false}
+                  />
+                </>
+              )}
+              {(!provider?.client_id_configured || clientId) && (
+                <>
+                  <label htmlFor={`${id}-client`}>Application (client) ID</label>
+                  <input
+                    id={`${id}-client`}
+                    className="k-input"
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    placeholder={account ? 'The one used before (leave empty)' : '0a1b2c3d-4e5f-…'}
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                </>
+              )}
+            </div>
+          )}
+          {microsoft && flow && (
+            <div className="mail-device" role="status">
+              <p>
+                On <strong>{helpHost(flow.verification_uri)}</strong>, type this code and sign in with your Microsoft account:
+              </p>
+              <div className="mail-device-code">
+                <code>{flow.user_code}</code>
+                <button
+                  type="button"
+                  className="k-icon-btn"
+                  title="Copy the code"
+                  aria-label="Copy the code"
+                  onClick={() => void navigator.clipboard?.writeText(flow.user_code).catch(() => {})}
+                >
+                  <Copy size={15} />
+                </button>
+                <button type="button" className="k-btn small" onClick={() => os.openUrl(flow.verification_uri)}>
+                  Open the page <ExternalLink size={12} />
+                </button>
+              </div>
+              <p className="mail-hint">
+                <LoaderCircle size={13} className="k-spin" /> Waiting for you to finish on Microsoft’s page…
+              </p>
+            </div>
+          )}
+
+          {!unsupported && !microsoft && (
             <>
               <div className="mail-form">
                 <label htmlFor={`${id}-name`}>Your name</label>
@@ -334,14 +473,35 @@ export function AccountDialog({ account, defaultName, onClose, onSaved }: Accoun
         </div>
 
         <div className="mail-dialog-foot">
-          {busy && <span className="mail-hint">Checking the incoming and outgoing servers…</span>}
+          {busy && !flow && <span className="mail-hint">{microsoft ? 'Asking Microsoft for a sign-in code…' : 'Checking the incoming and outgoing servers…'}</span>}
           <span className="mail-spacer" />
-          <button type="button" className="k-btn" onClick={onClose} disabled={busy}>
+          <button type="button" className="k-btn" onClick={onClose} disabled={busy && !flow}>
             Cancel
           </button>
+          {microsoft && editing && (
+            <button
+              type="button"
+              className="k-btn"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true)
+                setError(null)
+                try {
+                  const trimmed = name.trim()
+                  if (trimmed !== account!.display_name) await mail.updateAccount(account!.id, { display_name: trimmed })
+                  onSaved({ ...account!, display_name: trimmed }, false)
+                } catch (err) {
+                  setError({ message: errorMessage(err), kind: null })
+                  setBusy(false)
+                }
+              }}
+            >
+              Save the name
+            </button>
+          )}
           <button type="submit" className="k-btn primary" disabled={busy || !canSubmit}>
             {busy && <LoaderCircle size={14} className="k-spin" />}
-            {editing ? 'Save' : 'Add account'}
+            {microsoft ? (editing ? 'Sign in again with Microsoft' : 'Sign in with Microsoft') : editing ? 'Save' : 'Add account'}
           </button>
         </div>
       </form>
