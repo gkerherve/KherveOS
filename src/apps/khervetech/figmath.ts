@@ -20,6 +20,25 @@ export function axesBox(pos: [number, number, number, number], W: number, H: num
   return { x0: x * W, x1: (x + w) * W, y0: H - (y + h) * H, y1: H - y * H }
 }
 
+/**
+ * ax.set_aspect('equal') (adjustable='box', anchored centre): the axes rectangle (figure fractions) shrunk so one data
+ * unit is as long on x as on y. An image keeps its proportions whatever the shape of the panel.
+ */
+export function fitAspect(pos: [number, number, number, number], xlim: [number, number], ylim: [number, number], W: number, H: number, aspect = 1): [number, number, number, number] {
+  const dx = Math.abs(xlim[1] - xlim[0])
+  const dy = Math.abs(ylim[1] - ylim[0])
+  if (!(dx > 0) || !(dy > 0) || !(W > 0) || !(H > 0)) return pos
+  const [x, y, w, h] = pos
+  const pw = w * W
+  const ph = h * H
+  const want = dx / (dy * aspect) // pixel width / pixel height
+  let nw = pw
+  let nh = ph
+  if (pw / ph > want) nw = ph * want
+  else nh = pw / want
+  return [x + (w - nw / W) / 2, y + (h - nh / H) / 2, nw / W, nh / H]
+}
+
 export interface Scale {
   /** value → pixel */
   to: (v: number) => number

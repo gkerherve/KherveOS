@@ -347,7 +347,8 @@ class _Appearance:
 class Bitmap:
     def __init__(self, name='', type=BITMAP_TYPE_ANY, *a, **kw):
         self.name = name if isinstance(name, str) else ''
-        self.size = (25, 25)
+        self.size = (int(name), int(type)) if isinstance(name, int) and isinstance(type, int) and type > 0 else (25, 25)
+        self._svg = None            # elements drawn on it through a MemoryDC / GraphicsContext
 
     IsOk = lambda s: True
     GetWidth = lambda s: s.size[0]
@@ -365,6 +366,11 @@ class Bitmap:
 
     def css(self):
         import os
+        if self._svg:
+            w, h = self.size
+            svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">{"".join(self._svg)}</svg>'
+            from urllib.parse import quote
+            return 'data:image/svg+xml;utf8,' + quote(svg, safe="/:=,;()' ")
         return os.path.basename(self.name) if self.name else ''
 
 
@@ -402,18 +408,271 @@ class Cursor:
 StockCursor = Cursor
 
 
-class MemoryDC:
-    def __init__(self, *a, **kw):
+# ----------------------------------------- drawing: recorded as SVG (tool-button icons, small pictograms)
+
+PENSTYLE_SOLID, PENSTYLE_DOT, PENSTYLE_LONG_DASH, PENSTYLE_SHORT_DASH, PENSTYLE_DOT_DASH, PENSTYLE_TRANSPARENT = 100, 101, 102, 103, 104, 106
+SOLID, DOT, LONG_DASH, SHORT_DASH, DOT_DASH, TRANSPARENT = 100, 101, 102, 103, 104, 106
+BRUSHSTYLE_SOLID, BRUSHSTYLE_TRANSPARENT = 100, 106
+CAP_ROUND, CAP_PROJECTING, CAP_BUTT = 130, 131, 132
+JOIN_BEVEL, JOIN_MITER, JOIN_ROUND = 120, 121, 122
+
+
+def _col(c, default='#000000'):
+    if c is None:
+        return default
+    try:
+        return Colour(c).css()
+    except Exception:
+        return default
+
+
+class Pen:
+    def __init__(self, colour=None, width=1, style=PENSTYLE_SOLID):
+        self.colour = Colour(colour) if colour is not None else Colour(0, 0, 0)
+        self.width, self.style, self.cap, self.join = width, style, 'butt', 'miter'
+
+    def SetCap(self, c):
+        self.cap = {CAP_ROUND: 'round', CAP_PROJECTING: 'square'}.get(c, 'butt')
+
+    def SetJoin(self, j):
+        self.join = {JOIN_ROUND: 'round', JOIN_BEVEL: 'bevel'}.get(j, 'miter')
+
+    def SetWidth(self, w):
+        self.width = w
+
+    def SetColour(self, c):
+        self.colour = Colour(c)
+
+    def SetStyle(self, s):
+        self.style = s
+
+    GetWidth = lambda s: s.width
+    GetColour = lambda s: s.colour
+    GetStyle = lambda s: s.style
+    IsOk = lambda s: True
+
+    def _svg(self):
+        if self.style == PENSTYLE_TRANSPARENT:
+            return 'stroke="none"'
+        dash = {PENSTYLE_DOT: f' stroke-dasharray="{self.width:g} {2 * self.width:g}"',
+                PENSTYLE_SHORT_DASH: f' stroke-dasharray="{3 * self.width:g} {2 * self.width:g}"',
+                PENSTYLE_LONG_DASH: f' stroke-dasharray="{6 * self.width:g} {3 * self.width:g}"',
+                PENSTYLE_DOT_DASH: f' stroke-dasharray="{4 * self.width:g} {2 * self.width:g} {self.width:g} {2 * self.width:g}"'
+                }.get(self.style, '')
+        return (f'stroke="{_col(self.colour)}" stroke-width="{self.width:g}" stroke-linecap="{self.cap}" '
+                f'stroke-linejoin="{self.join}"{dash}')
+
+
+class Brush:
+    def __init__(self, colour=None, style=BRUSHSTYLE_SOLID):
+        self.colour = Colour(colour) if colour is not None else None
+        self.style = style
+
+    def SetColour(self, c):
+        self.colour = Colour(c)
+
+    GetColour = lambda s: s.colour or Colour(0, 0, 0)
+    IsOk = lambda s: True
+
+    def _svg(self):
+        if self.colour is None or self.style == BRUSHSTYLE_TRANSPARENT:
+            return 'fill="none"'
+        return f'fill="{_col(self.colour)}"'
+
+
+TRANSPARENT_BRUSH = Brush(None, BRUSHSTYLE_TRANSPARENT)
+TRANSPARENT_PEN = Pen(None, 1, PENSTYLE_TRANSPARENT)
+NullPen, NullBrush = TRANSPARENT_PEN, TRANSPARENT_BRUSH
+BLACK_PEN, WHITE_PEN = Pen(Colour(0, 0, 0)), Pen(Colour(255, 255, 255))
+BLACK_BRUSH, WHITE_BRUSH = Brush(Colour(0, 0, 0)), Brush(Colour(255, 255, 255))
+
+
+class GraphicsPath:
+    def __init__(self):
+        self.d = []
+
+    def MoveToPoint(self, x, y=None):
+        x, y = (x, y) if y is not None else tuple(x)
+        self.d.append(f'M{x:g} {y:g}')
+
+    def AddLineToPoint(self, x, y=None):
+        x, y = (x, y) if y is not None else tuple(x)
+        self.d.append(f'L{x:g} {y:g}')
+
+    def AddCurveToPoint(self, *a):
+        pts = a if len(a) == 6 else [v for p in a for v in p]
+        self.d.append('C' + ' '.join(f'{v:g}' for v in pts))
+
+    def AddQuadCurveToPoint(self, cx, cy, x, y):
+        self.d.append(f'Q{cx:g} {cy:g} {x:g} {y:g}')
+
+    def CloseSubpath(self):
+        self.d.append('Z')
+
+    def AddRectangle(self, x, y, w, h):
+        self.d.append(f'M{x:g} {y:g}h{w:g}v{h:g}h{-w:g}Z')
+
+    def AddCircle(self, x, y, r):
+        self.d.append(f'M{x - r:g} {y:g}a{r:g} {r:g} 0 1 0 {2 * r:g} 0a{r:g} {r:g} 0 1 0 {-2 * r:g} 0Z')
+
+    def AddEllipse(self, x, y, w, h):
+        rx, ry = w / 2, h / 2
+        self.d.append(f'M{x:g} {y + ry:g}a{rx:g} {ry:g} 0 1 0 {w:g} 0a{rx:g} {ry:g} 0 1 0 {-w:g} 0Z')
+
+    def AddRoundedRectangle(self, x, y, w, h, r):
+        self.d.append(f'M{x + r:g} {y:g}h{w - 2 * r:g}a{r:g} {r:g} 0 0 1 {r:g} {r:g}v{h - 2 * r:g}a{r:g} {r:g} 0 0 1 {-r:g} {r:g}'
+                      f'h{-(w - 2 * r):g}a{r:g} {r:g} 0 0 1 {-r:g} {-r:g}v{-(h - 2 * r):g}a{r:g} {r:g} 0 0 1 {r:g} {-r:g}Z')
+
+
+class _Canvas2D:
+    """wx.MemoryDC / wx.GraphicsContext: the calls become SVG elements on the bitmap, which the page shows as an icon."""
+
+    def __init__(self, bmp=None):
+        self._bmp = None
+        self._pen, self._brush = Pen(Colour(0, 0, 0)), Brush(None)
+        self._depth = 0
+        if isinstance(bmp, Bitmap):
+            self.SelectObject(bmp)
+
+    def SelectObject(self, bmp):
+        if self._bmp is not None:
+            self.PopAll()
+        self._bmp = bmp if isinstance(bmp, Bitmap) else None
+        if self._bmp is not None and self._bmp._svg is None:
+            self._bmp._svg = []
+
+    def PopAll(self):
+        while self._depth > 0:
+            self.PopState()
+
+    def _add(self, el):
+        if self._bmp is not None:
+            self._bmp._svg.append(el)
+
+    # state
+    def SetPen(self, pen):
+        self._pen = pen if isinstance(pen, Pen) else Pen(pen)
+
+    def SetBrush(self, brush):
+        self._brush = brush if isinstance(brush, Brush) else Brush(brush)
+
+    def SetFont(self, *a, **kw):
+        self._font = a[0] if a else None
+
+    def PushState(self):
+        self._depth += 1
+        self._add('<g>')
+
+    def PopState(self):
+        if self._depth > 0:
+            self._depth -= 1
+            self._add('</g>')
+
+    def Translate(self, dx, dy):
+        self._add(f'<g transform="translate({dx:g} {dy:g})">')
+        self._depth += 1
+
+    def Scale(self, sx, sy):
+        self._add(f'<g transform="scale({sx:g} {sy:g})">')
+        self._depth += 1
+
+    def Rotate(self, a):
+        self._add(f'<g transform="rotate({a * 57.29578:g})">')
+        self._depth += 1
+
+    def _style(self, fill=True, stroke=True):
+        f = self._brush._svg() if fill else 'fill="none"'
+        st = self._pen._svg() if stroke else 'stroke="none"'
+        return f'{f} {st}'
+
+    # shapes
+    def DrawRectangle(self, x, y=None, w=None, h=None):
+        if y is None:                           # wx.Rect
+            x, y, w, h = x.x, x.y, x.width, x.height
+        self._add(f'<rect x="{x:g}" y="{y:g}" width="{w:g}" height="{h:g}" {self._style()}/>')
+
+    def DrawRoundedRectangle(self, x, y, w, h, r):
+        self._add(f'<rect x="{x:g}" y="{y:g}" width="{w:g}" height="{h:g}" rx="{abs(r):g}" {self._style()}/>')
+
+    def DrawEllipse(self, x, y, w, h):
+        self._add(f'<ellipse cx="{x + w / 2:g}" cy="{y + h / 2:g}" rx="{w / 2:g}" ry="{h / 2:g}" {self._style()}/>')
+
+    def DrawCircle(self, x, y, r):
+        self._add(f'<circle cx="{x:g}" cy="{y:g}" r="{r:g}" {self._style()}/>')
+
+    def DrawLine(self, x1, y1, x2, y2):
+        self._add(f'<line x1="{x1:g}" y1="{y1:g}" x2="{x2:g}" y2="{y2:g}" {self._style(False)}/>')
+
+    StrokeLine = DrawLine
+
+    def DrawLines(self, pts, *a, **kw):
+        self._add(f'<polyline points="{" ".join(f"{p[0]:g},{p[1]:g}" for p in pts)}" {self._style(False)}/>')
+
+    def StrokeLines(self, pts):
+        self.DrawLines(pts)
+
+    def DrawPolygon(self, pts, *a, **kw):
+        self._add(f'<polygon points="{" ".join(f"{p[0]:g},{p[1]:g}" for p in pts)}" {self._style()}/>')
+
+    def DrawPoint(self, x, y):
+        self._add(f'<circle cx="{x:g}" cy="{y:g}" r="{max(self._pen.width, 1) / 2:g}" fill="{_col(self._pen.colour)}"/>')
+
+    def DrawText(self, text, x, y, *a):
+        self._add(f'<text x="{x:g}" y="{y:g}" font-size="11" dominant-baseline="hanging" fill="{_col(self._pen.colour)}">{_xml(text)}</text>')
+
+    def CreatePath(self):
+        return GraphicsPath()
+
+    def DrawPath(self, path, *a):
+        self._add(f'<path d="{" ".join(path.d)}" {self._style()}/>')
+
+    def StrokePath(self, path):
+        self._add(f'<path d="{" ".join(path.d)}" {self._style(False)}/>')
+
+    def FillPath(self, path, *a):
+        self._add(f'<path d="{" ".join(path.d)}" {self._style(True, False)}/>')
+
+    def Clear(self):
         pass
 
+    def SetBackground(self, *a):
+        pass
+
+    def CreateLinearGradientBrush(self, *a, **kw):
+        stops = [v for v in a if isinstance(v, (Colour, Brush)) or hasattr(v, 'r')]
+        return Brush(stops[0] if stops else None)
+
+    CreateRadialGradientBrush = CreateLinearGradientBrush
+
+    def CreateBrush(self, brush):
+        return brush
+
+    def CreatePen(self, pen):
+        return pen
+
     def __getattr__(self, name):
+        if name.startswith('_'):
+            raise AttributeError(name)
         return lambda *a, **kw: None
 
 
-class GraphicsContext:
+def _xml(t):
+    return str(t).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
+class MemoryDC(_Canvas2D):
+    pass
+
+
+class GraphicsContext(_Canvas2D):
     @staticmethod
-    def Create(*a, **kw):
-        return MemoryDC()
+    def Create(dc=None, *a, **kw):
+        gc = GraphicsContext()
+        gc._bmp = getattr(dc, '_bmp', None)
+        return gc
+
+
+GCDC = MemoryDC
 
 
 # -------------------------------------------------------------------- events
@@ -440,6 +699,9 @@ EVT_BUTTON, EVT_TEXT, EVT_TEXT_ENTER, EVT_CHOICE, EVT_COMBOBOX, EVT_CHECKBOX, EV
 EVT_SPINCTRL, EVT_SPINCTRLDOUBLE, EVT_SPIN, EVT_SLIDER, EVT_LISTBOX, EVT_LISTBOX_DCLICK, EVT_CHECKLISTBOX, \
     EVT_TOGGLEBUTTON = (_B('EVT_SPINCTRL'), _B('EVT_SPINCTRLDOUBLE'), _B('EVT_SPIN'), _B('EVT_SLIDER'),
                         _B('EVT_LISTBOX'), _B('EVT_LISTBOX_DCLICK'), _B('EVT_CHECKLISTBOX'), _B('EVT_TOGGLEBUTTON'))
+EVT_TREE_SEL_CHANGED, EVT_TREE_ITEM_ACTIVATED, EVT_TREE_ITEM_EXPANDED, EVT_TREE_ITEM_COLLAPSED, EVT_TREE_ITEM_RIGHT_CLICK = (
+    _B('EVT_TREE_SEL_CHANGED'), _B('EVT_TREE_ITEM_ACTIVATED'), _B('EVT_TREE_ITEM_EXPANDED'), _B('EVT_TREE_ITEM_COLLAPSED'), _B('EVT_TREE_ITEM_RIGHT_CLICK'))
+TR_DEFAULT_STYLE, TR_HIDE_ROOT, TR_HAS_BUTTONS, TR_SINGLE, TR_MULTIPLE, TR_LINES_AT_ROOT = 0x20, 0x800, 0x1, 0x0, 0x20, 0x4
 EVT_NOTEBOOK_PAGE_CHANGED, EVT_NOTEBOOK_PAGE_CHANGING = _B('EVT_NOTEBOOK_PAGE_CHANGED'), _B('EVT_NOTEBOOK_PAGE_CHANGING')
 EVT_MENU, EVT_TOOL, EVT_UPDATE_UI = _B('EVT_MENU'), _B('EVT_TOOL'), _B('EVT_UPDATE_UI')
 EVT_CLOSE, EVT_SIZE, EVT_MOVE, EVT_PAINT, EVT_ERASE_BACKGROUND, EVT_SHOW, EVT_ACTIVATE, EVT_IDLE, EVT_TIMER, \
@@ -1415,6 +1677,192 @@ class BitmapButton(Button):
                  validator=None, name='button'):
         super().__init__(parent, id, '', pos, size, style, validator, name)
         self._bmp = bitmap
+
+
+class BitmapToggleButton(Button):
+    """A toggle button that shows a bitmap (the EDX window's zoom / pan / pick tools)."""
+    _kind = 'Toggle'
+
+    def __init__(self, parent=None, id=ID_ANY, bitmap=None, pos=DefaultPosition, size=DefaultSize, style=0,
+                 validator=None, name='button'):
+        super().__init__(parent, id, '', pos, size, style, validator, name)
+        self._bmp = bitmap
+        self._value = False
+
+    def GetValue(self):
+        return self._value
+
+    def SetValue(self, v):
+        self._value = bool(v)
+        self.Dirty()
+
+    def SetBitmapLabel(self, b):
+        self._bmp = b
+        self.Dirty()
+
+    def _serial(self):
+        d = super()._serial()
+        d['value'] = self._value
+        return d
+
+    def _user(self, msg):
+        if msg.get('type') == 'button':
+            self._value = bool(msg['value']) if msg.get('value') is not None else not self._value
+            self._fire(EVT_TOGGLEBUTTON, isdown=self._value)
+
+
+class TreeItemId:
+    _ids = itertools.count(1)
+
+    def __init__(self, text='', data=None, parent=None):
+        self.id = next(TreeItemId._ids)
+        self.text, self.data, self.parent = text, data, parent
+        self.children = []
+        self.expanded = True
+
+    def IsOk(self):
+        return True
+
+    __bool__ = lambda s: True
+
+
+class TreeCtrl(Control):
+    """wx.TreeCtrl: a tree of text items (the EDX data browser). The page draws it as nested rows."""
+    _kind = 'Tree'
+
+    def __init__(self, parent=None, id=ID_ANY, pos=DefaultPosition, size=DefaultSize, style=TR_DEFAULT_STYLE,
+                 validator=None, name='tree'):
+        super().__init__(parent, id, pos, size, style, name)
+        self._root = None
+        self._sel = None
+
+    def AddRoot(self, text, image=-1, selImage=-1, data=None):
+        self._root = TreeItemId(text, data)
+        self.Dirty()
+        return self._root
+
+    def GetRootItem(self):
+        return self._root
+
+    def AppendItem(self, parent, text, image=-1, selImage=-1, data=None):
+        item = TreeItemId(text, data, parent)
+        parent.children.append(item)
+        self.Dirty()
+        return item
+
+    InsertItem = lambda self, parent, before, text, *a, **kw: self.AppendItem(parent, text)
+
+    def GetItemText(self, item, column=0):
+        return item.text if item is not None else ''
+
+    def SetItemText(self, item, text, column=0):
+        item.text = text
+        self.Dirty()
+
+    def GetItemData(self, item):
+        return item.data if item is not None else None
+
+    def SetItemData(self, item, data):
+        item.data = data
+
+    def GetSelection(self):
+        return self._sel
+
+    def GetSelections(self):
+        return [self._sel] if self._sel is not None else []
+
+    def SelectItem(self, item, select=True):
+        self._sel = item if select else None
+        self.Dirty()
+
+    def UnselectAll(self):
+        self._sel = None
+
+    def Expand(self, item):
+        item.expanded = True
+        self.Dirty()
+
+    def Collapse(self, item):
+        item.expanded = False
+        self.Dirty()
+
+    def ExpandAll(self):
+        def go(n):
+            n.expanded = True
+            for c in n.children:
+                go(c)
+        if self._root is not None:
+            go(self._root)
+        self.Dirty()
+
+    CollapseAll = lambda s: None
+    EnsureVisible = lambda s, item: None
+    SetItemBold = lambda s, item, bold=True: None
+    SetItemTextColour = lambda s, item, c: None
+    SetItemBackgroundColour = lambda s, item, c: None
+    SetImageList = lambda s, il: None
+    ItemHasChildren = lambda s, item: bool(item.children)
+    GetChildrenCount = lambda s, item, recursively=True: len(item.children)
+    GetItemParent = lambda s, item: item.parent
+    IsExpanded = lambda s, item: item.expanded
+
+    def GetFirstChild(self, item):
+        return (item.children[0], 0) if item.children else (None, 0)
+
+    def GetNextChild(self, item, cookie):
+        kids = item.children
+        return (kids[cookie + 1], cookie + 1) if cookie + 1 < len(kids) else (None, cookie)
+
+    def DeleteChildren(self, item):
+        item.children.clear()
+        self.Dirty()
+
+    def Delete(self, item):
+        if item.parent is not None:
+            item.parent.children.remove(item)
+        elif item is self._root:
+            self._root = None
+        if self._sel is item:
+            self._sel = None
+        self.Dirty()
+
+    def DeleteAllItems(self):
+        self._root, self._sel = None, None
+        self.Dirty()
+
+    def _find(self, wid, node=None):
+        node = node if node is not None else self._root
+        if node is None:
+            return None
+        if node.id == wid:
+            return node
+        for c in node.children:
+            f = self._find(wid, c)
+            if f is not None:
+                return f
+        return None
+
+    def _serial(self):
+        def node(n):
+            return {'id': n.id, 'text': n.text, 'open': n.expanded, 'kids': [node(c) for c in n.children]}
+
+        d = self._common()
+        hide_root = bool(self._style & TR_HIDE_ROOT)
+        d['tree'] = [node(self._root)] if self._root is not None and not hide_root else [node(c) for c in (self._root.children if self._root else [])]
+        d['sel'] = self._sel.id if self._sel is not None else None
+        return d
+
+    def _user(self, msg):
+        item = self._find(msg.get('item'))
+        if item is None:
+            return
+        if msg.get('type') == 'toggle':
+            item.expanded = not item.expanded
+            self.Dirty()
+            return
+        self._sel = item
+        self.Dirty()
+        self._fire(EVT_TREE_ITEM_ACTIVATED if msg.get('type') == 'dclick' else EVT_TREE_SEL_CHANGED, item=item)
 
 
 class ToggleButton(Button):
@@ -2522,6 +2970,11 @@ class TopLevelWindow(Window):
     def _serial(self):
         d = super()._serial()
         d.update({'title': self._title, 'shown': self._shown})
+        if 'sizer' not in d:
+            # wx gives a frame's only child the whole client area, sizer or not (AFM Analysis puts one panel in it)
+            kids = [c for c in self._children if not c._dead and c._shown and not isinstance(c, (StatusBar, ToolBar))]
+            if len(kids) == 1:
+                d['sizer'] = {'t': 'Sizer', 'o': 'v', 'items': [{'n': kids[0]._serial(), 'p': 1, 'f': EXPAND}]}
         return d
 
 
@@ -2564,7 +3017,7 @@ class Dialog(TopLevelWindow):
     def ShowModal(self):
         """Ask the page, keyed on the order the widgets were created in."""
         widgets = self._descendants()
-        spec = {'kind': 'dialog', 'frame': self._serial(), 'ids': [w._uid for w in widgets]}
+        spec = {'kind': 'dialog', 'frame': serialise_frame(self), 'ids': [w._uid for w in widgets]}
         answer = _modal(spec)
         values = answer.get('values') or {}
         for pos, value in values.items():

@@ -1,5 +1,5 @@
 """Draws the icons of the technique apps (KherveTGA, KherveBET, KherveUVVis, KherveFTIR,
-KherveRaman) as SVG tiles in public/icons/apps/. Each tile has its own glyph: the
+KherveRaman, KherveDilatometer) as SVG tiles in public/icons/apps/. Each tile has its own glyph: the
 technique's signature curve.
 
     python3 tools/make_technique_icons.py
@@ -108,12 +108,64 @@ def raman():
     return beam + line(path_of(pts), 8)
 
 
+def dilatometer():
+    # dL/L0 against temperature: the sample swells on heating, shrinks when it sinters, and the
+    # cooling branch (lighter) comes back lower: the heat / cool loop of a dilatometer run.
+    def eps(p):
+        return 0.95 * p - 0.62 / (1 + math.exp(-(p - 0.72) / 0.05))
+
+    def y(e):
+        return 188 - 110 * e
+
+    heat = [(46 + 164 * i / 60, y(eps(i / 60))) for i in range(61)]
+    end = eps(1.0)
+    cool = [(46 + 164 * i / 60, y(end * i / 60 - 0.04)) for i in range(61)]
+    return line(path_of(cool), 7, opacity=.6) + line(path_of(heat), 12)
+
+
+def afm():
+    # A cantilever tip scanning a rolling surface: the line of the topography with a tip above it.
+    pts = []
+    for i in range(0, 169):
+        x = 44 + i
+        y = 176 - 22 * math.sin((x - 44) / 22.0) - 16 * math.sin((x - 44) / 9.0 + 1.2) * 0.5 - 20 * gauss(x, 150, 14)
+        pts.append((x, y))
+    tip = "M146 38 L160 38 L153 108 Z"
+    beam = line("M54 40 H160", 10, opacity=.9)
+    return line(path_of(pts), 12) + beam + f'<path d="{tip}" fill="#fff" fill-opacity=".9"/>'
+
+
+def tem():
+    # An electron beam through a lattice: the beam (top) and the spot pattern it makes.
+    dots = "".join(f'<circle cx="{58 + 36 * i}" cy="{150 + 34 * j}" r="{9 if (i + j) % 2 else 7}" fill="#fff" fill-opacity="{.95 if (i + j) % 2 else .6}"/>'
+                   for i in range(5) for j in range(2))
+    beam = line("M128 30 V118", 12, opacity=.9)
+    cone = '<path d="M128 118 L70 140 M128 118 L186 140" stroke="#fff" stroke-opacity=".5" stroke-width="5" stroke-linecap="round"/>'
+    return beam + cone + dots
+
+
+def edx():
+    # An X-ray spectrum with its characteristic peaks over a bremsstrahlung background, and the electron beam on top.
+    pts = []
+    for i in range(0, 169):
+        x = 44 + i
+        bg = 168 - 40 * math.exp(-((x - 44) / 70.0))
+        peaks = 78 * gauss(x, 96, 3.5) + 52 * gauss(x, 112, 3.2) + 96 * gauss(x, 150, 3.6) + 34 * gauss(x, 166, 3.0)
+        pts.append((x, bg - peaks))
+    beam = line("M60 36 L100 96", 9, color="#fff", opacity=.8, dash="2 14")
+    return beam + line(path_of(pts), 10)
+
+
 ICONS = {
     "khervetga": ("#f59e4b", "#b8561a", tga),
     "khervebet": ("#4fbe9f", "#1d6f5b", bet),
     "kherveuvvis": ("#8b6cf6", "#4a2fb4", uvvis),
     "kherveftir": ("#38bdf8", "#1765a0", ftir),
     "kherveraman": ("#4ade80", "#15803d", raman),
+    "khervedilatometer": ("#f27a6b", "#a32a3a", dilatometer),
+    "kherveafm": ("#f6c453", "#a8741a", afm),
+    "khervetem": ("#7c8cf8", "#34429e", tem),
+    "kherveedx": ("#ec6aa4", "#9d2766", edx),
 }
 
 if __name__ == "__main__":

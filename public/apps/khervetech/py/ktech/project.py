@@ -248,11 +248,12 @@ def _f(v):
 RESULT_KEYS = ('TGA_Steps', 'TGA_DTG_Peaks', 'TGA_DSC_Peaks', 'TGA_Events', 'TGA_Cycles', 'TGA_Glass_Transitions',
                'TGA_Oxygen_Result', 'TGA_Kinetic_Model', 'TGA_Kinetic_R2', 'TGA_Arrhenius_Ea_kJ', 'TGA_Arrhenius_R2',
                'TGA_Sample_Mass_mg', 'TGA_Label', 'TGA_View', 'TGA_Y_Unit', 'TGA_Smoothing')
-#: the other techniques keep their results under their own prefix (BET_Results, UVVIS_Results, Raman_Peaks…)
-RESULT_PREFIXES = ('BET_', 'UVVIS_', 'Raman_', 'FTIR_', 'XRD_', 'EELS_')
+#: the other techniques keep their results under their own prefix (BET_Results, UVVIS_Results, Raman_Peaks, DIL_Results…)
+RESULT_PREFIXES = ('BET_', 'UVVIS_', 'Raman_', 'FTIR_', 'XRD_', 'EELS_', 'DIL_')
 #: per-point copies and drawing state, not results
 DROP_KEYS = {'FTIR_Raw', 'FTIR_Overlays', 'FTIR_Curves', 'FTIR_History', 'FTIR_Show_Raw', 'FTIR_Show_Curves',
-             'UVVIS_Fit_X', 'UVVIS_Fit_Y', 'Raman_Fit_X', 'Raman_Fit_Y', 'BET_Source_Sheet'}
+             'UVVIS_Fit_X', 'UVVIS_Fit_Y', 'Raman_Fit_X', 'Raman_Fit_Y', 'BET_Source_Sheet',
+             'DIL_Temperature', 'DIL_Strain', 'DIL_dL_um', 'DIL_Time_min', 'DIL_Segment', 'DIL_Fit_X', 'DIL_Fit_Y'}
 DROP = ('t_selected', 'y_selected', 'baseline', 'pre_line', 'post_line', 'fitted', 't_relative')
 
 
@@ -264,7 +265,10 @@ def _slim(v, depth=0):
             return f"[{len(v)} values]"
         return [_slim(x, depth + 1) for x in v]
     if isinstance(v, float):
-        return round(v, 6) if np.isfinite(v) else None
+        if not np.isfinite(v):
+            return None
+        # six decimals, but never fewer than six significant digits: dL/L0 and α(T) are of order 1e-5
+        return round(v, max(6, 6 - int(np.floor(np.log10(abs(v)))))) if v else 0.0
     return v
 
 
@@ -335,6 +339,13 @@ def _set(widget, value):
         widget.ChangeValue('' if value is None else str(value))
     elif isinstance(widget, wx.CheckListBox):
         widget.SetCheckedItems([int(v) for v in value])
+    elif hasattr(wx, 'grid') and isinstance(widget, wx.grid.Grid):
+        # a table: the row (0-based) a button then works on, like a click on it
+        row = int(value)
+        if not 0 <= row < widget.GetNumberRows():
+            raise ValueError(f"Row {row + 1} is not in the table ({widget.GetNumberRows()} rows).")
+        widget.SelectRow(row)
+        widget.SetGridCursor(row, 0)
     else:
         raise ValueError(f"Cannot set a {type(widget).__name__}")
 
@@ -357,10 +368,62 @@ def _read(widget):
     return None
 
 
+class _Region:
+    """A drawn region (the desktop's RotatableRectangle) given in image pixels: the window keeps it in the axes' units."""
+
+    def __init__(self, win, cx, cy, w, h, angle=0.0):
+        try:
+            scale = float(win._map_scale()[0])
+        except Exception:
+            scale = 1.0
+        if cx is None:                      # no region given: the whole image (a square on its middle)
+            from libraries.FileMenu.TEM_Import import tem_array
+            rows, cols = tem_array(win.sheet).shape[:2]
+            cx, cy, w, h = cols / 2, rows / 2, min(rows, cols), min(rows, cols)
+        self.active = True
+        self.center, self.width, self.height, self.angle = (cx * scale, cy * scale), w * scale, h * scale, float(angle)
+
+    def __getattr__(self, name):
+        if name.startswith('__'):
+            raise AttributeError(name)
+        return lambda *a, **kw: None
+
+
+def _takes_event(fn):
+    import inspect
+    try:
+        return bool(inspect.signature(fn).parameters)
+    except (TypeError, ValueError):
+        return True
+
+
+def _jsonable(v):
+    import numpy as np
+    if isinstance(v, dict):
+        return {str(k): _jsonable(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple, set)):
+        return [_jsonable(x) for x in v]
+    if isinstance(v, np.ndarray):
+        return _jsonable(v.tolist())
+    if isinstance(v, (np.floating, float)):
+        return float(v) if np.isfinite(v) else None
+    if isinstance(v, (np.integer,)):
+        return int(v)
+    if isinstance(v, (str, int, bool)) or v is None:
+        return v
+    return str(v)
+
+
+def _tuples(v):
+    return tuple(_tuples(x) for x in v) if isinstance(v, list) else v
+
+
 def drive(window, tech, a):
     """Open the tool window (or a section), set controls by attribute name, call a handler, read results.
 
     ``set``    {attribute: value} of the window's own controls (e.g. relp_lo_ctrl)
+    ``before`` handler methods to run first, in order (e.g. on_auto_watershed)
+    ``attrs``  {attribute: value} of the window's own state that is not a control (set before the call)
     ``call``   the handler method to run (e.g. on_fit_bet), as a button press would
     ``read``   attributes to read back (text boxes, labels, grids)
     ``sheet``  select this sheet on the main plot first
@@ -406,8 +469,30 @@ def drive(window, tech, a):
         if widget is None:
             raise ValueError(f"The window has no control {attr!r}.")
         _set(widget, value)
+    for attr, value in (a.get('attrs') or {}).items():
+        # window state that is not a control (the AFM profile line): lists become the tuples the window keeps;
+        # a {'region_px': [cx, cy, w, h, angle]} is the rectangle the TEM / EDX windows let the mouse drag out
+        if isinstance(value, dict) and 'region_px' in value:
+            value = _Region(win, *value['region_px'])
+        elif isinstance(value, dict) and 'set' in value:      # a Python set (the EDX window's include / exclude elements)
+            value = set(value['set'])
+        setattr(win, attr, _tuples(value))
+    for name in a.get('before') or []:
+        first = getattr(win, name, None)
+        if first is None:
+            raise ValueError(f"The window has no action {name!r}.")
+        first(wx.Event(wx.EVT_BUTTON, win)) if _takes_event(first) else first()
+        wx.run_after()
     wx.take_effects()
-    if a.get('call'):
+    returned = None
+    if a.get('call') and ':' in a['call']:
+        # "module:function": a helper of KherveOS's own (ktech/…) for what the desktop does with the mouse; it is given the
+        # tool window and the args, and what it returns goes back to the caller
+        import importlib
+        module, _, fn = a['call'].partition(':')
+        returned = _jsonable(getattr(importlib.import_module(module), fn)(win, *(a.get('args') or [])))
+        wx.run_after()
+    elif a.get('call'):
         handler = getattr(win, a['call'], None)
         if handler is None:
             raise ValueError(f"The window has no action {a['call']!r}.")
@@ -428,6 +513,8 @@ def drive(window, tech, a):
     for e in effects:
         wx.effect(e.pop('kind'), **e)
     out = {'messages': messages}
+    if returned is not None:
+        out['returned'] = returned
     readouts = {}
     for attr in a.get('read') or []:
         widget = getattr(win, attr, None)

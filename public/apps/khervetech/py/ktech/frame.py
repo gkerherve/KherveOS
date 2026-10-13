@@ -106,6 +106,16 @@ class PlotManager:
     def update_legend(self, window=None):
         pass
 
+    def plot_profile(self, *a, **kw):
+        """PlotManager.plot_profile, the desktop's (a zzProfile sheet: the EDX line profile of element concentrations)."""
+        from libraries.Plot_Operations import plot_profile
+        return plot_profile(self, *a, **kw)
+
+    def apply_edx_plot_style(self, *a, **kw):
+        """PlotManager.apply_edx_plot_style, the desktop's (plot_edx_data calls it on its plot manager)."""
+        from libraries.Plot_Operations import apply_edx_plot_style
+        return apply_edx_plot_style(self, *a, **kw)
+
     def raw_trace_label(self, window, sheet_name=None):
         if sheet_name is None:
             sheet_name = window.sheet_combobox.GetValue()
@@ -131,6 +141,10 @@ class MainFrame(wx.Frame):
         super().__init__(None, title='KherveFitting')
         from libraries.ConfigFile import Init_Measurement_Data
         self.tech = tech
+        # the web edition stores projects as .kfit: the desktop's "Choose Project Format" question is answered
+        # in advance for the techniques whose importers write a workbook first (techniques.py: 'project_format')
+        if tech.get('project_format'):
+            self._import_format_session_choice = tech['project_format']
         self.Data = Init_Measurement_Data(self)
         self.sheet_combobox = wx.ComboBox(self, style=wx.CB_READONLY)
         self.figure = Figure(figsize=(8.0, 6.0), dpi=100)
@@ -271,10 +285,18 @@ class MainFrame(wx.Frame):
         sheet = self.Data.get('Core levels', {}).get(self.sheet_combobox.GetValue(), {})
         return np.asarray(sheet.get('B.E.', []) if isinstance(sheet, dict) else [], dtype=float)
 
+    @x_values.setter
+    def x_values(self, v):          # the desktop's plot code caches the plotted arrays here; they are the sheet's own
+        pass
+
     @property
     def y_values(self):
         sheet = self.Data.get('Core levels', {}).get(self.sheet_combobox.GetValue(), {})
         return np.asarray(sheet.get('Raw Data', []) if isinstance(sheet, dict) else [], dtype=float)
+
+    @y_values.setter
+    def y_values(self, v):
+        pass
 
     def sheet_names(self):
         return list(self.Data.get('Core levels', {}).keys())
@@ -471,6 +493,39 @@ class MainFrame(wx.Frame):
             self.canvas.draw_idle()
             return
         cl = self.Data['Core levels'][sheet_name]
+        special = self.tech.get('sheet_plot')
+        if special and sheet_name.startswith(special[0]):
+            # a technique that draws its own spectrum sheets (EDX: PlotManager.plot_edx_data(window, sheet))
+            module, _, fn = special[1].partition(':')
+            ax.clear()
+            try:
+                getattr(importlib.import_module(module), fn)(self.plot_manager, self, sheet_name)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                ax.text(0.5, 0.5, f'{sheet_name}\n\n{e}', ha='center', va='center', transform=ax.transAxes, fontsize=11, color='gray')
+            self.canvas.draw_idle()
+            return
+        from libraries.Plot_Operations import is_image_sheet
+        if self.tech.get('image_plot') and is_image_sheet(self, sheet_name):
+            # a micrograph / map: the technique draws the picture itself (AFM_Plot.plot_afm_image…)
+            module, _, fn = self.tech['image_plot'].partition(':')
+            try:
+                getattr(importlib.import_module(module), fn)(self, sheet_name)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                ax.clear()
+                ax.text(0.5, 0.5, f'{sheet_name}\n\n{e}', ha='center', va='center', transform=ax.transAxes, fontsize=11, color='gray')
+            else:
+                shown = self.plot_manager.ax
+                if not (shown.images or shown.lines or shown.patches or shown.collections or shown.texts):
+                    # drawn on an axes the page cannot show yet (a 3D projection): say so rather than leave it blank
+                    shown.set_axis_off()
+                    shown.text(0.5, 0.5, f'{sheet_name}\n\nThis view is not drawn in the web edition yet.', ha='center', va='center',
+                               transform=shown.transAxes, fontsize=11, color='gray')
+            self.canvas.draw_idle()
+            return
         limits = self.plot_config.get_plot_limits(self, sheet_name) or {}
         upper = sheet_name.upper()
         is_tga = upper.startswith('TGA')
@@ -518,7 +573,10 @@ class MainFrame(wx.Frame):
                         alpha=self.background_alpha, label='Background', linewidth=self.background_thickness)
 
         label = self.plot_manager.raw_trace_label(self, sheet_name)
-        if self.plot_style == "scatter" and not is_ftir and not is_optical:
+        # the desktop draws every sheet that is not "optical" as dots; a spectrum technique that says so in
+        # techniques.py ('raw_as_line') is drawn as a line, as spectra are read (the web edition has no plot-style control)
+        as_line = bool(self.tech.get('raw_as_line'))
+        if self.plot_style == "scatter" and not is_ftir and not is_optical and not as_line:
             colour = self.plot_manager.raw_trace_colour(self, sheet_name, self.scatter_color)
             ax.scatter(x_values, y_values, c=colour, s=self.scatter_size, marker=self.scatter_marker, label=label)
         else:

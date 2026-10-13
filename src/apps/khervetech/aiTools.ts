@@ -105,11 +105,13 @@ export function techAiTools({ doc, spec, actions, open, examples, examplesDir }:
       const run = { low, high, options }
       const args: Args = { call: typeof def.call === 'function' ? def.call(run) : def.call, read: def.read, set: def.set ? def.set(run) : {} }
       if (def.args) args.args = def.args(run)
+      if (def.attrs) args.attrs = def.attrs(run)
+      if (def.before) args.before = def.before(run)
       const sheet = sheetName(doc, a)
       if (sheet) args.sheet = sheet
       if (def.range && low !== undefined && high !== undefined) args.range = [low, high]
       const r = await call(doc, 'drive', args)
-      return { sheet: r.sheet, messages: r.messages, results: r.read, sheets: doc.state.sheets }
+      return { sheet: r.sheet, messages: r.messages, results: r.read, ...(r.returned !== undefined && { returned: r.returned }), sheets: doc.state.sheets }
     },
     get_results: async (a, ctx) => {
       await ready(doc, ctx.signal)

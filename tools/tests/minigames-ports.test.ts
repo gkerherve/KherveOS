@@ -18,6 +18,16 @@ import {
   Electrons, MAX_ELECTRONS, MIN_ELECTRONS, centreOf, pointsPerSecond, stabilityOf, stepElectrons, type Electron,
 } from '../../src/apps/minigames/electronsRules.ts'
 import {
+  COLS as RC_COLS, MAX_ATOMS, MOLECULES, ROWS as RC_ROWS, ReactionChain, atomCount, dropTime, elementsAt, findReaction, moleculesAt, pointsFor,
+  type El,
+} from '../../src/apps/minigames/reactionChainRules.ts'
+import {
+  LEVELS as MB_LEVELS, MolBuilder, VALENCE, canonical, check, formulaOf, parseSmiles, type El as MbEl, type Mol,
+} from '../../src/apps/minigames/molBuilderRules.ts'
+import {
+  ANALYTES, INDICATORS, TitrationRush, accuracyPoints, equivalence, goodIndicator, phAt, type Setup,
+} from '../../src/apps/minigames/titrationRules.ts'
+import {
   MaterialLab, POINTS as LPOINTS, REACTIONS, START_UNLOCKED, fuelFor,
 } from '../../src/apps/minigames/materialLabRules.ts'
 
@@ -541,4 +551,219 @@ test('material lab: every recipe works at its temperature, and all 44 complete t
   }
   assert.equal(g.state, 'complete')
   assert.equal(g.score, REACTIONS.length * LPOINTS.discovery + LPOINTS.complete)
+})
+
+// ------------------------------------------------------------ Reaction Chain
+
+const tile = (el: El, id = 0) => ({ el, id, off: 0 })
+const rack = (...cols: El[][]) => Array.from({ length: RC_COLS }, (_, c) => (cols[c] ?? []).map((e) => tile(e)))
+
+test('reaction chain: water forms from touching atoms only', () => {
+  const water = MOLECULES.find((m) => m.formula === 'H₂O')!
+  assert.equal(findReaction(rack(['H', 'O', 'H']), moleculesAt(1), null)?.molecule, water)
+  assert.equal(findReaction(rack(['H'], ['O'], ['H']), moleculesAt(1), null)?.molecule, water)
+  // H, gap column, O, H: the first H does not touch
+  assert.equal(findReaction(rack(['H'], [], ['O'], ['O']), moleculesAt(1), null), null)
+  assert.equal(findReaction(rack(['H', 'H']), moleculesAt(1), null), null)
+})
+
+test('reaction chain: the biggest molecule wins (CO₂ before CO), CH₄ is found', () => {
+  assert.equal(findReaction(rack(['O', 'C', 'O']), moleculesAt(2), null)?.molecule.formula, 'CO₂')
+  // C with only three H round it: no methane
+  assert.notEqual(findReaction(rack(['H', 'C', 'H'], ['N', 'H'], ['N', 'N']), moleculesAt(2), null)?.molecule.formula, 'CH₄')
+  // the fourth H touches the third one: methane (5 atoms) beats water
+  assert.equal(findReaction(rack(['H', 'C', 'H'], ['O', 'H', 'O'], ['O', 'H']), moleculesAt(2), null)?.molecule.formula, 'CH₄')
+})
+
+test('reaction chain: a drop reacts, scores and the atoms above fall into a chain', () => {
+  const g = new ReactionChain(() => 0.99)
+  g.cols = rack(['O', 'H', 'O'], ['H', 'H'])
+  g.target = MOLECULES.find((m) => m.formula === 'H₂O₂')!
+  g.current = 'H'
+  g.moveTo(2)
+  // H at (2,0) touches H at (1,0): H(1,0) H(1,1) H(2,0)… needs O: O(0,0) touches H(1,0)
+  assert.equal(g.drop(), true)
+  const made = g.settle()
+  assert.ok(made.length >= 1)
+  assert.equal(made[0].chain, 1)
+  assert.equal(g.score, made.reduce((a, r) => a + r.points, 0))
+  assert.equal(made[0].points, pointsFor(atomCount(made[0].molecule), 1, made[0].target))
+  for (let i = 1; i < made.length; i++) assert.equal(made[i].chain, i + 1)
+})
+
+test('reaction chain: a full column refuses a drop, an auto-drop into it ends the game', () => {
+  const g = new ReactionChain(() => 0)
+  g.cols[0] = Array.from({ length: RC_ROWS }, (_, i) => tile(i % 2 ? 'O' : 'O', i))
+  g.moveTo(0)
+  assert.equal(g.drop(), false)
+  assert.equal(g.state, 'play')
+  g.timer = 0.001
+  g.update(1 / 60)
+  assert.equal(g.state, 'over')
+})
+
+test('reaction chain: levels add elements and molecules, drops speed up', () => {
+  assert.deepEqual(elementsAt(1), ['H', 'O'])
+  assert.deepEqual(elementsAt(3), ['H', 'O', 'C', 'N'])
+  assert.ok(moleculesAt(1).every((m) => m.level === 1))
+  assert.ok(dropTime(5) < dropTime(1))
+  for (const m of MOLECULES) {
+    assert.ok(atomCount(m) <= MAX_ATOMS, m.formula)
+    for (const e of Object.keys(m.atoms)) assert.ok(elementsAt(m.level).includes(e as El), `${m.formula} uses ${e}`)
+  }
+})
+
+// ------------------------------------------------------------ Molecule Builder
+
+/** Every connected molecule with these heavy atoms and hydrogen count, by canonical form (brute force over bond orders). */
+function enumerateIsomers(els: MbEl[], h: number): Set<string> {
+  const n = els.length
+  const pairs: [number, number][] = []
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) pairs.push([i, j])
+  const out = new Set<string>()
+  const orders = new Array(pairs.length).fill(0)
+  const total = 4 ** pairs.length
+  for (let k = 0; k < total; k++) {
+    let x = k
+    for (let p = 0; p < pairs.length; p++) {
+      orders[p] = x % 4
+      x = Math.floor(x / 4)
+    }
+    const m: Mol = { atoms: els.map((el, i) => ({ id: i, el, x: 0, y: 0 })), bonds: [] }
+    pairs.forEach(([a, b], p) => orders[p] && m.bonds.push({ a, b, order: orders[p] }))
+    const c = check(m, { formula: formulaOf(m), isomers: [], hint: '' })
+    if (!c.ok) continue
+    const hs = m.atoms.reduce((s, a) => s + VALENCE[a.el] - m.bonds.reduce((t, b) => t + (b.a === a.id || b.b === a.id ? b.order : 0), 0), 0)
+    if (hs === h) out.add(canonical(m))
+  }
+  return out
+}
+
+test('molbuilder: the SMILES of each level give its formula, and its isomers are all different', () => {
+  for (const l of MB_LEVELS) {
+    const keys = new Set<string>()
+    for (const i of l.isomers) {
+      const m = parseSmiles(i.smiles)
+      assert.equal(formulaOf(m), l.formula, `${i.name} is ${l.formula}`)
+      keys.add(canonical(m))
+    }
+    assert.equal(keys.size, l.isomers.length, `${l.formula}: isomers are distinct`)
+  }
+})
+
+test('molbuilder: every level up to four heavy atoms lists all its isomers', () => {
+  for (const l of MB_LEVELS) {
+    const m = parseSmiles(l.isomers[0].smiles)
+    if (m.atoms.length > 4) continue
+    const h = Number(/H(\d*)/.exec(l.formula)?.[1] || (l.formula.includes('H') ? 1 : 0))
+    const all = enumerateIsomers(m.atoms.map((a) => a.el), h)
+    assert.equal(all.size, l.isomers.length, `${l.formula} has ${all.size} isomers`)
+  }
+})
+
+test('molbuilder: the same molecule drawn two ways has one canonical form', () => {
+  assert.equal(canonical(parseSmiles('OCC')), canonical(parseSmiles('CCO')))
+  assert.equal(canonical(parseSmiles('C(C)(C)C')), canonical(parseSmiles('CC(C)C')))
+  assert.notEqual(canonical(parseSmiles('CCCC')), canonical(parseSmiles('CC(C)C')))
+})
+
+test('molbuilder: clicks place atoms and cycle bonds; a finished isomer scores and the level moves on', () => {
+  const g = new MolBuilder()
+  g.click(1, 1) // C, picked
+  assert.equal(formulaOf(g.mol), 'CH4')
+  assert.equal(g.found.length, 1)
+  assert.equal(g.score, 100)
+  for (let i = 0; i < 200 && g.level === 0; i++) g.update(1 / 60)
+  assert.equal(g.level, 1)
+  assert.equal(g.mol.atoms.length, 0)
+  // ethane: a C, then a C next to it bonds straight away
+  g.click(1, 1)
+  g.click(2, 1)
+  assert.equal(g.found.at(-1)?.name, 'ethane')
+  for (let i = 0; i < 200 && g.level === 1; i++) g.update(1 / 60)
+  // ethene: the second click on the pair makes the bond double
+  g.click(1, 1)
+  g.click(2, 1) // ethane: wrong level, nothing found
+  assert.equal(g.found.length, 0)
+  g.click(1, 1)
+  assert.equal(g.found.at(-1)?.name, 'ethene')
+})
+
+test('molbuilder: buildSmiles finds isomers once and ignores the wrong formula', () => {
+  const g = new MolBuilder()
+  while (g.current.formula !== 'C2H6O') {
+    if (g.levelDone) g.update(2)
+    else g.buildSmiles(g.current.isomers.find((i) => !g.found.some((f) => f.name === i.name))!.smiles)
+  }
+  const before = g.score
+  assert.equal(g.buildSmiles('CC').ok, false)
+  const first = g.buildSmiles('OCC')
+  assert.equal(first.ok && first.name, 'ethanol')
+  g.update(2)
+  g.buildSmiles('CCO') // the same molecule written the other way round
+  assert.equal(g.found.length, 1)
+  assert.equal(g.score, before + 300)
+  g.buildSmiles('COC')
+  g.update(2)
+  assert.equal(g.current.formula, 'C2H7N')
+})
+
+// ------------------------------------------------------------ Titration Rush
+
+const setup = (formula: string, conc = 0.1, titrant = 0.1, volume = 25): Setup => ({
+  analyte: ANALYTES.find((a) => a.formula === formula)!, volume, conc, titrant, indicator: INDICATORS[3],
+})
+
+test('titration: textbook pH values', () => {
+  const close = (a: number, b: number, tol = 0.03) => assert.ok(Math.abs(a - b) <= tol, `${a} vs ${b}`)
+  close(phAt(setup('HCl'), 0), 1)
+  close(phAt(setup('HCl'), 25), 7)
+  close(phAt(setup('CH₃COOH'), 0), 2.88)
+  close(phAt(setup('CH₃COOH'), 12.5), 4.76)
+  close(phAt(setup('CH₃COOH'), 25), 8.73)
+  close(phAt(setup('NH₃'), 12.5), 9.25)
+  close(phAt(setup('NH₃'), 25), 5.28)
+  assert.equal(equivalence(setup('H₂C₂O₄', 0.05)), 25)
+})
+
+test('titration: phenolphthalein suits a weak acid, methyl red a weak base, methyl orange neither', () => {
+  const ind = (n: string) => INDICATORS.find((i) => i.name === n)!
+  assert.ok(goodIndicator(setup('CH₃COOH'), ind('phenolphthalein')))
+  assert.ok(!goodIndicator(setup('CH₃COOH'), ind('methyl orange')))
+  assert.ok(goodIndicator(setup('NH₃'), ind('methyl red')))
+  assert.ok(!goodIndicator(setup('NH₃'), ind('phenolphthalein')))
+})
+
+test('titration: every round has a good indicator and an end point inside the burette', () => {
+  const g = new TitrationRush(seeded(3))
+  for (let r = 1; r <= 10; r++)
+    for (let k = 0; k < 20; k++) {
+      const s = g.makeSetup(r)
+      const eq = equivalence(s)
+      assert.ok(eq > 5 && eq < 45, `${s.analyte.name}: ${eq} mL`)
+      assert.ok(INDICATORS.some((i) => goodIndicator(s, i)), s.analyte.name)
+    }
+})
+
+test('titration: calling the end point scores by the error, timing out scores nothing', () => {
+  assert.equal(accuracyPoints(0), 1000)
+  assert.equal(accuracyPoints(0.5), 500)
+  assert.equal(accuracyPoints(2), 0)
+  const g = new TitrationRush(seeded(5))
+  assert.equal(g.phase, 'titrate')
+  g.add(equivalence(g.setup))
+  const r = g.callEndpoint()!
+  assert.ok(r.error < 1e-9)
+  assert.equal(r.points, 1000)
+  assert.equal(g.score, 1000 + r.timeBonus)
+  g.next()
+  g.update(60)
+  assert.equal(g.results[1].timedOut, true)
+  assert.equal(g.results[1].points, 0)
+  while (g.phase !== 'over') {
+    if (g.phase === 'result') g.next()
+    else if (g.phase === 'choose') g.choose(3)
+    else g.callEndpoint()
+  }
+  assert.equal(g.results.length, 10)
 })

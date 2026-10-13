@@ -111,3 +111,9 @@ def open_bet_analysis_window(window):
     from libraries.ToolsMenu.BET_Analysis import open_bet_window
     open_bet_window(window)
 
+
+
+def on_new(window):
+    from ktech import bridge
+    bridge.op_new({})
+    return True

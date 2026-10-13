@@ -136,6 +136,19 @@
 .kt-app .kt-panel.kt-scroll {
   overflow: auto;
 }
+/* A wx.ScrolledWindow lays its rows out at their natural height and scrolls when they do not fit (the proportions only
+   share what is left over), rather than squeezing them to the window's height. */
+.kt-app .kt-panel.kt-scroll > .kt-box.kt-v {
+  flex: 1 0 auto;
+  min-height: auto;
+}
+.kt-app .kt-panel.kt-scroll .kt-box.kt-v > .kt-item {
+  flex-basis: auto !important;
+  flex-shrink: 0 !important;
+}
+.kt-app .kt-panel.kt-scroll .kt-item.kt-fill > * {
+  flex-shrink: 0;
+}
 .kt-app .kt-box {
   display: flex;
   min-width: 0;

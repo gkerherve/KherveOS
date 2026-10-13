@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import itertools
 import math
+import struct
+import zlib
 
 import numpy as np
 
@@ -115,17 +118,51 @@ class _Transform:
     def __init__(self, kind, ax=None):
         self.kind, self.ax = kind, ax
 
+    def _view(self):
+        return getattr(self.ax, '_view', None) if self.kind == 'data' and self.ax is not None else None
+
     def transform(self, xy):
-        return np.asarray(xy, dtype=float)
+        """Data -> display pixels, with the geometry the page reported with the last mouse event (x right, y up as
+        matplotlib's display coordinates are; the page's own y runs down, so it is negated). Identity until then."""
+        a = np.asarray(xy, dtype=float)
+        v = self._view()
+        if v is None:
+            return a
+        x0, y0, x1, y1 = v['box']
+        xl, yl = v['xlim'], v['ylim']
+        pts = a.reshape(-1, 2)
+        px = x0 + (pts[:, 0] - xl[0]) / ((xl[1] - xl[0]) or 1.0) * (x1 - x0)
+        py = y1 - (pts[:, 1] - yl[0]) / ((yl[1] - yl[0]) or 1.0) * (y1 - y0)
+        return np.column_stack([px, -py]).reshape(a.shape)
 
     def inverted(self):
-        return self
+        return _InvertedTransform(self)
 
     def __add__(self, other):
         return self
 
     def __radd__(self, other):
         return self
+
+
+class _InvertedTransform:
+    def __init__(self, t):
+        self.t = t
+
+    def transform(self, xy):
+        a = np.asarray(xy, dtype=float)
+        v = self.t._view()
+        if v is None:
+            return a
+        x0, y0, x1, y1 = v['box']
+        xl, yl = v['xlim'], v['ylim']
+        pts = a.reshape(-1, 2)
+        x = xl[0] + (pts[:, 0] - x0) / ((x1 - x0) or 1.0) * (xl[1] - xl[0])
+        y = yl[0] + (y1 + pts[:, 1]) / ((y1 - y0) or 1.0) * (yl[1] - yl[0])
+        return np.column_stack([x, y]).reshape(a.shape)
+
+    def inverted(self):
+        return self.t
 
 
 class Bbox:
@@ -218,6 +255,7 @@ class Artist:
 
     def set_transform(self, t):
         self.props['transform'] = getattr(t, 'kind', 'data')
+        self._affine = getattr(t, 'affine', None)      # Affine2D + transData: the shape's corners move by this matrix
 
     def get_transform(self):
         return _Transform(self.props.get('transform', 'data'), self.axes)
@@ -574,6 +612,10 @@ class Text(Artist):
     def set_fontfamily(self, f):
         self.style['fontfamily'] = f
 
+    def set_path_effects(self, effects):
+        self.style['path_effects'] = list(effects or [])
+        self._touch()
+
     def set_fontstyle(self, s):
         self.style['fontstyle'] = s
 
@@ -613,6 +655,9 @@ class Text(Artist):
         if s.get('fontfamily'):
             fam = s['fontfamily']
             out['family'] = fam if isinstance(fam, str) else fam[0]
+        for pe in s.get('path_effects') or []:
+            if hasattr(pe, 'linewidth') and hasattr(pe, 'foreground'):
+                out['halo'] = {'lw': float(pe.linewidth), 'color': css_colour(pe.foreground)}
         bbox = s.get('bbox')
         if isinstance(bbox, dict):
             out['bbox'] = {'fc': css_colour(bbox.get('facecolor', bbox.get('fc', 'white'))),
@@ -759,6 +804,14 @@ class Patch(Artist):
         d = self._base(arrays)
         d['shape'] = self.shape
         d['geom'] = _clean(self.geom)
+        m = getattr(self, '_affine', None)
+        if m is not None and self.shape == 'rect' and 'xy' in self.geom:
+            x, y = self.geom['xy']
+            w, h = self.geom.get('w', 0), self.geom.get('h', 0)
+            corners = np.array([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], dtype=float)
+            moved = (m @ np.vstack([corners.T, np.ones(4)]))[:2].T
+            d['shape'] = 'polygon'
+            d['geom'] = {'xy': _clean(moved.tolist()), 'closed': True}
         d['fc'] = css_colour(self.fc) if self.fc is not None else None
         d['ec'] = css_colour(self.ec) if self.ec is not None else None
         if self.lw is not None:
@@ -767,6 +820,196 @@ class Patch(Artist):
         if self.hatch:
             d['hatch'] = str(self.hatch)
         return d
+
+
+# ---------------------------------------------------------------- images
+
+def _png(rgb):
+    """An 8-bit RGB / RGBA array as PNG bytes (no imaging library in the worker)."""
+    a = np.ascontiguousarray(rgb, dtype=np.uint8)
+    h, w, c = a.shape
+    raw = np.concatenate([np.zeros((h, 1), np.uint8), a.reshape(h, w * c)], axis=1).tobytes()
+
+    def chunk(tag, data):
+        return struct.pack('>I', len(data)) + tag + data + struct.pack('>I', zlib.crc32(tag + data) & 0xffffffff)
+
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 6 if c == 4 else 2, 0, 0, 0))
+            + chunk(b'IDAT', zlib.compress(raw, 4)) + chunk(b'IEND', b''))
+
+
+class _ImageNorm:
+    """matplotlib.colors.Normalize as an image sees it: the limits, found from the data when not given."""
+
+    def __init__(self, vmin=None, vmax=None):
+        self.vmin, self.vmax = vmin, vmax
+
+    def autoscale_None(self, A):
+        a = np.asarray(A, dtype=float)
+        a = a[np.isfinite(a)]
+        if self.vmin is None:
+            self.vmin = float(a.min()) if a.size else 0.0
+        if self.vmax is None:
+            self.vmax = float(a.max()) if a.size else 1.0
+
+    def __call__(self, v):
+        lo, hi = self.vmin if self.vmin is not None else 0.0, self.vmax if self.vmax is not None else 1.0
+        return (np.asarray(v, dtype=float) - lo) / ((hi - lo) or 1.0)
+
+
+_MAX_IMAGE_SIDE = 1400
+
+
+class AxesImage(Artist):
+    """ax.imshow(): the pixels become a PNG the page draws in the axes (colour map and limits applied here)."""
+    kind = 'image'
+
+    def __init__(self, ax, X, cmap=None, norm=None, vmin=None, vmax=None, extent=None, origin=None,
+                 interpolation=None, alpha=None, zorder=0, **kw):
+        super().__init__(alpha=alpha, zorder=zorder, label=kw.pop('label', ''))
+        from . import cm as _cm
+        self.axes, self.figure = ax, ax.figure
+        self.origin = origin or 'upper'
+        self._interp = interpolation or 'antialiased'
+        self.cmap = _cm.get_cmap(cmap)
+        self.norm = norm if hasattr(norm, 'vmin') else _ImageNorm(vmin, vmax)
+        if vmin is not None:
+            self.norm.vmin = vmin
+        if vmax is not None:
+            self.norm.vmax = vmax
+        self._extent = tuple(float(v) for v in extent) if extent is not None else None
+        self._A = None
+        self._cache = None
+        self.set_data(X)
+
+    def set_data(self, A):
+        A = np.ma.filled(A.astype(float), np.nan) if isinstance(A, np.ma.MaskedArray) and A.dtype.kind != 'u' else np.asarray(A)
+        if A.ndim == 3 and A.shape[2] == 1:
+            A = A[:, :, 0]
+        self._A = A
+        self._cache = None
+        self._touch()
+
+    set_array = set_data
+
+    def get_array(self):
+        return self._A
+
+    def get_clim(self):
+        if self._A is not None and self._A.ndim == 2:
+            self.norm.autoscale_None(self._A)
+        return (self.norm.vmin, self.norm.vmax)
+
+    def set_clim(self, vmin=None, vmax=None):
+        if isinstance(vmin, (tuple, list)):
+            vmin, vmax = vmin
+        if vmin is not None:
+            self.norm.vmin = vmin
+        if vmax is not None:
+            self.norm.vmax = vmax
+        self._cache = None
+        self._touch()
+
+    def autoscale(self):
+        self.norm.vmin = self.norm.vmax = None
+        self._cache = None
+        self._touch()
+
+    def set_cmap(self, cmap):
+        from . import cm as _cm
+        self.cmap = _cm.get_cmap(cmap)
+        self._cache = None
+        self._touch()
+
+    def get_cmap(self):
+        return self.cmap
+
+    def set_norm(self, norm):
+        if hasattr(norm, 'vmin'):
+            self.norm = norm
+            self._cache = None
+            self._touch()
+
+    def set_interpolation(self, interpolation):
+        self._interp = interpolation or 'antialiased'
+        self._touch()
+
+    def get_interpolation(self):
+        return self._interp
+
+    def get_extent(self):
+        if self._extent is not None:
+            return self._extent
+        ny, nx = self._A.shape[:2]
+        return (-0.5, nx - 0.5, ny - 0.5, -0.5) if self.origin == 'upper' else (-0.5, nx - 0.5, -0.5, ny - 0.5)
+
+    def set_extent(self, extent, **kw):
+        self._extent = tuple(float(v) for v in extent)
+        if self.axes is not None:
+            l, r, b, t = self._extent
+            self.axes._xlim, self.axes._xinv = (l, r), False
+            self.axes._ylim, self.axes._yinv = (b, t), False
+        self._touch()
+
+    def get_size(self):
+        return tuple(self._A.shape[:2])
+
+    def to_rgba(self, x, alpha=None, bytes=False):
+        return self.cmap(self.norm(x), alpha=alpha, bytes=bytes)
+
+    def get_window_extent(self, renderer=None):
+        return Bbox(0, 0, 0, 0)
+
+    def _rgba(self):
+        A = self._A
+        if A.ndim == 3:
+            rgb = A if A.dtype == np.uint8 else np.clip(A.astype(float), 0, 1) * 255 + 0.5
+            return rgb.astype(np.uint8)
+        lo, hi = self.get_clim()
+        t = (A.astype(float) - lo) / ((hi - lo) or 1.0)
+        bad = ~np.isfinite(t)
+        idx = np.clip((np.nan_to_num(t, nan=0.0, posinf=1.0, neginf=0.0) * 256).astype(int), 0, 255)
+        out = self.cmap.lut256()[idx]
+        if bad.any():
+            return np.dstack([out, np.where(bad, 0, 255).astype(np.uint8)])
+        return out
+
+    def _data_uri(self):
+        key = (self._A.shape, self.cmap.name, self.get_clim() if self._A.ndim == 2 else None)
+        if self._cache is not None and self._cache[0] == key:
+            return self._cache[1]
+        rgba = self._rgba()
+        h, w = rgba.shape[:2]
+        sy, sx = max(1, -(-h // _MAX_IMAGE_SIDE)), max(1, -(-w // _MAX_IMAGE_SIDE))
+        if sy > 1 or sx > 1:
+            rgba = rgba[::sy, ::sx]
+        uri = 'data:image/png;base64,' + base64.b64encode(_png(rgba)).decode()
+        self._cache = (key, uri)
+        return uri
+
+    def serial(self, arrays):
+        d = self._base(arrays)
+        d['extent'] = [_num(v) for v in self.get_extent()]
+        d['origin'] = self.origin
+        d['smooth'] = self._interp not in ('nearest', 'none')
+        d['src'] = self._data_uri()
+        d['shape'] = list(self._A.shape[:2])
+        return d
+
+
+def _nice_ticks(lo, hi, n=5):
+    """Round tick values covering lo..hi (about n of them), as matplotlib's default locator picks them."""
+    lo, hi = float(lo), float(hi)
+    if not (math.isfinite(lo) and math.isfinite(hi)) or hi == lo:
+        return [lo]
+    raw = (hi - lo) / max(n - 1, 1)
+    mag = 10 ** math.floor(math.log10(raw))
+    step = next(m * mag for m in (1, 2, 2.5, 5, 10) if m * mag >= raw * 0.99)
+    first = math.ceil(lo / step - 1e-9) * step
+    out, v = [], first
+    while v <= hi + step * 1e-9 and len(out) < 50:
+        out.append(round(v, 12))
+        v += step
+    return out
 
 
 def _clean(v):
@@ -1457,17 +1700,32 @@ class Axes:
         t = Table(cellText, **kw)
         return self.add_table(t)
 
-    def imshow(self, X, cmap=None, aspect=None, extent=None, origin=None, **kw):
-        p = Patch('image')
-        arr = np.asarray(X)
-        p.geom.update(shape=list(arr.shape[:2]), extent=list(extent) if extent is not None else None)
-        self.images.append(p)
-        p.axes = self
-        p._owner = self.images
-        return p
+    def imshow(self, X, cmap=None, norm=None, aspect=None, interpolation=None, alpha=None, vmin=None, vmax=None,
+               origin=None, extent=None, **kw):
+        im = AxesImage(self, X, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, extent=extent, origin=origin,
+                       interpolation=interpolation, alpha=alpha, zorder=kw.pop('zorder', 0), label=kw.pop('label', ''))
+        self.images.append(im)
+        im._owner = self.images
+        self.set_aspect('equal' if aspect is None else aspect)
+        l, r, b, t = im.get_extent()
+        self._xlim, self._xinv = (l, r), False
+        self._ylim, self._yinv = (b, t), False
+        self._touch()
+        return im
 
-    def pcolormesh(self, *a, **kw):
-        return self.imshow(np.zeros((1, 1)))
+    def pcolormesh(self, *a, cmap=None, vmin=None, vmax=None, norm=None, shading=None, alpha=None, **kw):
+        C = np.asarray(a[-1])
+        extent = None
+        if len(a) >= 3:
+            X, Y = np.asarray(a[0], dtype=float), np.asarray(a[1], dtype=float)
+            xs, ys = X.ravel(), Y.ravel()
+            if X.shape == C.shape and C.shape[1] > 1 and C.shape[0] > 1:     # cell centres: the edges lie half a cell out
+                dx, dy = (xs.max() - xs.min()) / (C.shape[1] - 1) / 2, (ys.max() - ys.min()) / (C.shape[0] - 1) / 2
+                extent = (xs.min() - dx, xs.max() + dx, ys.min() - dy, ys.max() + dy)
+            else:
+                extent = (xs.min(), xs.max(), ys.min(), ys.max())
+        return self.imshow(C, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, extent=extent, origin='lower', aspect='auto',
+                           interpolation='nearest', alpha=alpha)
 
     def contour(self, *a, **kw):
         return None
@@ -1534,6 +1792,9 @@ class Axes:
                         vals.append(_finite(c.props.get('y2')))
                 elif isinstance(c, Scatter):
                     vals.append(_finite(c.props.get(which)))
+            for im in ax.images:
+                l, r, b, t = im.get_extent()
+                vals.append(np.array([l, r] if which == 'x' else [b, t], dtype=float))
             for p in ax.patches:
                 if p.shape == 'rect' and 'xy' in p.geom:
                     x0, y0 = p.geom['xy']
@@ -1557,7 +1818,7 @@ class Axes:
         if hi == lo:
             d = abs(lo) * 0.05 or 0.05
             return lo - d, hi + d
-        m = self._margins[0 if which == 'x' else 1] * (hi - lo)
+        m = 0.0 if self.images else self._margins[0 if which == 'x' else 1] * (hi - lo)
         return lo - m, hi + m
 
     def get_xlim(self):
@@ -1900,7 +2161,7 @@ class Axes:
         x0, x1 = self.get_xlim()
         y0, y1 = self.get_ylim()
         artists = []
-        for lst in (self.patches, self.collections, self.lines, self.texts, self.tables):
+        for lst in (self.images, self.patches, self.collections, self.lines, self.texts, self.tables):
             for a in lst:
                 try:
                     artists.append(a.serial(arrays))
@@ -1923,6 +2184,15 @@ class Axes:
                            'lw': float(s.lw) if s.lw is not None else None} for k, s in self.spines.items()},
             'ySide': self.yaxis.side, 'aspect': self._aspect if isinstance(self._aspect, str) else 'equal',
         }
+        for which, lim in (('x', (x0, x1)), ('y', (y0, y1))):
+            # a formatter that is a function (FuncFormatter): the labels are worked out here, on round tick values
+            fn = getattr(getattr(self, which + 'axis').formatter, 'fn', None)
+            if fn is not None and self._ticklabels[which] is None and self._scale[which] == 'linear':
+                ticks = self._ticks[which] if self._ticks[which] is not None else _nice_ticks(min(lim), max(lim))
+                try:
+                    d[which + 'ticks'], d[which + 'ticklabels'] = [_num(t) for t in ticks], [str(fn(t, i)) for i, t in enumerate(ticks)]
+                except Exception:
+                    pass
         if self.twin_of is not None:
             d['twinOf'] = self.twin_of.id
         if self._legend is not None and self._legend._visible:
@@ -1952,6 +2222,16 @@ def _apply_fmt(fmt, kw):
 
 
 # ---------------------------------------------------------------- figure
+
+class MouseEvent:
+    """matplotlib.backend_bases.MouseEvent: what a connected handler is given for a click, a drag or the wheel."""
+
+    def __init__(self, name, canvas, ax, xdata, ydata, x=0, y=0, button=1, key=None, step=0, dblclick=False):
+        self.name, self.canvas, self.inaxes = name, canvas, ax
+        self.xdata, self.ydata = (xdata, ydata) if ax is not None else (None, None)
+        self.x, self.y, self.button, self.key, self.step, self.dblclick = x, y, button, key, step, dblclick
+        self.guiEvent = None
+
 
 class _CanvasBase:
     def __init__(self, figure):
@@ -1994,6 +2274,36 @@ class _CanvasBase:
     def callbacks_for(self, event):
         return [fn for e, fn in self._cids.values() if e == event]
 
+    def events(self):
+        """The event names the tools connected: the page only sends the mouse events somebody listens to."""
+        return sorted({e for e, _fn in self._cids.values()})
+
+    def _mouse(self, msg):
+        """A mouse action in the page (kind press / release / motion / scroll / dblclick, axes id, data x, y) as the
+        matplotlib event the desktop's handlers connected with mpl_connect take."""
+        names = {'press': 'button_press_event', 'release': 'button_release_event', 'motion': 'motion_notify_event',
+                 'scroll': 'scroll_event', 'dblclick': 'button_press_event'}
+        name = names.get(msg.get('kind'))
+        if name is None:
+            return
+        ax = None
+        want = msg.get('axes')
+        if want is not None:
+            for cand in self.figure.axes:
+                if cand.id == want:
+                    ax = cand
+                    break
+                for child in getattr(cand, 'child_axes', []):
+                    if child.id == want:
+                        ax = child
+        if ax is not None and msg.get('view'):
+            ax._view = msg['view']          # {box, xlim, ylim}: where the axes is on the page, for transData.transform
+        ev = MouseEvent(name, self, ax, msg.get('x'), msg.get('y'), msg.get('px', 0), -msg.get('py', 0),
+                        button=msg.get('button', 1), key=msg.get('key'), step=msg.get('step', 0),
+                        dblclick=msg.get('kind') == 'dblclick')
+        for fn in list(self.callbacks_for(name)):
+            fn(ev)
+
 
 class _GridSpec:
     def __init__(self, fig, nrows, ncols, **kw):
@@ -2025,6 +2335,67 @@ class _SubplotSpec:
 
     def get_position(self, fig=None):
         return self.bbox
+
+
+class _Outline:
+    """colorbar.outline: the frame of the bar (the spines of its axes)."""
+
+    def __init__(self, ax):
+        self._ax = ax
+
+    def set_edgecolor(self, c):
+        for sp in self._ax.spines.values():
+            sp.color = c
+        self._ax._touch()
+
+    set_color = set_edgecolor
+
+    def set_linewidth(self, w):
+        for sp in self._ax.spines.values():
+            sp.lw = w
+        self._ax._touch()
+
+    def set_visible(self, v):
+        for sp in self._ax.spines.values():
+            sp.visible = bool(v)
+        self._ax._touch()
+
+
+class Colorbar:
+    """figure.colorbar(image, cax=...): the colour scale drawn as a gradient image in its own axes."""
+
+    def __init__(self, mappable, cax, orientation='vertical'):
+        self.mappable, self.ax, self.orientation = mappable, cax, orientation
+        self.outline = _Outline(cax)
+        lo, hi = mappable.get_clim()
+        grad = np.linspace(lo, hi, 256)
+        if orientation == 'horizontal':
+            cax.imshow(grad.reshape(1, -1), cmap=mappable.cmap, vmin=lo, vmax=hi, extent=[lo, hi, 0, 1], origin='lower', aspect='auto')
+            cax.set_yticks([])
+            cax.xaxis.tick_bottom()
+        else:
+            cax.imshow(grad.reshape(-1, 1), cmap=mappable.cmap, vmin=lo, vmax=hi, extent=[0, 1, lo, hi], origin='lower', aspect='auto')
+            cax.set_xticks([])
+            cax.yaxis.tick_right()
+        cax._colorbar = self
+
+    def set_label(self, label, **kw):
+        (self.ax.set_xlabel if self.orientation == 'horizontal' else self.ax.set_ylabel)(label, **kw)
+
+    def set_ticks(self, ticks, **kw):
+        (self.ax.set_xticks if self.orientation == 'horizontal' else self.ax.set_yticks)(ticks)
+
+    def set_ticklabels(self, labels, **kw):
+        (self.ax.set_xticklabels if self.orientation == 'horizontal' else self.ax.set_yticklabels)(labels)
+
+    def update_ticks(self):
+        pass
+
+    def update_normal(self, mappable=None):
+        pass
+
+    def remove(self):
+        self.ax.remove()
 
 
 class Figure:
@@ -2072,6 +2443,12 @@ class Figure:
 
     def add_gridspec(self, nrows=1, ncols=1, **kw):
         return _GridSpec(self, nrows, ncols, **kw)
+
+    def colorbar(self, mappable, cax=None, ax=None, orientation='vertical', **kw):
+        if cax is None:
+            parent = ax if isinstance(ax, Axes) else (ax[0] if ax else (self.axes[-1] if self.axes else self.add_axes([0.1, 0.1, 0.8, 0.8])))
+            cax = parent.inset_axes([1.02, 0.0, 0.04, 1.0] if orientation == 'vertical' else [0.0, -0.14, 1.0, 0.04])
+        return Colorbar(mappable, cax, orientation)
 
     def delaxes(self, ax):
         if ax in self.axes:
@@ -2141,9 +2518,6 @@ class Figure:
 
     def savefig(self, *a, **kw):
         raise RuntimeError('Saving a figure from Python is not available in KherveOS; use the page\'s export.')
-
-    def colorbar(self, *a, **kw):
-        return None
 
     def get_children(self):
         return list(self.axes)

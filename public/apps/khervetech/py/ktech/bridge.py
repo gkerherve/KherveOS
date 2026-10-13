@@ -123,6 +123,10 @@ def state(full=False):
         out['rangeActive'] = w.range_active()
         names = w.sheet_names()
         out['sheets'] = names
+        note = S.tech.get('sheet_note')
+        if note:
+            levels = w.Data.get('Core levels', {})
+            out['notes'] = {n: note(levels[n]) for n in names if isinstance(levels.get(n), dict)}
         out['sheet'] = w.sheet_combobox.GetValue()
         out['file'] = w.Data.get('FilePath', '') or ''
         spec = w.technique_tool_spec
@@ -137,6 +141,7 @@ def state(full=False):
         out['canUndo'] = bool(w.history)
         out['canRedo'] = bool(w.redo_stack)
         out['status'] = w.status[0]
+        out['mpl'] = w.canvas.events()      # the mouse events the tools listen to on the main plot
     finally:
         out['arrays'] = end_arrays()
     out['effects'] = wx.take_effects()
@@ -198,6 +203,13 @@ def op_tool(a):
         _fn(section)(S.frame, a['section'])
     else:
         _fn(full)(S.frame)
+    return {}
+
+
+def op_mouse(a):
+    """A mouse action on the main plot (press / release / motion / scroll in data coordinates): the matplotlib event the
+    tool windows connected with mpl_connect (AFM / TEM line drawing, EDX map clicks…)."""
+    S.frame.canvas._mouse(a)
     return {}
 
 
@@ -288,16 +300,16 @@ def op_drive(a):
 
 
 OPS = {
-    'init': op_init, 'state': op_state, 'open': op_open, 'menu': op_menu, 'tool': op_tool, 'event': op_event,
+    'init': op_init, 'state': op_state, 'open': op_open, 'menu': op_menu, 'tool': op_tool, 'event': op_event, 'mouse': op_mouse,
     'select': op_select, 'vline': op_vline, 'undo': op_undo, 'redo': op_redo, 'save': op_save, 'new': op_new,
     'sheet': op_sheet, 'table': op_table, 'results': op_results, 'drive': op_drive, 'display': op_display,
 }
 
 #: requests that may read or write a project or workbook (the technique's own packages load first)
-DATA_OPS = {'init', 'open', 'menu', 'event', 'drive', 'save', 'tool'}
+DATA_OPS = {'init', 'open', 'menu', 'event', 'drive', 'save', 'tool', 'mouse'}
 
 NEEDS = {'open': ['h5py'], 'save': ['h5py'], 'event': ['h5py'], 'menu': ['h5py'], 'drive': ['h5py'],
-         'sheet': ['h5py'], 'undo': ['h5py'], 'redo': ['h5py']}
+         'sheet': ['h5py'], 'undo': ['h5py'], 'redo': ['h5py'], 'mouse': ['h5py']}
 
 
 async def ensure(names):

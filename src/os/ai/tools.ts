@@ -25,6 +25,7 @@ import { mimeType } from '@/os/fileIcons'
 import { PythonKernel } from '@/os/python/kernel'
 import { captureCanvas, flash, saveScreenshot, targetName, type ShotTarget } from '@/os/screenshot'
 import { appKTools, appToolNames } from './appTools'
+import { appGuide } from './guides/runtime'
 
 export interface KTool {
   /** snake_case, unique. */
@@ -381,16 +382,27 @@ export const KTOOLS: KTool[] = [
   },
   {
     name: 'list_apps',
-    description: 'List the apps of KherveOS: their id (for open_app), name, what they do, the file types they open and their own tools.',
+    description: 'List the apps of KherveOS: id (for open_app), name, group, what they do, the file types they open and their own tools. app_guide teaches how to use one.',
     inputSchema: object({}),
     async run() {
       return {
         apps: APPS.map((app) => {
           const opens = (app.fileTypes ?? []).filter(Boolean)
           const tools = appToolNames(app.id)
-          return { id: app.id, name: app.name, description: app.description, ...(opens.length && { opens }), ...(tools.length && { tools }) }
+          return { id: app.id, name: app.name, group: app.group, description: app.description, ...(opens.length && { opens }), ...(tools.length && { tools }) }
         }),
       }
+    },
+  },
+  {
+    name: 'app_guide',
+    description:
+      'How to use a KherveOS app well: what it is for, its concepts and units, the usual tool sequence, pitfalls, and the apps it works with. ' +
+      'Without "app": the index of all apps by group, one line each. Read the guide before using an app you do not know.',
+    inputSchema: object({ app: str('An app id or name, e.g. "kherveftir" or "kFTIR". Omit for the index of all apps.') }),
+    readOnly: true,
+    async run(a) {
+      return appGuide(optText(a, 'app'))
     },
   },
   {

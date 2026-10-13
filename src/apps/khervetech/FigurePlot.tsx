@@ -14,7 +14,7 @@
 import { useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { PLOT_STYLE } from '../khervefitting/mpl'
 import { textWidth } from '../khervefitting/Plot'
-import { axesBox, axisTicks, dashArray, legendPlace, limitsOf, mainAxes, makeScale, mathRuns, nearestLine, px, zOf, type Box, type Scale } from './figmath'
+import { axesBox, axisTicks, dashArray, fitAspect, legendPlace, limitsOf, mainAxes, makeScale, mathRuns, nearestLine, px, zOf, type Box, type Scale } from './figmath'
 import type { Arrays, ArtistJ, AxesJ, Fig, LegendJ } from './types'
 
 export interface Limits {
@@ -25,6 +25,21 @@ export interface Limits {
 }
 
 export type PlotMode = 'none' | 'zoom' | 'drag'
+
+/** A mouse action in data coordinates of the main axes, for the engine to turn into the matplotlib event the tools connected. */
+export interface MouseMsg {
+  kind: 'press' | 'release' | 'motion' | 'scroll' | 'dblclick'
+  /** The id of the main axes. */
+  axes: number
+  x: number | null
+  y: number | null
+  px: number
+  py: number
+  button: number
+  step?: number
+  /** Where the main axes is on the page and its limits, so the engine can map data to pixels (transData.transform). */
+  view?: { box: [number, number, number, number]; xlim: [number, number]; ylim: [number, number] }
+}
 
 export interface FigurePlotProps {
   fig: Fig | null
@@ -46,6 +61,9 @@ export interface FigurePlotProps {
   onCursor?: (at: { x: number; y: number } | null) => void
   onVline?: (which: number, x: number, final: boolean) => void
   onGreenLine?: (x: number) => void
+  /** matplotlib mouse events the tools listen to (button_press_event…) and where to send them: only those are sent. */
+  mouseEvents?: string[]
+  onMouse?: (m: MouseMsg) => void
   onDoubleClick?: () => void
   onContextMenu?: (e: ReactMouseEvent, at: { x: number; y: number }) => void
 }
@@ -108,12 +126,22 @@ function fillPath(xs: (number | null)[], lo: (number | null)[], hi: (number | nu
 /** Text with mathtext runs as tspans. */
 type Baseline = 'alphabetic' | 'hanging' | 'middle' | 'central' | 'text-after-edge' | 'text-before-edge' | 'auto'
 
-export function MText({ text, x, y, size, color, anchor = 'start', baseline, rotate, bold, italic, family }: { text: string; x: number; y: number; size: number; color?: string | null; anchor?: 'start' | 'middle' | 'end'; baseline?: Baseline; rotate?: number; bold?: boolean; italic?: boolean; family?: string }) {
+/**
+ * Where the alphabetic baseline sits for each SVG `dominant-baseline`, in em from the anchor point (positive = down):
+ * the font's ascent below the top edge, descent above the bottom edge, the middle of the em box below the centre.
+ * The text is shifted by this much with `dy` instead of passing `dominant-baseline`: browsers differ in how much of
+ * that attribute they honour (some ignore text-before-edge / central), which left the axis numbers sitting on the axis.
+ */
+const BASELINE_DY: Record<Baseline, number> = { alphabetic: 0, auto: 0, hanging: 0.8, 'text-before-edge': 0.905, middle: 0.35, central: 0.35, 'text-after-edge': -0.212 }
+
+export function MText({ text, x, y, size, color, anchor = 'start', baseline, rotate, bold, italic, family, halo }: { text: string; x: number; y: number; size: number; color?: string | null; anchor?: 'start' | 'middle' | 'end'; baseline?: Baseline; rotate?: number; bold?: boolean; italic?: boolean; family?: string; halo?: { lw: number; color: string | null } }) {
   const runs = mathRuns(text)
   const lines = runs.length === 1 && runs[0].t.includes('\n') && !runs[0].s ? runs[0].t.split('\n') : null
+  const baseDy = (BASELINE_DY[baseline ?? 'alphabetic'] ?? 0) * size
   const common = {
-    x, y, fontSize: size, fill: color ?? 'black', textAnchor: anchor, dominantBaseline: baseline, fontFamily: family ? `${family}, ${FONT}` : FONT,
+    x, y, fontSize: size, fill: color ?? 'black', textAnchor: anchor, fontFamily: family ? `${family}, ${FONT}` : FONT,
     fontWeight: bold ? 'bold' : undefined, fontStyle: italic ? 'italic' : undefined,
+    ...(halo ? { stroke: halo.color ?? 'black', strokeWidth: px(halo.lw), strokeLinejoin: 'round' as const, paintOrder: 'stroke' as const } : {}),
     transform: rotate ? `rotate(${-rotate} ${x} ${y})` : undefined, style: { whiteSpace: 'pre' as const },
   }
   if (lines) {
@@ -122,7 +150,7 @@ export function MText({ text, x, y, size, color, anchor = 'start', baseline, rot
     return (
       <text {...common}>
         {lines.map((l, i) => (
-          <tspan key={i} x={x} dy={i === 0 ? off : lh}>
+          <tspan key={i} x={x} dy={i === 0 ? off + baseDy : lh}>
             {l}
           </tspan>
         ))}
@@ -130,7 +158,7 @@ export function MText({ text, x, y, size, color, anchor = 'start', baseline, rot
     )
   }
   return (
-    <text {...common}>
+    <text {...common} dy={baseDy || undefined}>
       {runs.map((r, i) => (
         <tspan key={i} baselineShift={r.s === 'sup' ? 'super' : r.s === 'sub' ? 'sub' : undefined} fontSize={r.s ? size * 0.7 : undefined} fontStyle={r.italic ? 'italic' : undefined}>
           {r.t}
@@ -271,12 +299,32 @@ export function FigurePlot(props: FigurePlotProps) {
   const main = mainAxes(fig)
   const geos: AxesGeo[] = []
   if (fig) {
-    // inset axes (ax.inset_axes: Label Manager insets) are drawn after their parent, placed in its frame
+    // the limits an axes is drawn with: its own, or the page's zoom for the main axes (and its twins)
+    const limsOf = (ax: AxesJ) => {
+      const lim = limitsOf(ax)
+      let x = lim.x
+      let y = lim.y
+      const user = props.limits
+      if (user && (ax.id === main?.id || ax.twinOf === main?.id)) {
+        const forward = lim.x[0] <= lim.x[1]
+        x = forward ? [user.xmin, user.xmax] : [user.xmax, user.xmin]
+        // an image's rows run downwards (origin 'upper'): its y axis keeps that direction when it is zoomed
+        if (ax.id === main?.id) y = lim.y[0] <= lim.y[1] ? [user.ymin, user.ymax] : [user.ymax, user.ymin]
+      }
+      return { x, y }
+    }
+    // inset axes (ax.inset_axes: Label Manager insets, colour keys) are drawn after their parent, placed in its frame:
+    // for an image (aspect 'equal') the frame is the picture's, not the panel's
     const all: AxesJ[] = []
     for (const ax of fig.axes) {
-      all.push(ax)
+      let pos = ax.pos
+      if (ax.aspect === 'equal' && ax.xscale !== 'log' && ax.yscale !== 'log') {
+        const l = limsOf(ax)
+        pos = fitAspect(ax.pos, l.x, l.y, W, H)
+      }
+      all.push(pos === ax.pos ? ax : { ...ax, pos })
       for (const c of ax.children ?? []) {
-        const [px, py, pw, ph] = ax.pos
+        const [px, py, pw, ph] = pos
         const [cx, cy, cw, ch] = c.pos
         all.push({ ...c, pos: [px + cx * pw, py + cy * ph, cw * pw, ch * ph], z: (ax.z ?? 0) + 0.5 })
       }
@@ -285,18 +333,21 @@ export function FigurePlot(props: FigurePlotProps) {
       if (!ax.visible) continue
       const box = axesBox(ax.pos, W, H)
       const lim = limitsOf(ax)
-      let x = lim.x
-      let y = lim.y
-      const user = props.limits
-      if (user && (ax === main || ax.twinOf === main?.id)) {
-        const forward = lim.x[0] <= lim.x[1]
-        x = forward ? [user.xmin, user.xmax] : [user.xmax, user.xmin]
-        if (ax === main) y = [user.ymin, user.ymax]
+      // the left axis' tick numbers and its title need room: a long number (0.0005) or a long title would
+      // otherwise run into each other or off the figure, where matplotlib's layout would have moved the axes
+      if (ax.yaxisVisible && ax.ySide !== 'right' && !ax.twinOf && ax.ylabel) {
+        const fsT = px((ax.ytickp.size ?? PLOT_STYLE.axisNumberSize) + delta)
+        const fsL = px((ax.ylabelStyle.size ?? PLOT_STYLE.axisTitleSize) + delta)
+        const t = axisTicks(lim.y, box.y1 - box.y0, fsT / px(1), 'y', ax.yformat, ax.yticks, ax.yticklabels, 0)
+        const widest = Math.max(0, ...t.major.map((_v, k) => textWidth(t.labels[k] ?? '', fsT)))
+        const need = TICK_LEN + px(3.5) + widest + px(4) + fsL * 1.6
+        if (box.x0 < need) box.x0 = Math.min(need, box.x1 - 40)
       }
+      const { x, y } = limsOf(ax)
       geos.push({ ax, box, X: makeScale(x, box.x0, box.x1, ax.xscale === 'log'), Y: makeScale(y, box.y1, box.y0, ax.yscale === 'log') })
     }
   }
-  const mg = geos.find((g) => g.ax === main) ?? null
+  const mg = geos.find((g) => g.ax.id === main?.id) ?? null
 
   // ------------------------------------------------------------ mouse (main axes)
   const local = (e: { clientX: number; clientY: number }) => {
@@ -304,28 +355,59 @@ export function FigurePlot(props: FigurePlotProps) {
     return { x: ((e.clientX - r.left) * W) / (r.width || W), y: ((e.clientY - r.top) * H) / (r.height || H) }
   }
   const inMain = (p: { x: number; y: number }) => !!mg && p.x >= mg.box.x0 && p.x <= mg.box.x1 && p.y >= mg.box.y0 && p.y <= mg.box.y1
-  const currentLimits = (): Limits | null => (mg ? { xmin: mg.X.lo, xmax: mg.X.hi, ymin: mg.Y.lo, ymax: mg.Y.hi } : null)
+  const currentLimits = (): Limits | null =>
+    mg ? { xmin: Math.min(mg.X.lo, mg.X.hi), xmax: Math.max(mg.X.lo, mg.X.hi), ymin: Math.min(mg.Y.lo, mg.Y.hi), ymax: Math.max(mg.Y.lo, mg.Y.hi) } : null
   const xRange = mg ? Math.abs(mg.X.hi - mg.X.lo) : 1
   const threshold = Math.max(0.1, 0.02 * xRange)
 
+  // the mouse the tools listen to (mpl_connect): sent as data coordinates of the main axes; the zoom / pan modes of the
+  // toolbar keep the mouse for themselves while they are on
+  const listens = (name: string) => !!props.onMouse && !!props.mouseEvents?.includes(name)
+  const mouseDown = useRef(false)
+  const lastMotion = useRef(0)
+  const sendMouse = (kind: MouseMsg['kind'], e: { button?: number }, p: { x: number; y: number }, extra: Partial<MouseMsg> = {}) => {
+    if (!mg || !props.onMouse) return
+    props.onMouse({ kind, axes: mg.ax.id, x: mg.X.from(p.x), y: mg.Y.from(p.y), px: p.x, py: p.y, button: (e.button ?? 0) + 1, view: { box: [mg.box.x0, mg.box.y0, mg.box.x1, mg.box.y1], xlim: [mg.X.lo, mg.X.hi], ylim: [mg.Y.lo, mg.Y.hi] }, ...extra })
+  }
+
   const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
-    if (still || e.button !== 0 || !mg) return
+    if (!mg) return
     const p = local(e)
+    const mode = props.mode ?? 'none'
+    if (still || e.button !== 0) {
+      if ((mode === 'none' || still) && listens('button_press_event') && inMain(p)) {
+        e.currentTarget.setPointerCapture?.(e.pointerId)
+        mouseDown.current = true
+        sendMouse('press', e, p)
+      }
+      return
+    }
     if (!inMain(p)) return
     e.currentTarget.setPointerCapture?.(e.pointerId)
-    const mode = props.mode ?? 'none'
     if (mode === 'zoom') return setDrag({ kind: 'box', x0: p.x, y0: p.y, x1: p.x, y1: p.y })
     if (mode === 'drag') return setDrag({ kind: 'pan', px0: p.x, py0: p.y, l: currentLimits()! })
     const bx = mg.X.from(p.x)
     if (props.greenLine !== null && props.greenLine !== undefined && Math.abs(props.greenLine - bx) <= threshold) return setDrag({ kind: 'green' })
     if (props.rangeActive && props.vlines && Object.keys(props.vlines).length) {
       const which = nearestLine(bx, props.vlines)
-      if (which !== null) setDrag({ kind: 'vline', which, x: props.vlines[String(which)] })
+      if (which !== null) return setDrag({ kind: 'vline', which, x: props.vlines[String(which)] })
+    }
+    if (listens('button_press_event')) {
+      mouseDown.current = true
+      sendMouse('press', e, p)
     }
   }
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (!mg) return
     const p = local(e)
+    if (listens('motion_notify_event') && (mouseDown.current || inMain(p))) {
+      const now = performance.now()
+      if (now - lastMotion.current > 30) {
+        lastMotion.current = now
+        sendMouse('motion', e, p)
+      }
+    }
+    if (still) return
     props.onCursor?.(inMain(p) ? { x: mg.X.from(p.x), y: mg.Y.from(p.y) } : null)
     if (!drag) return
     const dx = mg.X.from(p.x)
@@ -341,11 +423,21 @@ export function FigurePlot(props: FigurePlotProps) {
       const sy = (l.ymax - l.ymin) / (mg.box.y1 - mg.box.y0)
       const forward = mg.X.to(l.xmax) > mg.X.to(l.xmin)
       const ddx = (p.x - drag.px0) * sx * (forward ? -1 : 1)
-      const ddy = (p.y - drag.py0) * sy
+      const yUp = mg.Y.to(l.ymax) < mg.Y.to(l.ymin) // an image's rows run downwards: its y axis is reversed
+      const ddy = (p.y - drag.py0) * sy * (yUp ? 1 : -1)
       props.onLimits?.({ xmin: l.xmin + ddx, xmax: l.xmax + ddx, ymin: l.ymin + ddy, ymax: l.ymax + ddy })
     }
   }
+  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    if (!mg || !listens('scroll_event')) return
+    const p = local(e)
+    if (inMain(p)) sendMouse('scroll', e, p, { step: e.deltaY < 0 ? 1 : -1 })
+  }
   const onPointerUp = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (mouseDown.current && mg) {
+      mouseDown.current = false
+      sendMouse('release', e, local(e))
+    }
     const cur = drag
     setDrag(null)
     if (!cur || !mg) return
@@ -491,6 +583,20 @@ export function FigurePlot(props: FigurePlotProps) {
         }
         if (a.arrow) free.push(arrowPath([tx, ty], [ax0, ay0], a.arrow.style, 15, a.arrow.color ?? 'black', px(a.arrow.lw), `${key}a`))
         free.push(textNode(a, tx, ty, key, delta))
+      } else if (a.k === 'image' && a.src && a.extent) {
+        // the PNG covers the extent: row 0 sits at the extent's top for origin 'upper' (bottom for 'lower'), and
+        // an axis running backwards flips the picture with it
+        const [l, r, b, t] = a.extent
+        const xa = X.to(l)
+        const xb = X.to(r)
+        const ya = Y.to(a.origin === 'lower' ? b : t)
+        const yb = Y.to(a.origin === 'lower' ? t : b)
+        const cx = (xa + xb) / 2
+        const cy = (ya + yb) / 2
+        const flip = `translate(${cx} ${cy}) scale(${xb < xa ? -1 : 1} ${yb < ya ? -1 : 1}) translate(${-cx} ${-cy})`
+        clipped.push(
+          <image key={key} href={a.src} x={Math.min(xa, xb)} y={Math.min(ya, yb)} width={Math.abs(xb - xa)} height={Math.abs(yb - ya)} preserveAspectRatio="none" opacity={op} transform={xb < xa || yb < ya ? flip : undefined} style={{ imageRendering: a.smooth ? 'auto' : 'pixelated' }} />,
+        )
       } else if (a.k === 'patch') {
         clipped.push(patchNode(a, g, coord, key))
       } else if (a.k === 'table') {
@@ -516,19 +622,19 @@ export function FigurePlot(props: FigurePlotProps) {
         // x axis
         if (ax.xaxisVisible) {
           const fsT = tickSize(ax, 'x')
-          const t = axisTicks([X.lo, X.hi], box.x1 - box.x0, fsT / px(1), 'x', ax.xformat, ax.xticks, ax.xticklabels, ax === main ? PLOT_STYLE.xSublines + 1 : 0)
+          const t = axisTicks([X.lo, X.hi], box.x1 - box.x0, fsT / px(1), 'x', ax.xformat, ax.xticks, ax.xticklabels, ax.id === main?.id ? PLOT_STYLE.xSublines + 1 : 0)
           const tc = ax.xtickp.color ?? 'black'
           t.major.forEach((v, k) => {
             const x = X.to(v)
             items.push(<line key={`xt${k}`} x1={x} x2={x} y1={box.y1} y2={box.y1 + TICK_LEN} stroke={tc} strokeWidth={px(0.8)} />)
-            items.push(<MText key={`xl${k}`} text={t.labels[k] ?? ''} x={x} y={box.y1 + TICK_LEN + px(3.5)} size={fsT} anchor="middle" baseline="text-before-edge" color={tc} />)
+            items.push(<MText key={`xl${k}`} text={t.labels[k] ?? ''} x={x} y={box.y1 + TICK_LEN + px(4.5)} size={fsT} anchor="middle" baseline="text-before-edge" color={tc} />)
           })
           t.minor.forEach((v, k) => {
             const x = X.to(v)
             items.push(<line key={`xm${k}`} x1={x} x2={x} y1={box.y1} y2={box.y1 + MINOR_LEN} stroke={tc} strokeWidth={px(0.6)} />)
           })
           if (t.corner) items.push(<MText key="xc" text={t.corner} x={box.x1} y={box.y1 + TICK_LEN + fsT * 2.2} size={fsT} anchor="end" baseline="text-before-edge" color={tc} />)
-          if (ax.xlabel) items.push(<MText key="xlab" text={ax.xlabel} x={(box.x0 + box.x1) / 2} y={box.y1 + TICK_LEN + px(3.5) + fsT * 1.25 + px(4)} size={labelSize(ax.xlabelStyle)} anchor="middle" baseline="text-before-edge" color={ax.xlabelStyle.color ?? 'black'} bold={ax.xlabelStyle.bold} />)
+          if (ax.xlabel) items.push(<MText key="xlab" text={ax.xlabel} x={(box.x0 + box.x1) / 2} y={box.y1 + TICK_LEN + px(4.5) + fsT * 1.25 + px(4)} size={labelSize(ax.xlabelStyle)} anchor="middle" baseline="text-before-edge" color={ax.xlabelStyle.color ?? 'black'} bold={ax.xlabelStyle.bold} />)
         }
       }
       // y axis: left for the main axes, right (outward) for a twin
@@ -540,7 +646,7 @@ export function FigurePlot(props: FigurePlotProps) {
         const fsT = tickSize(ax, 'y')
         const tc = ax.ytickp.color ?? 'black'
         if (isTwin && sp.right.visible) items.push(<line key="tsr" x1={sx} x2={sx} y1={box.y0} y2={box.y1} stroke={sp.right.color ?? 'black'} strokeWidth={px(sp.right.lw ?? 0.8)} />)
-        const t = axisTicks([Y.lo, Y.hi], box.y1 - box.y0, fsT / px(1), 'y', ax.yformat, ax.yticks, ax.yticklabels, ax === main ? PLOT_STYLE.ySublines + 1 : 0)
+        const t = axisTicks([Y.lo, Y.hi], box.y1 - box.y0, fsT / px(1), 'y', ax.yformat, ax.yticks, ax.yticklabels, ax.id === main?.id ? PLOT_STYLE.ySublines + 1 : 0)
         let widest = 0
         t.major.forEach((v, k) => {
           const y = Y.to(v)
@@ -601,8 +707,12 @@ export function FigurePlot(props: FigurePlotProps) {
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onWheel={onWheel}
         onPointerLeave={() => props.onCursor?.(null)}
-        onDoubleClick={() => props.onDoubleClick?.()}
+        onDoubleClick={(e) => {
+          if (listens('button_press_event') && mg && inMain(local(e))) sendMouse('dblclick', e, local(e))
+          props.onDoubleClick?.()
+        }}
         onContextMenu={onContextMenu}
         fontFamily={FONT}
       >
@@ -618,7 +728,7 @@ function textNode(a: ArtistJ, x: number, y: number, key: string, delta: number):
   const size = px((a.size ?? 10) + delta)
   const anchor = anchorOf(a.ha)
   const baseline = baselineOf(a.va)
-  const label = <MText key={key} text={a.text ?? ''} x={x} y={y} size={size} anchor={anchor} baseline={baseline} color={a.color} rotate={a.rotation} bold={a.bold} italic={a.italic} family={a.family} />
+  const label = <MText key={key} text={a.text ?? ''} x={x} y={y} size={size} anchor={anchor} baseline={baseline} color={a.color} rotate={a.rotation} bold={a.bold} italic={a.italic} family={a.family} halo={a.halo} />
   if (!a.bbox) return label
   const w = textWidth(a.text ?? '', size) + 2 * a.bbox.pad * size
   const h = size * 1.2 + 2 * a.bbox.pad * size

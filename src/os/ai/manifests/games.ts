@@ -7,7 +7,7 @@
 // get_status, restart and reload, implemented in WebGame.tsx.
 
 import type { AppToolSet, AppToolSpec } from '../appToolsCore.ts'
-import { bool, int, object, oneOf, str } from './schema.ts'
+import { bool, int, num, object, oneOf, str } from './schema.ts'
 
 /** The tools every mini-game has (GameShell.tsx), then the game's own ones. */
 function miniGame(app: string, name: string, summary: string, keywords: string[], stats: string, extra: AppToolSpec[] = []): AppToolSet {
@@ -72,6 +72,8 @@ export const GAME_TOOL_SETS: AppToolSet[] = [
   miniGame('pacman', 'Pac-Man', 'the maze game: eat the dots, dodge the ghosts.', ['pacman', 'pac-man', 'pac man', 'ghosts', 'maze'], 'level, lives, dots left, power-pellet seconds, mode, and the tiles of Pac-Man and the four ghosts'),
   miniGame('pinball', 'Pinball', 'the pinball table with flippers and bumpers.', ['pinball', 'flipper', 'flippers'], 'ball number, bonus, multiplier'),
   miniGame('asteroids', 'Meteor Smash', 'the space shooter where you blast meteors (Asteroids-like).', ['asteroids', 'meteor', 'meteors'], 'wave, lives, meteors left'),
+  miniGame('runekeep', 'Rune Keep', 'the fast 90s-style first-person shooter: three levels of keeps, lava, keys and secrets.', ['rune keep', 'quake', 'fps', 'shooter', 'doom', 'boomer shooter', 'arena'], 'level, stage (play, dead, intermission, finished), health, armor, weapon, ammo, weapons owned, keys, kills, secrets, time'),
+  miniGame('lasttrain', 'Last Train', 'the 3D first-person shooter in a subway station: clear zombie waves, ride the train to the next station.', ['last train', 'subway', 'metro', 'fps', 'shooter', 'zombies', 'train'], 'wave, station, stage, health, weapon, ammo, enemies left, kills'),
   miniGame('flappy', 'Flappy Khervey', 'the Flappy Bird-like game: flap through pipes, shoot birds and bees.', ['flappy', 'flappy bird', 'khervey'], 'stage, difficulty', [
     {
       action: 'set_difficulty',
@@ -152,6 +154,65 @@ export const GAME_TOOL_SETS: AppToolSet[] = [
           },
           ['elements'],
         ),
+      },
+    ],
+  ),
+  miniGame(
+    'reactionchain',
+    'Reaction Chain',
+    'the molecule puzzle: drop atoms into a rack; touching atoms that make a molecule react, and chains score more.',
+    ['reaction chain', 'reactionchain', 'molecule game', 'atom puzzle'],
+    'level, current and next atoms, target molecule, the rack (columns bottom first), molecules in play',
+    [
+      {
+        action: 'drop',
+        description:
+          'Drop Reaction Chain\'s current atom into a column (1–7) and resolve every reaction and chain it sets off. Returns the reactions, score, next atoms, target and the rack. Starts the game if needed.',
+        inputSchema: object({ column: int('Column 1 (left) to 7 (right).') }, ['column']),
+      },
+    ],
+  ),
+  miniGame(
+    'molbuilder',
+    'Molecule Builder',
+    'the isomer puzzle: build every structural isomer of a formula from C, N and O atoms (hydrogens fill in).',
+    ['molecule builder', 'molbuilder', 'isomer game', 'isomers'],
+    'level, formula, how many isomers it has, those found, the formula on the board',
+    [
+      {
+        action: 'build',
+        description:
+          'Build a structure on Molecule Builder\'s board from SMILES (C, N, O; = and # bonds; branches in brackets; ring digits; hydrogens implicit) and check it against the level\'s formula. A new isomer scores; finding all moves to the next level. Starts the game if needed.',
+        inputSchema: object({ smiles: str('The structure, e.g. "CCO" (ethanol), "COC" (dimethyl ether), "C1CC1" (cyclopropane).') }, ['smiles']),
+      },
+    ],
+  ),
+  miniGame(
+    'titrationrush',
+    'Titration Rush',
+    'the titration game: ten acid–base titrations against the clock, scored on how close the end point is to the equivalence point.',
+    ['titration rush', 'titrationrush', 'titration game', 'end point game'],
+    'round, round phase (choose, titrate, result), the flask and titrant, indicator, mL added, pH (training rounds), seconds left, results',
+    [
+      {
+        action: 'add',
+        description: 'Add titrant to Titration Rush\'s flask (mL; a drop is 0.05). Returns the volume added, the indicator and, in the training rounds 1–4, the pH.',
+        inputSchema: object({ ml: num('mL of titrant to add, more than 0.') }, ['ml']),
+      },
+      {
+        action: 'choose_indicator',
+        description: 'Choose the indicator at the start of rounds 5–10 of Titration Rush: methyl orange, methyl red, bromothymol blue or phenolphthalein.',
+        inputSchema: object({ indicator: oneOf(['methyl orange', 'methyl red', 'bromothymol blue', 'phenolphthalein'], 'The indicator.') }, ['indicator']),
+      },
+      {
+        action: 'end_point',
+        description: 'Call the end point at the volume added so far: returns the equivalence volume, the error and the points.',
+        inputSchema: object({}),
+      },
+      {
+        action: 'next',
+        description: 'Move from a finished round of Titration Rush to the next one.',
+        inputSchema: object({}),
       },
     ],
   ),

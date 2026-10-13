@@ -1,4 +1,4 @@
-/* kTGA: its own window on the OS theme. The root also carries kf-app / kt-app for the
+/* The window of kTGA and kDilatometer (AnalysisApp.tsx): its own look on the OS theme. The root also carries kf-app / kt-app for the
    layout of the desktop's widgets (WxUI); their colours are set again here (.tg-app.kt-app
    wins over .kt-app) so the analysis panel matches the rest of the OS. */
 

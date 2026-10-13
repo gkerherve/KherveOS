@@ -25,9 +25,16 @@ class FigureCanvasWxAgg(wx.Window, _CanvasBase):
 
     draw = draw_idle
 
+    def _user(self, msg):
+        if msg.get('type') == 'mouse':
+            self._mouse(msg)
+        else:
+            wx.Window._user(self, msg)
+
     def _serial(self):
         from .._rec import current_arrays, serialise_figure
         d = self._common()
+        d['mpl'] = self.events()          # the mouse events the tools listen to: the page sends only those
         d['fig'] = serialise_figure(self.figure, current_arrays())
         self._seen = self.figure.version
         return d

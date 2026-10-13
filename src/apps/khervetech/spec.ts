@@ -29,6 +29,10 @@ export const TECH_APPS: TechAppSpec[] = [
     // TechniqueTool._is_raman_name / Raman_Analysis.is_raman_sheet
     match: (s) => s.startsWith('RA') || s.toUpperCase().includes('RAMAN') || s.startsWith('Ra_'),
   },
+  { appId: 'khervedilatometer', name: 'kDilatometer', tech: 'DIL', prefix: 'DIL', examples: 'khervedilatometer', exts: ['.csv', '.txt', '.dat'] },
+  { appId: 'kherveafm', name: 'kAFM', tech: 'AFM', prefix: 'AFM', examples: 'kherveafm', exts: ['.ibw', '.spm', '.ardf', '.gwy', '.gsf', '.emd'] },
+  { appId: 'khervetem', name: 'kTEM', tech: 'TEM', prefix: 'TEM', examples: 'khervetem', exts: ['.dm3', '.dm4', '.dm5', '.tif', '.tiff', '.png'] },
+  { appId: 'kherveedx', name: 'kEDX', tech: 'EDX', prefix: 'EDX', examples: 'kherveedx', exts: ['.hdf5', '.h5', '.bcf', '.emd'] },
 ]
 
 /** A sheet of this technique (TechniqueTool.technique_of_sheet). */

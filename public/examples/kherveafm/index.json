@@ -1,0 +1,16 @@
+{
+ "examples": [
+  {
+   "file": "Nanoparticles_on_silicon_2um.gsf",
+   "title": "Nanoparticles on silicon (2 um, height)"
+  },
+  {
+   "file": "Gold_terraces_5um.gsf",
+   "title": "Gold terraces (5 um, three 2.4 nm steps)"
+  },
+  {
+   "file": "Polymer_film_1um.gsf",
+   "title": "Polymer film (1 um, roughness)"
+  }
+ ]
+}

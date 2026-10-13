@@ -15,12 +15,20 @@ import { filesFor, installedPath, parseAnswers, START, END } from '../engine.cor
 import { MAIN_TOOLBAR } from '../../khervefitting/toolbarSpec.ts'
 import { TGA_ACTIONS } from '../../khervetga/actions.ts'
 import { BET_ACTIONS } from '../../khervebet/actions.ts'
+import { DIL_ACTIONS } from '../../khervedilatometer/actions.ts'
 import { KHERVETGA_TOOL_SET } from '../../../os/ai/manifests/khervetga.ts'
 import { KHERVEBET_TOOL_SET } from '../../../os/ai/manifests/khervebet.ts'
+import { KHERVEDILATOMETER_TOOL_SET } from '../../../os/ai/manifests/khervedilatometer.ts'
 import { UVVIS_ACTIONS } from '../../kherveuvvis/actions.ts'
+import { AFM_ACTIONS } from '../../kherveafm/actions.ts'
+import { TEM_ACTIONS } from '../../khervetem/actions.ts'
+import { EDX_ACTIONS } from '../../kherveedx/actions.ts'
 import { FTIR_ACTIONS } from '../../kherveftir/actions.ts'
 import { RAMAN_ACTIONS } from '../../kherveraman/actions.ts'
 import { KHERVEUVVIS_TOOL_SET } from '../../../os/ai/manifests/kherveuvvis.ts'
+import { KHERVEAFM_TOOL_SET } from '../../../os/ai/manifests/kherveafm.ts'
+import { KHERVETEM_TOOL_SET } from '../../../os/ai/manifests/khervetem.ts'
+import { KHERVEEDX_TOOL_SET } from '../../../os/ai/manifests/kherveedx.ts'
 import { KHERVEFTIR_TOOL_SET } from '../../../os/ai/manifests/kherveftir.ts'
 import { KHERVERAMAN_TOOL_SET } from '../../../os/ai/manifests/kherveraman.ts'
 import { TECHNIQUE_TOOL_SETS } from '../../../os/ai/manifests/techniqueApps.ts'
@@ -83,15 +91,20 @@ test('wx wildcards become the file dialog\'s extensions', () => {
 })
 
 test('the technique apps and their registry entries', () => {
-  assert.deepEqual(TECH_APPS.map((t) => t.name), ['kTGA', 'kBET', 'kUVVis', 'kFTIR', 'kRaman'])
+  assert.deepEqual(TECH_APPS.map((t) => t.name), ['kTGA', 'kBET', 'kUVVis', 'kFTIR', 'kRaman', 'kDilatometer', 'kAFM', 'kTEM', 'kEDX'])
   assert.equal(techApp('khervebet').tech, 'BET')
   assert.equal(appForSheets(['BET', 'BET~Plot'])?.appId, 'khervebet')
   assert.equal(appForSheets(['TGA~Mass'])?.appId, 'khervetga')
+  assert.equal(appForSheets(['DIL', 'DIL~Heat'])?.appId, 'khervedilatometer')
+  assert.equal(techApp('khervedilatometer').tech, 'DIL')
   assert.equal(appForSheets(['UVvis', 'UVvis~Tauc'])?.appId, 'kherveuvvis')
   assert.equal(appForSheets(['FTIR1'])?.appId, 'kherveftir')
   // Raman sheets: TechniqueTool's match (RA…, …RAMAN…, Ra_…), not a prefix
   assert.equal(appForSheets(['Raman_TiO2'])?.appId, 'kherveraman')
   assert.ok(isSheetOf(techApp('kherveraman'), 'RA1'))
+  assert.equal(appForSheets(['AFM', 'AFM~3D'])?.appId, 'kherveafm')
+  assert.equal(appForSheets(['TEM~Map', 'TEM~FFT'])?.appId, 'khervetem')
+  assert.equal(appForSheets(['EDX~Plot', 'EDX~Map'])?.appId, 'kherveedx')
   assert.equal(appForSheets(['C1s']), null)
   assert.equal(TECHNIQUE_TOOL_SETS.length, TECH_APPS.length)
   for (const t of TECH_APPS) assert.ok(TECHNIQUE_TOOL_SETS.some((s) => s.app === t.appId), `${t.appId} tool set`)
@@ -104,7 +117,7 @@ test('the technique apps and their registry entries', () => {
     for (const e of idx.examples) assert.ok(fs.existsSync(new URL(`../../../../public/examples/${t.examples}/${e.file}`, import.meta.url)), e.file)
     assert.ok(fs.existsSync(new URL(`../../../../public/apps/khervetech/icons/Tech-${t.tech}-3.png`, import.meta.url)), 'toolbar icon')
   }
-  assert.match(reg, /group: 'Science'/)
+  assert.match(reg, /group: 'Materials'/)
 })
 
 test('the slim technique toolbar: the desktop\'s XPS-only tools, the technique button after them', () => {
@@ -146,7 +159,13 @@ function checkActions(actions, src, toolSet) {
   const { attrs, methods } = members(src)
   for (const [name, def] of Object.entries(actions)) {
     const calls = typeof def.call === 'function' ? [def.call({ options: {} }), def.call({ options: { model: 'all' } })] : def.call ? [def.call] : []
-    for (const c of calls) assert.ok(methods.has(c), `${name}: ${c} is a handler of the window`)
+    for (const c of calls) {
+      if (c.includes(':')) {
+        const [mod, fn] = c.split(':')
+        const file = fs.readFileSync(new URL(`../../../../public/apps/khervetech/py/${mod.replace(/\./g, '/')}.py`, import.meta.url), 'utf8')
+        assert.ok(new RegExp(`^def ${fn}\\(win`, 'm').test(file), `${name}: ${c} is a helper function taking the window`)
+      } else assert.ok(methods.has(c), `${name}: ${c} is a handler of the window`)
+    }
     for (const r of def.read) assert.ok(attrs.has(r), `${name}: reads ${r}`)
     const set = def.set ? def.set({ low: 1, high: 2, options: { initial_mass: 10, normalisation: '% of initial mass', name: 'x', edges_over: 5, method: 'Gaussian', width: 9, basis: 'Raw', dry_mass: 1, molar_mass: 2, mode: 'dm/dT', sensitivity: 5, baseline: 'Straight', poly_order: 2, anchors: [1, 2], tolerance: 5, model: 'Avrami (JMAK)', mass: 5, dh_ref: 100, formula: 'CaO', delta_initial: 0, sites: 3, mass_change: -1, host: 'CaCO3', species: 'CO2', n: 1, branch: 'adsorption', ordinate: 'Transmittance', transition: 'Indirect', font_size: 9, unit: 'Absorbance', preset: 'Strong', prominence: 4, min_distance: 20, search: 'C=O', material: 'Oxide', substrate: 'Si', elements: 'Ti O', laser: '532', in_air: true } }) : {}
     for (const k of Object.keys(set)) assert.ok(attrs.has(k), `${name}: sets ${k}`)
@@ -164,12 +183,28 @@ test('KherveBET AI actions name the BET / Physisorption Analysis window\'s own c
   checkActions(BET_ACTIONS, desktop('libraries/ToolsMenu/BET_Analysis.py'), KHERVEBET_TOOL_SET)
 })
 
+test('KherveDilatometer AI actions name the Dilatometry Analysis window\'s own controls and handlers', () => {
+  checkActions(DIL_ACTIONS, desktop('libraries/ToolsMenu/DIL_Analysis.py'), KHERVEDILATOMETER_TOOL_SET)
+})
+
 test('KherveUVVis AI actions name the UV-Vis Analysis window\'s own controls and handlers', () => {
   checkActions(UVVIS_ACTIONS, desktop('libraries/ToolsMenu/UVVIS_Analysis.py'), KHERVEUVVIS_TOOL_SET)
 })
 
 test('KherveFTIR AI actions name the FTIR Analysis window\'s own controls and handlers', () => {
   checkActions(FTIR_ACTIONS, desktop('libraries/ToolsMenu/FTIR_Analysis.py'), KHERVEFTIR_TOOL_SET)
+})
+
+test('KherveAFM AI actions name the AFM Analysis window\'s own controls and handlers', () => {
+  checkActions(AFM_ACTIONS, desktop('libraries/ToolsMenu/AFM_Analysis.py'), KHERVEAFM_TOOL_SET)
+})
+
+test('KherveTEM AI actions name the TEM Analysis window\'s own controls and handlers', () => {
+  checkActions(TEM_ACTIONS, ['TEM_Analysis', 'TEM_Denoise', 'TEM_Filter'].map((f) => desktop(`libraries/ToolsMenu/${f}.py`)).join('\n'), KHERVETEM_TOOL_SET)
+})
+
+test('KherveEDX AI actions name the EDX HeatMap window\'s helpers', () => {
+  checkActions(EDX_ACTIONS, '', KHERVEEDX_TOOL_SET)
 })
 
 test('KherveRaman AI actions name the Raman Analysis window\'s own controls and handlers', () => {

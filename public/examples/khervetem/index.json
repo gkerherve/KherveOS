@@ -1,0 +1,12 @@
+{
+ "examples": [
+  {
+   "file": "Gold_nanoparticles_bright_field.png",
+   "title": "Gold nanoparticles on carbon (bright field, particles)"
+  },
+  {
+   "file": "Gold_lattice_fringes_HRTEM.png",
+   "title": "Gold lattice fringes (HRTEM, 0.0235 nm per pixel, FFT)"
+  }
+ ]
+}

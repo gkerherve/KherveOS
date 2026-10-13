@@ -59,7 +59,7 @@ def savefig(*a, **kw):
 
 
 def colorbar(*a, **kw):
-    return None
+    return gcf().colorbar(*a, **kw)
 
 
 def setp(obj, **kw):

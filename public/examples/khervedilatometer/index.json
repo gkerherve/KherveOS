@@ -1,0 +1,20 @@
+{
+ "examples": [
+  {
+   "file": "Alumina_bar_DIL402_5Kmin.csv",
+   "title": "Alumina bar - heat / dwell / cool (CTE)"
+  },
+  {
+   "file": "Zirconia_compact_sintering_1450C.csv",
+   "title": "Zirconia compact - sintering (Sintering tab)"
+  },
+  {
+   "file": "Steel_phase_transformation_dL_um.txt",
+   "title": "Steel - phase transformation, dL in micrometres"
+  },
+  {
+   "file": "Glass_Tg_bare_CSV.csv",
+   "title": "Glass - bare temperature / dL/L0 CSV"
+  }
+ ]
+}

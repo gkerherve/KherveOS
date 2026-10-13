@@ -1,6 +1,10 @@
 """matplotlib.cm for the recording matplotlib: the colour maps the tools sample (tab10, viridis…)."""
 
+import base64
+
 import numpy as np
+
+from .cmdata import TABLES as _TABLES
 
 _TAB10 = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
           '#17becf']
@@ -39,11 +43,24 @@ class Colormap:
         self._c = np.array([_rgb(c) + (1.0,) for c in colours])
         self.listed = listed
         self.N = len(colours) if listed else 256
+        self.table = False          # 256 exact entries (matplotlib's own), looked up rather than interpolated
+        self._bad = None
+
+    @staticmethod
+    def from_table(name, rgb256):
+        cm = Colormap(name, [])
+        cm._c = np.hstack([rgb256 / 255.0, np.ones((len(rgb256), 1))])
+        cm.table = True
+        cm.N = len(rgb256)
+        return cm
 
     def __call__(self, x, alpha=None, bytes=False):
         scalar = np.ndim(x) == 0
         x = np.atleast_1d(np.asarray(x, dtype=float))
-        if self.listed:
+        if self.table:
+            idx = np.clip((np.clip(np.nan_to_num(x, nan=0.0), 0, 1) * self.N).astype(int), 0, self.N - 1)
+            out = self._c[idx]
+        elif self.listed:
             if np.issubdtype(np.asarray(x).dtype, np.floating) and np.all((x >= 0) & (x <= 1)):
                 idx = np.clip((x * self.N).astype(int), 0, self.N - 1)
             else:
@@ -66,7 +83,16 @@ class Colormap:
         cm = Colormap(self.name + '_r', [], self.listed)
         cm._c = self._c[::-1].copy()
         cm.N = self.N
+        cm.table = self.table
         return cm
+
+    def lut256(self):
+        """The 256 x 3 uint8 table an image is coloured with."""
+        if self.table or self.listed:
+            n = len(self._c)
+            idx = np.clip((np.linspace(0, 1, 256) * n).astype(int), 0, n - 1)
+            return (self._c[idx][:, :3] * 255 + 0.5).astype(np.uint8)
+        return (self(np.linspace(0, 1, 256))[:, :3] * 255 + 0.5).astype(np.uint8)
 
     def resampled(self, n):
         return self
@@ -101,6 +127,9 @@ _REGISTRY = {'tab10': Colormap('tab10', _TAB10, True), 'tab20': Colormap('tab20'
 for _n, _c in _ANCHORS.items():
     _REGISTRY[_n] = Colormap(_n, _c)
     _REGISTRY[_n + '_r'] = _REGISTRY[_n].reversed()
+for _n, _b64 in _TABLES.items():       # matplotlib's own tables replace the few-colour approximations
+    _REGISTRY[_n] = Colormap.from_table(_n, np.frombuffer(base64.b64decode(_b64), dtype=np.uint8).reshape(256, 3))
+    _REGISTRY[_n + '_r'] = _REGISTRY[_n].reversed()
 for _n, _cm in list(_REGISTRY.items()):
     globals()[_n] = _cm
 
@@ -120,6 +149,11 @@ def get_cmap(name=None, lut=None):
     if isinstance(name, Colormap):
         return name
     return _REGISTRY.get(name or 'viridis', _REGISTRY['viridis'])
+
+
+def register_cmap(name=None, cmap=None, **kw):
+    if cmap is not None:
+        _REGISTRY[name or cmap.name] = cmap
 
 
 class ScalarMappable:

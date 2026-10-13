@@ -1,0 +1,341 @@
+/* Last Train: the 3D view fills the window; the HUD is drawn over it in the
+   game's own colours (white on the dark station, like the other playfields'
+   canvas art); the cards use the theme. */
+
+.lt-app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #070908;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.lt-app:focus {
+  outline: none;
+}
+.lt-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+/* ------------------------------------------------------------- HUD */
+
+.lt-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #f2f5ef;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+.lt-hidden {
+  visibility: hidden;
+}
+.lt-hurt {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(150, 0, 0, 0.55) 85%, rgba(90, 0, 0, 0.85));
+  transition: opacity 0.08s;
+}
+
+.lt-cross,
+.lt-hit {
+  --gap: 6px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+.lt-cross i {
+  position: absolute;
+  background: rgba(240, 255, 240, 0.9);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.9);
+}
+.lt-cross i:nth-child(1),
+.lt-cross i:nth-child(2) {
+  width: 2px;
+  height: 9px;
+  left: -1px;
+}
+.lt-cross i:nth-child(1) {
+  bottom: var(--gap);
+}
+.lt-cross i:nth-child(2) {
+  top: var(--gap);
+}
+.lt-cross i:nth-child(3),
+.lt-cross i:nth-child(4) {
+  height: 2px;
+  width: 9px;
+  top: -1px;
+}
+.lt-cross i:nth-child(3) {
+  right: var(--gap);
+}
+.lt-cross i:nth-child(4) {
+  left: var(--gap);
+}
+.lt-hit {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.lt-hit i {
+  position: absolute;
+  width: 2px;
+  height: 8px;
+  left: -1px;
+  top: -4px;
+  background: #fff;
+}
+.lt-hit[data-head='1'] i {
+  background: #ff5a3c;
+}
+.lt-hit i:nth-child(1) {
+  transform: rotate(45deg) translateY(-11px);
+}
+.lt-hit i:nth-child(2) {
+  transform: rotate(135deg) translateY(-11px);
+}
+.lt-hit i:nth-child(3) {
+  transform: rotate(225deg) translateY(-11px);
+}
+.lt-hit i:nth-child(4) {
+  transform: rotate(315deg) translateY(-11px);
+}
+
+.lt-top {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 22px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+.lt-top b {
+  font-size: 17px;
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+
+.lt-message {
+  position: absolute;
+  top: 24%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  animation: lt-in 0.45s ease-out;
+}
+.lt-message-main {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lt-message-sub {
+  margin-top: 4px;
+  font-size: 15px;
+  opacity: 0.85;
+}
+@keyframes lt-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(1.04);
+  }
+}
+
+.lt-health {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  width: 230px;
+}
+.lt-station {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-left: 4px solid;
+  background: rgba(0, 0, 0, 0.45);
+  margin-bottom: 8px;
+}
+.lt-bar {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.lt-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2fbf71, #8af0b4);
+  transition: width 0.2s;
+}
+.lt-bar-fill.lt-low {
+  background: linear-gradient(90deg, #c4331f, #ff7a5a);
+}
+.lt-hp {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.lt-hp b {
+  font-size: 22px;
+  margin-right: 3px;
+}
+
+.lt-ammo {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  text-align: right;
+}
+.lt-weapon {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.lt-rounds b {
+  font-size: 38px;
+  font-weight: 800;
+}
+.lt-rounds span {
+  font-size: 16px;
+  margin-left: 6px;
+  opacity: 0.7;
+}
+.lt-low-text {
+  color: #ff7a5a;
+}
+.lt-slots {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  font-size: 11px;
+  opacity: 0.6;
+}
+.lt-slots .lt-on {
+  opacity: 1;
+  color: #8af0b4;
+  font-weight: 700;
+}
+.lt-hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #ffd27a;
+}
+
+/* ------------------------------------------------------------- cards */
+
+.lt-card-wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.lt-card-wrap.lt-dead {
+  background: rgba(60, 0, 0, 0.45);
+  cursor: default;
+}
+.lt-card {
+  min-width: 300px;
+  max-width: min(460px, calc(100% - 32px));
+  padding: 22px 26px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--k-surface) 88%, transparent);
+  color: var(--k-text);
+  border: 1px solid var(--k-border);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  cursor: default;
+}
+.lt-title {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--k-accent);
+}
+.lt-title.lt-small {
+  font-size: 22px;
+}
+.lt-tag {
+  margin: 6px 0 14px;
+  color: var(--k-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.lt-keys {
+  margin: 10px auto 16px;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+.lt-keys th {
+  text-align: right;
+  padding: 3px 12px 3px 0;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.lt-keys td {
+  text-align: left;
+  color: var(--k-muted);
+}
+.lt-go {
+  min-width: 160px;
+  cursor: pointer;
+}
+.lt-best {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.lt-result {
+  display: flex;
+  justify-content: center;
+  gap: 26px;
+  margin: 14px 0;
+}
+.lt-result b {
+  display: block;
+  font-size: 26px;
+}
+.lt-result span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--k-muted);
+}
+.lt-scores {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  font-size: 12px;
+  text-align: left;
+}
+.lt-scores li {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.lt-scores li span:nth-child(2) {
+  color: var(--k-muted);
+}
+.lt-scores li.lt-on {
+  background: var(--k-selection);
+}

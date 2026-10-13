@@ -16,6 +16,10 @@ export interface ActionDef {
   range?: boolean
   /** The window's controls to set first, by attribute name. */
   set?: (a: RunArgs) => Record<string, unknown>
+  /** State of the window that is not a control (kAFM's profile line), set before the handler runs. */
+  attrs?: (a: RunArgs) => Record<string, unknown>
+  /** Handlers to run first, in order (kAFM: measure the watershed settings off the scan before counting grains). */
+  before?: (a: RunArgs) => string[]
   /** Arguments the handler takes instead of an event (e.g. on_auto_clean("Standard")). */
   args?: (a: RunArgs) => unknown[]
   /** Controls to read back (result boxes, tables). */
@@ -54,4 +58,11 @@ export function optList(o: Record<string, unknown>, key: string): string | undef
   const v = o[key]
   if (Array.isArray(v)) return v.join(', ')
   return optStr(o, key)
+}
+
+/** The entry of a window's choice list a model's wording points at (exact, then prefix, then contains). */
+export function pick(list: readonly string[], v: string | undefined): string | undefined {
+  if (!v) return undefined
+  const low = v.toLowerCase()
+  return list.find((m) => m.toLowerCase() === low) ?? list.find((m) => m.toLowerCase().startsWith(low)) ?? list.find((m) => m.toLowerCase().includes(low)) ?? v
 }

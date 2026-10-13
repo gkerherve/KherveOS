@@ -23,6 +23,8 @@ export interface TechDocState {
   vlines: Record<string, number>
   rangeActive: boolean
   sheets: string[]
+  /** What each sheet is, when the technique says (TechState.notes). */
+  notes: Record<string, string>
   sheet: string
   /** The project as Python sees it (a /home/user path, the same on the drive). */
   file: string
@@ -34,6 +36,8 @@ export interface TechDocState {
   canUndo: boolean
   canRedo: boolean
   status: string
+  /** The mouse events the tools listen to on the main plot. */
+  mpl: string[]
   busy: number
   progress: string | null
   message: { text: string; error: boolean } | null
@@ -112,13 +116,13 @@ export class TechDoc {
       parse: (out) => parseAnswers<Answer>(out),
     })
     this.store = createStore<TechDocState>(() => ({
-      info: null, ready: false, fig: null, vlines: {}, rangeActive: false, sheets: [], sheet: '', file: '', technique: null, right: null,
-      frames: {}, open: [], canUndo: false, canRedo: false, status: '', busy: 0, progress: null, message: null, loading: null,
+      info: null, ready: false, fig: null, vlines: {}, rangeActive: false, sheets: [], notes: {}, sheet: '', file: '', technique: null, right: null,
+      frames: {}, open: [], canUndo: false, canRedo: false, status: '', mpl: [], busy: 0, progress: null, message: null, loading: null,
     }))
     this.bridge.onBusy = (n) => this.set({ busy: n })
     this.bridge.onProgress = (t) => this.set({ progress: t })
     this.bridge.onLost = () => {
-      this.set({ ready: false, fig: null, frames: {}, open: [], right: null, sheets: [], sheet: '', file: '' })
+      this.set({ ready: false, fig: null, frames: {}, open: [], right: null, sheets: [], notes: {}, sheet: '', file: '' })
       this.arrays.clear()
       this.flash('Python stopped and started again: open the file again.', true)
       void this.start()
@@ -232,8 +236,8 @@ export class TechDoc {
     for (const f of s.frames ?? []) frames[f.id!] = f
     for (const id of Object.keys(frames).map(Number)) if (!s.open.includes(id)) delete frames[id]
     const patch: Partial<TechDocState> = {
-      vlines: s.vlines, rangeActive: s.rangeActive, sheets: s.sheets, sheet: s.sheet, file: s.file, technique: s.technique,
-      frames, open: s.open, canUndo: s.canUndo, canRedo: s.canRedo, status: s.status,
+      vlines: s.vlines, rangeActive: s.rangeActive, sheets: s.sheets, notes: s.notes ?? {}, sheet: s.sheet, file: s.file, technique: s.technique,
+      frames, open: s.open, canUndo: s.canUndo, canRedo: s.canRedo, status: s.status, mpl: s.mpl ?? [],
     }
     if (s.main) patch.fig = s.main
     if (s.right) patch.right = s.right

@@ -27,7 +27,7 @@ export interface McpTool {
 }
 
 /** Core tools that only read (ChatGPT, for one, asks less before them). */
-export const READ_ONLY_CORE = new Set(['list_files', 'read_file', 'search_files', 'list_apps', 'list_windows'])
+export const READ_ONLY_CORE = new Set(['list_files', 'read_file', 'search_files', 'list_apps', 'app_guide', 'list_windows'])
 /** Core tools that may overwrite or run code. */
 export const MAY_DESTROY_CORE = new Set(['write_file', 'create_notebook', 'run_python'])
 

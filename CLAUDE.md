@@ -51,6 +51,11 @@ free, open source, helping people. Avoid communist imagery (stars, hammer & sick
   serves `/mcp` (per-user bearer token) and keeps the last list for when no tab is open. Limits there: `MAX_TOOLS`, `MAX_TOOLS_JSON`.
 - Every registry app must have a tool set (`tools/tests/mcp-tools.test.ts`); ≤ 6 args per tool. Sending mail/messages,
   Terminal commands and anything destructive call `ctx.confirm(…)` first.
+- Every registry app must also have a guide (`src/os/ai/guides/`: what it is for, units and sheet names, the tool
+  sequence, pitfalls, apps it works with). A technique app is one `technique({…})` entry in `guides/techniques.ts`
+  (the test checks that every `run` action is mentioned); others go in the file of their kind (`index.ts` lists them).
+  The `app_guide` tool serves them; the bridge sends them to the server (MCP resources `kherveos://apps[/<id>]`, and
+  `app_guide` still answers from the saved copy when no tab is open). `tools/tests/app-guides.test.ts` says what is missing.
 - Tests: `node --test tools/tests/*.test.ts tools/tests/*.test.mjs`.
 
 ## Gotchas
@@ -73,7 +78,7 @@ free, open source, helping people. Avoid communist imagery (stars, hammer & sick
 - Games run their own servers (PlanetCraft 8123, SimAI 8137, FaceCraft 8140) because their pages use
   absolute `/api/...` paths; `server/kherveos_server/games.py` whitelists and starts them (system `python3`).
 
-## Technique apps (KherveTGA, KherveBET, … from KherveFitting-AI)
+## Technique apps (KherveTGA, KherveBET, KherveDilatometer, … from KherveFitting-AI)
 
 Each technique of the desktop KherveFitting-AI (`../KherveFittingPro`, dev-AI) is an app of its own
 on one base, `src/apps/khervetech/`: the desktop main window in that technique's mode (slim toolbar +
@@ -94,10 +99,18 @@ To add a technique (FTIR, Raman, UV-Vis, XRD, XAS, EELS…):
    the analysis window's openers, `window_attr` / `windows`, `extras` (its `draw_<tech>_extras`).
    If its code needs a wx widget, a matplotlib call or a desktop module the shims lack, add it there
    (the error names it), not in the desktop copy; NumPy-2 gaps go in `ktech/compat.py`.
-3. `src/apps/khervetech/spec.ts` → `TECH_APPS`; `src/apps/kherve<tech>/Kherve<Tech>.tsx` (3 lines, see
-   khervebet; kTGA has its own window on the same engine) and `actions.ts` (AI `run` actions: the window's control attributes and handlers).
-4. Registry entry (group Science, `image: '/icons/apps/kherve<tech>.png'`, `fileTypes: ['.kfit', …]`),
+3. `src/apps/khervetech/spec.ts` → `TECH_APPS`; `src/apps/kherve<tech>/Kherve<Tech>.tsx` (every technique app
+   uses the same window, `src/apps/khervetech/AnalysisApp.tsx`: an `AnalysisLook` of names / texts / icon, see kherveftir; the older
+   desktop-clone window `TechApp.tsx` is no longer used by any app, only its helpers) and `actions.ts` (AI `run` actions: the window's control attributes and handlers).
+4. Registry entry (group Materials, `image: '/icons/apps/kherve<tech>.png'`, `fileTypes: ['.kfit', …]`),
    `src/os/ai/manifests/kherve<tech>.ts` via `techniqueToolSet`, pushed in `appManifest.ts`.
+   Image techniques (AFM, TEM, EDX: micrographs, maps) add: `image_plot` / `sheet_plot` in `TECHS` (what draws a sheet on the main
+   plot), `packages` (scikit-image, pillow), an `ktech/openers.py` entry when the desktop's import takes one path, and AI actions
+   that need the mouse go through `module:function` calls of `ktech/` (`edx_tools.py`) or `attrs` / `before` of the run protocol.
+   The recording matplotlib (`py/shims/matplotlib`) draws images as PNGs (`AxesImage`, exact colour maps in `cmdata.py`, made by
+   `tools/make_cmaps.py`), colour bars, patheffects halos, and gives the tools real mouse events: the page forwards
+   press / release / motion / scroll of the main plot and of docked canvases to what they connected with `mpl_connect`
+   (`FigurePlot` `onMouse`, bridge op `mouse`); `RectangleSelector` / `SpanSelector` work. 3D axes are not drawn (AFM~3D says so).
 5. Tests: add the technique to `src/apps/khervetech/tests/engine.test.mjs` (real Pyodide:
    `KHERVEOS_PYODIDE=…/pyodide/pyodide.mjs node --test src/apps/khervetech/tests/*.mjs`) and its
    actions to `logic.test.mjs`; checklist `docs/parity/kherve<tech>.md`.

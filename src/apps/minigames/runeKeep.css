@@ -1,0 +1,320 @@
+/* Rune Keep: the 3D view fills the window; the status bar is the game's own
+   art (bronze and stone, like the classic shooters' bars); cards use the theme. */
+
+.rk-app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0806;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.rk-app:focus {
+  outline: none;
+}
+.rk-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+.rk-tint,
+.rk-hurt,
+.rk-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.rk-hurt {
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(160, 0, 0, 0.2) 30%, rgba(140, 0, 0, 0.75));
+}
+.rk-flash {
+  opacity: 0;
+  background: rgba(255, 200, 80, 0.22);
+}
+
+.rk-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #e8d6b0;
+  text-shadow: 0 1px 2px #000;
+}
+.rk-cross {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  background:
+    linear-gradient(#f0e0c0, #f0e0c0) center / 2px 14px no-repeat,
+    linear-gradient(#f0e0c0, #f0e0c0) center / 14px 2px no-repeat;
+  opacity: 0.75;
+  mix-blend-mode: screen;
+}
+.rk-log {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  font: 13px/1.5 'Courier New', monospace;
+}
+.rk-center {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: bold 22px 'Courier New', monospace;
+  letter-spacing: 0.08em;
+  animation: rk-in 0.3s ease-out;
+}
+@keyframes rk-in {
+  from {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+.rk-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(#3a2e22, #241a12);
+  border-top: 2px solid #6a5232;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.6);
+}
+.rk-inv {
+  display: flex;
+  gap: 2px;
+  padding: 3px 8px;
+  font: 11px 'Courier New', monospace;
+  background: rgba(0, 0, 0, 0.3);
+  flex-wrap: wrap;
+}
+.rk-inv > span {
+  padding: 1px 6px;
+  color: #6a5a44;
+  border-radius: 3px;
+}
+.rk-inv i {
+  font-style: normal;
+  margin-right: 3px;
+  opacity: 0.7;
+}
+.rk-inv .rk-have {
+  color: #d8c090;
+}
+.rk-inv .rk-cur {
+  background: #8a6a30;
+  color: #fff4d0;
+}
+.rk-inv .rk-ammos {
+  margin-left: auto;
+  color: #c8b080;
+}
+.rk-ammos b {
+  color: #f0c060;
+  margin-left: 6px;
+}
+.rk-main {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding: 6px 14px 8px;
+}
+.rk-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rk-cell b {
+  font: bold 34px/1 Impact, 'Arial Black', sans-serif;
+  color: #f0c060;
+  min-width: 64px;
+  letter-spacing: 0.02em;
+}
+.rk-cell b.rk-low {
+  color: #ff5040;
+}
+.rk-cell b.rk-dim {
+  color: #5a4a36;
+}
+.rk-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  border: 2px solid #6a5232;
+  background: #2a2018;
+}
+.rk-armor {
+  clip-path: polygon(10% 0, 90% 0, 100% 30%, 85% 100%, 15% 100%, 0 30%);
+}
+/* the status rune: green, amber, red as you get hurt */
+.rk-face {
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #b0f0a0, #2a8030);
+}
+.rk-face.rk-hurt1 {
+  background: radial-gradient(circle at 40% 35%, #f0d080, #a06010);
+}
+.rk-face.rk-hurt2 {
+  background: radial-gradient(circle at 40% 35%, #ff9080, #900a08);
+}
+.rk-face.rk-quadface {
+  box-shadow: 0 0 14px 4px #4060ff;
+}
+.rk-ammo-shells {
+  background: repeating-linear-gradient(90deg, #c02818 0 6px, #d0a040 6px 8px);
+}
+.rk-ammo-nails {
+  background: repeating-linear-gradient(0deg, #8a96a0 0 3px, #3a4048 3px 6px);
+}
+.rk-ammo-rockets {
+  background: linear-gradient(#d05030 0 30%, #5a5a4a 30%);
+}
+.rk-ammo-cells {
+  background: radial-gradient(circle, #a0d0ff, #2050c0);
+}
+.rk-ammo-none {
+  visibility: hidden;
+}
+.rk-keys {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.rk-key {
+  width: 12px;
+  height: 26px;
+  border-radius: 6px 6px 2px 2px;
+}
+.rk-key-silver {
+  background: linear-gradient(#ffffff, #8a9098);
+}
+.rk-key-gold {
+  background: linear-gradient(#fff0a0, #b07a10);
+}
+.rk-quad {
+  font: bold 14px 'Courier New', monospace;
+  color: #8aa0ff;
+  text-shadow: 0 0 8px #4060ff;
+}
+.rk-level {
+  margin-left: auto;
+  text-align: right;
+  font: 12px/1.4 'Courier New', monospace;
+  color: #c8b080;
+}
+.rk-level div:first-child {
+  font-weight: bold;
+  color: #f0d8a0;
+}
+
+/* ------------------------------------------------------------- cards */
+
+.rk-wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+.rk-wrap.rk-dead {
+  background: rgba(70, 0, 0, 0.5);
+  cursor: default;
+}
+.rk-card {
+  min-width: 300px;
+  max-width: min(480px, calc(100% - 32px));
+  padding: 22px 26px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--k-surface) 90%, transparent);
+  color: var(--k-text);
+  border: 1px solid var(--k-border);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  cursor: default;
+}
+.rk-title {
+  font: 800 32px Impact, 'Arial Black', sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--k-accent);
+}
+.rk-title.rk-small {
+  font-size: 22px;
+  letter-spacing: 0.04em;
+}
+.rk-tag {
+  margin: 6px 0 12px;
+  color: var(--k-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.rk-keystable {
+  margin: 10px auto 16px;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+.rk-keystable th {
+  text-align: right;
+  padding: 3px 12px 3px 0;
+  white-space: nowrap;
+}
+.rk-keystable td {
+  text-align: left;
+  color: var(--k-muted);
+}
+.rk-go {
+  min-width: 170px;
+  cursor: pointer;
+}
+.rk-best {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--k-muted);
+}
+.rk-stats {
+  display: flex;
+  justify-content: center;
+  gap: 26px;
+  margin: 14px 0;
+}
+.rk-stats b {
+  display: block;
+  font-size: 24px;
+}
+.rk-stats span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--k-muted);
+}
+.rk-scores {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  font-size: 12px;
+  text-align: left;
+}
+.rk-scores li {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.rk-scores li span:nth-child(2) {
+  color: var(--k-muted);
+}
+.rk-scores li.rk-on {
+  background: var(--k-selection);
+}

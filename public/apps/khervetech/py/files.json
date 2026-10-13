@@ -18,33 +18,43 @@
   "desktop/libraries/ViewMenu/Labels_Screen.py",
   "desktop/libraries/ViewMenu/TechniqueOverview.py",
   "desktop/libraries/ViewMenu/TechniqueToolbar.py",
+  "desktop/libraries/ViewMenu/XYMapViewer.py",
   "desktop/libraries/ViewMenu/__init__.py",
   "desktop/libraries/Widgets_Toolbars.py",
   "desktop/libraries/__init__.py",
   "ktech/__init__.py",
   "ktech/bridge.py",
   "ktech/compat.py",
+  "ktech/edx_tools.py",
   "ktech/frame.py",
+  "ktech/openers.py",
   "ktech/project.py",
   "ktech/techniques.py",
   "shims/libraries/Config_Edition.py",
   "shims/libraries/Sheet_Operations.py",
+  "shims/libraries/Utilities.py",
   "shims/matplotlib/__init__.py",
   "shims/matplotlib/_rec.py",
   "shims/matplotlib/axes.py",
   "shims/matplotlib/backends/__init__.py",
   "shims/matplotlib/backends/backend_agg.py",
+  "shims/matplotlib/backends/backend_wx.py",
   "shims/matplotlib/backends/backend_wxagg.py",
   "shims/matplotlib/cm.py",
+  "shims/matplotlib/cmdata.py",
   "shims/matplotlib/collections.py",
   "shims/matplotlib/colors.py",
   "shims/matplotlib/figure.py",
   "shims/matplotlib/lines.py",
   "shims/matplotlib/patches.py",
+  "shims/matplotlib/patheffects.py",
   "shims/matplotlib/pyplot.py",
   "shims/matplotlib/text.py",
   "shims/matplotlib/ticker.py",
   "shims/matplotlib/transforms.py",
+  "shims/matplotlib/widgets.py",
+  "shims/mpl_toolkits/__init__.py",
+  "shims/mpl_toolkits/axes_grid1.py",
   "shims/wx/__init__.py",
   "shims/wx/grid.py"
  ],
@@ -71,6 +81,21 @@
    "files": [
     "desktop/libraries/FileMenu/BET_Import.py",
     "desktop/libraries/ToolsMenu/BET_Analysis.py"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy"
+   ]
+  },
+  "DIL": {
+   "files": [
+    "desktop/libraries/FileMenu/TGA_Import.py",
+    "desktop/libraries/FileMenu/DIL_Import.py",
+    "desktop/libraries/ToolsMenu/DIL_Analysis.py"
    ],
    "wheels": [
     "openpyxl-3.1.2-py2.py3-none-any.whl",
@@ -129,6 +154,71 @@
     "numpy",
     "scipy",
     "pandas"
+   ]
+  },
+  "AFM": {
+   "files": [
+    "desktop/libraries/FileMenu/AFM_Import.py",
+    "desktop/libraries/ToolsMenu/AFM_Engine.py",
+    "desktop/libraries/ToolsMenu/AFM_Plot.py",
+    "desktop/libraries/ToolsMenu/AFM_Analysis.py",
+    "desktop/libraries/ViewMenu/HeatmapColours.py",
+    "desktop/libraries/ToolsMenu/SEM_Engine.py"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy",
+    "scikit-image"
+   ]
+  },
+  "TEM": {
+   "files": [
+    "desktop/libraries/EELS_Utilities.py",
+    "desktop/libraries/FileMenu/TEM_Import.py",
+    "desktop/libraries/ToolsMenu/TEM_Engine.py",
+    "desktop/libraries/ToolsMenu/TEM_Plot.py",
+    "desktop/libraries/ToolsMenu/TEM_Filter.py",
+    "desktop/libraries/ToolsMenu/TEM_Denoise.py",
+    "desktop/libraries/ToolsMenu/TEM_DenoisePlots.py",
+    "desktop/libraries/ToolsMenu/TEM_Analysis.py",
+    "desktop/libraries/ToolsMenu/SEM_Engine.py",
+    "desktop/libraries/ToolsMenu/SEM_Sheets.py",
+    "desktop/libraries/ThemeColours.py",
+    "desktop/libraries/EDX_Utilities.py",
+    "desktop/libraries/BCF_Reader.py",
+    "desktop/libraries/EMD_Reader.py",
+    "desktop/libraries/ToolsMenu/EDX_SEM_Analysis.py"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy",
+    "scikit-image",
+    "pillow"
+   ]
+  },
+  "EDX": {
+   "files": [
+    "desktop/libraries/ThemeColours.py",
+    "desktop/libraries/EDX_Utilities.py",
+    "desktop/libraries/BCF_Reader.py",
+    "desktop/libraries/EMD_Reader.py",
+    "desktop/libraries/ToolsMenu/EDX_SEM_Analysis.py"
+   ],
+   "wheels": [
+    "openpyxl-3.1.2-py2.py3-none-any.whl",
+    "et_xmlfile-1.1.0-py3-none-any.whl"
+   ],
+   "packages": [
+    "numpy",
+    "scipy"
    ]
   },
   "RAMAN": {

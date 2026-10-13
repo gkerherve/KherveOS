@@ -15,10 +15,12 @@ export interface TextStyle {
   rotation?: number
   family?: string
   bbox?: { fc: string | null; ec: string | null; alpha: number; pad: number }
+  /** patheffects.withStroke: an outline drawn behind the text */
+  halo?: { lw: number; color: string | null }
 }
 
 export interface ArtistJ extends TextStyle {
-  k: 'line' | 'axline' | 'scatter' | 'fill' | 'text' | 'annotation' | 'patch' | 'table' | 'error' | string
+  k: 'line' | 'axline' | 'scatter' | 'fill' | 'text' | 'annotation' | 'patch' | 'table' | 'image' | 'error' | string
   id: number
   label?: string
   hidden?: boolean
@@ -63,6 +65,11 @@ export interface ArtistJ extends TextStyle {
   // patch
   shape?: string
   geom?: Record<string, unknown>
+  // image (ax.imshow: a PNG, the colour map already applied)
+  src?: string
+  extent?: [number, number, number, number]
+  origin?: string
+  smooth?: boolean
   // table
   cells?: ({ t: string; fc: string | null; ec: string | null } & TextStyle | null)[][]
   fontsize?: number
@@ -153,6 +160,13 @@ export type Arrays = Map<string, (number | null)[]>
 
 // ------------------------------------------------------------------ wx widgets
 
+export interface TreeNodeJ {
+  id: number
+  text: string
+  open: boolean
+  kids: TreeNodeJ[]
+}
+
 export interface WxNode {
   t: string
   id?: number
@@ -196,6 +210,10 @@ export interface WxNode {
   inc?: number
   digits?: number
   float?: boolean
+  // canvases: the mouse events the tools connected
+  mpl?: string[]
+  // tree (wx.TreeCtrl)
+  tree?: TreeNodeJ[]
   // choice-like
   sel?: number
   editable?: boolean
@@ -297,6 +315,8 @@ export interface TechState {
   vlines: Record<string, number>
   rangeActive: boolean
   sheets: string[]
+  /** What each sheet is (techniques that say: kFTIR's "Reference: Polystyrene"). */
+  notes?: Record<string, string>
   sheet: string
   file: string
   technique: { key: string; icon: string; help: string } | null
@@ -306,6 +326,8 @@ export interface TechState {
   canUndo: boolean
   canRedo: boolean
   status: string
+  /** The matplotlib mouse events the tools connected on the main plot (button_press_event…). */
+  mpl?: string[]
   arrays: Record<string, (number | null)[]>
   effects: Effect[]
 }

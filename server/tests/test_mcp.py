@@ -107,8 +107,11 @@ class Tab:
         self.ws, self.id = ws, tab_id
         self.calls = []
 
-    def register(self, tools=TOOLS):
-        self.ws.send_json({"type": "mcp.tools", "tab": self.id, "tools": tools})
+    def register(self, tools=TOOLS, guides=None):
+        event = {"type": "mcp.tools", "tab": self.id, "tools": tools}
+        if guides is not None:
+            event["guides"] = guides
+        self.ws.send_json(event)
         ready = receive_until(self.ws, "mcp.ready", lambda e: e["tab"] == self.id)
         assert ready["tools"] == len(tools)
 
@@ -283,6 +286,103 @@ def test_no_tab_open(client):
     assert mcp.tool_names() == ["list_files", "delete"]
     reply = mcp.call("list_files")
     assert reply["result"]["isError"] is True and text_of(reply) == mcp_server.NO_TAB
+
+
+GUIDES = {
+    "index": "KherveOS apps by group (2).\n\n## Materials\n- kherveftir (kFTIR): Infrared spectra\n\n## Office\n- khervesheet (kSheet): Spreadsheets",
+    "apps": {
+        "kherveftir": {"name": "kFTIR", "group": "Materials", "use": "Infrared spectra", "text": "# kFTIR (kherveftir) - Materials\nWorkflow: ..."},
+        "khervesheet": {"name": "kSheet", "group": "Office", "use": "Spreadsheets", "text": "# kSheet (khervesheet) - Office\nWorkflow: ..."},
+    },
+}
+APP_GUIDE_TOOL = {
+    "name": "app_guide",
+    "description": "How to use an app.",
+    "inputSchema": {"type": "object", "properties": {"app": {"type": "string"}}, "required": []},
+    "annotations": {"title": "App guide", "readOnlyHint": True},
+}
+
+
+def test_instructions_teach_the_workflow():
+    text = mcp_server.INSTRUCTIONS
+    assert len(text) < 3000, len(text)
+    for word in ("app_guide", "list_apps", "<app>_<action>", "~", "window", "kherveos://apps", "asks the user"):
+        assert word in text, word
+
+
+def test_app_guides_are_resources(client):
+    make_user(client)
+    mcp = Mcp(client, token_for(client))
+    info = mcp.initialize()
+    assert "resources" in info["capabilities"]
+    assert mcp.rpc("resources/list")["result"]["resources"] == []  # nothing received yet
+
+    with client.websocket_connect("/api/ws") as ws:
+        Tab(ws).register(guides=GUIDES)
+        listed = mcp.rpc("resources/list")["result"]["resources"]
+        assert [r["uri"] for r in listed] == ["kherveos://apps", "kherveos://apps/kherveftir", "kherveos://apps/khervesheet"]
+        assert listed[1]["description"] == "Infrared spectra" and listed[1]["mimeType"] == "text/markdown"
+
+        index = mcp.rpc("resources/read", {"uri": "kherveos://apps"})["result"]["contents"][0]
+        assert index["text"] == GUIDES["index"] and index["uri"] == "kherveos://apps"
+        one = mcp.rpc("resources/read", {"uri": "kherveos://apps/kherveftir"})["result"]["contents"][0]
+        assert one["text"].startswith("# kFTIR (kherveftir)")
+        missing = mcp.rpc("resources/read", {"uri": "kherveos://apps/nothing"})
+        assert missing["error"]["code"] == -32002
+
+    # The tab has closed: the guides are still served (from the saved copy).
+    assert len(mcp.rpc("resources/list")["result"]["resources"]) == 3
+
+
+def test_app_guide_is_answered_when_no_tab_is_open(client):
+    make_user(client)
+    mcp = Mcp(client, token_for(client))
+    mcp.initialize()
+    with client.websocket_connect("/api/ws") as ws:
+        Tab(ws).register(tools=[*TOOLS, APP_GUIDE_TOOL], guides=GUIDES)
+    assert "app_guide" in mcp.tool_names()
+
+    index = text_of(mcp.call("app_guide"))
+    assert index.startswith("KherveOS apps by group") and "not open" in index
+    by_name = text_of(mcp.call("app_guide", {"app": "kFTIR"}))
+    assert by_name.startswith("# kFTIR (kherveftir) - Materials") and "not open" in by_name
+    assert text_of(mcp.call("app_guide", {"app": "kSheet"})).startswith("# kSheet")
+    bad = mcp.call("app_guide", {"app": "nothing"})
+    assert bad["result"]["isError"] is True and "kherveftir, khervesheet" in text_of(bad)
+    # Other tools still say to open KherveOS.
+    assert text_of(mcp.call("list_files")) == mcp_server.NO_TAB
+
+    # With a tab open the call goes to the tab, which holds the live guides.
+    with client.websocket_connect("/api/ws") as ws:
+        tab = Tab(ws)
+        tab.register(tools=[*TOOLS, APP_GUIDE_TOOL])
+        thread = tab.answer(lambda e: {"ok": True, "result": "live guide"})
+        assert text_of(mcp.call("app_guide", {"app": "kFTIR"})) == "live guide"
+        thread.join(5)
+
+
+def test_guides_without_a_saved_copy_say_to_open_kherveos(client):
+    make_user(client)
+    mcp = Mcp(client, token_for(client))
+    mcp.initialize()
+    with client.websocket_connect("/api/ws") as ws:
+        Tab(ws).register(tools=[*TOOLS, APP_GUIDE_TOOL])  # an old KherveOS page sends no guides
+    assert text_of(mcp.call("app_guide")) == mcp_server.NO_TAB
+
+
+def test_bad_guides_are_ignored(client):
+    user = make_user(client)
+    clean = mcp_server._clean_guides
+    assert clean("nope") is None and clean({"index": "x"}) is None and clean({"index": "x", "apps": {}}) is None
+    assert clean({"index": "x", "apps": {"bad id!": {"text": "t"}, "ok": {"text": ""}, "also": "junk"}}) is None
+    kept = clean({"index": "x", "apps": {"ok": {"text": "t"}}})
+    assert kept == {"index": "x", "apps": {"ok": {"name": "ok", "group": "", "use": "", "text": "t"}}}
+    huge = {"index": "x", "apps": {f"a{i}": {"text": "y" * 20_000} for i in range(40)}}
+    assert clean(huge) is None  # over MAX_GUIDES_JSON
+    with client.websocket_connect("/api/ws") as ws:
+        ws.send_json({"type": "mcp.tools", "tab": "tab-one", "tools": TOOLS, "guides": "junk"})
+        receive_until(ws, "mcp.ready")
+    assert client.portal.call(mcp_server.relay.guides_for, user["id"]) is None
 
 
 def test_closing_the_tab_ends_a_waiting_call(client):

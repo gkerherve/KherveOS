@@ -92,7 +92,7 @@ export function ModalFrame({ spec, arrays, done }: { spec: ModalSpec; arrays: Ar
   }
   return (
     <div className="kt-modal-back">
-      <div className="kf-float kt-float kt-modal" style={{ position: 'relative', width: Math.min(560, Math.max(320, spec.frame?.size[0] ?? 400)) }}>
+      <div className="kf-float kt-float kt-modal" style={{ position: 'relative', width: Math.min(560, Math.max(320, spec.frame?.size?.[0] ?? 400)) }}>
         <div className="kf-float-title">
           <span>{spec.frame?.title ?? 'KherveFitting'}</span>
           <button type="button" className="kf-float-close" onClick={() => done({ id: WX.ID_CANCEL })}>

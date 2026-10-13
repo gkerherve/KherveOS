@@ -79,6 +79,8 @@ GridCellTextEditor = GridCellNumberEditor = GridCellFloatEditor = GridCellAutoWr
 
 class Grid(wx.Window):
     _kind = 'Grid'
+    # wx.grid.Grid.GridSelectionModes (the desktop's SetSelectionMode(wx.grid.Grid.SelectRows))
+    SelectCells, SelectRows, SelectColumns, SelectRowsOrColumns = 0, 1, 2, 3
 
     def __init__(self, parent=None, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.WANTS_CHARS,
                  name='grid'):

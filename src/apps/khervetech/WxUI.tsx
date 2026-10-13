@@ -12,7 +12,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { FigurePlot } from './FigurePlot'
-import { WX, type Arrays, type WxItem, type WxNode } from './types'
+import { WX, type Arrays, type TreeNodeJ, type WxItem, type WxNode } from './types'
 
 export interface WxMsg {
   id: number
@@ -42,6 +42,22 @@ const useWx = () => useContext(Ctx)!
 const FillCtx = createContext(false)
 
 const bound = (n: WxNode, ev: string) => !!n.ev?.includes(ev)
+
+/** An icon the engine names: a file of the shared icon set, or a drawing it made itself (a data: URI). */
+const iconSrc = (name: string) => (name.startsWith('data:') ? name : `${import.meta.env.BASE_URL}apps/khervetech/icons/${name}`)
+
+/** A control's label as wx shows it: "&&" is a literal "&", a single "&" marks the mnemonic key (not drawn here). */
+const mnemonic = (s: string | undefined) => s?.replace(/&(.)/g, '$1')
+
+/** Readable text on a background the desktop code chose (cells it paints), whatever the OS theme: dark ink on light, white on dark. */
+function inkFor(bg: string | undefined): string | undefined {
+  if (!bg) return undefined
+  const hex = bg.trim().match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i)
+  const rgb = hex ? hex.slice(1, 4).map((x) => parseInt(x, 16)) : bg.match(/\d+(\.\d+)?/g)?.slice(0, 3).map(Number)
+  if (!rgb || rgb.length < 3 || rgb.some((x) => Number.isNaN(x))) return undefined
+  const [r, g, b] = rgb
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#1d1d1d' : '#fff'
+}
 
 function look(n: WxNode): CSSProperties {
   const s: CSSProperties = {}
@@ -117,7 +133,7 @@ function SizerView({ node }: { node: WxNode }) {
   if (node.box !== undefined)
     return (
       <fieldset className={`kt-staticbox kt-${o === 'g' ? 'v' : o}`} disabled={node.en === false}>
-        <legend>{node.box}</legend>
+        <legend>{mnemonic(node.box)}</legend>
         {inner}
       </fieldset>
     )
@@ -186,6 +202,8 @@ export function WxView({ node }: { node: WxNode }) {
       return <RadioView node={node} />
     case 'RadioBox':
       return <RadioBoxView node={node} />
+    case 'Tree':
+      return <TreeView node={node} />
     case 'CheckList':
     case 'List':
       return <ListView node={node} />
@@ -202,7 +220,7 @@ export function WxView({ node }: { node: WxNode }) {
     case 'Slider':
       return <SliderView node={node} />
     case 'Bitmap':
-      return node.src ? <img src={`${import.meta.env.BASE_URL}apps/khervetech/icons/${node.src}`} alt="" /> : null
+      return node.src ? <img src={iconSrc(node.src)} alt="" /> : null
     case 'Splitter':
       return (
         <div className={`kt-box kt-${node.vertical ? 'h' : 'v'} kt-splitterwin`}>
@@ -237,8 +255,8 @@ function ButtonView({ node }: { node: WxNode }) {
       title={node.tip}
       onClick={() => send({ id: node.id!, type: 'button', value: node.t === 'Toggle' ? !node.value : undefined })}
     >
-      {node.icon && <img src={`${import.meta.env.BASE_URL}apps/khervetech/icons/${node.icon}`} alt="" width={20} height={20} />}
-      {node.label}
+      {node.icon && <img src={iconSrc(node.icon)} alt="" width={20} height={20} />}
+      {mnemonic(node.label)}
     </button>
   )
 }
@@ -369,7 +387,7 @@ function CheckView({ node }: { node: WxNode }) {
           else setValue(e.target.checked)
         }}
       />
-      {node.label}
+      {mnemonic(node.label)}
     </label>
   )
 }
@@ -379,7 +397,7 @@ function RadioView({ node }: { node: WxNode }) {
   return (
     <label className="kt-check" title={node.tip} style={look(node)}>
       <input type="radio" checked={!!node.value} disabled={node.en === false || disabled} onChange={() => send({ id: node.id!, type: 'radio', value: true })} />
-      {node.label}
+      {mnemonic(node.label)}
     </label>
   )
 }
@@ -389,7 +407,7 @@ function RadioBoxView({ node }: { node: WxNode }) {
   const items = node.items as unknown as string[]
   return (
     <fieldset className="kt-staticbox">
-      <legend>{node.label}</legend>
+      <legend>{mnemonic(node.label)}</legend>
       <div className="kt-grid" style={{ gridTemplateColumns: `repeat(${Number(node.cols) || 1}, auto)` }}>
         {items.map((s, i) => (
           <label key={i} className="kt-check">
@@ -402,6 +420,37 @@ function RadioBoxView({ node }: { node: WxNode }) {
   )
 }
 
+function TreeView({ node }: { node: WxNode }) {
+  const { send, disabled } = useWx()
+  const row = (n: TreeNodeJ, depth: number): ReactNode => (
+    <div key={n.id}>
+      <div
+        className={`kt-listitem kt-treeitem${n.id === node.sel ? ' kt-sel' : ''}`}
+        style={{ paddingLeft: 6 + depth * 14 }}
+        onClick={() => !disabled && send({ id: node.id!, type: 'select', item: n.id })}
+        onDoubleClick={() => !disabled && send({ id: node.id!, type: 'dclick', item: n.id })}
+      >
+        <span
+          className="kt-twisty"
+          onClick={(e) => {
+            e.stopPropagation()
+            if (n.kids.length && !disabled) send({ id: node.id!, type: 'toggle', item: n.id })
+          }}
+        >
+          {n.kids.length ? (n.open ? '▾' : '▸') : ''}
+        </span>
+        {n.text}
+      </div>
+      {n.open && n.kids.map((k) => row(k, depth + 1))}
+    </div>
+  )
+  return (
+    <div className="kt-listbox" style={sizeStyle(node, useContext(FillCtx))} title={node.tip}>
+      {(node.tree ?? []).map((n) => row(n, 0))}
+    </div>
+  )
+}
+
 function ListView({ node }: { node: WxNode }) {
   const { send, disabled, pending, setPending } = useWx()
   const items = node.items as unknown as string[]
@@ -410,7 +459,7 @@ function ListView({ node }: { node: WxNode }) {
   const checked = local?.checked ?? node.checked ?? []
   const sel = local?.sel ?? node.sel ?? -1
   return (
-    <div className="kt-listbox" style={sizeStyle(node, useContext(FillCtx))} title={node.tip}>
+    <div className="kt-listbox" style={{ ...sizeStyle(node, useContext(FillCtx)), height: node.h && node.h > 0 ? node.h : undefined }} title={node.tip}>
       {items.map((s, i) => (
         <div
           key={i}
@@ -500,7 +549,7 @@ function GridView({ node }: { node: WxNode }) {
                   <td
                     key={c}
                     className={cursor[0] === r && cursor[1] === c ? 'kt-cursor' : ''}
-                    style={{ background: bgs.get(`${r},${c}`) }}
+                    style={{ background: bgs.get(`${r},${c}`), color: inkFor(bgs.get(`${r},${c}`)) }}
                     onClick={() => select(r, c)}
                     onDoubleClick={() => {
                       if (!disabled && node.editable && !ro.has(`${r},${c}`)) setEdit({ r, c, v })
@@ -571,7 +620,14 @@ function CanvasView({ node }: { node: WxNode }) {
   const ref = useRef<HTMLDivElement>(null)
   return (
     <div className="kt-canvas" ref={ref} style={sizeStyle(node, useContext(FillCtx))}>
-      <FigurePlot fig={node.fig ?? null} arrays={arrays} still onDoubleClick={() => bound(node, 'EVT_LEFT_DCLICK') && send({ id: node.id!, type: 'dclick' })} />
+      <FigurePlot
+        fig={node.fig ?? null}
+        arrays={arrays}
+        still
+        mouseEvents={node.mpl}
+        onMouse={(m) => send({ id: node.id!, type: 'mouse', ...m })}
+        onDoubleClick={() => bound(node, 'EVT_LEFT_DCLICK') && send({ id: node.id!, type: 'dclick' })}
+      />
     </div>
   )
 }

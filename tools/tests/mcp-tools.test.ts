@@ -57,7 +57,7 @@ test('the registry and the tool manifest agree', () => {
 })
 
 test('the OS tools open, list, arrange and close any app\'s windows', () => {
-  for (const name of ['list_apps', 'open_app', 'open_file', 'list_windows', 'arrange_window', 'close_window', 'take_screenshot']) {
+  for (const name of ['list_apps', 'app_guide', 'open_app', 'open_file', 'list_windows', 'arrange_window', 'close_window', 'take_screenshot']) {
     assert.ok(core.names.includes(name), `${name} is a core tool`)
   }
 })
@@ -102,4 +102,11 @@ test('what Claude sees', () => {
   for (const d of appDefs) byApp.set(d.app!, (byApp.get(d.app!) ?? 0) + 1)
   const line = [...byApp].map(([a, n]) => `${a} ${n}`).join(', ')
   console.log(`${listed.length} tools: ${core.names.length} OS tools + ${appDefs.length} app tools (${line})`)
+  const maxTools = serverLimit('MAX_TOOLS')
+  const maxJson = serverLimit('MAX_TOOLS_JSON')
+  const appJson = JSON.stringify(toMcpTools(appDefs)).length
+  console.log(
+    `room: ${maxTools - listed.length} tools under MAX_TOOLS ${maxTools} (${Math.floor((maxTools * 0.8 - listed.length) / 8)} more apps of 8 tools before the 80 % margin); ` +
+      `app tools ${appJson} bytes of JSON (about ${Math.round(appJson / appDefs.length)} per tool) + core at most ${core.size}: ${Math.round(((appJson + core.size) / maxJson) * 100)} % of MAX_TOOLS_JSON ${maxJson}`,
+  )
 })

@@ -240,4 +240,4 @@ desktop source (dev branches) and ../khervefitting-web/public/screenshots/tools/
       KherveBET written 2026-10-08, UNCOMMITTED, not yet seen in a browser: run the test lists at the end of
       docs/parity/khervetga.md and docs/parity/kherve-bet.md, then commit. Next: FTIR, Raman, UV-Vis, XRD, XAS, EELS
       (CLAUDE.md, "Technique apps").
-- [ ] Redesign KherveTGA/KherveBET with KherveOS's own look and icons (not the wx copy); keep only the analysis logic. Then FTIR, Raman, UV-Vis, XRD, XAS, EELS the same way.
+- [ ] Redesign KherveTGA/KherveBET with KherveOS's own look and icons (not the wx copy); keep only the analysis logic. Then FTIR, Raman, UV-Vis, XRD, XAS, EELS the same way. kTGA is done (its window is now the shared `src/apps/khervetech/AnalysisApp.tsx`); kDilatometer (2026-10-09, UNCOMMITTED) is the first second user of it: docs/parity/khervedilatometer.md. BET, UV-Vis, FTIR, Raman still use the wx-copy `TechApp`.

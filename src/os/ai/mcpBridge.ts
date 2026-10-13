@@ -5,7 +5,8 @@
 // but the tools run here, in the browser, where the drive, the windows and
 // Python are. Over the realtime websocket (/api/ws):
 //
-//   tab → server   mcp.tools  {tab, tools}           on connect: the tools this tab offers
+//   tab → server   mcp.tools  {tab, tools, guides?}   on connect: the tools this tab offers, and the app
+//                                                     guides (guides/core.ts GuideBundle) when they changed
 //                  mcp.active {tab}                  the user came back to this tab
 //                  mcp.result {id, ok, result|error}
 //                  mcp.bye    {tab}                  the page is closing
@@ -24,6 +25,7 @@ import { realtime, useRealtime, type ServerEvent } from '@/os/server'
 import { allTools, runTool, type ToolResult } from './tools'
 import { appToolRegistry } from './appTools'
 import { toMcpTools } from './mcpCore'
+import { appGuideBundle } from './guides/runtime'
 
 export interface McpActivity {
   id: string
@@ -110,11 +112,21 @@ let stopBridge: (() => void) | null = null
 export function startMcpBridge(): () => void {
   if (stopBridge) return stopBridge
   let sent = ''
+  let sentGuides = ''
   const register = () => {
     const tools = mcpToolList()
     sent = JSON.stringify(tools)
+    // The guides (about 100 KB) go with the first list of a connection and again only if they changed:
+    // the server keeps them for MCP resources and for when no tab is open.
+    const guides = appGuideBundle()
+    const guidesJson = JSON.stringify(guides)
+    const event: ServerEvent = { type: 'mcp.tools', tab: TAB, tools }
+    if (guidesJson !== sentGuides) {
+      event.guides = guides
+      sentGuides = guidesJson
+    }
     useMcpBridge.setState({ registered: null })
-    realtime.send({ type: 'mcp.tools', tab: TAB, tools })
+    realtime.send(event)
   }
   // App windows come and go: send the list again when it is different.
   let timer: number | null = null
@@ -131,8 +143,10 @@ export function startMcpBridge(): () => void {
   const bye = () => realtime.send({ type: 'mcp.bye', tab: TAB })
   const offs: (() => unknown)[] = [
     useRealtime.subscribe((s, prev) => {
-      if (s.connected && !prev.connected) register()
-      else if (!s.connected && prev.connected) useMcpBridge.setState({ registered: null })
+      if (s.connected && !prev.connected) {
+        sentGuides = '' // a new connection: the server may have restarted
+        register()
+      } else if (!s.connected && prev.connected) useMcpBridge.setState({ registered: null })
     }),
     realtime.on('mcp.ready', (ev) => {
       if (ev.tab === TAB) useMcpBridge.setState({ registered: typeof ev.tools === 'number' ? ev.tools : 0 })

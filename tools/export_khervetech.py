@@ -80,7 +80,8 @@ PARTIAL = {
     "libraries/Plot_Operations.py": {
         "imports": "import re\n",
         "names": ["_TECHNIQUE_AXES", "plain_axis_label", "is_optical_sheet", "axis_labels_for_sheet", "is_xps_like_sheet",
-                  "sheet_x_is_forward", "is_image_sheet", "_plot_ftir_overlays"],
+                  "sheet_x_is_forward", "is_image_sheet", "_plot_ftir_overlays", "PlotManager.plot_edx_data", "PlotManager.apply_edx_plot_style",
+                  "PlotManager.plot_profile"],
     },
     "libraries/ViewMenu/Labels_Screen.py": {
         "imports": ("import math\nfrom matplotlib.patches import (Rectangle, Circle, FancyArrowPatch, Polygon,\n"
@@ -105,9 +106,16 @@ PARTIAL = {
                   "get_xrd_instrument_path", "Init_Measurement_Data", "build_core_level_Data", "add_core_level_Data",
                   "add_peak_to_core_level_Data"],
     },
+    "libraries/ViewMenu/XYMapViewer.py": {
+        # the draggable rectangle the TEM / EDX windows use for regions (a RotatableRectangle that hit-tests in display pixels)
+        "imports": "import numpy as np\n",
+        "names": ["_make_grid_rotatable"],
+    },
     "libraries/Widgets_Toolbars.py": {
         "imports": "",
         "names": ["open_*_analysis_window", "open_bet_analysis_window", "on_open_eels_window"],
+        # File > New: the image imports (AFM / TEM / EDX) start a fresh project and close the tool windows of the old one
+        "tail": "\n\ndef on_new(window):\n    from ktech import bridge\n    bridge.op_new({})\n    return True\n",
     },
     "libraries/FileMenu/Open.py": {
         "imports": "import os\nimport re\nimport json\nimport wx\n",
@@ -155,6 +163,17 @@ TECHNIQUES = {
         ],
         "examples": "BET",
     },
+    "dil": {
+        "key": "DIL",
+        "app": "khervedilatometer",
+        "icon": "Tech-DIL-3.png",
+        "modules": [
+            "libraries/FileMenu/TGA_Import.py",  # DIL_Import reads the same NETZSCH CSV with its parser
+            "libraries/FileMenu/DIL_Import.py",
+            "libraries/ToolsMenu/DIL_Analysis.py",
+        ],
+        "examples": "Dilatometry",
+    },
     "uvvis": {
         "key": "UVVIS",
         "app": "kherveuvvis",
@@ -184,6 +203,60 @@ TECHNIQUES = {
         "packages": ["numpy", "scipy", "pandas"],
         "example_files": ["FTIR Library/Polystyrene_synthetic.jdx", "FTIR Library/PMMA_synthetic.jdx",
                           "FTIR Library/Ethanol_synthetic.jdx", "FTIR Library/CaCO3_calcite_synthetic.jdx"],
+    },
+    "afm": {
+        "key": "AFM",
+        "app": "kherveafm",
+        "icon": "Tech-AFM-3.png",
+        "modules": [
+            "libraries/FileMenu/AFM_Import.py",
+            "libraries/ToolsMenu/AFM_Engine.py",
+            "libraries/ToolsMenu/AFM_Plot.py",
+            "libraries/ToolsMenu/AFM_Analysis.py",
+            "libraries/ViewMenu/HeatmapColours.py",
+            "libraries/ToolsMenu/SEM_Engine.py",
+        ],
+        "examples": "AFM",
+        "packages": ["numpy", "scipy", "scikit-image"],
+    },
+    "tem": {
+        "key": "TEM",
+        "app": "khervetem",
+        "icon": "Tech-TEM-3.png",
+        "modules": [
+            "libraries/EELS_Utilities.py",
+            "libraries/FileMenu/TEM_Import.py",
+            "libraries/ToolsMenu/TEM_Engine.py",
+            "libraries/ToolsMenu/TEM_Plot.py",
+            "libraries/ToolsMenu/TEM_Filter.py",
+            "libraries/ToolsMenu/TEM_Denoise.py",
+            "libraries/ToolsMenu/TEM_DenoisePlots.py",
+            "libraries/ToolsMenu/TEM_Analysis.py",
+            "libraries/ToolsMenu/SEM_Engine.py",
+            "libraries/ToolsMenu/SEM_Sheets.py",
+            # the draggable region rectangle (XYMapViewer._make_grid_rotatable) is the EDX window's RotatableRectangle
+            "libraries/ThemeColours.py",
+            "libraries/EDX_Utilities.py",
+            "libraries/BCF_Reader.py",
+            "libraries/EMD_Reader.py",
+            "libraries/ToolsMenu/EDX_SEM_Analysis.py",
+        ],
+        "examples": "TEM",
+        "packages": ["numpy", "scipy", "scikit-image", "pillow"],
+    },
+    "edx": {
+        "key": "EDX",
+        "app": "kherveedx",
+        "icon": "Tech-EDX-3.png",
+        "modules": [
+            "libraries/ThemeColours.py",
+            "libraries/EDX_Utilities.py",
+            "libraries/BCF_Reader.py",
+            "libraries/EMD_Reader.py",
+            "libraries/ToolsMenu/EDX_SEM_Analysis.py",
+        ],
+        "examples": "EDX",
+        "packages": ["numpy", "scipy"],
     },
     "raman": {
         "key": "RAMAN",
@@ -482,7 +555,254 @@ def make_bet_examples(out: Path) -> list[dict]:
     return made
 
 
-MAKERS = {"tga": make_tga_examples, "bet": make_bet_examples}
+def make_dil_examples(out: Path) -> list[dict]:
+    """Synthetic pushrod dilatometer runs in the formats DIL_Import reads (the desktop ships none)."""
+    import random
+    random.seed(23)
+    made = []
+
+    def programme(points):
+        """[(T, segment)] of a heat / dwell / cool programme: points = [(t0, t1, step, segment)]."""
+        rows = []
+        for t0, t1, step, seg in points:
+            n = max(1, int(round(abs(t1 - t0) / step)))
+            for i in range(n + 1):
+                rows.append((t0 + (t1 - t0) * i / n, seg))
+        return rows
+
+    # 1. Alumina bar, NETZSCH DIL 402 export: heat to 1000 degC at 5 K/min, a 20 min dwell, cool back.
+    #    alpha rises from 6.5 to 9.5e-6 /K, so the CTE tab has something to show; the cooling branch retraces it.
+    def alumina(T):
+        return 6.5e-6 * (T - 25) + 1.5e-9 * (T - 25) ** 2
+
+    rows = []
+    t = 0.0
+    for T, seg in programme([(25, 1000, 2.5, 1)]):
+        rows.append([T + random.gauss(0, 0.05), t, alumina(T) + random.gauss(0, 1.5e-6), seg])
+        t += 0.5
+    for _ in range(40):
+        rows.append([1000 + random.gauss(0, 0.05), t, alumina(1000) + 2e-6 + random.gauss(0, 1.5e-6), 2])
+        t += 0.5
+    for T, seg in programme([(1000, 25, 5.0, 3)]):
+        rows.append([T + random.gauss(0, 0.05), t, alumina(T) + 2e-6 + random.gauss(0, 1.5e-6), seg])
+        t += 1.0
+    _netzsch(out / "Alumina_bar_DIL402_5Kmin.csv",
+             {"EXPORTTYPE": "DATA ALL", "FILE": "Al2O3_bar.ngb-sd3", "FORMAT": "NETZSCH5", "MTYPE": "DIL",
+              "INSTRUMENT": "NETZSCH DIL 402 (synthetic)", "SAMPLE": "Alumina reference bar",
+              "SAMPLE LENGTH /mm": "25.00", "OPERATOR": "KherveOS example",
+              "RANGE": "25/5.0(K/min)/1000/20(min)/-10.0(K/min)/25", "DECIMAL": "POINT", "SEPARATOR": "COMMA"},
+             ["Temp./°C", "Time/min", "dL/Lo", "Segment"], rows)
+    made.append({"file": "Alumina_bar_DIL402_5Kmin.csv", "title": "Alumina bar - heat / dwell / cool (CTE)"})
+
+    # 2. A green zirconia compact sintered to 1450 degC: expansion to about 900 degC, then a shrinkage of ~20 %
+    #    (onset near 950, fastest near 1250), more shrinkage in the dwell, and a clean cooling branch.
+    def green(T):
+        shrink = -0.205 * _sigmoid(T, 1255, 70)
+        return 9.5e-6 * (T - 25) + shrink
+
+    rows = []
+    t = 0.0
+    for T, seg in programme([(25, 1450, 5.0, 1)]):
+        rows.append([T + random.gauss(0, 0.1), t, green(T) + random.gauss(0, 4e-5), seg])
+        t += 0.5
+    soak = rows[-1][2]
+    for i in range(120):
+        extra = -0.012 * (1 - math.exp(-i / 40.0))
+        rows.append([1450 + random.gauss(0, 0.1), t, soak + extra + random.gauss(0, 4e-5), 2])
+        t += 1.0
+    end_heat = rows[-1][2]
+    for T, seg in programme([(1450, 25, 10.0, 3)]):
+        rows.append([T + random.gauss(0, 0.1), t, end_heat + 10.5e-6 * (T - 1450) + random.gauss(0, 4e-5), seg])
+        t += 1.0
+    _netzsch(out / "Zirconia_compact_sintering_1450C.csv",
+             {"EXPORTTYPE": "DATA ALL", "FORMAT": "NETZSCH5", "MTYPE": "DIL", "INSTRUMENT": "NETZSCH DIL 402 (synthetic)",
+              "SAMPLE": "3Y-TZP green compact", "SAMPLE LENGTH /mm": "12.40", "OPERATOR": "KherveOS example",
+              "RANGE": "25/5.0(K/min)/1450/2(h)/-10.0(K/min)/25"},
+             ["Temp./°C", "Time/min", "dL/Lo", "Segment"], rows)
+    made.append({"file": "Zirconia_compact_sintering_1450C.csv", "title": "Zirconia compact - sintering (Sintering tab)"})
+
+    # 3. Low-alloy steel: ferrite -> austenite contraction on heating (Ac1 ~ 735), the reverse on cooling
+    #    (Ar1 ~ 640). Absolute dL in micrometres plus the sample length, so the importer forms dL/L0.
+    def steel(T, heating):
+        lin = 14.0e-6 * (T - 25)
+        if heating:
+            return lin - 1.7e-3 * _sigmoid(T, 740, 7) + 1.0e-6 * (T - 25) * _sigmoid(T, 740, 7)
+        return lin - 1.7e-3 * _sigmoid(T, 645, 9) + 1.0e-6 * (T - 25) * _sigmoid(T, 645, 9) + 2.0e-4
+
+    L0 = 10.0
+    rows = []
+    t = 0.0
+    for T, seg in programme([(25, 950, 2.0, 1)]):
+        rows.append([T, t, steel(T, True) * L0 * 1000 + random.gauss(0, 0.02), seg])
+        t += 0.2
+    for T, seg in programme([(950, 25, 5.0, 2)]):
+        rows.append([T, t, steel(T, False) * L0 * 1000 + random.gauss(0, 0.02), seg])
+        t += 0.3
+    lines = ["Linseis L75 dilatometer (synthetic example)", "Sample\t42CrMo4 steel, 10 mm rod",
+             "Sample Length (mm)\t10.0", "Heating 10 K/min to 950 degC, cooling 10 K/min", "",
+             "Temperature [°C]\tTime [min]\tdL [µm]\tSegment"]
+    for r in rows:
+        lines.append(f"{r[0]:.2f}\t{r[1]:.3f}\t{r[2]:.3f}\t{r[3]}")
+    (out / "Steel_phase_transformation_dL_um.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    made.append({"file": "Steel_phase_transformation_dL_um.txt", "title": "Steel - phase transformation, dL in micrometres"})
+
+    # 4. A bare temperature / dL/L0 CSV of a glass: the slope steps up at the glass transition (~560 degC).
+    lines = ["Temperature (C),dL/L0"]
+    eps = 0.0
+    prev = 25.0
+    for i in range(0, 601):
+        T = 25 + i
+        alpha = 8.8e-6 if T < 555 else 8.8e-6 + 120e-6 * _sigmoid(T, 575, 8)
+        eps += alpha * (T - prev)
+        prev = T
+        lines.append(f"{T:.1f},{eps + random.gauss(0, 1e-6):.7f}")
+    (out / "Glass_Tg_bare_CSV.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    made.append({"file": "Glass_Tg_bare_CSV.csv", "title": "Glass - bare temperature / dL/L0 CSV"})
+    return made
+
+
+def _write_gsf(path: Path, z, size_m: float, title: str):
+    """A Gwyddion Simple Field (.gsf): text header, NUL padding to 4 bytes, little-endian float32, top row first."""
+    import numpy as np
+
+    z = np.asarray(z, dtype="<f4")
+    head = ("Gwyddion Simple Field 1.0\n"
+            f"XRes = {z.shape[1]}\nYRes = {z.shape[0]}\nXReal = {size_m:g}\nYReal = {size_m:g}\n"
+            f"XYUnits = m\nZUnits = m\nTitle = {title}\n").encode()
+    head += b"\0" * (4 - len(head) % 4)
+    path.write_bytes(head + z.tobytes())
+
+
+def make_afm_examples(out: Path) -> list[dict]:
+    """The desktop ships no AFM scans: three synthetic ones (heights in metres, as a .gsf stores them)."""
+    import numpy as np
+
+    made = []
+    rng = np.random.default_rng(7)
+
+    # 1. nanoparticles on a tilted silicon substrate: 256 x 256 px over 2 um
+    n, size = 256, 2e-6
+    y, x = np.mgrid[0:n, 0:n] * (size / n)
+    z = 0.35e-9 * rng.standard_normal((n, n)) + 4e-9 * (x / size) + 2.5e-9 * (y / size)
+    for _ in range(46):
+        cx, cy = rng.uniform(0.08, 0.92, 2) * size
+        r = rng.uniform(45e-9, 95e-9)
+        h = rng.uniform(8e-9, 26e-9)
+        z += h * np.exp(-(((x - cx) ** 2 + (y - cy) ** 2) / (2 * (r / 1.6) ** 2)) ** 1.0)
+    _write_gsf(out / "Nanoparticles_on_silicon_2um.gsf", z, size, "Height")
+    made.append({"file": "Nanoparticles_on_silicon_2um.gsf", "title": "Nanoparticles on silicon (2 um, height)"})
+
+    # 2. atomic-step terraces: 256 x 256 px over 5 um, three steps of 2.4 nm and a little drift
+    n, size = 256, 5e-6
+    y, x = np.mgrid[0:n, 0:n] * (size / n)
+    edge = x + 0.35e-6 * np.sin(y / size * 6.0)
+    z = 2.4e-9 * (1 / (1 + np.exp(-(edge - 1.4e-6) / 25e-9)) + 1 / (1 + np.exp(-(edge - 2.9e-6) / 25e-9))
+                  + 1 / (1 + np.exp(-(edge - 4.1e-6) / 25e-9)))
+    z += 0.25e-9 * rng.standard_normal((n, n)) + 1.2e-9 * (y / size)
+    _write_gsf(out / "Gold_terraces_5um.gsf", z, size, "Height")
+    made.append({"file": "Gold_terraces_5um.gsf", "title": "Gold terraces (5 um, three 2.4 nm steps)"})
+
+    # 3. a rough polymer film, 128 x 128 px over 1 um: correlated roughness for the Rq / Ra numbers
+    n, size = 128, 1e-6
+    noise = np.fft.fft2(rng.standard_normal((n, n)))
+    fx = np.fft.fftfreq(n)[:, None]
+    fy = np.fft.fftfreq(n)[None, :]
+    film = np.real(np.fft.ifft2(noise * np.exp(-((fx ** 2 + fy ** 2) / (2 * 0.06 ** 2)))))
+    film = 3.2e-9 * film / film.std()
+    _write_gsf(out / "Polymer_film_1um.gsf", film, size, "Height")
+    made.append({"file": "Polymer_film_1um.gsf", "title": "Polymer film (1 um, roughness)"})
+    return made
+
+
+def _write_png_gray(path: Path, a):
+    """An 8-bit greyscale PNG (zlib + struct: the export needs no imaging library)."""
+    import struct
+    import zlib
+
+    import numpy as np
+
+    a = np.ascontiguousarray(np.clip(a, 0, 255), dtype=np.uint8)
+    h, w = a.shape
+    raw = b"".join(b"\x00" + a[i].tobytes() for i in range(h))
+
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 0, 0, 0, 0))
+                     + chunk(b"IDAT", zlib.compress(raw, 6)) + chunk(b"IEND", b""))
+
+
+def make_tem_examples(out: Path) -> list[dict]:
+    """The desktop ships no TEM images (and a plain PNG carries no pixel size): synthetic ones with known numbers."""
+    import numpy as np
+
+    made = []
+    rng = np.random.default_rng(11)
+    n = 512
+    y, x = np.mgrid[0:n, 0:n].astype(float)
+
+    # 1. gold nanoparticles on an amorphous carbon film: dark discs on a grainy grey ground (bright-field)
+    img = 175 + 12 * rng.standard_normal((n, n))
+    for _ in range(38):
+        cx, cy = rng.uniform(25, n - 25, 2)
+        r = rng.uniform(9, 26)
+        d = np.hypot(x - cx, y - cy)
+        img -= 95 * np.clip((r - d) / 2.5 + 0.5, 0, 1)
+    _write_png_gray(out / "Gold_nanoparticles_bright_field.png", img)
+    made.append({"file": "Gold_nanoparticles_bright_field.png", "title": "Gold nanoparticles on carbon (bright field, particles)"})
+
+    # 2. a lattice image: two crossed fringe families, 0.235 nm and 0.204 nm (Au 111 / 200) at 0.0235 nm per pixel,
+    #    so 10 and 8.7 pixels; the FFT shows the two spot pairs
+    img = 128 + 9 * rng.standard_normal((n, n))
+    for d_px, ang in ((10.0, 0.0), (8.68, 54.7)):
+        a = np.radians(ang)
+        img += 30 * np.cos(2 * np.pi * (x * np.cos(a) + y * np.sin(a)) / d_px)
+    img += 20 * np.exp(-((x - 256) ** 2 + (y - 256) ** 2) / (2 * 190 ** 2))
+    _write_png_gray(out / "Gold_lattice_fringes_HRTEM.png", img)
+    made.append({"file": "Gold_lattice_fringes_HRTEM.png", "title": "Gold lattice fringes (HRTEM, 0.0235 nm per pixel, FFT)"})
+    return made
+
+
+def make_edx_examples(out: Path) -> list[dict]:
+    """The desktop ships no EDX maps: a synthetic SEM-EDX spectrum image (HDF5) of a steel with a Cr-rich phase and an
+    Si-O inclusion: 48 x 48 pixels, 0-10 keV in 10 eV channels, Poisson counts."""
+    import h5py
+    import numpy as np
+
+    rng = np.random.default_rng(5)
+    n, ch = 48, 1000
+    e = np.arange(ch) * 0.01
+    y, x = np.mgrid[0:n, 0:n].astype(float)
+
+    def disc(cx, cy, r, soft=1.5):
+        return np.clip((r - np.hypot(x - cx, y - cy)) / soft + 0.5, 0, 1)
+
+    cr = np.clip(disc(14, 16, 8) + disc(34, 30, 6) + disc(20, 38, 4), 0, 1)           # Cr-rich carbides
+    si = np.clip(disc(36, 11, 6) + disc(8, 38, 3), 0, 1)                              # Si-O inclusions
+    fe = np.clip(1 - cr - si, 0, 1)
+    ni = 0.11 * fe
+    # characteristic lines: (keV, relative weight) per element
+    lines = {"Fe": [(6.404, 1.0), (7.058, 0.17), (0.705, 0.12)], "Cr": [(5.415, 1.0), (5.947, 0.15), (0.573, 0.1)],
+             "Ni": [(7.478, 1.0), (8.265, 0.13), (0.851, 0.1)], "Si": [(1.740, 1.0)], "O": [(0.525, 1.0)],
+             "C": [(0.277, 1.0)]}
+    maps = {"Fe": fe * 1.0 + cr * 0.35, "Cr": cr * 0.9 + fe * 0.18, "Ni": ni, "Si": si * 1.0 + fe * 0.01, "O": si * 1.1 + cr * 0.15,
+            "C": 0.04 + cr * 0.12}
+    cube = np.zeros((n, n, ch))
+    for el, parts in lines.items():
+        for kev, w in parts:
+            sigma = np.sqrt(0.0026 + 0.00035 * kev)  # detector resolution, keV
+            cube += maps[el][..., None] * w * 30 * np.exp(-((e - kev) ** 2) / (2 * sigma ** 2))[None, None, :]
+    cube += (6.0 * np.exp(-e / 3.2) * (1 - np.exp(-e / 0.25)))[None, None, :] * (0.6 + 0.4 * fe[..., None])   # bremsstrahlung
+    cube = rng.poisson(np.clip(cube, 0, None) * 1.0).astype(np.uint16)
+    with h5py.File(out / "Steel_Cr_carbides_SEM_EDX.hdf5", "w") as f:
+        f.create_dataset("EDX/data", data=cube, compression="gzip", compression_opts=6)
+        f.create_dataset("EDX/energy", data=e)
+        f["EDX"].attrs["description"] = "Synthetic SEM-EDX spectrum image: steel with Cr-rich carbides and Si-O inclusions"
+    return [{"file": "Steel_Cr_carbides_SEM_EDX.hdf5", "title": "Steel with Cr carbides and Si-O inclusions (SEM-EDX map)"}]
+
+
+MAKERS = {"tga": make_tga_examples, "bet": make_bet_examples, "dil": make_dil_examples, "afm": make_afm_examples,
+          "tem": make_tem_examples, "edx": make_edx_examples}
 
 
 def export_examples(root: Path, tech: str, spec: dict):
