@@ -339,3 +339,10 @@
 .lt-scores li.lt-on {
   background: var(--k-selection);
 }
+
+.lt-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}

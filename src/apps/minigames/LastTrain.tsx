@@ -12,8 +12,9 @@ import { useAppTools } from '@/os/ai/appTools'
 import { releaseAudio, retainAudio, setSoundOn, unlockAudio, useSound } from './sound'
 import { addScore, DEFAULT_NAME, getScores, lastName } from './scores'
 import { useScores } from './GameShell'
+import { loadCheckpoint, saveCheckpoint } from './checkpoints'
 import { gameCode } from './fpsKeys'
-import type { GameResult, Hud, LastTrainEngine } from './lastTrainEngine'
+import type { GameResult, Hud, LastTrainEngine, LTSave } from './lastTrainEngine'
 import './lastTrain.css'
 
 const ID = 'lasttrain'
@@ -43,6 +44,7 @@ export default function LastTrain({ win }: AppProps) {
   const [result, setResult] = useState<(GameResult & { rank: number }) | null>(null)
   const [error, setError] = useState('')
   const scores = useScores(ID)
+  const [save, setSave] = useState<LTSave | null>(() => loadCheckpoint<LTSave>(ID))
   const soundOn = useSound((s) => s.on)
   const focused = useWindows((s) => s.focusedId === win.id)
 
@@ -93,6 +95,20 @@ export default function LastTrain({ win }: AppProps) {
     if (locked()) document.exitPointerLock()
   }, [setPhase])
 
+  /** Pick up from the last checkpoint (the click is the gesture that takes the mouse). */
+  const continueGame = useCallback(
+    (e?: { stopPropagation(): void }) => {
+      e?.stopPropagation()
+      const eng = engineRef.current
+      if (!eng || !save) return
+      eng.continueFrom(save)
+      setResult(null)
+      setPhase('ready')
+      engage()
+    },
+    [save, setPhase, engage],
+  )
+
   // ---- the engine (three.js loads with it)
 
   useEffect(() => {
@@ -112,6 +128,10 @@ export default function LastTrain({ win }: AppProps) {
           if (document.pointerLockElement) document.exitPointerLock()
         })
         engineRef.current = engine
+        engine.onCheckpoint = (cp) => {
+          saveCheckpoint(ID, cp)
+          setSave(cp)
+        }
         engine.bindHud({ crosshair: crossRef.current, hit: hitRef.current, hurt: hurtRef.current })
         const fit = () => {
           const el = rootRef.current
@@ -399,9 +419,20 @@ export default function LastTrain({ win }: AppProps) {
                 ))}
               </tbody>
             </table>
-            <button className="k-btn lt-go" onClick={engage}>
-              {phase === 'ready' ? 'Click to play' : 'Click to resume'}
-            </button>
+            {phase === 'ready' && save ? (
+              <div className="lt-buttons">
+                <button className="k-btn lt-go" onClick={continueGame}>
+                  Continue — wave {save.wave}, {save.stationName}
+                </button>
+                <button className="k-btn" onClick={engage}>
+                  New game
+                </button>
+              </div>
+            ) : (
+              <button className="k-btn lt-go" onClick={engage}>
+                {phase === 'ready' ? 'Click to play' : 'Click to resume'}
+              </button>
+            )}
             {phase === 'ready' && best > 0 && <p className="lt-best">Best: {fmt(best)}</p>}
           </div>
         </div>
@@ -435,9 +466,16 @@ export default function LastTrain({ win }: AppProps) {
                 ))}
               </ol>
             )}
-            <button className="k-btn lt-go" onClick={newGame}>
-              Play again
-            </button>
+            <div className="lt-buttons">
+              {save && (
+                <button className="k-btn lt-go" onClick={continueGame}>
+                  Continue — wave {save.wave}, {save.stationName}
+                </button>
+              )}
+              <button className={save ? 'k-btn' : 'k-btn lt-go'} onClick={newGame}>
+                {save ? 'New game' : 'Play again'}
+              </button>
+            </div>
           </div>
         </div>
       )}

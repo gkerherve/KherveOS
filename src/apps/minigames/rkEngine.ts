@@ -68,6 +68,19 @@ export interface RKHudEls {
   tint: HTMLElement | null
 }
 
+/** The state at the start of a level: where Continue picks up. */
+export interface RKSave {
+  level: number
+  levelName: string
+  health: number
+  armor: number
+  armorType: number
+  ammo: Record<AmmoType, number>
+  owned: WeaponId[]
+  score: number
+  totalKills: number
+}
+
 export interface RKResult {
   score: number
   levels: number
@@ -359,6 +372,21 @@ export class RuneKeepEngine {
     }
   }
 
+  /** Called with a checkpoint each time a level (after the first) begins. */
+  onCheckpoint: ((s: RKSave) => void) | null = null
+
+  /** Start again from a checkpoint. */
+  continueFrom(s: RKSave) {
+    this.score = s.score
+    this.totalKills = s.totalKills
+    this.health = Math.max(s.health, 50)
+    this.armor = s.armor
+    this.armorType = s.armorType
+    this.ammo = { ...s.ammo }
+    this.owned = new Set(s.owned)
+    this.loadLevel(clamp(s.level, 0, LEVELS.length - 1))
+  }
+
   newGame() {
     this.score = 0
     this.totalKills = 0
@@ -394,6 +422,12 @@ export class RuneKeepEngine {
     this.selectWeapon(this.bestWeapon(), true)
     this.say(map.name, 3)
     this.message(`Level ${i + 1}: ${map.name}`)
+    // a checkpoint at every level after the first
+    if (i > 0)
+      this.onCheckpoint?.({
+        level: i, levelName: map.name, health: Math.min(100, Math.max(this.health, 50)), armor: this.armor, armorType: this.armorType,
+        ammo: { ...this.ammo }, owned: [...this.owned], score: this.score, totalKills: this.totalKills,
+      })
   }
 
   private clearLevel() {

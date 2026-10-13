@@ -132,6 +132,17 @@ export interface HudEls {
   hurt: HTMLElement | null
 }
 
+/** The state on arrival at a station: where Continue picks up. */
+export interface LTSave {
+  wave: number
+  station: number
+  stationName: string
+  health: number
+  score: number
+  kills: number
+  guns: { mag: number; reserve: number }[]
+}
+
 export interface GameResult {
   score: number
   wave: number
@@ -596,6 +607,26 @@ export class LastTrainEngine {
 
   // ---------------------------------------------------------------- public
 
+  /** Called with a checkpoint each time the train reaches a new station. */
+  onCheckpoint: ((s: LTSave) => void) | null = null
+
+  /** Start again from a checkpoint: on the platform of that station, its wave about to begin. */
+  continueFrom(s: LTSave) {
+    this.reset()
+    this.setStation(s.station)
+    this.wave = s.wave
+    this.health = Math.max(50, s.health)
+    this.score = s.score
+    this.kills = s.kills
+    s.guns.forEach((g, i) => {
+      if (!this.guns[i]) return
+      this.guns[i].mag = g.mag
+      this.guns[i].reserve = g.reserve
+    })
+    this.startWave()
+    this.refreshTargets()
+  }
+
   reset() {
     for (const z of this.zombies) this.removeZombie(z)
     this.zombies = []
@@ -888,6 +919,10 @@ export class LastTrainEngine {
           this.stage = 'alight'
           this.stageT = 0
           this.chime()
+          this.onCheckpoint?.({
+            wave: this.wave, station: this.stationIndex, stationName: stationAt(this.stationIndex).name, health: Math.max(50, Math.ceil(this.health)),
+            score: this.score, kills: this.kills, guns: this.guns.map((g) => ({ mag: g.mag, reserve: g.reserve })),
+          })
           this.say(stationAt(this.stationIndex).name, `Step off the train for wave ${this.wave}`, 5)
         }
         break

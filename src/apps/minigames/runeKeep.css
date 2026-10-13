@@ -318,3 +318,10 @@
 .rk-scores li.rk-on {
   background: var(--k-selection);
 }
+
+.rk-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}

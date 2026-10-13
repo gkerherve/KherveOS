@@ -12,8 +12,9 @@ import { useAppTools } from '@/os/ai/appTools'
 import { releaseAudio, retainAudio, setSoundOn, unlockAudio, useSound } from './sound'
 import { addScore, DEFAULT_NAME, getScores, lastName } from './scores'
 import { useScores } from './GameShell'
+import { clearCheckpoint, loadCheckpoint, saveCheckpoint } from './checkpoints'
 import { gameCode } from './fpsKeys'
-import type { RKHud, RKResult, RuneKeepEngine } from './rkEngine'
+import type { RKHud, RKResult, RKSave, RuneKeepEngine } from './rkEngine'
 import './runeKeep.css'
 
 const ID = 'runekeep'
@@ -45,6 +46,7 @@ export default function RuneKeep({ win }: AppProps) {
   const [result, setResult] = useState<(RKResult & { rank: number }) | null>(null)
   const [error, setError] = useState('')
   const scores = useScores(ID)
+  const [save, setSave] = useState<RKSave | null>(() => loadCheckpoint<RKSave>(ID))
   const soundOn = useSound((s) => s.on)
   const focused = useWindows((s) => s.focusedId === win.id)
   const wasLocked = useRef(false)
@@ -95,6 +97,20 @@ export default function RuneKeep({ win }: AppProps) {
     if (locked()) document.exitPointerLock()
   }, [setPhase])
 
+  /** Pick up from the last checkpoint (the click is the gesture that takes the mouse). */
+  const continueGame = useCallback(
+    (e?: { stopPropagation(): void }) => {
+      e?.stopPropagation()
+      const eng = engineRef.current
+      if (!eng || !save) return
+      eng.continueFrom(save)
+      setResult(null)
+      setPhase('ready')
+      engage()
+    },
+    [save, setPhase, engage],
+  )
+
   // ---- the engine
 
   useEffect(() => {
@@ -111,10 +127,18 @@ export default function RuneKeep({ win }: AppProps) {
           const summary = r.won ? `Escaped · ${r.kills} kills` : `Level ${r.levels + 1} · ${r.kills} kills`
           const rank = addScore(ID, { name, score: r.score, summary, date: Date.now() })
           setResult({ ...r, rank })
+          if (r.won) {
+            clearCheckpoint(ID)
+            setSave(null)
+          }
           setPhase('over')
           if (document.pointerLockElement) document.exitPointerLock()
         })
         engineRef.current = engine
+        engine.onCheckpoint = (cp) => {
+          saveCheckpoint(ID, cp)
+          setSave(cp)
+        }
         engine.bindHud({ hurt: hurtRef.current, flash: flashRef.current, tint: tintRef.current })
         const fit = () => {
           const el = rootRef.current
@@ -394,9 +418,20 @@ export default function RuneKeep({ win }: AppProps) {
                 ))}
               </tbody>
             </table>
-            <button className="k-btn rk-go" onClick={engage}>
-              {phase === 'ready' ? 'Click to play' : 'Click to resume'}
-            </button>
+            {phase === 'ready' && save ? (
+              <div className="rk-buttons">
+                <button className="k-btn rk-go" onClick={continueGame}>
+                  Continue — level {save.level + 1}, {save.levelName}
+                </button>
+                <button className="k-btn" onClick={engage}>
+                  New game
+                </button>
+              </div>
+            ) : (
+              <button className="k-btn rk-go" onClick={engage}>
+                {phase === 'ready' ? 'Click to play' : 'Click to resume'}
+              </button>
+            )}
             {phase === 'ready' && best > 0 && <p className="rk-best">Best: {fmt(best)}</p>}
           </div>
         </div>
@@ -454,9 +489,16 @@ export default function RuneKeep({ win }: AppProps) {
                 ))}
               </ol>
             )}
-            <button className="k-btn rk-go" onClick={newGame}>
-              Play again
-            </button>
+            <div className="rk-buttons">
+              {save && !result.won && (
+                <button className="k-btn rk-go" onClick={continueGame}>
+                  Continue — level {save.level + 1}, {save.levelName}
+                </button>
+              )}
+              <button className={save && !result.won ? 'k-btn' : 'k-btn rk-go'} onClick={newGame}>
+                {save && !result.won ? 'New game' : 'Play again'}
+              </button>
+            </div>
           </div>
         </div>
       )}
