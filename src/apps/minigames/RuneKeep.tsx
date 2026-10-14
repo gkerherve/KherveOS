@@ -135,6 +135,8 @@ export default function RuneKeep({ win }: AppProps) {
           if (document.pointerLockElement) document.exitPointerLock()
         })
         engineRef.current = engine
+        // in dev the console can reach the game (kherveos.runeKeep.pos.set(…))
+        if (import.meta.env.DEV) Object.assign((window as unknown as { kherveos: object }).kherveos ?? {}, { runeKeep: engine })
         engine.onCheckpoint = (cp) => {
           saveCheckpoint(ID, cp)
           setSave(cp)

@@ -171,6 +171,51 @@ function makeTex(kind: Tex): SurfaceTex {
       grain(g, r, 6000)
       break
     }
+    case 'grass':
+    case 'ash': {
+      const grass = kind === 'grass'
+      g.fillStyle = grass ? '#3d5a26' : '#3a3430'
+      g.fillRect(0, 0, 512, 512)
+      bg.fillStyle = '#707070'
+      bg.fillRect(0, 0, 512, 512)
+      // patches of lighter and darker ground
+      for (let i = 0; i < 60; i++) {
+        const x = r() * 512
+        const y = r() * 512
+        const rad = 20 + r() * 70
+        const gr = g.createRadialGradient(x, y, 0, x, y, rad)
+        gr.addColorStop(0, grass ? (r() < 0.5 ? 'rgba(90,120,50,0.5)' : 'rgba(60,48,30,0.45)') : r() < 0.5 ? 'rgba(20,16,14,0.5)' : 'rgba(110,90,80,0.35)')
+        gr.addColorStop(1, 'rgba(0,0,0,0)')
+        g.fillStyle = gr
+        g.fillRect(x - rad, y - rad, rad * 2, rad * 2)
+      }
+      // blades (grass) or cinders (ash)
+      for (let i = 0; i < (grass ? 9000 : 4000); i++) {
+        const x = r() * 512
+        const y = r() * 512
+        if (grass) {
+          const v = r()
+          g.strokeStyle = `rgb(${50 + v * 60},${80 + v * 80},${30 + v * 30})`
+          g.lineWidth = 1 + r()
+          g.beginPath()
+          g.moveTo(x, y)
+          g.lineTo(x + (r() - 0.5) * 6, y - 4 - r() * 8)
+          g.stroke()
+          bg.fillStyle = `rgb(${150 + v * 100},${150 + v * 100},${150 + v * 100})`
+          bg.fillRect(x, y - 4, 1.5, 4)
+        } else {
+          const s = 1 + r() * 3
+          const v = r()
+          g.fillStyle = v < 0.04 ? 'rgb(255,110,40)' : `rgb(${40 + v * 50},${36 + v * 44},${34 + v * 40})`
+          g.fillRect(x, y, s, s)
+          bg.fillStyle = `rgb(${100 + v * 150},${100 + v * 150},${100 + v * 150})`
+          bg.fillRect(x, y, s, s)
+        }
+      }
+      grain(g, r, 5000, 0.18, 0.05)
+      rough = 0.95
+      break
+    }
     case 'wood': {
       bg.fillStyle = '#000'
       bg.fillRect(0, 0, 512, 512)
@@ -472,6 +517,7 @@ export class Level {
     this.collectLights()
     this.buildStatic()
     this.buildMovers()
+    this.buildTrees()
   }
 
   // ---- queries
@@ -486,7 +532,7 @@ export class Level {
   }
 
   blocked(c: Cell | null): boolean {
-    return !c || c.solid || (c.door !== undefined && this.doors[c.door].open < 0.92)
+    return !c || c.solid || !!c.tree || (c.door !== undefined && this.doors[c.door].open < 0.92)
   }
 
   /** Can a box (radius r, height h) stand with its feet at `feet`? Returns the floor it would stand on, or null. */
@@ -526,6 +572,8 @@ export class Level {
 
   solidAt(x: number, y: number, z: number): boolean {
     const c = this.cell(x, z)
+    // a tree stops shots at its trunk and crown, not the sky above it
+    if (c?.tree && !c.solid) return y < c.f + 7 || y > c.c
     if (this.blocked(c)) return true
     return y < this.floorOf(c!) || y > c!.c
   }
@@ -621,7 +669,7 @@ export class Level {
       const c = this.cell(x, z)
       if (!c || c.solid) return false
       const f = c.lift !== undefined ? this.map.lifts[c.lift].low : c.f
-      if (y < f - 0.02 || y > c.c + 0.02) return false
+      if (y < f - (c.terrain ? 0.5 : 0.02) || y > c.c + 0.02) return false
     }
     return true
   }
@@ -635,7 +683,7 @@ export class Level {
       const c = this.cell(x, z)
       if (!c || c.solid) return false
       if (y > c.c) return !!c.sky
-      if (y < c.f - 0.02) return false
+      if (y < c.f - (c.terrain ? 0.5 : 0.02)) return false
     }
     return false
   }
@@ -714,6 +762,34 @@ export class Level {
     const S = 0.5 // one texture repeat per 2 m
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
     const effFloor = (c: Cell) => (c.lift !== undefined ? m.lifts[c.lift].low : c.f)
+    const land = (c: Cell | null) => !!c && !c.solid && !!c.terrain && !c.liquid
+    /** Terrain is smooth: a corner is the mean of the ground cells around it. */
+    const corner = (x: number, z: number) => {
+      let sum = 0
+      let n = 0
+      for (const [dx, dz] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) {
+        const c = cellOf(m, x + dx, z + dz)
+        if (land(c)) {
+          sum += c!.f
+          n++
+        }
+      }
+      return n ? sum / n : 0
+    }
+    const ground = (x: number, z: number, key: string) => {
+      const b = bucket(key)
+      const base = b.pos.length / 3
+      const h = [corner(x, z), corner(x + 1, z), corner(x, z + 1), corner(x + 1, z + 1)]
+      const sx = (h[1] - h[0] + h[3] - h[2]) / 2
+      const sz = (h[2] - h[0] + h[3] - h[1]) / 2
+      const n = V(-sx, 1, -sz).normalize()
+      for (const [i, [px, pz]] of [[x, z], [x + 1, z], [x, z + 1], [x + 1, z + 1]].entries()) {
+        b.pos.push(px, h[i], pz)
+        b.nrm.push(n.x, n.y, n.z)
+        b.uv.push(px * S, pz * S)
+      }
+      b.idx.push(base, base + 2, base + 1, base + 1, base + 2, base + 3)
+    }
 
     for (let z = 0; z < m.h; z++)
       for (let x = 0; x < m.w; x++) {
@@ -722,6 +798,7 @@ export class Level {
         const f = effFloor(c)
         // floor (lifts draw their own), liquids
         if (c.liquid) quad('liquid:' + c.liquid, V(x, c.f + 0.35, z + 1), V(1, 0, 0), V(0, 0, -1), V(0, 1, 0), (p) => [p.x * S, p.z * S])
+        else if (land(c)) ground(x, z, 'floor:' + c.floor)
         else if (c.lift === undefined) quad('floor:' + c.floor, V(x, f, z + 1), V(1, 0, 0), V(0, 0, -1), V(0, 1, 0), (p) => [p.x * S, p.z * S])
         // ceiling
         quad(c.sky ? 'sky' : 'ceil:' + c.ceil, V(x, c.c, z), V(1, 0, 0), V(0, 0, 1), V(0, -1, 0), (p) => [p.x * S, p.z * S])
@@ -739,8 +816,10 @@ export class Level {
             if (y1 - y0 < 0.01) return
             quad('wall:' + t, V(start.x, y0, start.z), along, V(0, y1 - y0, 0), n, uvOf)
           }
-          if (!nb || nb.solid) wall(f, c.c, c.wall)
-          else {
+          if (!nb || nb.solid) wall(f - (land(c) ? 0.6 : 0), c.c, c.wall)
+          else if (land(c) && land(nb)) {
+            if (nb.c < c.c) wall(nb.c, c.c, c.wall)
+          } else {
             const nf = effFloor(nb)
             if (nf > f) wall(f, Math.min(nf, c.c), nb.wall)
             if (nb.c < c.c) wall(Math.max(nb.c, f), c.c, c.wall)
@@ -857,6 +936,78 @@ export class Level {
       const l = m.lifts[0]
       this.lightAt(new THREE.Vector3(l.x0 + 1, l.low + 1.5, l.z0 + 1), tint)
       liftMat.color.setRGB(Math.min(1.4, tint.r + 0.3), Math.min(1.4, tint.g + 0.3), Math.min(1.4, tint.b + 0.3))
+    }
+  }
+
+  /** Trees: instanced trunks and crowns, tinted by the baked light where each stands. */
+  private buildTrees() {
+    const m = this.map
+    const spots: { x: number; z: number; f: number; kind: string; r: number }[] = []
+    for (let z = 0; z < m.h; z++)
+      for (let x = 0; x < m.w; x++) {
+        const c = m.cells[z * m.w + x]
+        if (c.tree && !c.solid) spots.push({ x: x + 0.5, z: z + 0.5, f: c.f, kind: c.tree, r: ((x * 73856093) ^ (z * 19349663)) >>> 0 })
+      }
+    if (!spots.length) return
+    const parts: { geo: THREE.BufferGeometry; color: number; rough: number; kinds: string[]; place: (o: THREE.Object3D, s: (typeof spots)[0], k: number) => void }[] = [
+      // trunks
+      { geo: new THREE.CylinderGeometry(0.12, 0.22, 1, 7).translate(0, 0.5, 0), color: 0x6a4a32, rough: 0.95, kinds: ['pine', 'oak', 'dead'], place: (o, s, k) => o.scale.set(k, s.kind === 'pine' ? 3.6 * k : s.kind === 'oak' ? 3.8 * k : 4 * k, k) },
+      // pine: three stacked cones
+      ...[0, 1, 2].map((i) => ({
+        geo: new THREE.ConeGeometry(1.5 - i * 0.38, 2.2 - i * 0.3, 9).translate(0, 1.1, 0),
+        color: 0x2d5a2a, rough: 0.9, kinds: ['pine'],
+        place: (o: THREE.Object3D, _s: (typeof spots)[0], k: number) => {
+          o.position.y += (2 + i * 1.3) * k
+          o.scale.setScalar(k)
+        },
+      })),
+      // oak: a cluster of round crowns
+      ...[[0, 4.8, 0, 1.6], [0.8, 4.4, 0.4, 1.1], [-0.7, 4.5, -0.3, 1.2], [0.1, 5.6, -0.2, 1.0]].map(([dx, dy, dz, rad]) => ({
+        geo: new THREE.IcosahedronGeometry(rad, 1), color: 0x3f6e2c, rough: 0.9, kinds: ['oak'],
+        place: (o: THREE.Object3D, _s: (typeof spots)[0], k: number) => {
+          o.position.x += dx * k
+          o.position.y += dy * k
+          o.position.z += dz * k
+          o.scale.set(k, k * 0.85, k)
+        },
+      })),
+      // dead: bare branches
+      ...[[0.7, 2.6, 0], [-0.6, 3.1, 0.5], [0.1, 3.5, -0.7]].map(([ax, ay, az]) => ({
+        geo: new THREE.CylinderGeometry(0.03, 0.08, 1.6, 5).translate(0, 0.8, 0), color: 0x2a221e, rough: 1, kinds: ['dead'],
+        place: (o: THREE.Object3D, _s: (typeof spots)[0], k: number) => {
+          o.position.y += ay * k
+          o.rotation.set(az, 0, -ax)
+          o.scale.setScalar(k)
+        },
+      })),
+    ]
+    const tint = new THREE.Color()
+    const o = new THREE.Object3D()
+    for (const part of parts) {
+      const mine = spots.filter((s) => part.kinds.includes(s.kind))
+      if (!mine.length) continue
+      const mat = new THREE.MeshStandardMaterial({ color: part.color, roughness: part.rough, flatShading: true })
+      const mesh = new THREE.InstancedMesh(part.geo, mat, mine.length)
+      this.owned.push(part.geo, mat)
+      mine.forEach((s, i) => {
+        const k = 0.85 + (s.r % 1000) / 1000 * 0.5
+        o.position.set(s.x, s.f - 0.1, s.z)
+        o.rotation.set(0, 0, 0)
+        o.scale.setScalar(1)
+        part.place(o, s, k)
+        // spin the whole tree about its trunk
+        const yaw = (s.r % 628) / 100
+        const rel = o.position.clone().sub(new THREE.Vector3(s.x, o.position.y, s.z)).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)
+        o.position.set(s.x + rel.x, o.position.y, s.z + rel.z)
+        o.rotation.y += yaw
+        o.updateMatrix()
+        mesh.setMatrixAt(i, o.matrix)
+        this.lightAt(new THREE.Vector3(s.x, s.f + 2, s.z), tint)
+        mesh.setColorAt(i, tint.setRGB(Math.min(1.5, tint.r * 1.1 + 0.08), Math.min(1.5, tint.g * 1.1 + 0.08), Math.min(1.5, tint.b * 1.1 + 0.08)))
+      })
+      mesh.instanceMatrix.needsUpdate = true
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+      this.group.add(mesh)
     }
   }
 

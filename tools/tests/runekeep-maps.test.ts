@@ -20,7 +20,7 @@ function reach(m: MapDef, keys: Set<string>): Set<number> {
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const j = (z + dz) * m.w + x + dx
       const b = m.cells[j]
-      if (!b || b.solid || seen.has(j)) continue
+      if (!b || b.solid || b.tree || seen.has(j)) continue
       if (b.door !== undefined && m.doors[b.door].key && !keys.has(m.doors[b.door].key!)) continue
       if (b.f > top(a) + STEP + 1e-6) continue
       if (Math.min(b.c, a.c) - Math.max(b.f, a.f) < 1.8) continue
@@ -36,10 +36,15 @@ for (const make of LEVELS) {
   test(`${m.name}: things stand in open cells`, () => {
     for (const e of m.ents) {
       const c = m.cells[Math.floor(e.z) * m.w + Math.floor(e.x)]
-      assert.ok(c && !c.solid, `${e.kind} at ${e.x},${e.z}`)
+      assert.ok(c && !c.solid && !c.tree, `${e.kind} at ${e.x},${e.z}`)
     }
     assert.equal(m.ents.filter((e) => e.kind === 'start').length, 1)
     assert.equal(m.ents.filter((e) => e.kind === 'exit').length, 1)
+  })
+  test(`${m.name}: has open country with trees, and the hills can be walked`, () => {
+    const land = m.cells.filter((c) => c.terrain)
+    assert.ok(land.length > 500, 'outdoors')
+    assert.ok(land.filter((c) => c.tree).length > 20, 'trees')
   })
   test(`${m.name}: every key, then the exit, can be reached`, () => {
     const keys = new Set<string>()
