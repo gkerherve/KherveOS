@@ -31,7 +31,8 @@ interface Variant {
 
 const VARIANTS: Record<ModelKind, Variant[]> = {
   grunt: [
-    { file: 'soldier', height: 1.8, weapon: 'shotgun', detail: true },
+    // the SWAT model with the gear added in KherveCAD (tools/kcad_to_game_glb.py)
+    { file: 'soldier-cad', height: 1.8, weapon: 'shotgun', detail: true },
     {
       file: 'soldier2', height: 1.8, detail: true,
       prefer: { idle: ['Idle'], shoot: ['Idle_Shoot'], attack: ['Idle_Shoot'], run: ['Run_Gun', 'Run'], walk: ['Run_Gun', 'Walk'] },

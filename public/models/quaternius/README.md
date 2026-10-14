@@ -25,3 +25,4 @@ and Last Train.
 | winged-demon.glb | Demon (flying) | https://poly.pizza/m/Mo2ky6vkf8 |
 | zombie2.glb | Zombie | https://poly.pizza/m/JoBvxIUpZP |
 | soldier2.glb | Character Soldier | https://poly.pizza/m/PpLF4rt4ah |
+| soldier-cad.glb | SWAT + gear modelled in KherveCAD (tools/kcad_to_game_glb.py) | derived from soldier.glb |

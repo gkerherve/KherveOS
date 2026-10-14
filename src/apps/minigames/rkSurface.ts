@@ -20,7 +20,7 @@ export function surfaceKindOf(mat: THREE.MeshStandardMaterial): SurfaceKind {
   if (/visor|glass|lens/.test(name)) return 'visor'
   const c = mat.color
   const lum = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b
-  if (/black|dark/.test(name) || lum < 0.035) return 'gear'
+  if (/^gear|black|dark/.test(name) || lum < 0.035) return 'gear'
   return 'uniform'
 }
 
