@@ -1,5 +1,10 @@
 """Bring a character improved in KherveCAD back into the games, animated.
 
+Superseded by KherveCAD's own character tools (khervecad/character.py:
+import_character, the bone node, pose_character, export_character), which
+now make soldier-cad.glb. Kept for KherveCAD parts made the older way
+(a static export with gear added around it).
+
 The KherveCAD part (made by export_characters_to_khervecad.py) is an Object
 whose coloured children are either the original body meshes (stl_import) or
 what was added in KherveCAD (gear: pouches, pads, radio...). This tool keeps
