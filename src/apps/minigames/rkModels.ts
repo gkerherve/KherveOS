@@ -10,6 +10,7 @@
 import * as THREE from 'three'
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
+import { applySurfaceDetail, surfaceKindOf } from './rkSurface'
 
 export type ModelKind = 'grunt' | 'knight' | 'brute' | 'ravager' | 'hound' | 'wraith' | 'zombie'
 export type Move = 'idle' | 'walk' | 'run' | 'attack' | 'shoot' | 'leap' | 'hit' | 'death'
@@ -22,10 +23,24 @@ interface Variant {
   weapon?: 'shotgun' | 'sword'
   /** Clips to prefer for some moves (otherwise CLIP_NAMES decides). */
   prefer?: Partial<Record<Move, string[]>>
+  /** The model carries several props: show one of `keep`, hide the rest of `among`. */
+  props?: { among: string[]; keep: string[] }
+  /** Procedural fabric, gear and skin detail (rkSurface.ts). */
+  detail?: boolean
 }
 
 const VARIANTS: Record<ModelKind, Variant[]> = {
-  grunt: [{ file: 'soldier', height: 1.8, weapon: 'shotgun' }],
+  grunt: [
+    { file: 'soldier', height: 1.8, weapon: 'shotgun', detail: true },
+    {
+      file: 'soldier2', height: 1.8, detail: true,
+      prefer: { idle: ['Idle'], shoot: ['Idle_Shoot'], attack: ['Idle_Shoot'], run: ['Run_Gun', 'Run'], walk: ['Run_Gun', 'Walk'] },
+      props: {
+        among: ['Sniper', 'SMG', 'RocketLauncher', 'Revolver', 'Revolver_Small', 'Pistol', 'GrenadeLauncher', 'ShortCannon', 'Shotgun', 'Sniper_2', 'Shovel', 'Knife_2', 'AK', 'Knife_1'],
+        keep: ['AK', 'SMG', 'Shotgun'],
+      },
+    },
+  ],
   knight: [
     { file: 'king', height: 1.9, weapon: 'sword' },
     { file: 'skeleton', height: 1.85 },
@@ -191,6 +206,26 @@ export function instanceModel(kind: ModelKind): ModelInstance {
     m.material = Array.isArray(m.material) ? m.material.map(swap) : swap(m.material)
     meshes.push(m)
   })
+  if (v.props) {
+    const keep = v.props.keep[Math.floor(Math.random() * v.props.keep.length)]
+    for (const name of v.props.among) {
+      const o = inner.getObjectByName(name)
+      if (o) o.visible = name === keep
+    }
+  }
+  if (v.detail) {
+    // metres per model unit: the model's scale times the mesh's own bind scale
+    const done = new Set<THREE.Material>()
+    for (const m of meshes) {
+      const bind = (m as THREE.SkinnedMesh).isSkinnedMesh ? (m as THREE.SkinnedMesh).bindMatrix : m.matrixWorld
+      const unit = L.scale * new THREE.Vector3().setFromMatrixScale(bind).x
+      for (const mat of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) {
+        if (done.has(mat)) continue
+        done.add(mat)
+        applySurfaceDetail(mat, surfaceKindOf(mat), unit)
+      }
+    }
+  }
   const wrist = v.weapon && inner.getObjectByName('Wrist.R')
   if (wrist && v.weapon) {
     const w = v.weapon === 'shotgun' ? shotgun(mats) : sword(mats)

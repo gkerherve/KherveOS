@@ -24,3 +24,4 @@ and Last Train.
 | dragon.glb | Dragon Evolved | https://poly.pizza/m/LlwD0QNUPj |
 | winged-demon.glb | Demon (flying) | https://poly.pizza/m/Mo2ky6vkf8 |
 | zombie2.glb | Zombie | https://poly.pizza/m/JoBvxIUpZP |
+| soldier2.glb | Character Soldier | https://poly.pizza/m/PpLF4rt4ah |
