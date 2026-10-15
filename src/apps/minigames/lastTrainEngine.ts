@@ -18,7 +18,7 @@ import { noise, sfx, tone } from './sound'
 import { ScaryMusic } from './lastTrainMusic'
 import { hasModel, instanceModel, type ModelInstance } from './rkModels'
 import {
-  CAR_L, CAR_PITCH, CAR_W, CAR_XS, CAR_Z, DOORS, drawBoard, FINAL_STATION, HALL, hallAt, hallY, LANDING, PLATFORM, rng, sprite, STAIR, stairSlope, stairY, STAIRS, stationAt, texture,
+  CAR_L, CAR_PITCH, CAR_W, CAR_XS, CAR_Z, DOORS, drawBoard, FINAL_STATION, HALL, hallAt, hallY, LANDING, STREET, TUNNEL_STOP, PLATFORM, rng, sprite, STAIR, stairSlope, stairY, STAIRS, stationAt, texture,
   TRACK_Y, TRAVEL,
 } from './lastTrainWorld'
 import { buildStation, type ExitBuild, type StationBuild } from './lastTrainStation'
@@ -78,6 +78,8 @@ interface Zombie {
   next: number
   /** The spitter's time to its next glob. */
   spit: number
+  /** One of the street's horde (not part of the wave: the station can be cleared without them). */
+  street: boolean
 }
 
 /** A sheet of paper blowing about the platform. */
@@ -328,6 +330,12 @@ export class LastTrainEngine {
   /** The draught along the platform (m/s, towards +x), gusting. */
   private windSpeed = 0
   private introZ: Zombie[] = []
+  /** Each stairway's gate: forced open by the player (E at the chain), and how far open it is. */
+  private forced: boolean[] = [false, false]
+  private gateK: number[] = [0, 0]
+  private shownOpen: number[] = [-1, -1]
+  private streetSpawnT = 0
+  private darkTold = false
   private introStep = -1
   private introLit = false
   private boardT = 0
@@ -431,6 +439,12 @@ export class LastTrainEngine {
   // ---------------------------------------------------------------- setup
 
   private setStation(index: number) {
+    // the street's horde stays with its street
+    for (const z of this.zombies) if (z.street) this.removeZombie(z)
+    this.zombies = this.zombies.filter((z) => !z.street)
+    this.forced = [false, false]
+    this.gateK = [0, 0]
+    this.shownOpen = [-1, -1]
     for (const c of this.crowd) this.removeZombie(c.z)
     this.crowd = []
     this.crowdNear = []
@@ -453,6 +467,9 @@ export class LastTrainEngine {
     this.exitOpen = 0
     this.gateHurtT = 0
     this.gateTold = false
+    this.forced = [false, false]
+    this.gateK = [0, 0]
+    this.shownOpen = [-1, -1]
     this.escapeT = 0
     this.renderer.toneMappingExposure = 1.05
     this.fillCrowd()
@@ -694,7 +711,7 @@ export class LastTrainEngine {
       wave: this.wave,
       score: this.score,
       kills: this.kills,
-      left: this.toSpawn + this.zombies.filter((z) => z.state !== 'dead').length,
+      left: this.toSpawn + this.zombies.filter((z) => z.state !== 'dead' && !z.street).length,
       station: st.name,
       stationColor: st.color,
       stage: this.stage,
@@ -715,6 +732,7 @@ export class LastTrainEngine {
     if (/^Digit[1-9]$/.test(code)) this.switchTo(Number(code.slice(5)) - 1)
     else if (code === 'KeyQ') this.cycleGun(-1)
     else if (code === 'KeyR') this.startReload()
+    else if (code === 'KeyE') this.breakGate()
     else if (code === 'Space' && this.onGround && this.stage !== 'escaped') {
       this.vel.y = 6.4
       this.onGround = false
@@ -819,8 +837,10 @@ export class LastTrainEngine {
     this.updateEffects(dt)
     this.updatePickups(dt)
     this.updateGlobs(dt)
+    this.updateStreet(dt)
     this.animateStation(dt)
     this.placeCamera(dt)
+    this.updateTunnel()
     this.updateHudEls(dt)
   }
 
@@ -828,6 +848,93 @@ export class LastTrainEngine {
     this.message = message
     this.sub = sub
     this.messageT = secs
+  }
+
+  // ---------------------------------------------------------------- the street and the tunnels
+
+  /** A zombie's strength for the wave it comes in. */
+  private arm(z: Zombie) {
+    const w = this.wave
+    z.maxHp = z.hp = KINDS[z.kind].hp * (1 + (w - 1) * 0.12)
+    z.speed = KINDS[z.kind].speed * (1 + (w - 1) * 0.04) * (0.85 + Math.random() * 0.3)
+  }
+
+  /** E at a chained gate: the chain snaps, the gate slides open, and the crowd behind it comes in. */
+  private breakGate() {
+    const i = this.station.exits.findIndex(
+      (e, k) => !this.forced[k] && this.openAt(k) < 0.5 && Math.abs(this.pos.x - e.x) < 1.95 && this.pos.y > 2.5 && this.pos.y < HALL.y - 0.5 && this.pos.z > LANDING.gateZ - 2.4,
+    )
+    if (i < 0 || this.stage === 'dying' || this.stage === 'escaped') return
+    this.forced[i] = true
+    this.station.exits[i].showStreet()
+    for (const c of this.crowd.filter((c) => c.exit === i)) {
+      const at = c.z.root.position.clone()
+      const kind = c.z.kind
+      this.removeZombie(c.z)
+      const z = this.makeZombie(kind)
+      this.arm(z)
+      z.state = 'chase'
+      z.street = true
+      z.root.position.copy(at)
+      this.world.add(z.root)
+      this.zombies.push(z)
+    }
+    this.crowd = this.crowd.filter((c) => c.exit !== i)
+    this.shake = Math.max(this.shake, 0.06)
+    sfx('chain', () => {
+      noise({ dur: 0.25, freq: 4200, filter: 'bandpass', q: 4, vol: 0.2 })
+      tone({ freq: 260, to: 90, dur: 0.4, type: 'square', vol: 0.08 })
+      noise({ dur: 0.9, freq: 300, to: 120, filter: 'lowpass', vol: 0.12, at: 0.15 })
+    }, 0.2)
+    this.music.stinger(0.7)
+    this.say('The chain snaps', 'The street is full of them — and now they can get in', 4)
+    this.refreshTargets()
+  }
+
+  /** While the player is out in the street, it keeps filling: a horde from every side. */
+  private updateStreet(dt: number) {
+    if (!this.forced.some(Boolean) || this.stage === 'dying' || this.stage === 'escaped' || this.stage === 'depart' || this.stage === 'arrive') return
+    this.streetSpawnT -= dt
+    if (this.pos.z < LANDING.endZ - 1 || this.streetSpawnT > 0) return
+    const out = this.zombies.filter((z) => z.street && z.state !== 'dead').length
+    if (out >= Math.min(30, 14 + this.wave * 3)) return
+    this.streetSpawnT = 0.3 + Math.random() * 0.45
+    for (let tries = 0; tries < 8; tries++) {
+      const far = Math.random() < 0.5
+      const x = far ? STREET.x0 + Math.random() * (STREET.x1 - STREET.x0) : Math.random() < 0.5 ? STREET.x0 + 0.5 : STREET.x1 - 0.5
+      const zz = far ? STREET.z1 - 0.5 : STREET.z0 + 4 + Math.random() * (STREET.z1 - STREET.z0 - 4)
+      if (Math.hypot(x - this.pos.x, zz - this.pos.z) < 18) continue
+      const roll = Math.random()
+      const kind: Kind = roll < 0.4 ? 'walker' : roll < 0.72 ? 'runner' : roll < 0.84 ? 'brute' : roll < 0.93 ? 'bloater' : 'spitter'
+      const z = this.makeZombie(kind)
+      this.arm(z)
+      z.state = 'chase'
+      z.street = true
+      z.root.position.set(x, STREET.y, zz)
+      this.world.add(z.root)
+      this.zombies.push(z)
+      this.refreshTargets()
+      break
+    }
+  }
+
+  /** Down on the track: the tunnel swallows the light; a train coming in throws the player back. */
+  private updateTunnel() {
+    if (this.train.group.visible && this.pos.y < -0.6 && this.stage !== 'depart' && this.stage !== 'arrive') {
+      this.pos.set(clamp(this.pos.x, PLATFORM.x0 + 1, PLATFORM.x1 - 1), 0, PLATFORM.z0 + 1)
+      this.vel.set(0, 0, 0)
+      this.hurt(30)
+      this.shake = Math.max(this.shake, 0.08)
+      this.say('The train!', 'Never stay on the track when one comes in', 3)
+    }
+    if (this.stage === 'intro' || this.stage === 'escaped' || this.stage === 'dying') return
+    const tx = Math.abs(this.pos.x)
+    const deep = this.pos.y < -0.5 && tx > PLATFORM.x1 + 3 ? clamp((tx - 44) / (TUNNEL_STOP - 50), 0, 1) : 0
+    this.renderer.toneMappingExposure = 1.05 * (1 - deep * 0.98)
+    if (deep > 0.97 && !this.darkTold) {
+      this.darkTold = true
+      this.say('Too dark to go on', 'Nothing to see down here — turn back', 3)
+    } else if (deep < 0.5) this.darkTold = false
   }
 
   // ---------------------------------------------------------------- the intro: the lights fail
@@ -1050,7 +1157,8 @@ export class LastTrainEngine {
         break
       case 'fight': {
         this.spawnT -= dt
-        const alive = this.zombies.filter((z) => z.state !== 'dead').length
+        // the street's horde is not part of the wave
+        const alive = this.zombies.filter((z) => z.state !== 'dead' && !z.street).length
         if (this.toSpawn > 0 && this.spawnT <= 0 && alive < this.maxAlive) {
           this.spawn()
           this.toSpawn--
@@ -1250,6 +1358,9 @@ export class LastTrainEngine {
 
   /** The floor under (x, z): the platform, the steps of a stairway, its landing. */
   private groundAt(x: number, z: number): number {
+    // the street, the track bed (when no train stands over it)
+    if (z > LANDING.endZ - 0.05) return STREET.y
+    if (z < PLATFORM.z0 - 0.02 && !this.train.group.visible) return TRACK_Y
     if (z > STAIR.z0 && STAIRS.some((sx) => Math.abs(x - sx) < 2)) return stairY(z)
     const h = hallAt(x, z)
     if (h) return hallY(h.u)
@@ -1261,9 +1372,11 @@ export class LastTrainEngine {
   /** Where the player may stand right now: axis-aligned rectangles. */
   private walkable(): Rect[] {
     const plat: Rect = [PLATFORM.x0, PLATFORM.x1, PLATFORM.z0, PLATFORM.z1]
-    // the stairways: up the steps, over the landing, as far as the gate (or out of it, once it is open)
-    const top = this.exitOpen > 0.9 ? LANDING.endZ - 0.7 : LANDING.gateZ - 0.55
-    const stairs = STAIRS.map((sx) => [sx - STAIR.halfW + 0.1, sx + STAIR.halfW - 0.1, 9.0, top] as Rect)
+    // the stairways: up the steps, over the landing, as far as the gate (or out into the street, once it is open)
+    const stairs = STAIRS.map((sx, i) => [sx - STAIR.halfW + 0.1, sx + STAIR.halfW - 0.1, 9.0, this.openAt(i) > 0.9 ? LANDING.endZ + 0.6 : LANDING.gateZ - 0.55] as Rect)
+    if (STAIRS.some((_, i) => this.openAt(i) > 0.9)) stairs.push([STREET.x0, STREET.x1, STREET.z0, STREET.z1])
+    // down on the track and into the tunnels, while no train is in
+    if (!this.train.group.visible) stairs.push([-TUNNEL_STOP, TUNNEL_STOP, -3.6, PLATFORM.z0 + 0.01])
     // through the staff door, up the flight, into the ticket hall
     for (const sx of STAIRS) stairs.push(...hallRects(sx, 0.3))
     // the train: the aisle of each car, the door zones between the seats, the gangways
@@ -2014,7 +2127,7 @@ export class LastTrainEngine {
     Object.assign(z, {
       kind, root, hips, spine, head: neck, arms, fores, thighs, shins, mats, eyes, meshes, shadow,
       hp: 100, maxHp: 100, speed: 1, state: 'chase', t: 0, phase: r() * 10, attack: 0, hitT: 0, flash: 0,
-      deadT: 0, fall: r() < 0.5 ? -1 : 1, groan: 1 + r() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2,
+      deadT: 0, fall: r() < 0.5 ? -1 : 1, groan: 1 + r() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2, street: false,
     })
     return z as Zombie
   }
@@ -2033,7 +2146,7 @@ export class LastTrainEngine {
       kind, model, root, hips: dummy(), spine: dummy(), head: dummy(), arms: [dummy(), dummy()], fores: [dummy(), dummy()],
       thighs: [dummy(), dummy()], shins: [dummy(), dummy()], mats: model.mats, eyes: [], meshes: model.meshes, shadow,
       hp: 100, maxHp: 100, speed: 1, state: 'chase', t: 0, phase: Math.random() * 10, attack: 0, hitT: 0, flash: 0,
-      deadT: 0, fall: 1, groan: 1 + Math.random() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2,
+      deadT: 0, fall: 1, groan: 1 + Math.random() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2, street: false,
     } as unknown as Zombie
     const extra: THREE.Mesh[] = []
     this.dress(kind, model.root, extra, model.mats, model.height)
@@ -2202,7 +2315,30 @@ export class LastTrainEngine {
    * Where a zombie at p heads to reach the player: straight at them when they share a space,
    * else the next doorway on the way (platform ⇄ stairs ⇄ staff door ⇄ flight ⇄ hall ⇄ the wide ticket gate).
    */
+  /** How far a stairway's gate is open (the last station's, or one the player forced). */
+  private openAt(i: number): number {
+    return Math.max(this.exitOpen, this.gateK[i] ?? 0)
+  }
+
+  /** Where a zombie heads: through an open gate when one of them is in the street and the other not. */
   private route(p: THREE.Vector3): [number, number] {
+    const out = (z: number) => z > LANDING.endZ + 0.1
+    const zs = out(p.z)
+    if (zs === out(this.pos.z)) return this.routeTo(p, this.pos.x, this.pos.z)
+    const open = this.station.exits.filter((_, i) => this.openAt(i) > 0.9)
+    if (!open.length) return this.routeTo(p, this.pos.x, this.pos.z)
+    const ex = open.reduce((a, b) => (Math.abs(a.x - p.x) <= Math.abs(b.x - p.x) ? a : b)).x
+    // from the street: to the entrance, then down
+    if (zs) return Math.abs(p.x - ex) > 1.3 ? [ex, LANDING.endZ + 1.2] : [ex, LANDING.endZ - 2]
+    // from inside: out of a hall first, up the stairs, through the gate
+    const h = hallAt(p.x, p.z)
+    if (h && h.u > 0.05) return this.routeTo(p, ex, 14)
+    if (p.z < STAIR.z0 + 0.3 || Math.abs(p.x - ex) > STAIR.halfW - 0.2) return [ex, STAIR.z0 + 1]
+    return [ex, LANDING.endZ + 1.5]
+  }
+
+  /** The way to (tx, tz) through the station and its halls (doorways and the wide ticket gate). */
+  private routeTo(p: THREE.Vector3, tx: number, tz: number): [number, number] {
     const H = HALL
     const lane = H.laneZ
     // cells: 0 platform and stairs, 1 the flight, 2 the hall this side of the gates, 3 beyond them
@@ -2213,8 +2349,8 @@ export class LastTrainEngine {
     }
     const X = (sx: number, u: number) => sx - 2 - u
     const [zc, zsx] = cell(p.x, p.z)
-    const [pc, psx] = cell(this.pos.x, this.pos.z)
-    if (zc === pc && (zc === 0 || zsx === psx)) return [this.pos.x, this.pos.z]
+    const [pc, psx] = cell(tx, tz)
+    if (zc === pc && (zc === 0 || zsx === psx)) return [tx, tz]
     // the cell to go to next, and through which hall
     const sx = zc === 0 ? psx : zsx
     const want = zc !== 0 && (pc === 0 || psx !== zsx) ? zc - 1 : zc + 1
@@ -2403,14 +2539,24 @@ export class LastTrainEngine {
         const h = hallAt(p.x, p.z)!
         p.y += (hallY(h.u, true) - p.y) * Math.min(1, dt * 10)
         this.pushBlocks(p, 0.38)
+      } else if (z.state === 'chase' && p.z > LANDING.endZ - 0.2) {
+        // the street: in through an open entrance only
+        const door = this.station.exits.some((e, i) => this.openAt(i) > 0.9 && Math.abs(p.x - e.x) < 1.5)
+        p.x = clamp(p.x, STREET.x0, STREET.x1)
+        p.z = clamp(p.z, door ? LANDING.endZ - 0.5 : STREET.z0 + 0.1, STREET.z1)
+        p.y += (STREET.y - p.y) * Math.min(1, dt * 10)
+        this.pushBlocks(p, 0.38)
       } else if (z.state === 'chase') {
-        // the platform, and the stairways that open off it
+        // the platform, the track below it (after a player who went down), and the stairways that open off it
         const sx = STAIRS.find((x) => Math.abs(p.x - x) < (p.z > PLATFORM.z1 + 0.5 ? STAIR.halfW + 0.4 : STAIR.halfW - 0.25))
-        p.x = clamp(p.x, PLATFORM.x0, PLATFORM.x1)
-        p.z = clamp(p.z, PLATFORM.z0, sx !== undefined ? LANDING.gateZ - 0.9 : PLATFORM.z1)
+        const track = !this.train.group.visible && (this.pos.y < -0.5 || p.y < -0.4)
+        const onTrack = track && p.z < PLATFORM.z0
+        p.x = clamp(p.x, onTrack ? -TUNNEL_STOP : PLATFORM.x0, onTrack ? TUNNEL_STOP : PLATFORM.x1)
+        const si = sx === undefined ? -1 : STAIRS.indexOf(sx)
+        p.z = clamp(p.z, track ? -3.6 : PLATFORM.z0, sx !== undefined ? (this.openAt(si) > 0.9 ? LANDING.endZ + 0.5 : LANDING.gateZ - 0.9) : PLATFORM.z1)
         const atDoor = sx !== undefined && Math.abs(p.z - HALL.laneZ) < 0.4 && p.z > LANDING.z0
         if (sx !== undefined && p.z > PLATFORM.z1) p.x = clamp(p.x, sx - STAIR.halfW + (atDoor ? -0.3 : 0.35), sx + STAIR.halfW - 0.35)
-        const floorY = sx !== undefined && p.z > STAIR.z0 - 0.2 ? stairSlope(p.z) : 0
+        const floorY = p.z < PLATFORM.z0 - 0.05 && track ? TRACK_Y : sx !== undefined && p.z > STAIR.z0 - 0.2 ? stairSlope(p.z) : 0
         p.y += (floorY - p.y) * Math.min(1, dt * 10)
         for (const pl of this.station.pillars) {
           const ox = p.x - pl.x
@@ -2443,9 +2589,22 @@ export class LastTrainEngine {
     const want = this.station.final && (this.stage === 'exit' || this.stage === 'escaped') ? 1 : 0
     if (this.exitOpen !== want) {
       this.exitOpen = clamp(this.exitOpen + Math.sign(want - this.exitOpen) * (dt / 2.6), 0, 1)
-      for (const e of exits) e.setOpen(this.exitOpen)
       this.rumble(dt, 0.35, 12)
     }
+    for (const [i, e] of exits.entries()) {
+      // a gate whose chain the player broke slides open
+      const target = this.forced[i] ? 1 : 0
+      if (this.gateK[i] !== target) {
+        this.gateK[i] = clamp(this.gateK[i] + Math.sign(target - this.gateK[i]) * (dt / 1.6), 0, 1)
+        this.rumble(dt, 0.45, 12)
+      }
+      const k = this.openAt(i)
+      if (k !== this.shownOpen[i]) {
+        this.shownOpen[i] = k
+        e.setOpen(k)
+      }
+    }
+    this.station.street.fire.intensity = 12 + Math.sin(t * 13) * 2.5 + Math.random() * 3
     const alive = this.zombies.filter((z) => z.state !== 'dead').length
     // the last station: the crowd thins as the wave comes down the stairs, and the street is empty at the end
     const left = this.station.final ? (this.stage === 'fight' ? clamp((this.toSpawn + alive) / Math.max(1, this.waveTotal), 0, 1) : this.stage === 'dying' ? 1 : 0) : 1
@@ -2453,7 +2612,7 @@ export class LastTrainEngine {
     for (const [i, e] of exits.entries()) {
       const gx = Math.abs(this.pos.x - e.x)
       const dGate = Math.hypot(gx, this.pos.z - LANDING.gateZ)
-      const near = dGate < 26 && this.exitOpen < 1
+      const near = dGate < 26 && this.openAt(i) < 1
       if (near !== this.crowdNear[i]) {
         this.crowdNear[i] = near
         retarget = true
@@ -2469,10 +2628,10 @@ export class LastTrainEngine {
       }
       const upstairs = this.pos.y > 2.5 && this.pos.y < HALL.y - 0.5 && gx < 1.95 && this.pos.z > LANDING.gateZ - 5
       // the player on the landing, up against the bars: they reach through
-      if (upstairs && this.exitOpen < 0.5) {
+      if (upstairs && this.openAt(i) < 0.5) {
         if (!this.gateTold && this.pos.z > LANDING.gateZ - 4) {
           this.gateTold = true
-          this.say('The gate is chained shut', this.station.final ? 'The street is swarming — clear the station first' : 'The street is full of them — only the last station is open', 5)
+          this.say('The gate is chained shut', 'Press E at the chain to break it — the street is full of them', 5)
         }
         if (this.pos.z > LANDING.gateZ - 1.2 && this.stage !== 'dying') {
           this.gateHurtT -= dt
@@ -2484,7 +2643,7 @@ export class LastTrainEngine {
           }
         }
       }
-      if (near && this.exitOpen < 0.05) {
+      if (near && this.openAt(i) < 0.05) {
         const amt = upstairs ? 0.012 : 0.0025
         e.gate.position.x = e.x + Math.sin(t * 41 + i) * amt
         e.gate.position.z = LANDING.gateZ + Math.sin(t * 53 + i * 2) * amt * 0.7
@@ -2497,7 +2656,7 @@ export class LastTrainEngine {
           }, 0.2)
         }
         for (const c of members) if (near && c.z.root.visible) this.animateCrowd(c.z, c.base, dt, t, upstairs)
-      } else if (this.exitOpen >= 0.05) {
+      } else if (this.openAt(i) >= 0.05) {
         e.gate.position.x = e.x
         e.gate.position.z = LANDING.gateZ
       }

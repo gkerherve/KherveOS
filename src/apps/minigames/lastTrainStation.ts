@@ -8,7 +8,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import {
   archWallGeometry, box, canvas, ceilingTiles, CEIL_Y, concrete, cyl, FINAL_STATION, floorTexture, graffiti, gravel, LAMP_PITCH, LANDING,
   lineMap, panel, poster, REACH, rng, shade, stain, stairY, STAIR, STAIRS, stationAt, std, tactile, texture, tiles, tmpBox, tmpCyl, TRACK_Y,
-  vaultGeometry, vaultY, vines, wallTexture, words, HALL,
+  vaultGeometry, vaultY, vines, wallTexture, words, HALL, STREET,
 } from './lastTrainWorld'
 import { STYLES, type Decor, type StationStyle } from './lastTrainStyles'
 
@@ -39,6 +39,8 @@ export interface ExitBuild {
   hallLight: THREE.PointLight
   /** Where the crowd stands behind the gate: [x, z] in station coordinates, y is the landing. */
   crowd: [number, number][]
+  /** Hide the painted street behind the gate: the real street is there once the gate is forced. */
+  showStreet(): void
   /** The things that rattle (the gate halves). */
   gate: THREE.Object3D
   /** The group the crowd is added to (it leaves with the station). */
@@ -61,6 +63,8 @@ export interface StationBuild {
   pillars: Pillar[]
   blocks: Block[]
   exits: ExitBuild[]
+  /** The street above the station: its burning barrels flicker. */
+  street: StreetBuild
   style: StationStyle
   /** The last station: its gate opens when the wave is cleared. */
   final: boolean
@@ -212,6 +216,8 @@ export function buildStation(index: number): StationBuild {
     lintel.position.set(sx, 3.75, 10)
     exits.push(buildExit({ group, solids, blocks, own, wallPanel, floorMat, metal, darkMetal, black, final, style, sx, r }))
   }
+  // -- the street above, behind the gates (reached by breaking a gate's chain)
+  const street = buildStreet({ group, solids, blocks, own, index, r: rng(4000 + index) })
 
   // name plaques, posters
   const nameTex = own(words(st.name.toUpperCase(), 1024, 160, '#f4f1e6', '#1d1d1b', 'bold 84px Helvetica, Arial, sans-serif', st.color))
@@ -508,6 +514,7 @@ export function buildStation(index: number): StationBuild {
     pillars,
     blocks,
     exits,
+    street,
     style,
     final,
     dispose() {
@@ -890,19 +897,26 @@ function buildExit(c: ExitCtx): ExitBuild {
   const crowdGroup = new THREE.Group()
   g.add(crowdGroup)
 
+  let street = false
   const setOpen = (k: number) => {
     const e = k * k * (3 - 2 * k)
     halves[0].position.x = -e * 2.0
     halves[1].position.x = e * 2.0
     chainBits.visible = k < 0.02
-    night.visible = k < 1
+    night.visible = !street && k < 1
+    day.visible = !street
     day.material.opacity = e
     light.color.setRGB(1, 0.6 + e * 0.32, 0.35 + e * 0.5)
     light.intensity = 5 + e * 10
   }
   setOpen(0)
+  const showStreet = () => {
+    street = true
+    night.visible = false
+    day.visible = false
+  }
 
-  return { x: sx, setOpen, spawn, hallSpawn, crowd, gate: gateGroup, crowdGroup, light, hallLight }
+  return { x: sx, setOpen, showStreet, spawn, hallSpawn, crowd, gate: gateGroup, crowdGroup, light, hallLight }
 }
 
 /** The stairwell behind the staff door and the ticket hall above it: its gates, its broken shutter. */
@@ -1082,6 +1096,212 @@ function buildHall(c: ExitCtx, g: THREE.Group, wallD: THREE.Material): THREE.Poi
   g.add(light)
   void style
   return light
+}
+
+// ---------------------------------------------------------------- the street above
+
+export interface StreetBuild {
+  /** The burning barrels' light (it flickers). */
+  fire: THREE.PointLight
+}
+
+interface StreetCtx {
+  group: THREE.Group
+  solids: THREE.Object3D[]
+  blocks: Block[]
+  own: Own
+  index: number
+  r: () => number
+}
+
+/** A building's front: rows of windows, a few lit, most dark or broken. */
+function facadeTexture(seed: number, base: string): THREE.CanvasTexture {
+  const [c, g] = canvas(256, 512)
+  const r = rng(seed)
+  g.fillStyle = base
+  g.fillRect(0, 0, 256, 512)
+  for (let y = 24; y < 500; y += 46) {
+    for (let x = 18; x < 240; x += 56) {
+      const lit = r() < 0.12
+      g.fillStyle = lit ? `rgba(255,${180 + r() * 50},${90 + r() * 40},0.95)` : `rgba(10,12,16,${0.8 + r() * 0.2})`
+      g.fillRect(x, y, 34, 28)
+      if (!lit && r() < 0.25) {
+        // broken glass
+        g.strokeStyle = 'rgba(160,170,180,0.5)'
+        g.beginPath()
+        g.moveTo(x + r() * 34, y)
+        g.lineTo(x + r() * 34, y + 28)
+        g.stroke()
+      }
+      g.fillStyle = 'rgba(0,0,0,0.35)'
+      g.fillRect(x - 2, y + 28, 38, 4)
+    }
+  }
+  return texture(c)
+}
+
+function buildStreet(c: StreetCtx): StreetBuild {
+  const { group, solids, blocks, own, index, r } = c
+  const g = new THREE.Group()
+  group.add(g)
+  const y0 = STREET.y
+  const add = <T extends THREE.Mesh>(m: T) => (solids.push(m), m)
+  const W = STREET.x1 - STREET.x0 + 4
+  const D = STREET.z1 - LANDING.endZ + 3
+  const zc = LANDING.endZ + D / 2 - 0.5
+
+  // -- the ground: pavement all over, the road across the middle with its markings
+  const paveTex = own(concrete(310 + index, '#55534e', 0.05))
+  paveTex.wrapS = paveTex.wrapT = THREE.RepeatWrapping
+  paveTex.repeat.set(1 / 3, 1 / 3)
+  const pave = add(panel(g, own(std({ map: paveTex, roughness: 0.9 })), W, D))
+  pave.rotation.x = -Math.PI / 2
+  pave.position.set(0, y0, zc)
+  const [rc, rg] = canvas(512, 256)
+  rg.fillStyle = '#26272a'
+  rg.fillRect(0, 0, 512, 256)
+  const rr = rng(77 + index)
+  for (let i = 0; i < 900; i++) {
+    rg.fillStyle = `rgba(${rr() < 0.5 ? '0,0,0' : '120,120,120'},${rr() * 0.25})`
+    rg.fillRect(rr() * 512, rr() * 256, 2, 2)
+  }
+  rg.fillStyle = '#d8c46a'
+  for (let x = 0; x < 512; x += 64) rg.fillRect(x, 124, 36, 8)
+  const roadTex = own(texture(rc))
+  roadTex.wrapS = THREE.RepeatWrapping
+  roadTex.repeat.set(W / 16, 1)
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(W, 12), own(std({ map: roadTex, roughness: 0.75 })))
+  road.rotation.x = -Math.PI / 2
+  road.position.set(0, y0 + 0.01, 40)
+  g.add(road)
+  const kerb = own(std({ color: 0x8a8780, roughness: 0.8 }))
+  for (const z of [33.9, 46.1]) box(g, kerb, W, 0.14, 0.25, 0, y0 + 0.07, z)
+
+  // -- the station's front, its two entrances (over the stairways), lit signs
+  const brick = wallTexture('brick', '#6b4a3a', 600 + index, 1.2)
+  own(brick.map)
+  own(brick.bump)
+  for (const t of [brick.map, brick.bump]) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping
+    t.repeat.set(0.5, 0.5)
+  }
+  const frontMat = own(std({ map: brick.map, bumpMap: brick.bump, bumpScale: 2, roughness: 0.9 }))
+  const front = (x0: number, x1: number, ya: number, yb: number) => {
+    const m = add(panel(g, frontMat, x1 - x0, yb - ya))
+    m.position.set((x0 + x1) / 2, (ya + yb) / 2, LANDING.endZ + 0.02)
+  }
+  const top = y0 + 3.0
+  front(-W / 2, STAIRS[0] - 2, y0, y0 + 9)
+  front(STAIRS[0] + 2, STAIRS[1] - 2, y0, y0 + 9)
+  front(STAIRS[1] + 2, W / 2, y0, y0 + 9)
+  for (const sx of STAIRS) front(sx - 2, sx + 2, top, y0 + 9)
+  const signMat = own(std({ color: 0x000000, emissive: 0xffffff, emissiveIntensity: 1.5, emissiveMap: own(words('SUBWAY', 512, 96, '#9a1c14', '#fff', 'bold 64px Helvetica, Arial, sans-serif')) }))
+  const rail = own(std({ color: 0x2c4a36, roughness: 0.5, metalness: 0.6 }))
+  for (const sx of STAIRS) {
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.7), signMat)
+    sign.position.set(sx, top + 0.6, LANDING.endZ + 0.08)
+    g.add(sign)
+    // railings either side of the entrance
+    for (const s of [-1, 1]) {
+      box(g, rail, 0.06, 1.0, 2.2, sx + s * 2.1, y0 + 0.5, LANDING.endZ + 1.1)
+      blocks.push({ x0: sx + s * 2.1 - 0.06, x1: sx + s * 2.1 + 0.06, z0: LANDING.endZ, z1: LANDING.endZ + 2.2 })
+    }
+  }
+
+  // -- buildings: a row across the far side, more down both ends
+  const tones = ['#3a3a40', '#4a3c34', '#33393a', '#463f4a', '#2f3436']
+  const building = (x: number, z: number, w: number, d: number, h: number, k: number) => {
+    const tex = own(facadeTexture(800 + index * 31 + k, tones[k % tones.length]))
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+    tex.repeat.set(Math.max(1, Math.round(w / 6)), Math.max(1, Math.round(h / 12)))
+    const m = add(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), own(std({ map: tex, roughness: 0.85 }))))
+    m.position.set(x, y0 + h / 2, z)
+    g.add(m)
+  }
+  let k = 0
+  for (let x = -W / 2; x < W / 2; k++) {
+    const w = 8 + r() * 7
+    building(x + w / 2, STREET.z1 + 5.5, w, 8, 10 + r() * 16, k)
+    x += w + (r() < 0.25 ? 3 : 0) // an alley now and then
+  }
+  for (const s of [-1, 1])
+    for (let z = LANDING.endZ + 2; z < STREET.z1 + 2; k++) {
+      const d = 7 + r() * 6
+      building(s * (STREET.x1 + 5.5), z + d / 2, 8, d, 9 + r() * 14, k)
+      z += d + (r() < 0.3 ? 3 : 0)
+    }
+
+  // -- cars left where they stopped
+  const carCols = [0x7a1e1e, 0x1e3a6a, 0xb8b4a8, 0x2a2a2a, 0x3c5a2a, 0x8a6a1e]
+  const glass = own(std({ color: 0x0c1014, roughness: 0.1, metalness: 0.6 }))
+  const tyre = own(std({ color: 0x111111, roughness: 0.9 }))
+  const lampOn = own(std({ color: 0x000000, emissive: 0xfff0c0, emissiveIntensity: 2 }))
+  const car = (x: number, z: number, along: boolean, col: number) => {
+    const body = own(std({ color: col, roughness: 0.35, metalness: 0.6 }))
+    const cg = new THREE.Group()
+    cg.position.set(x, y0, z)
+    if (!along) cg.rotation.y = Math.PI / 2
+    g.add(cg)
+    solids.push(box(cg, body, 4.2, 0.75, 1.8, 0, 0.6, 0))
+    solids.push(box(cg, body, 2.2, 0.6, 1.62, -0.2, 1.25, 0))
+    box(cg, glass, 2.24, 0.48, 1.64, -0.2, 1.25, 0)
+    for (const [wx, wz] of [[-1.35, -0.9], [-1.35, 0.9], [1.35, -0.9], [1.35, 0.9]]) cyl(cg, tyre, 0.36, 0.26, wx, 0.36, wz, 'z')
+    if (r() < 0.4) for (const wz of [-0.6, 0.6]) box(cg, lampOn, 0.04, 0.12, 0.3, 2.11, 0.75, wz)
+    const hw = along ? 2.2 : 1.0
+    const hd = along ? 1.0 : 2.2
+    blocks.push({ x0: x - hw, x1: x + hw, z0: z - hd, z1: z + hd })
+  }
+  for (let i = 0; i < 9; i++) {
+    const x = STREET.x0 + 5 + r() * (STREET.x1 - STREET.x0 - 10)
+    const z = 36 + r() * 8
+    if (Math.abs(x - STAIRS[0]) < 4 || Math.abs(x - STAIRS[1]) < 4) continue
+    car(x, z, r() < 0.75, carCols[i % carCols.length])
+  }
+  car(-6, 28, false, 0x5a5a5a)
+  car(32, 54, true, 0x7a1e1e)
+
+  // -- street lamps (one still throws real light), burning barrels by the entrances
+  const pole = own(std({ color: 0x1e2224, roughness: 0.5, metalness: 0.6 }))
+  const head = own(std({ color: 0x000000, emissive: 0xffc890, emissiveIntensity: 2.2 }))
+  for (let x = -40; x <= 40; x += 16) {
+    for (const z of [32.5, 47.5]) {
+      const out = z < 40 ? 1 : -1
+      cyl(g, pole, 0.08, 6, x, y0 + 3, z)
+      box(g, pole, 0.12, 0.12, 1.2, x, y0 + 6, z + out * 0.5)
+      if (r() < 0.6) box(g, head, 0.4, 0.1, 0.25, x, y0 + 5.92, z + out)
+      blocks.push({ x0: x - 0.15, x1: x + 0.15, z0: z - 0.15, z1: z + 0.15 })
+    }
+  }
+  const lampLight = new THREE.PointLight(0xffb070, 30, 40, 1.4)
+  lampLight.position.set(0, y0 + 5.6, 33.5)
+  g.add(lampLight)
+  const barrelMat = own(std({ color: 0x4a2a18, roughness: 0.8, metalness: 0.4 }))
+  const flame = own(std({ color: 0x000000, emissive: 0xff7a20, emissiveIntensity: 3 }))
+  for (const [x, z] of [[-14, 27], [3, 29], [14, 26.5]]) {
+    cyl(g, barrelMat, 0.34, 0.9, x, y0 + 0.45, z)
+    const f = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.6, 8), flame)
+    f.position.set(x, y0 + 1.15, z)
+    g.add(f)
+    blocks.push({ x0: x - 0.4, x1: x + 0.4, z0: z - 0.4, z1: z + 0.4 })
+  }
+  const fire = new THREE.PointLight(0xff7a30, 14, 22, 1.5)
+  fire.position.set(0, y0 + 1.6, 28)
+  g.add(fire)
+
+  // -- a moon over the rooftops (no fog on it)
+  const [mc, mg] = canvas(256, 256)
+  const grad = mg.createRadialGradient(128, 128, 30, 128, 128, 128)
+  grad.addColorStop(0, 'rgba(240,236,220,1)')
+  grad.addColorStop(0.45, 'rgba(230,226,210,1)')
+  grad.addColorStop(0.5, 'rgba(200,190,170,0.25)')
+  grad.addColorStop(1, 'rgba(0,0,0,0)')
+  mg.fillStyle = grad
+  mg.fillRect(0, 0, 256, 256)
+  const moon = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), own(new THREE.MeshBasicMaterial({ map: own(texture(mc)), transparent: true, fog: false, depthWrite: false })))
+  moon.position.set(-20, y0 + 45, 120)
+  moon.rotation.y = Math.PI
+  g.add(moon)
+  return { fire }
 }
 
 function solid3<T extends THREE.Mesh>(m: T, solids: THREE.Object3D[]): T {

@@ -29,6 +29,7 @@ const CONTROLS: [string, string][] = [
   ['Mouse', 'Look · left click to shoot · right click to aim'],
   ['W A S D', 'Move · W W or Shift run · Space jump'],
   ['← → ↑ ↓', 'Turn · look up and down'],
+  ['E', 'At a chained gate (top of the stairs): break it, go out'],
   ['1–7 · Q · wheel', 'Pistol, rifle, shotgun — one more gun found at each station'],
   ['R', 'Reload'],
   ['F', 'Full screen'],

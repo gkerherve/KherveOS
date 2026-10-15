@@ -26,6 +26,10 @@ export function stairY(z: number): number {
 export function stairSlope(z: number): number {
   return THREE.MathUtils.clamp(((z - STAIR.z0) / (LANDING.z0 - STAIR.z0)) * LANDING.y + 0.08, 0, LANDING.y)
 }
+/** The street above the station, behind the gates: ground at the landing's height. */
+export const STREET = { x0: -46.5, x1: 46.5, z0: LANDING.endZ + 0.3, z1: 60.5, y: LANDING.y }
+/** How far along the track a player can walk into a tunnel before the dark stops them (|x|). */
+export const TUNNEL_STOP = 92
 /**
  * The ticket hall above each landing: through the staff door in the landing's left wall (x = sx - 2),
  * up a short flight, into a hall with a line of ticket gates. Measured by u = sx - 2 - x (into the hall).
