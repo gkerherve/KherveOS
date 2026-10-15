@@ -142,6 +142,8 @@ export interface Hud {
 
 export interface HudEls {
   crosshair: HTMLElement | null
+  /** The view through a telescopic sight (shown while aiming with one). */
+  scope?: HTMLElement | null
   hit: HTMLElement | null
   hurt: HTMLElement | null
 }
@@ -726,7 +728,8 @@ export class LastTrainEngine {
 
   look(dx: number, dy: number) {
     if (this.stage === 'dying') return
-    const sens = 0.0022 * (this.aiming ? 0.6 : 1)
+    // slower through a scope, so the reticle can be held on a head
+    const sens = 0.0022 * (this.aiming ? (this.gun.def.scope ? 0.28 : 0.6) : 1)
     this.yaw -= dx * sens
     this.pitch = clamp(this.pitch - dy * sens, -1.5, 1.5)
     this.vmSway.x = clamp(this.vmSway.x + dx * 0.00012, -0.03, 0.03)
@@ -797,7 +800,7 @@ export class LastTrainEngine {
   // ---------------------------------------------------------------- update
 
   private update(dt: number) {
-    this.vm.visible = this.stage !== 'dying'
+    this.vm.visible = this.stage !== 'dying' && !this.scoped
     this.stageT += dt
     this.messageT -= dt
     this.updateStage(dt)
@@ -1425,6 +1428,11 @@ export class LastTrainEngine {
       noise({ dur: 0.06, freq: 500 + Math.random() * 300, filter: 'lowpass', vol: 0.09 * vol })
       noise({ dur: 0.03, freq: 2400, filter: 'bandpass', q: 2, vol: 0.03 * vol, at: 0.01 })
     }, 0.12)
+  }
+
+  /** Looking through a telescopic sight: aiming with one, fully raised, not reloading or switching. */
+  private get scoped(): boolean {
+    return !!this.gun.def.scope && this.aim > 0.85 && this.reloadT <= 0 && this.switchT <= 0 && this.stage !== 'dying'
   }
 
   private placeCamera(dt: number) {
@@ -2755,8 +2763,9 @@ export class LastTrainEngine {
       const h = this.renderer.domElement.clientHeight
       const gap = 4 + (Math.tan(this.currentSpread()) / tan) * (h / 2)
       ch.style.setProperty('--gap', `${gap.toFixed(1)}px`)
-      ch.style.opacity = String(this.sprinting || this.stage === 'dying' ? 0 : 1 - this.aim * (this.gun.def.base === 'shotgun' ? 0.3 : 0.9))
+      ch.style.opacity = String(this.sprinting || this.stage === 'dying' || this.scoped ? 0 : 1 - this.aim * (this.gun.def.base === 'shotgun' ? 0.3 : 0.9))
     }
+    if (this.hud.scope) this.hud.scope.style.opacity = this.scoped ? '1' : '0'
     if (this.hud.hit) this.hud.hit.style.opacity = String(this.hitT > 0 ? 1 : 0)
     if (this.hud.hurt) {
       const low = this.health < 35 ? 0.35 + Math.sin(performance.now() * 0.006) * 0.12 : 0

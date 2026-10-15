@@ -41,6 +41,7 @@ export default function LastTrain({ win }: AppProps) {
   const crossRef = useRef<HTMLDivElement>(null)
   const hitRef = useRef<HTMLDivElement>(null)
   const hurtRef = useRef<HTMLDivElement>(null)
+  const scopeRef = useRef<HTMLDivElement>(null)
   const engineRef = useRef<LastTrainEngine | null>(null)
   const [phase, setPhaseState] = useState<Phase>('loading')
   const phaseRef = useRef<Phase>('loading')
@@ -142,7 +143,7 @@ export default function LastTrain({ win }: AppProps) {
           saveCheckpoint(ID, cp)
           setSave(cp)
         }
-        engine.bindHud({ crosshair: crossRef.current, hit: hitRef.current, hurt: hurtRef.current })
+        engine.bindHud({ crosshair: crossRef.current, hit: hitRef.current, hurt: hurtRef.current, scope: scopeRef.current })
         const fit = () => {
           const el = rootRef.current
           if (el && engine) engine.resize(el.clientWidth, el.clientHeight, window.devicePixelRatio || 1)
@@ -387,6 +388,21 @@ export default function LastTrain({ win }: AppProps) {
 
       <div className={`lt-hud${showHud ? '' : ' lt-hidden'}`}>
         <div ref={hurtRef} className="lt-hurt" />
+        {/* the view through the marksman rifle's telescopic sight */}
+        <div ref={scopeRef} className="lt-scope">
+          <svg viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet">
+            <circle r="99" fill="none" stroke="#000" strokeWidth="2.5" />
+            <path d="M-99 0H-12M12 0H99M0 -99V-12M0 12V99" stroke="#000" strokeWidth="0.6" />
+            <path d="M-99 0H-60M60 0H99M0 60V99" stroke="#000" strokeWidth="3" />
+            {[-40, -30, -20, 20, 30, 40].map((v) => (
+              <g key={v}>
+                <circle cx={v} cy="0" r="1" fill="#000" />
+                <circle cx="0" cy={v} r="1" fill="#000" />
+              </g>
+            ))}
+            <circle r="0.9" fill="#ff2a1a" />
+          </svg>
+        </div>
         <div ref={crossRef} className="lt-cross">
           <i />
           <i />

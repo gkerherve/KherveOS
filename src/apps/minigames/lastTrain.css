@@ -27,6 +27,8 @@
 /* ------------------------------------------------------------- HUD */
 
 .lt-hud {
+  /* the scope is sized on this view (cqmin) */
+  container-type: size;
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -373,4 +375,23 @@
   font-size: 12px;
   pointer-events: none;
   z-index: 5;
+}
+
+/* the telescopic sight: a round view with a reticle, black around it (sized on the game's view: cqmin) */
+.lt-scope {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.08s;
+  background: radial-gradient(circle at center, transparent 0, transparent calc(46cqmin - 6px), rgba(0, 0, 0, 0.6) calc(46cqmin - 2px), #000 46cqmin);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.6);
+}
+.lt-scope svg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 92cqmin;
+  height: 92cqmin;
+  transform: translate(-50%, -50%);
 }

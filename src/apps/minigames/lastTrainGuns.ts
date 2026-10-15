@@ -21,6 +21,8 @@ export interface WeaponDef {
   from: number
   /** Field of view taken off when aiming down the sights. */
   zoom: number
+  /** A telescopic sight: aiming looks through it (the scope view, the gun out of sight). */
+  scope?: boolean
   auto: boolean
   damage: number
   pellets: number
@@ -45,7 +47,7 @@ export const WEAPONS: WeaponDef[] = [
   { id: 'smg', base: 'rifle', short: 'SMG', from: 1, zoom: 12, name: 'Vesper SMG', auto: true, damage: 17, pellets: 1, rpm: 980, mag: 40, reserve: 200, reload: 1.55, rack: 0.3, spread: 0.024, kick: 0.012, range: 60 },
   { id: 'magnum', base: 'pistol', short: 'Magnum', from: 2, zoom: 16, name: 'Warden .44', auto: false, damage: 115, pellets: 1, rpm: 130, mag: 6, reserve: 36, reload: 1.7, rack: 0.2, spread: 0.006, kick: 0.07, range: 100 },
   { id: 'autoshotgun', base: 'shotgun', short: 'Auto-12', from: 3, zoom: 12, name: 'Riot Auto-12', auto: true, damage: 13, pellets: 8, rpm: 230, mag: 8, reserve: 40, reload: 0.42, rack: 0, spread: 0.075, kick: 0.07, range: 34 },
-  { id: 'marksman', base: 'rifle', short: 'Marksman', from: 4, zoom: 44, name: 'Longline DMR', auto: false, damage: 150, pellets: 1, rpm: 190, mag: 10, reserve: 50, reload: 2.2, rack: 0.4, spread: 0.004, kick: 0.05, range: 200 },
+  { id: 'marksman', base: 'rifle', short: 'Marksman', from: 4, zoom: 60, scope: true, name: 'Longline DMR', auto: false, damage: 150, pellets: 1, rpm: 190, mag: 10, reserve: 50, reload: 2.2, rack: 0.4, spread: 0.004, kick: 0.05, range: 200 },
 ]
 
 /** The two-bone left arm: shoulder and hand are given, the elbow follows. */
