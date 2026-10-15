@@ -86,6 +86,8 @@ export interface Gun {
 
 const boxGeo = new THREE.BoxGeometry(1, 1, 1)
 const cylGeo = new THREE.CylinderGeometry(1, 1, 1, 16)
+/** A tube with no ends (a sight you look through). */
+const sightTube = new THREE.CylinderGeometry(1, 1, 1, 24, 1, true)
 
 function mat(color: number, roughness: number, metalness = 0): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({ color, roughness, metalness })
@@ -106,6 +108,7 @@ const M = {
   plate: mat(0x101113, 0.7, 0.2),
   tan: mat(0x8a7a58, 0.75, 0.1),
   rubber: mat(0x141414, 0.95),
+  blackOpen: new THREE.MeshStandardMaterial({ color: 0x1d1f22, roughness: 0.42, metalness: 0.8, side: THREE.DoubleSide }),
   white: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.6, 1.5) }),
   lamp: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 2.2, 1.9) }),
   chrome: mat(0xc8ccd0, 0.18, 1),
@@ -421,7 +424,13 @@ export function buildGuns(): Gun[] {
     B(g, M.polymer, 0.045, 0.07, 0.2, 0, -0.015, 0.25)
     // red-dot sight
     B(g, M.black, 0.03, 0.02, 0.08, 0, 0.045, 0.0)
-    C(g, M.black, 0.024, 0.07, 0, 0.075, -0.0)
+    // the sight's housing is an open tube: aiming looks through it at the glass and the dot (a closed
+    // cylinder here filled the view with its black end cap)
+    const housing = new THREE.Mesh(sightTube, M.blackOpen)
+    housing.scale.set(0.024, 0.07, 0.024)
+    housing.rotation.x = Math.PI / 2
+    housing.position.set(0, 0.075, 0)
+    g.add(housing)
     const lens = new THREE.Mesh(new THREE.CircleGeometry(0.019, 18), M.lens)
     lens.position.set(0, 0.075, 0.036)
     g.add(lens)
@@ -563,8 +572,9 @@ function rifleDetail(g: THREE.Group) {
   B(g, M.black, 0.012, 0.01, 0.02, 0.03, -0.01, -0.26)
   // the gas block, the folding front sight, the flash hider's slots, a sling loop
   B(g, M.dark, 0.026, 0.024, 0.03, 0, 0.002, -0.36)
-  B(g, M.black, 0.02, 0.03, 0.012, 0, 0.05, -0.34)
-  B(g, M.black, 0.004, 0.012, 0.004, 0, 0.068, -0.34)
+  // (folded down, below the red dot's line of sight)
+  B(g, M.black, 0.02, 0.016, 0.012, 0, 0.044, -0.34)
+  B(g, M.black, 0.004, 0.008, 0.004, 0, 0.055, -0.34)
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * Math.PI * 2 + 0.4
     B(g, M.plate, 0.004, 0.004, 0.035, Math.cos(a) * 0.017, Math.sin(a) * 0.017, -0.535)
