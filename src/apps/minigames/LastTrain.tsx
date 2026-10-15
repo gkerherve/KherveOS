@@ -390,8 +390,17 @@ export default function LastTrain({ win }: AppProps) {
         <div ref={hurtRef} className="lt-hurt" />
         {/* the view through the marksman rifle's telescopic sight */}
         <div ref={scopeRef} className="lt-scope">
-          <svg viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet">
-            <circle r="99" fill="none" stroke="#000" strokeWidth="2.5" />
+          {/* one picture, no CSS sizing tricks (WebKit): the black all round with a round hole, then the reticle */}
+          <svg viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet" overflow="visible">
+            <defs>
+              <radialGradient id="lt-scope-edge" cx="0" cy="0" r="100" gradientUnits="userSpaceOnUse">
+                <stop offset="0.86" stopColor="#000" stopOpacity="0" />
+                <stop offset="1" stopColor="#000" stopOpacity="0.55" />
+              </radialGradient>
+            </defs>
+            <path d="M-5000 -5000H5000V5000H-5000Z M0 -97A97 97 0 1 0 0 97A97 97 0 1 0 0 -97Z" fill="#000" fillRule="evenodd" />
+            <circle r="97" fill="url(#lt-scope-edge)" />
+            <circle r="97" fill="none" stroke="#000" strokeWidth="3" />
             <path d="M-99 0H-12M12 0H99M0 -99V-12M0 12V99" stroke="#000" strokeWidth="0.6" />
             <path d="M-99 0H-60M60 0H99M0 60V99" stroke="#000" strokeWidth="3" />
             {[-40, -30, -20, 20, 30, 40].map((v) => (
