@@ -837,9 +837,15 @@
 .k-window.k-game-full {
   position: fixed !important;
   inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
+  /* pinned to the four edges, not sized in vw/vh: the interface size (Settings, src/os/uiScale.ts) zooms
+     the page, and zoomed vw/vh fall short of the screen (by a different amount in WebKit and Chrome) */
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
   z-index: 2147483000 !important;
+  transform: none !important;
+  animation: none !important;
   border: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
