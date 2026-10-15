@@ -1,4 +1,4 @@
-// Rune Keep levels (src/apps/minigames/rkMaps.ts): every thing stands in an
+// DataCenter Assault levels (src/apps/minigames/rkMaps.ts): every thing stands in an
 // open cell, and a player walking (steps of at most STEP, any drop, lifts,
 // doors once their key is held) can collect every key and reach the exit.
 
@@ -41,10 +41,11 @@ for (const make of LEVELS) {
     assert.equal(m.ents.filter((e) => e.kind === 'start').length, 1)
     assert.equal(m.ents.filter((e) => e.kind === 'exit').length, 1)
   })
-  test(`${m.name}: has open country with trees, and the hills can be walked`, () => {
-    const land = m.cells.filter((c) => c.terrain)
-    assert.ok(land.length > 500, 'outdoors')
-    assert.ok(land.filter((c) => c.tree).length > 20, 'trees')
+  test(`${m.name}: corridors and rooms indoors, doors of several kinds`, () => {
+    assert.equal(m.cells.filter((c) => c.terrain || c.tree).length, 0, 'no hills or trees: it is a building')
+    const styles = new Set(m.doors.map((d) => d.style ?? 'slide'))
+    assert.ok(styles.size >= 3, `door styles: ${[...styles]}`)
+    assert.ok(m.cells.some((c) => c.wall === 'server'), 'server racks')
   })
   test(`${m.name}: every key, then the exit, can be reached`, () => {
     const keys = new Set<string>()
@@ -59,3 +60,9 @@ for (const make of LEVELS) {
     for (const d of m.doors) if (d.key) assert.ok(keys.has(d.key), `the ${d.key} key can be found`)
   })
 }
+
+test('the last level has core servers to destroy, and the exit waits for them', () => {
+  const m = LEVELS[LEVELS.length - 1]()
+  assert.ok(m.ents.filter((e) => e.kind === 'core').length >= 5)
+  assert.ok(m.exitNeedsKills)
+})

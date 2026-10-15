@@ -196,10 +196,10 @@
   border-radius: 6px 6px 2px 2px;
 }
 .rk-key-silver {
-  background: linear-gradient(#ffffff, #8a9098);
+  background: linear-gradient(#7ab4ff, #1f5ad0);
 }
 .rk-key-gold {
-  background: linear-gradient(#fff0a0, #b07a10);
+  background: linear-gradient(#ff8a80, #c01818);
 }
 .rk-quad {
   font: bold 14px 'Courier New', monospace;

@@ -1,12 +1,12 @@
-// Rune Keep: the levels. A level is a grid of 1 m cells; each open cell has
-// a floor and a ceiling height and its textures. Rooms, stairs, liquids,
-// doors, lifts and secrets are carved with a small builder, and things
-// (the start, monsters, items, lights, the exit) are placed by cell
-// coordinates. Mazes of corridors and open hills with trees are generated
-// from a seed, so a level is the same every time. Pure data: no three.js here (tools/tests/runekeep-maps.test.ts
+// DataCenter Assault (the app id is still runekeep): the levels. A level is a grid
+// of 1 m cells; each open cell has a floor and a ceiling height and its textures.
+// Rooms, rack rows, desks, doors (sliding, shutters, double, blast), lifts and
+// secrets are carved with a small builder, and things (the start, enemies, items,
+// lights, the exit) are placed by cell coordinates. The three levels are laid
+// out by hand: corridors and long rooms, the same every time. Pure data: no three.js here (tools/tests/runekeep-maps.test.ts
 // checks every level can be finished).
 
-export type Tex = 'stone' | 'brick' | 'metal' | 'wood' | 'rune' | 'grate' | 'tech' | 'dirt' | 'slab' | 'grass' | 'ash'
+export type Tex = 'stone' | 'brick' | 'metal' | 'wood' | 'rune' | 'grate' | 'tech' | 'dirt' | 'slab' | 'grass' | 'ash' | 'server' | 'panel' | 'raised' | 'ceiltile' | 'hazard'
 export type Liquid = 'lava' | 'slime'
 export type Key = 'silver' | 'gold'
 
@@ -30,6 +30,9 @@ export interface Cell {
 
 export type TreeKind = 'pine' | 'oak' | 'dead'
 
+/** How a door opens: slides up (the default), a roll-up shutter, double doors parting sideways, a heavy blast door. */
+export type DoorStyle = 'slide' | 'shutter' | 'split' | 'blast'
+
 export interface Door {
   id: number
   x0: number
@@ -37,6 +40,7 @@ export interface Door {
   x1: number
   z1: number
   key?: Key
+  style?: DoorStyle
 }
 
 export interface Lift {
@@ -49,9 +53,10 @@ export interface Lift {
   high: number
 }
 
-export type MonsterKind = 'grunt' | 'hound' | 'knight' | 'brute' | 'wraith' | 'ravager'
+/** grunt rifleman, hound attack dog, knight commando, brute heavy gunner, wraith drone, ravager android; core: a core server to destroy. */
+export type MonsterKind = 'grunt' | 'hound' | 'knight' | 'brute' | 'wraith' | 'ravager' | 'core'
 export type ItemKind =
-  | 'shotgun2' | 'nailgun' | 'supernail' | 'grenadel' | 'rocketl' | 'thunder'
+  | 'pistol' | 'shotgun2' | 'nailgun' | 'supernail' | 'grenadel' | 'rocketl' | 'thunder' | 'railgun'
   | 'shells' | 'nails' | 'rockets' | 'cells'
   | 'health' | 'health25' | 'mega' | 'armor1' | 'armor2' | 'armor3' | 'quad'
   | 'key_silver' | 'key_gold'
@@ -86,7 +91,7 @@ export interface MapDef {
   skyTint: [number, number, number]
 }
 
-export const MONSTERS: MonsterKind[] = ['grunt', 'hound', 'knight', 'brute', 'wraith', 'ravager']
+export const MONSTERS: MonsterKind[] = ['grunt', 'hound', 'knight', 'brute', 'wraith', 'ravager', 'core']
 
 /** A small seeded random generator (mulberry32). */
 function seeded(seed: number) {
@@ -169,9 +174,9 @@ class Builder {
     })
     return this
   }
-  door(x0: number, z0: number, x1: number, z1: number, key?: Key) {
+  door(x0: number, z0: number, x1: number, z1: number, key?: Key, style?: DoorStyle) {
     const id = this.doors.length
-    this.doors.push({ id, x0: x0 + this.ox, z0: z0 + this.oz, x1: x1 + this.ox, z1: z1 + this.oz, key })
+    this.doors.push({ id, x0: x0 + this.ox, z0: z0 + this.oz, x1: x1 + this.ox, z1: z1 + this.oz, key, style })
     this.each(x0, z0, x1, z1, (c) => {
       if (c.solid) throw new Error(`${this.name}: door ${id} over a solid cell`)
       c.door = id
@@ -310,6 +315,19 @@ class Builder {
     })
     return this
   }
+  /** Rows of server racks: blocks 2.2 m high with the rack fronts on their sides (too tall to climb). */
+  racks(x0: number, z0: number, x1: number, z1: number, base: number, c: number, ceil: Tex = 'ceiltile') {
+    return this.room(x0, z0, x1, z1, base + 2.2, c, { wall: 'server', floor: 'metal', ceil })
+  }
+  /** Desks and consoles: waist-high blocks. */
+  desks(x0: number, z0: number, x1: number, z1: number, base: number, c: number, ceil: Tex = 'ceiltile') {
+    return this.room(x0, z0, x1, z1, base + 0.9, c, { wall: 'metal', floor: 'wood', ceil })
+  }
+  /** A ceiling lamp every `step` cells over a box. */
+  lamps(x0: number, z0: number, x1: number, z1: number, y: number, step: number, color = 0xdfe8ff, power = 1.1) {
+    for (let z = z0; z <= z1; z += step) for (let x = x0; x <= x1; x += step) this.lamp(x, z, y, color, power)
+    return this
+  }
   /** The ground height at a cell (to stand things on hills). */
   height(x: number, z: number) {
     return this.cells[(z + this.oz) * this.w + x + this.ox].f
@@ -342,175 +360,164 @@ class Builder {
   }
 }
 
-// ---------------------------------------------------------------- E1: The Outer Gate
+// ---------------------------------------------------------------- the data centre's looks
 
-function outerGate(): MapDef {
-  const b = new Builder('The Outer Gate', 72, 116)
-  // start chamber and its hidden niche
-  b.room(30, 2, 39, 9, 0, 5, { wall: 'stone', floor: 'slab' })
-  b.room(27, 5, 29, 6, 0, 3, { wall: 'brick', floor: 'slab' }).secret(27, 5, 28, 6)
-  b.put('start', 34, 3, { angle: 0 })
-  b.torch(30, 2).torch(39, 2)
-  b.put('shells', 38, 8).put('nailgun', 27, 5).put('nails', 28, 6)
+/** White panels, raised floor, ceiling tiles: offices, corridors, server halls. */
+const DC: Look = { wall: 'panel', floor: 'raised', ceil: 'ceiltile' }
+/** Plant rooms: machinery walls, grating, bare metal overhead. */
+const PLANT: Look = { wall: 'tech', floor: 'grate', ceil: 'metal' }
+/** Loading bays, shafts and vaults: steel walls, concrete floors. */
+const DOCK: Look = { wall: 'metal', floor: 'slab', ceil: 'metal' }
+const ALARM = 0xff4030
 
-  // the cellars: a maze of brick corridors
-  b.room(35, 10, 36, 11, 0, 3.5, { wall: 'brick', floor: 'slab' })
-  const A = b.maze(14, 12, 12, 8, 11, 0, 3.5, { wall: 'brick', floor: 'slab', ceil: 'wood' })
-  const [ax, az] = A.at(1, 7)
-  b.room(ax, az + 2, ax + 1, az + 4, 0, 3.5, { wall: 'brick', floor: 'slab' })
-  b.room(ax, az + 5, ax + 1, az + 5, 0, 3.5, { wall: 'metal', floor: 'slab' }).door(ax, az + 5, ax + 1, az + 5)
-  const cellar: [string, number, number][] = [['grunt', 5, 1], ['grunt', 9, 3], ['hound', 2, 4], ['grunt', 6, 6], ['grunt', 10, 7], ['hound', 3, 2]]
-  for (const [k, i, j] of cellar) b.put(k as Ent['kind'], ...A.at(i, j), { angle: Math.PI })
-  const ends = A.deadEnds
-  for (const [n, k] of (['health', 'shells', 'armor1', 'shells', 'health'] as Ent['kind'][]).entries()) if (ends[n]) b.put(k, ...A.at(...ends[n]))
+// ---------------------------------------------------------------- 1: The Perimeter (soldiers)
 
-  // out onto the hills: grass, trees, open sky
-  b.hills(4, az + 6, 66, 86, 0, 5, 7, 22)
-  const hx = (x: number, z: number) => b.height(x, z)
-  b.put('grunt', 12, 50, { angle: Math.PI }).put('grunt', 40, 56, { angle: Math.PI }).put('hound', 22, 66, { angle: Math.PI })
-  b.put('hound', 52, 70, { angle: Math.PI }).put('grunt', 60, 48, { angle: -Math.PI / 2 }).put('knight', 34, 78, { angle: Math.PI })
-  b.put('wraith', 46, 62, { y: 7 }).put('wraith', 16, 76, { y: 7 })
-  // the silver key on the highest ground
-  let top: [number, number] = [30, 60]
-  for (let z = 44; z <= 82; z++) for (let x = 8; x <= 62; x++) if (hx(x, z) > hx(...top)) top = [x, z]
-  b.put('key_silver', ...top).put('armor2', top[0] + 1, top[1] + 1)
-  b.put('health', 8, 46).put('shells', 58, 80).put('health25', 44, 72).put('nails', 26, 54).put('shotgun2', 62, 58)
-  b.trees(5, az + 7, 65, 85, 90, 21)
-
-  // the keep gate (silver key) and the keep's corridors
-  b.room(31, 87, 32, 87, 0, 4, { wall: 'metal', floor: 'slab' }).door(31, 87, 32, 87, 'silver')
-  b.torch(30, 86).torch(33, 86)
-  const B = b.maze(10, 88, 14, 7, 5, 0, 4, { wall: 'rune', floor: 'stone', ceil: 'stone' }, 0.15, 0xff8050)
-  const keep: [string, number, number][] = [['knight', 4, 2], ['grunt', 9, 1], ['knight', 11, 4], ['grunt', 2, 5], ['brute', 7, 6], ['grunt', 13, 3]]
-  for (const [k, i, j] of keep) b.put(k as Ent['kind'], ...B.at(i, j), { angle: Math.PI })
-  for (const [n, k] of (['health25', 'rockets', 'shells', 'health', 'grenadel'] as Ent['kind'][]).entries()) if (B.deadEnds[n]) b.put(k, ...B.at(...B.deadEnds[n]))
-
-  // the last hall and the exit
-  const [bx, bz] = B.at(13, 6)
-  b.room(bx + 2, bz, bx + 6, bz + 1, 0, 4, { wall: 'rune', floor: 'stone' })
-  b.room(bx + 7, bz - 6, bx + 16, bz + 7, 0, 7, { wall: 'rune', floor: 'tech', ceil: 'stone' })
-  b.liquid(bx + 10, bz - 2, bx + 13, bz + 1, 'lava', -0.5)
-  b.put('knight', bx + 9, bz + 4, { angle: -Math.PI / 2 }).put('knight', bx + 14, bz - 4, { angle: -Math.PI / 2 })
-  b.put('exit', bx + 15, bz + 6).lamp(bx + 9, bz + 6, 6.6, 0x9fd0ff).lamp(bx + 14, bz - 5, 6.6, 0x9fd0ff)
-  b.torch(bx + 7, bz - 4).torch(bx + 16, bz + 2)
-  return b.done({ fog: 0.011, fogColor: 0x2a2418, sun: { dir: [-0.4, 1, 0.3], power: 1.6, color: 0xffe2b8 }, skyTint: [0.5, 0.42, 0.3] })
+function perimeter(): MapDef {
+  const b = new Builder('The Perimeter', 60, 90)
+  // the loading bay where the truck dropped you, crates for cover
+  b.room(18, 2, 41, 11, 0, 6, DOCK)
+  b.solid(23, 6, 24, 7).solid(35, 5, 36, 6)
+  b.put('start', 30, 3, { angle: 0 })
+  b.lamps(22, 4, 38, 10, 5.6, 8)
+  b.put('shells', 20, 10).put('nails', 40, 10).put('health', 20, 3)
+  // a roll-up shutter into the building
+  b.room(29, 12, 31, 12, 0, 3.4, DC).door(29, 12, 31, 12, undefined, 'shutter')
+  b.room(29, 13, 31, 30, 0, 3.4, DC)
+  b.lamps(30, 16, 30, 28, 3.1, 6)
+  b.put('grunt', 30, 25, { angle: Math.PI })
+  // the guard room behind double doors
+  b.room(28, 19, 28, 20, 0, 3.4, DC).door(28, 19, 28, 20, undefined, 'split')
+  b.room(18, 15, 27, 25, 0, 3.4, DC)
+  b.desks(20, 17, 23, 18, 0, 3.4)
+  b.lamps(20, 17, 26, 23, 3.1, 6)
+  b.put('shotgun2', 25, 23).put('armor1', 19, 24).put('shells', 26, 16)
+  b.put('grunt', 21, 21, { angle: Math.PI / 2 }).put('knight', 25, 16, { angle: Math.PI / 2 })
+  // server hall A: rows of racks, aisles between them
+  b.room(8, 31, 51, 46, 0, 5, DC)
+  for (const z of [34, 38, 42]) b.racks(11, z, 20, z + 1, 0, 5).racks(24, z, 34, z + 1, 0, 5).racks(38, z, 47, z + 1, 0, 5)
+  b.lamps(12, 32, 48, 44, 4.7, 9)
+  b.put('grunt', 15, 37, { angle: Math.PI }).put('grunt', 44, 41, { angle: Math.PI }).put('grunt', 26, 44, { angle: Math.PI })
+  b.put('hound', 30, 45, { angle: Math.PI }).put('hound', 9, 40, { angle: Math.PI })
+  b.put('knight', 45, 33, { angle: Math.PI }).put('wraith', 30, 36, { y: 3.8 })
+  b.put('nailgun', 50, 44).put('nails', 9, 32).put('health', 50, 32).put('key_silver', 49, 45)
+  // the blue-card door and the corridor to the offices
+  b.room(29, 47, 31, 47, 0, 3.4, DC).door(29, 47, 31, 47, 'silver', 'slide')
+  b.room(29, 48, 31, 58, 0, 3.4, DC)
+  b.lamps(30, 50, 30, 56, 3.1, 6)
+  b.put('grunt', 30, 55, { angle: Math.PI })
+  // open-plan offices: desks, a couple of partitions
+  b.room(12, 59, 47, 74, 0, 3.6, { wall: 'panel', floor: 'slab', ceil: 'ceiltile' })
+  b.solid(20, 59, 20, 65).solid(37, 68, 37, 74)
+  for (const [x0, z0, x1, z1] of [[14, 62, 17, 63], [14, 68, 17, 69], [22, 62, 26, 63], [32, 64, 35, 65], [40, 62, 44, 63], [40, 69, 44, 70], [22, 70, 26, 71]]) b.desks(x0, z0, x1, z1, 0, 3.6)
+  b.lamps(14, 61, 46, 73, 3.3, 8)
+  b.put('grunt', 16, 66, { angle: Math.PI }).put('grunt', 43, 66, { angle: Math.PI }).put('knight', 30, 72, { angle: Math.PI })
+  b.put('brute', 34, 61, { angle: Math.PI }).put('hound', 24, 67, { angle: Math.PI })
+  b.put('health25', 13, 73).put('shells', 46, 60).put('nails', 13, 60)
+  // the blast door and the stairwell down (the exit)
+  b.room(29, 75, 31, 75, 0, 3.6, DOCK).door(29, 75, 31, 75, undefined, 'blast')
+  b.room(25, 76, 35, 84, 0, 4, DOCK)
+  b.lamp(30, 80, 3.7, ALARM).put('exit', 30, 82)
+  return b.done({ fog: 0.012, fogColor: 0x0a0e14, sun: { dir: [0.3, 1, 0.2], power: 0.4, color: 0xbcd0ff }, skyTint: [0.2, 0.25, 0.35] })
 }
 
-// ---------------------------------------------------------------- E2: Halls of Embers
+// ---------------------------------------------------------------- 2: The Cooling Plant (heavier units, the first androids)
 
-function hallsOfEmbers(): MapDef {
-  const b = new Builder('Halls of Embers', 96, 140)
-  b.room(30, 2, 41, 9, 0, 5, { wall: 'metal', floor: 'tech', ceil: 'metal' })
-  b.put('start', 35, 3, { angle: 0 })
-  b.lamp(32, 5, 4.6).lamp(39, 5, 4.6)
-  b.put('shells', 31, 8).put('nails', 40, 8)
-  // a secret niche: megahealth
-  b.room(42, 4, 44, 6, 0, 3, { wall: 'brick', floor: 'slab' }).secret(43, 4, 44, 6)
-  b.put('mega', 43, 5)
-
-  // the furnace ducts: a maze of metal corridors
-  b.room(34, 10, 35, 11, 0, 3.5, { wall: 'metal', floor: 'grate', ceil: 'metal' })
-  const M = b.maze(22, 12, 10, 6, 41, 0, 3.5, { wall: 'metal', floor: 'grate', ceil: 'metal' }, 0.15, 0xffb070)
-  b.room(34, 29, 35, 31, 0, 3.5, { wall: 'metal', floor: 'grate', ceil: 'metal' })
-  for (const [k, i, j] of [['grunt', 2, 1], ['hound', 7, 2], ['grunt', 1, 4], ['grunt', 8, 5], ['hound', 5, 3]] as [Ent['kind'], number, number][]) b.put(k, ...M.at(i, j), { angle: Math.PI })
-  for (const [n, k] of (['shells', 'health', 'nails', 'armor1'] as Ent['kind'][]).entries()) if (M.deadEnds[n]) b.put(k, ...M.at(...M.deadEnds[n]))
-
-  // everything after the ducts sits 22 cells further on
-  b.offset(0, 22)
-
-  // the lava cavern with stone walkways
-  b.room(20, 10, 51, 35, -2, 12, { wall: 'rune', floor: 'stone', ceil: 'stone' })
-  b.liquid(20, 10, 51, 35, 'lava', -2)
-  b.room(34, 10, 37, 20, 0, 12, { wall: 'rune', floor: 'slab' }) // causeway north
-  b.room(28, 21, 43, 25, 0, 12, { wall: 'rune', floor: 'slab' }) // the cross platform
-  b.room(22, 21, 25, 34, 0, 12, { wall: 'rune', floor: 'slab' }) // west walkway
-  b.room(26, 21, 27, 22, 0, 12, { wall: 'rune', floor: 'slab' })
-  b.room(26, 31, 33, 34, 0, 12, { wall: 'rune', floor: 'slab' }) // back to the middle
-  b.room(34, 26, 37, 35, 0, 12, { wall: 'rune', floor: 'slab' }) // causeway to the door
-  b.room(42, 26, 43, 29, 0.5, 12, { wall: 'rune', floor: 'slab' })
-  b.room(44, 27, 48, 31, 1, 12, { wall: 'rune', floor: 'slab' }) // the rocket island
-  b.put('rocketl', 46, 29).put('rockets', 47, 30)
-  b.put('grunt', 30, 23, { angle: Math.PI }).put('grunt', 41, 23, { angle: Math.PI }).put('hound', 23, 30, { angle: Math.PI })
-  b.put('wraith', 28, 16, { y: 5 }).put('wraith', 44, 18, { y: 6 }).put('knight', 35, 33, { angle: Math.PI })
-  b.put('health', 23, 33).put('nails', 24, 22).put('supernail', 26, 33)
-  b.torch(34, 10).torch(37, 10).torch(22, 21).torch(43, 21)
-
-  // the hall north of the cavern
-  b.room(34, 36, 37, 36, 0, 6, { wall: 'metal', floor: 'slab' }).door(34, 36, 37, 36)
-  b.room(26, 37, 45, 50, 0, 8, { wall: 'brick', floor: 'stone', ceil: 'stone' })
-  b.solid(30, 41, 31, 42).solid(40, 41, 41, 42).solid(30, 46, 31, 47).solid(40, 46, 41, 47)
-  b.torch(26, 40).torch(45, 40).torch(26, 48)
-  b.put('knight', 29, 44, { angle: Math.PI }).put('grunt', 38, 49, { angle: Math.PI }).put('grunt', 27, 38, { angle: Math.PI })
-  b.put('shells', 44, 38).put('armor1', 27, 49)
-  // the lift to the gold key room
-  b.room(44, 49, 45, 50, 0, 8, { wall: 'metal' }).lift(44, 49, 45, 50, 0, 5)
-  b.room(46, 40, 55, 50, 5, 10, { wall: 'metal', floor: 'grate', ceil: 'metal' })
-  b.lamp(50, 45, 9.6, 0xffc080)
-  b.put('key_gold', 53, 44).put('brute', 50, 42, { angle: Math.PI }).put('armor2', 54, 49).put('rockets', 47, 41)
-
-  // the gold door, and out under a burning sky: ash hills and dead trees
-  b.room(34, 51, 37, 51, 0, 6, { wall: 'metal', floor: 'slab' }).door(34, 51, 37, 51, 'gold')
-  b.room(34, 52, 37, 55, 0, 6, { wall: 'metal', floor: 'slab' })
-  b.offset(0, 0)
-  b.hills(4, 78, 90, 136, 0, 6, 13, 24, 'ash', 'rune')
-  b.put('knight', 30, 92, { angle: Math.PI }).put('knight', 52, 98, { angle: Math.PI }).put('brute', 20, 110, { angle: Math.PI })
-  b.put('brute', 66, 116, { angle: Math.PI }).put('hound', 44, 104, { angle: Math.PI }).put('hound', 76, 90, { angle: Math.PI })
-  b.put('wraith', 40, 120, { y: 8 }).put('wraith', 14, 96, { y: 8 }).put('knight', 80, 128, { angle: Math.PI })
-  b.put('health25', 10, 86).put('health25', 84, 104).put('rockets', 50, 118).put('armor2', 28, 124).put('nails', 64, 86)
-  b.put('exit', 46, 133)
-  b.trees(5, 79, 89, 135, 70, 17, ['dead'])
-  return b.done({ fog: 0.013, fogColor: 0x220c05, sun: { dir: [0.3, 1, -0.5], power: 1.1, color: 0xff9a60 }, skyTint: [0.7, 0.22, 0.08] })
-}
-
-// ---------------------------------------------------------------- E3: The Rune Vault
-
-function runeVault(): MapDef {
-  const b = new Builder('The Rune Vault', 64, 108)
-  b.room(28, 2, 35, 7, 0, 5, { wall: 'rune', floor: 'slab' })
+function coolingPlant(): MapDef {
+  const b = new Builder('The Cooling Plant', 64, 100)
+  b.room(24, 2, 39, 9, 0, 4, DC)
   b.put('start', 31, 3, { angle: 0 })
-  b.torch(28, 4).torch(35, 4)
-  b.put('shells', 29, 6).put('nails', 34, 6).put('rockets', 31, 6)
-
-  // the rune labyrinth before the vault
-  b.room(29, 8, 30, 9, 0, 4, { wall: 'rune', floor: 'slab' })
-  const L = b.maze(17, 10, 10, 7, 77, 0, 4, { wall: 'rune', floor: 'slab', ceil: 'stone' }, 0.1, 0xff7040)
-  for (const [k, i, j] of [['knight', 2, 2], ['grunt', 7, 1], ['hound', 8, 4], ['knight', 1, 5], ['grunt', 5, 4]] as [Ent['kind'], number, number][]) b.put(k, ...L.at(i, j), { angle: Math.PI })
-  for (const [n, k] of (['health25', 'shells', 'nails', 'armor1'] as Ent['kind'][]).entries()) if (L.deadEnds[n]) b.put(k, ...L.at(...L.deadEnds[n]))
-
-  // a walk over the moor under the violet sky
-  b.room(29, 30, 30, 30, 0, 4, { wall: 'rune', floor: 'slab' })
-  b.hills(6, 31, 57, 53, 0, 5, 29, 20)
-  b.put('hound', 14, 40, { angle: Math.PI }).put('hound', 48, 44, { angle: Math.PI }).put('knight', 36, 48, { angle: Math.PI }).put('wraith', 22, 46, { y: 7 })
-  b.put('health', 10, 34).put('shells', 52, 50).put('cells', 40, 36)
-  b.trees(7, 32, 56, 52, 45, 9, ['pine', 'dead'])
-
-  // the arena and the vault sit 46 cells further on
-  b.offset(0, 46)
-  b.room(30, 8, 33, 15, 0, 4, { wall: 'brick', floor: 'slab' })
-  b.lamp(31, 12, 3.7, 0xff8060)
-
-  // the arena
-  b.room(12, 16, 51, 51, 0, 16, { wall: 'rune', floor: 'stone', sky: true })
-  b.room(26, 28, 37, 39, 0.5, 16, { wall: 'rune', floor: 'slab', sky: true })
-  b.room(28, 30, 35, 37, 1, 16, { wall: 'rune', floor: 'rune', sky: true })
-  b.liquid(14, 18, 19, 23, 'lava', -0.5).liquid(44, 18, 49, 23, 'lava', -0.5).liquid(14, 44, 19, 49, 'lava', -0.5).liquid(44, 44, 49, 49, 'lava', -0.5)
-  b.solid(22, 24, 23, 25).solid(40, 24, 41, 25).solid(22, 42, 23, 43).solid(40, 42, 41, 43)
-  b.put('thunder', 31, 33).put('cells', 32, 34).put('cells', 30, 34)
-  b.put('armor3', 13, 33).put('mega', 50, 33).put('rockets', 31, 17).put('grenadel', 31, 50).put('shells', 13, 17).put('nails', 50, 50)
-  b.put('quad', 31, 29)
-  for (const [x, z] of [[12, 26], [12, 41], [51, 26], [51, 41], [24, 51], [39, 51], [24, 16], [39, 16]]) b.torch(x, z, 0xff7040, 1.2)
-  b.put('knight', 20, 30, { angle: 0 }).put('knight', 43, 30, { angle: 0 }).put('knight', 20, 38).put('knight', 43, 38)
-  b.put('brute', 31, 45, { angle: Math.PI }).put('brute', 16, 34).put('ravager', 47, 34).put('ravager', 31, 22)
-  b.put('wraith', 20, 20, { y: 8 }).put('wraith', 44, 46, { y: 9 }).put('wraith', 44, 20, { y: 8 })
-  b.put('grunt', 26, 47).put('grunt', 37, 47).put('hound', 14, 28).put('hound', 49, 28)
-
-  // the vault exit, sealed until the arena is clear
-  b.room(29, 52, 34, 58, 0, 6, { wall: 'tech', floor: 'tech', ceil: 'metal' })
-  b.put('exit', 31, 57).lamp(30, 55, 5.6, 0x9fd0ff).lamp(33, 55, 5.6, 0x9fd0ff)
-  return b.done({ exitNeedsKills: true, fog: 0.01, fogColor: 0x0c0614, sun: { dir: [0.2, 1, 0.4], power: 1.0, color: 0xb89cff }, skyTint: [0.35, 0.18, 0.55] })
+  b.lamps(26, 4, 38, 8, 3.7, 6)
+  b.put('shells', 25, 8).put('nails', 38, 8)
+  b.room(30, 10, 32, 10, 0, 3.4, DC).door(30, 10, 32, 10, undefined, 'split')
+  b.room(30, 11, 32, 23, 0, 3.4, DC)
+  b.lamps(31, 13, 31, 22, 3.1, 5)
+  // a side armoury behind a shutter
+  b.room(33, 15, 33, 16, 0, 3.4, PLANT).door(33, 15, 33, 16, undefined, 'shutter')
+  b.room(34, 13, 40, 19, 0, 3.4, PLANT)
+  b.lamp(37, 16, 3.1)
+  b.put('supernail', 39, 18).put('nails', 35, 14).put('armor1', 39, 14).put('grunt', 37, 16, { angle: -Math.PI / 2 })
+  // the plant hall: pillars, a big cooling unit, a lift up to the gantry
+  b.room(6, 24, 57, 47, 0, 8, PLANT)
+  for (const x of [14, 24, 38, 48]) for (const z of [30, 40]) b.solid(x, z, x + 1, z + 1)
+  b.room(27, 31, 35, 36, 3, 8, { wall: 'tech', floor: 'metal', ceil: 'metal' })
+  b.lamps(10, 27, 54, 45, 7.6, 11, 0xbfe0ff, 1.3)
+  b.put('grunt', 20, 28, { angle: Math.PI }).put('grunt', 44, 27, { angle: Math.PI }).put('grunt', 52, 35, { angle: Math.PI })
+  b.put('brute', 50, 44, { angle: Math.PI }).put('knight', 10, 30, { angle: Math.PI }).put('hound', 40, 45, { angle: Math.PI })
+  b.put('wraith', 31, 40, { y: 5 }).put('wraith', 20, 44, { y: 5 })
+  b.put('grenadel', 55, 26).put('rockets', 54, 46).put('health', 8, 26).put('health25', 30, 45)
+  b.room(7, 47, 8, 47, 0, 8, PLANT).lift(7, 47, 8, 47, 0, 3.6)
+  b.room(6, 48, 17, 55, 3.6, 8, PLANT)
+  b.lamp(12, 52, 7.6, ALARM)
+  b.put('key_silver', 16, 54).put('armor2', 7, 54).put('brute', 12, 52, { angle: 0 })
+  // the blue-card shutter to server hall B, where the androids are
+  b.room(30, 48, 32, 48, 0, 3.6, PLANT).door(30, 48, 32, 48, 'silver', 'shutter')
+  b.room(30, 49, 32, 55, 0, 3.6, DC)
+  b.room(8, 56, 55, 73, 0, 5, DC)
+  for (const z of [59, 63, 67]) b.racks(11, z, 20, z + 1, 0, 5).racks(24, z, 29, z + 1, 0, 5).racks(34, z, 43, z + 1, 0, 5).racks(47, z, 52, z + 1, 0, 5)
+  b.lamps(12, 57, 52, 71, 4.7, 8)
+  b.put('ravager', 15, 62, { angle: Math.PI }).put('ravager', 49, 66, { angle: Math.PI })
+  b.put('grunt', 26, 57, { angle: Math.PI }).put('grunt', 45, 71, { angle: Math.PI }).put('knight', 36, 61, { angle: Math.PI })
+  b.put('wraith', 30, 70, { y: 3.8 }).put('hound', 10, 71, { angle: Math.PI })
+  b.put('key_gold', 54, 72).put('health', 9, 57).put('nails', 54, 57).put('rockets', 20, 71)
+  // the red-card blast door and the control room
+  b.room(30, 74, 32, 74, 0, 4, DOCK).door(30, 74, 32, 74, 'gold', 'blast')
+  b.room(22, 75, 41, 88, 0, 4.5, DC)
+  b.desks(25, 80, 29, 81, 0, 4.5).desks(34, 80, 38, 81, 0, 4.5)
+  b.lamps(24, 77, 40, 86, 4.2, 8, ALARM)
+  b.put('brute', 31, 85, { angle: Math.PI }).put('grunt', 24, 86, { angle: Math.PI }).put('grunt', 39, 86, { angle: Math.PI })
+  b.put('knight', 31, 78, { angle: Math.PI }).put('health25', 23, 76)
+  b.put('exit', 31, 87)
+  return b.done({ fog: 0.012, fogColor: 0x0a1014, sun: { dir: [0.3, 1, 0.2], power: 0.4, color: 0xbcd0ff }, skyTint: [0.2, 0.25, 0.35] })
 }
 
-export const LEVELS: (() => MapDef)[] = [outerGate, hallsOfEmbers, runeVault]
+// ---------------------------------------------------------------- 3: The Core (androids; destroy every core server)
+
+function theCore(): MapDef {
+  const b = new Builder('The Core', 64, 100)
+  b.room(27, 2, 36, 7, 0, 4, PLANT)
+  b.put('start', 31, 3, { angle: 0 })
+  b.lamp(31, 5, 3.7)
+  b.put('shells', 28, 6).put('nails', 35, 6).put('rockets', 31, 6).put('cells', 28, 3)
+  b.room(30, 8, 32, 8, 0, 3.4, DC).door(30, 8, 32, 8, undefined, 'split')
+  b.room(30, 9, 32, 17, 0, 3.4, DC)
+  b.lamps(31, 10, 31, 16, 3.1, 6)
+  // the armoury (blue card): the railgun
+  b.room(33, 12, 33, 13, 0, 3.4, DC).door(33, 12, 33, 13, 'silver', 'slide')
+  b.room(34, 9, 42, 16, 0, 3.4, PLANT)
+  b.lamp(38, 12, 3.1, 0x60c0ff)
+  b.put('railgun', 41, 15).put('cells', 41, 10).put('armor3', 35, 15).put('mega', 38, 12)
+  // server hall C, with the first three cores among the racks
+  b.room(6, 18, 57, 43, 0, 6, DC)
+  for (const z of [21, 26, 31, 36]) b.racks(9, z, 18, z + 1, 0, 6).racks(22, z, 28, z + 1, 0, 6).racks(35, z, 41, z + 1, 0, 6).racks(45, z, 54, z + 1, 0, 6)
+  b.lamps(10, 19, 54, 41, 5.7, 8)
+  b.put('core', 31, 24).put('core', 20, 40).put('core', 50, 29)
+  b.put('ravager', 15, 24, { angle: Math.PI }).put('ravager', 47, 34, { angle: Math.PI }).put('ravager', 26, 39, { angle: Math.PI })
+  b.put('grunt', 8, 20, { angle: Math.PI }).put('grunt', 55, 41, { angle: Math.PI }).put('grunt', 40, 29, { angle: Math.PI })
+  b.put('brute', 31, 35, { angle: Math.PI }).put('knight', 52, 19, { angle: Math.PI })
+  b.put('wraith', 20, 30, { y: 4.5 }).put('wraith', 44, 22, { y: 4.5 })
+  b.put('key_silver', 55, 20).put('nails', 7, 42).put('health25', 56, 42).put('shells', 7, 20).put('rockets', 31, 42)
+  // the shutter to the core chamber
+  b.room(30, 44, 32, 44, 0, 3.6, DC).door(30, 44, 32, 44, undefined, 'shutter')
+  b.room(30, 45, 32, 50, 0, 3.6, DC)
+  // the core chamber: five cores on a dais, the androids guarding them
+  b.room(8, 51, 55, 80, 0, 10, PLANT)
+  b.room(22, 60, 41, 71, 0.5, 10, { wall: 'tech', floor: 'metal', ceil: 'metal' })
+  b.solid(14, 56, 15, 57).solid(48, 56, 49, 57).solid(14, 74, 15, 75).solid(48, 74, 49, 75)
+  b.lamps(12, 54, 52, 78, 9.5, 10, 0x60c0ff, 1.4)
+  b.put('core', 25, 63).put('core', 38, 63).put('core', 25, 68).put('core', 38, 68).put('core', 31, 65)
+  for (const [x, z] of [[12, 60], [51, 60], [12, 72], [51, 72], [31, 77]]) b.put('ravager', x, z, { angle: Math.PI })
+  b.put('brute', 20, 55, { angle: Math.PI }).put('brute', 43, 55, { angle: Math.PI })
+  b.put('wraith', 31, 58, { y: 6 }).put('wraith', 18, 66, { y: 6 }).put('wraith', 45, 66, { y: 6 })
+  b.put('grunt', 10, 78, { angle: Math.PI }).put('grunt', 53, 78, { angle: Math.PI })
+  b.put('health', 9, 52).put('health', 54, 52).put('armor2', 31, 53).put('cells', 9, 79).put('rockets', 54, 79).put('quad', 31, 74)
+  // the way out, behind a blast door: it only lets you go once every core is down
+  b.room(30, 81, 32, 81, 0, 4, DOCK).door(30, 81, 32, 81, undefined, 'blast')
+  b.room(26, 82, 37, 90, 0, 4, DOCK)
+  b.lamp(31, 85, 3.7, ALARM).put('exit', 31, 88)
+  return b.done({ exitNeedsKills: true, fog: 0.011, fogColor: 0x060c14, sun: { dir: [0.3, 1, 0.2], power: 0.4, color: 0xbcd0ff }, skyTint: [0.2, 0.25, 0.35] })
+}
+
+export const LEVELS: (() => MapDef)[] = [perimeter, coolingPlant, theCore]
 
 // ---------------------------------------------------------------- queries shared by the game and the tests
 

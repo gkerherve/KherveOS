@@ -157,6 +157,7 @@ export const STATS: Record<MonsterKind, MonsterStats> = {
   brute: { hp: 200, speed: 2.8, radius: 0.6, height: 2.3, points: 400, melee: 2.0, meleeDmg: 18, range: 24, painChance: 0.15 },
   wraith: { hp: 80, speed: 4.0, radius: 0.5, height: 1.8, points: 250, melee: 0, meleeDmg: 0, range: 28, flies: true, painChance: 0.5 },
   ravager: { hp: 300, speed: 5.5, radius: 0.65, height: 2.2, points: 600, melee: 2.1, meleeDmg: 28, range: 0, painChance: 0.1 },
+  core: { hp: 260, speed: 0, radius: 0.75, height: 2.4, points: 1000, melee: 0, meleeDmg: 0, range: 0, painChance: 0 },
 }
 
 export interface Rig {
@@ -185,6 +186,21 @@ export function makeMonster(kind: MonsterKind): Rig {
     root.rotation.order = 'YXZ'
     root.add(inst.root)
     const dummy = () => new THREE.Object3D()
+    // the same soldier models dressed for their part: chrome androids, dark heavies, black-clad commandos
+    const look = kind === 'ravager' ? { c: [0.78, 0.82, 0.9], metal: 0.9, rough: 0.22 } : kind === 'brute' ? { c: [0.42, 0.46, 0.36], metal: 0.4, rough: 0.6 } : kind === 'knight' ? { c: [0.45, 0.45, 0.48], metal: 0.2, rough: 0.7 } : null
+    if (look)
+      for (const m of inst.mats) {
+        const base = m.userData.base as THREE.Color | undefined
+        if (kind === 'ravager') {
+          // chrome all over: the soldier's colours gone, a cold sheen
+          const l = base ? (base.r + base.g + base.b) / 3 : 0.5
+          const v = 0.35 + l * 0.6
+          base?.setRGB(v * look.c[0], v * look.c[1], v * look.c[2])
+          m.emissive.setRGB(0.02, 0.06, 0.14)
+        } else base?.multiply(new THREE.Color(...look.c))
+        m.metalness = look.metal
+        m.roughness = look.rough
+      }
     return {
       root, body: inst.root, hips: dummy(), spine: dummy(), head: dummy(), arms: [dummy(), dummy()], fores: [dummy(), dummy()],
       legs: [dummy(), dummy()], shins: [dummy(), dummy()], mats: inst.mats, meshes: inst.meshes, eyes: [], model: inst,
@@ -212,6 +228,29 @@ export function makeMonster(kind: MonsterKind): Rig {
     eyes.push(e)
   }
   const rig: Partial<Rig> = { root, body, mats, eyes, arms: [], fores: [], legs: [], shins: [] }
+
+  if (kind === 'core') {
+    // a core server: a tall black cabinet, a glowing core behind a window, cables down its back
+    const shell = M({ color: 0x15171b, roughness: 0.35, metalness: 0.8 })
+    const glow = M({ color: 0x103050, emissive: 0x30a8ff, emissiveIntensity: 2.6, glow: true, roughness: 0.2 })
+    const warn = M({ color: 0xc8a020, roughness: 0.5 })
+    const hips = pivot(body, [0, 0, 0])
+    part(hips, G.box, shell, [1.3, 2.4, 1.0], [0, 1.2, 0])
+    part(hips, G.box, warn, [1.32, 0.12, 1.02], [0, 2.3, 0])
+    part(hips, G.box, warn, [1.32, 0.12, 1.02], [0, 0.1, 0])
+    // glowing strips down every face, and the core itself showing through a window front and back
+    for (const sz of [-1, 1]) {
+      for (const sx of [-1, 1]) part(hips, G.box, glow, [0.08, 1.6, 0.02], [sx * 0.5, 1.2, sz * 0.51])
+      part(hips, G.box, glow, [0.36, 1.2, 0.02], [0, 1.2, sz * 0.505])
+      for (let k = 0; k < 5; k++) part(hips, G.box, shell, [0.4, 0.03, 0.03], [0, 0.72 + k * 0.24, sz * 0.52])
+    }
+    for (const sx of [-1, 1]) for (const sz of [-0.3, 0.3]) part(hips, G.box, glow, [0.02, 1.6, 0.08], [sx * 0.66, 1.2, sz])
+    Object.assign(rig, { hips, spine: pivot(hips, [0, 1.2, 0]), head: pivot(hips, [0, 2.2, 0]) })
+    const meshes: THREE.Mesh[] = []
+    root.traverse((o) => (o as THREE.Mesh).isMesh && meshes.push(o as THREE.Mesh))
+    rig.meshes = meshes
+    return rig as Rig
+  }
 
   if (kind === 'hound') {
     const fur = M({ map: s.fur, roughness: 0.95 })
@@ -241,27 +280,29 @@ export function makeMonster(kind: MonsterKind): Rig {
     part(tail, G.limb, fur, [0.04, 0.07, 0.04], [0, 0, -0.2], [-1.2, 0, 0])
     Object.assign(rig, { hips, spine, head, tail })
   } else if (kind === 'wraith') {
-    const robe = M({ map: s.robe, roughness: 0.95, side: THREE.DoubleSide })
-    const bone = M({ map: s.pale, roughness: 0.7 })
-    const hips = pivot(body, [0, 0.9, 0])
+    // the drone: a body, four arms with spinning rotors, a camera eye, a gun under it
+    const shell = M({ color: 0x2c3034, roughness: 0.4, metalness: 0.7 })
+    const trim = M({ color: 0xc8a020, roughness: 0.5, metalness: 0.3 })
+    const blade = M({ color: 0x15171a, roughness: 0.6, transparent: true, opacity: 0.7, side: THREE.DoubleSide })
+    const hips = pivot(body, [0, 1.3, 0])
     const spine = pivot(hips, [0, 0, 0])
-    part(spine, G.cone, robe, [0.42, 1.2, 0.38], [0, -0.25, 0], [Math.PI, 0, 0])
-    part(spine, G.limb, robe, [0.2, 0.08, 0.15], [0, 0.45, 0])
-    const head = pivot(spine, [0, 0.85, 0.02])
-    part(head, G.cone, robe, [0.2, 0.42, 0.22], [0, 0.05, -0.03])
-    part(head, G.sphere, M({ color: 0x050407, roughness: 1 }), [0.14, 0.16, 0.12], [0, -0.02, 0.06])
-    eye(head, -0.05, 0.0, 0.16, 0.026)
-    eye(head, 0.05, 0.0, 0.16, 0.026)
-    for (const x of [-1, 1]) {
-      const arm = pivot(spine, [x * 0.24, 0.55, 0])
-      part(arm, G.limb, robe, [0.07, 0.06, 0.07], [0, -0.18, 0])
-      const fore = pivot(arm, [0, -0.36, 0])
-      part(fore, G.limb, bone, [0.035, 0.045, 0.035], [0, -0.13, 0])
-      for (let k = -1; k <= 1; k++) part(fore, G.cone, bone, [0.012, 0.12, 0.012], [k * 0.025, -0.33, 0.02], [Math.PI, 0, 0])
-      rig.arms!.push(arm)
-      rig.fores!.push(fore)
+    part(spine, G.box, shell, [0.42, 0.14, 0.5], [0, 0, 0])
+    part(spine, G.box, trim, [0.44, 0.03, 0.12], [0, 0.07, -0.12])
+    part(spine, G.sphere, shell, [0.16, 0.1, 0.16], [0, -0.1, 0.12])
+    part(spine, G.cyl, shell, [0.025, 0.24, 0.025], [0, -0.16, 0.2], [Math.PI / 2, 0, 0])
+    const head = pivot(spine, [0, -0.04, 0.26])
+    part(head, G.sphere, M({ color: 0x050505, roughness: 0.2 }), [0.07, 0.07, 0.05], [0, 0, 0])
+    eye(head, 0, 0, 0.045, 0.03)
+    const rotors: THREE.Object3D[] = []
+    for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      part(spine, G.box, shell, [0.05, 0.04, 0.42], [x * 0.24, 0.02, z * 0.24], [0, Math.atan2(x, z), 0])
+      part(spine, G.cyl, shell, [0.05, 0.06, 0.05], [x * 0.38, 0.05, z * 0.38])
+      const rot = pivot(spine, [x * 0.38, 0.1, z * 0.38])
+      part(rot, G.box, blade, [0.34, 0.006, 0.05], [0, 0, 0])
+      part(rot, G.box, blade, [0.05, 0.006, 0.34], [0, 0, 0])
+      rotors.push(rot)
     }
-    Object.assign(rig, { hips, spine, head })
+    Object.assign(rig, { hips, spine, head, arms: [rotors[0], rotors[1]], fores: [rotors[2], rotors[3]] })
   }
   const meshes: THREE.Mesh[] = []
   root.traverse((o) => {
@@ -274,6 +315,7 @@ export function makeMonster(kind: MonsterKind): Rig {
 
 /** Pose a monster. `walk` is the stride phase, `speed` how fast it goes, `act` an attack in progress (0..1, -1 = none). */
 export function poseMonster(kind: MonsterKind, r: Rig, walk: number, speed: number, act: number, t: number, pain: number) {
+  if (kind === 'core') return
   const a = act >= 0 ? Math.sin(act * Math.PI) : 0
   if (kind === 'hound') {
     const sw = Math.min(1, speed / 3) * 0.7
@@ -287,13 +329,11 @@ export function poseMonster(kind: MonsterKind, r: Rig, walk: number, speed: numb
     return
   }
   if (kind === 'wraith') {
-    r.hips.position.y = 0.9 + Math.sin(t * 2) * 0.08
-    r.spine.rotation.z = Math.sin(t * 1.3) * 0.08
-    r.arms[0].rotation.x = -0.4 + Math.sin(t * 2.2) * 0.2 - a * 1.4
-    r.arms[1].rotation.x = -0.4 - Math.sin(t * 2.2) * 0.2 - a * 1.4
-    r.arms[0].rotation.z = -0.4
-    r.arms[1].rotation.z = 0.4
-    r.fores.forEach((f) => (f.rotation.x = -0.6 - a * 0.4))
+    // the drone hovers, tilts into its flight, and its rotors spin
+    r.hips.position.y = 1.3 + Math.sin(t * 2) * 0.06
+    r.spine.rotation.x = Math.min(0.35, speed * 0.06) - a * 0.2
+    r.spine.rotation.z = Math.sin(t * 1.3) * 0.06
+    for (const [i, rot] of [...r.arms, ...r.fores].entries()) rot.rotation.y = t * (i % 2 ? -40 : 40)
     return
   }
   const fast = kind === 'ravager' || kind === 'knight' ? 1.2 : 1
@@ -337,7 +377,7 @@ export function poseMonster(kind: MonsterKind, r: Rig, walk: number, speed: numb
 
 // ---------------------------------------------------------------- weapons
 
-export type WeaponId = 'axe' | 'shotgun' | 'shotgun2' | 'nailgun' | 'supernail' | 'grenadel' | 'rocketl' | 'thunder'
+export type WeaponId = 'axe' | 'pistol' | 'shotgun' | 'shotgun2' | 'nailgun' | 'supernail' | 'grenadel' | 'rocketl' | 'thunder' | 'railgun'
 export type AmmoType = 'shells' | 'nails' | 'rockets' | 'cells'
 
 export interface WeaponDef {
@@ -349,15 +389,18 @@ export interface WeaponDef {
   delay: number
 }
 
+// keys 1–9 then 0; the ids stay those of the first version (saves, pickups), the names are the military ones
 export const WEAPONS: WeaponDef[] = [
-  { id: 'axe', name: 'Axe', slot: 1, ammo: null, use: 0, delay: 0.5 },
-  { id: 'shotgun', name: 'Shotgun', slot: 2, ammo: 'shells', use: 1, delay: 0.5 },
-  { id: 'shotgun2', name: 'Double Shotgun', slot: 3, ammo: 'shells', use: 2, delay: 0.7 },
-  { id: 'nailgun', name: 'Nailgun', slot: 4, ammo: 'nails', use: 1, delay: 0.1 },
-  { id: 'supernail', name: 'Super Nailgun', slot: 5, ammo: 'nails', use: 2, delay: 0.1 },
-  { id: 'grenadel', name: 'Grenade Launcher', slot: 6, ammo: 'rockets', use: 1, delay: 0.6 },
-  { id: 'rocketl', name: 'Rocket Launcher', slot: 7, ammo: 'rockets', use: 1, delay: 0.8 },
-  { id: 'thunder', name: 'Thunderbolt', slot: 8, ammo: 'cells', use: 1, delay: 0.1 },
+  { id: 'axe', name: 'Combat Knife', slot: 1, ammo: null, use: 0, delay: 0.42 },
+  { id: 'pistol', name: 'Service Pistol', slot: 2, ammo: 'nails', use: 1, delay: 0.28 },
+  { id: 'shotgun', name: 'Pump Shotgun', slot: 3, ammo: 'shells', use: 1, delay: 0.5 },
+  { id: 'shotgun2', name: 'Combat Shotgun', slot: 4, ammo: 'shells', use: 2, delay: 0.7 },
+  { id: 'nailgun', name: 'Assault Rifle', slot: 5, ammo: 'nails', use: 1, delay: 0.1 },
+  { id: 'supernail', name: 'Minigun', slot: 6, ammo: 'nails', use: 2, delay: 0.07 },
+  { id: 'grenadel', name: 'Grenade Launcher', slot: 7, ammo: 'rockets', use: 1, delay: 0.6 },
+  { id: 'rocketl', name: 'Rocket Launcher', slot: 8, ammo: 'rockets', use: 1, delay: 0.8 },
+  { id: 'thunder', name: 'Arc Gun', slot: 9, ammo: 'cells', use: 1, delay: 0.1 },
+  { id: 'railgun', name: 'Railgun', slot: 10, ammo: 'cells', use: 5, delay: 1.25 },
 ]
 
 export interface ViewModel {
@@ -377,8 +420,6 @@ export function makeWeapon(id: WeaponId): ViewModel {
   }
   const steel = M({ color: 0x5a5c60, roughness: 0.35, metalness: 0.9 })
   const dark = M({ color: 0x262422, roughness: 0.5, metalness: 0.7 })
-  const wood = M({ color: 0x6a4024, roughness: 0.55 })
-  const brass = M({ color: 0xb08a40, roughness: 0.35, metalness: 1 })
   const glove = M({ color: 0x3a2e24, roughness: 0.85 })
   const g = new THREE.Group()
   const muzzle = new THREE.Object3D()
@@ -388,13 +429,29 @@ export function makeWeapon(id: WeaponId): ViewModel {
     part(g, G.sphere, glove, [0.05, 0.055, 0.07], [0.02, -0.07, 0.08])
     part(g, G.limb, M({ color: 0x4a3a2c, roughness: 0.9 }), [0.045, 0.06, 0.045], [0.06, -0.15, 0.28], [-1.1, 0, -0.15])
   }
+  // shared parts: a black receiver, a picatinny rail with its slots, a red-dot sight, a magazine
+  const poly = M({ color: 0x23262a, roughness: 0.7, metalness: 0.15 })
+  const tan = M({ color: 0x8a7a58, roughness: 0.75 })
+  const box = (p: THREE.Object3D, m: THREE.Material, s: [number, number, number], at: [number, number, number], r?: [number, number, number]) => part(p, G.box, m, s, at, r)
+  const rail = (z0: number, z1: number, y: number) => {
+    box(g, dark, [0.026, 0.008, z1 - z0], [0, y, (z0 + z1) / 2])
+    for (let z = z0 + 0.01; z < z1; z += 0.022) box(g, steel, [0.028, 0.006, 0.006], [0, y + 0.006, z])
+  }
+  const redDot = (z: number, y: number) => {
+    box(g, dark, [0.034, 0.018, 0.05], [0, y, z])
+    part(g, G.cyl, dark, [0.024, 0.05, 0.024], [0, y + 0.03, z], [Math.PI / 2, 0, 0])
+    part(g, G.sphere, M({ color: 0xff2010, emissive: 0xff2010, emissiveIntensity: 3, glow: true }), [0.004, 0.004, 0.004], [0, y + 0.03, z + 0.02])
+  }
   switch (id) {
     case 'axe': {
+      // a combat knife: black blade with a bright edge, a ribbed grip, a guard
       const h = new THREE.Group()
-      part(h, G.cyl, wood, [0.022, 0.62, 0.022], [0, 0.18, 0])
-      part(h, G.box, steel, [0.02, 0.16, 0.2], [0, 0.43, 0.08])
-      part(h, G.box, M({ color: 0xc8ccd0, roughness: 0.2, metalness: 1 }), [0.008, 0.18, 0.04], [0, 0.43, 0.19])
-      part(h, G.box, dark, [0.05, 0.06, 0.05], [0, 0.43, -0.03])
+      part(h, G.cyl, poly, [0.02, 0.13, 0.02], [0, 0.06, 0])
+      for (let k = 0; k < 5; k++) part(h, G.cyl, dark, [0.022, 0.006, 0.022], [0, 0.01 + k * 0.025, 0])
+      box(h, steel, [0.07, 0.012, 0.03], [0, 0.135, 0])
+      box(h, dark, [0.008, 0.2, 0.034], [0, 0.24, 0.0])
+      box(h, M({ color: 0xd0d4d8, roughness: 0.15, metalness: 1 }), [0.004, 0.19, 0.008], [0, 0.24, 0.02])
+      part(h, G.cone, dark, [0.017, 0.05, 0.004], [0, 0.36, 0.005])
       h.rotation.set(-0.9, 0, 0.35)
       h.position.set(0.02, -0.12, 0)
       g.add(h)
@@ -403,66 +460,158 @@ export function makeWeapon(id: WeaponId): ViewModel {
       muzzle.position.set(0, 0.1, -0.4)
       break
     }
-    case 'shotgun':
-      tube(0.022, 0.6, 0, 0.02, -0.28, steel)
-      tube(0.018, 0.45, 0, -0.025, -0.22, dark)
-      part(g, G.box, wood, [0.06, 0.06, 0.18], [0, -0.025, -0.25])
-      part(g, G.box, dark, [0.06, 0.08, 0.2], [0, 0, 0.02])
-      part(g, G.box, wood, [0.055, 0.1, 0.3], [0, -0.05, 0.25], [0.15, 0, 0])
+    case 'pistol': {
+      // a polymer pistol: slide with serrations, sights, rail, trigger guard, magazine base
+      box(g, dark, [0.034, 0.036, 0.2], [0, 0.02, -0.06])
+      for (let k = 0; k < 5; k++) box(g, steel, [0.036, 0.028, 0.004], [0, 0.02, 0.02 + k * 0.008])
+      box(g, steel, [0.012, 0.01, 0.05], [0, 0.034, -0.04])
+      box(g, dark, [0.006, 0.012, 0.006], [0, 0.044, -0.15])
+      box(g, dark, [0.026, 0.01, 0.01], [0, 0.044, 0.03])
+      box(g, poly, [0.03, 0.03, 0.16], [0, -0.012, -0.05])
+      rail(-0.13, -0.07, -0.03)
+      box(g, poly, [0.03, 0.11, 0.045], [0, -0.075, 0.03], [-0.25, 0, 0])
+      box(g, steel, [0.032, 0.012, 0.05], [0, -0.13, 0.045], [-0.25, 0, 0])
+      box(g, poly, [0.02, 0.008, 0.05], [0, -0.04, -0.03])
+      tube(0.008, 0.02, 0, 0.02, -0.165, steel)
       hand()
-      muzzle.position.set(0, 0.02, -0.6)
-      break
-    case 'shotgun2':
-      tube(0.024, 0.6, -0.026, 0.02, -0.28, steel)
-      tube(0.024, 0.6, 0.026, 0.02, -0.28, steel)
-      part(g, G.box, dark, [0.1, 0.07, 0.18], [0, 0.0, 0.03])
-      part(g, G.box, wood, [0.08, 0.06, 0.3], [0, -0.03, -0.12])
-      part(g, G.box, wood, [0.07, 0.11, 0.3], [0, -0.05, 0.26], [0.15, 0, 0])
-      hand()
-      muzzle.position.set(0, 0.02, -0.6)
-      break
-    case 'nailgun':
-    case 'supernail': {
-      const big = id === 'supernail'
-      part(g, G.box, dark, [big ? 0.14 : 0.1, big ? 0.13 : 0.1, 0.32], [0, 0, -0.02])
-      part(g, G.box, brass, [big ? 0.15 : 0.11, 0.025, 0.2], [0, big ? 0.07 : 0.055, -0.04])
-      const s = new THREE.Group()
-      s.position.set(0, 0.0, -0.3)
-      const n = big ? 4 : 2
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2
-        part(s, G.cyl, steel, [0.016, big ? 0.36 : 0.3, 0.016], [Math.cos(a) * 0.03, Math.sin(a) * 0.03, -0.05], [Math.PI / 2, 0, 0])
-      }
-      part(s, G.cyl, dark, [0.05, 0.03, 0.05], [0, 0, 0.02], [Math.PI / 2, 0, 0])
-      g.add(s)
-      spinner = s
-      hand()
-      muzzle.position.set(0, 0, big ? -0.52 : -0.48)
+      muzzle.position.set(0, 0.02, -0.18)
       break
     }
-    case 'grenadel':
-      tube(0.045, 0.32, 0, 0.0, -0.25, steel)
-      part(g, G.cyl, dark, [0.07, 0.12, 0.07], [0, -0.01, -0.02], [0, 0, Math.PI / 2])
-      part(g, G.box, wood, [0.06, 0.1, 0.26], [0, -0.05, 0.2], [0.15, 0, 0])
+    case 'shotgun': {
+      // a pump shotgun: receiver, barrel over a tube magazine, ribbed pump, side saddle, stock
+      tube(0.016, 0.56, 0, 0.022, -0.3, steel)
+      tube(0.014, 0.44, 0, -0.012, -0.24, dark)
+      const pump = new THREE.Group()
+      part(pump, G.cyl, poly, [0.024, 0.15, 0.024], [0, 0, 0], [Math.PI / 2, 0, 0])
+      for (let k = 0; k < 6; k++) part(pump, G.cyl, dark, [0.026, 0.006, 0.026], [0, 0, -0.06 + k * 0.024], [Math.PI / 2, 0, 0])
+      pump.position.set(0, -0.012, -0.24)
+      g.add(pump)
+      box(g, dark, [0.05, 0.07, 0.2], [0, 0.0, 0.02])
+      box(g, steel, [0.004, 0.022, 0.06], [0.026, 0.008, 0.0])
+      for (let k = 0; k < 4; k++) part(g, G.cyl, M({ color: 0xa02a1a, roughness: 0.5 }), [0.011, 0.05, 0.011], [-0.03, 0.0, -0.03 + k * 0.024])
+      box(g, poly, [0.045, 0.1, 0.06], [0, -0.065, 0.1], [-0.35, 0, 0])
+      box(g, poly, [0.045, 0.07, 0.24], [0, -0.03, 0.26], [0.1, 0, 0])
+      box(g, M({ color: 0x111111, roughness: 0.95 }), [0.048, 0.085, 0.02], [0, -0.04, 0.385], [0.1, 0, 0])
+      box(g, steel, [0.006, 0.008, 0.006], [0, 0.044, -0.57])
       hand()
-      muzzle.position.set(0, 0, -0.42)
+      muzzle.position.set(0, 0.022, -0.6)
       break
-    case 'rocketl':
-      tube(0.055, 0.7, 0, 0.0, -0.2, dark)
-      tube(0.062, 0.06, 0, 0.0, -0.55, steel)
-      tube(0.062, 0.06, 0, 0.0, 0.14, steel)
-      part(g, G.box, brass, [0.03, 0.05, 0.2], [0, 0.07, -0.1])
-      part(g, G.box, dark, [0.04, 0.12, 0.06], [0, -0.09, 0.02])
+    }
+    case 'shotgun2': {
+      // a combat shotgun: magazine-fed, a heat shield over the barrel, rail and red dot, a folding stock
+      tube(0.019, 0.52, 0, 0.02, -0.29, steel)
+      box(g, dark, [0.044, 0.03, 0.4], [0, 0.04, -0.26])
+      for (let k = 0; k < 8; k++) box(g, M({ color: 0x0a0a0a, roughness: 1 }), [0.046, 0.012, 0.016], [0, 0.04, -0.12 - k * 0.04])
+      box(g, poly, [0.06, 0.06, 0.2], [0, -0.01, -0.2])
+      box(g, dark, [0.06, 0.08, 0.24], [0, 0.0, 0.02])
+      rail(-0.06, 0.12, 0.045)
+      redDot(0.04, 0.06)
+      box(g, poly, [0.05, 0.14, 0.07], [0, -0.1, -0.03], [0.15, 0, 0])
+      box(g, poly, [0.045, 0.1, 0.06], [0, -0.07, 0.12], [-0.35, 0, 0])
+      box(g, dark, [0.012, 0.012, 0.22], [0.02, -0.02, 0.27])
+      box(g, dark, [0.012, 0.012, 0.22], [-0.02, -0.02, 0.27])
+      box(g, poly, [0.05, 0.09, 0.02], [0, -0.03, 0.38])
       hand()
-      muzzle.position.set(0, 0, -0.58)
+      muzzle.position.set(0, 0.02, -0.56)
       break
+    }
+    case 'nailgun': {
+      // an assault rifle: rail, handguard with slots, red dot, curved magazine, flash hider, stock
+      box(g, dark, [0.05, 0.06, 0.26], [0, 0, 0.02])
+      box(g, poly, [0.056, 0.056, 0.24], [0, -0.004, -0.22])
+      for (const sx of [-1, 1]) for (let k = 0; k < 5; k++) box(g, M({ color: 0x0a0a0a, roughness: 1 }), [0.004, 0.012, 0.026], [sx * 0.029, -0.004, -0.14 - k * 0.04])
+      rail(-0.33, 0.13, 0.034)
+      redDot(-0.02, 0.05)
+      tube(0.011, 0.16, 0, 0, -0.4, steel)
+      tube(0.016, 0.05, 0, 0, -0.5, dark)
+      box(g, dark, [0.024, 0.03, 0.03], [0, 0.0, -0.35])
+      box(g, poly, [0.04, 0.12, 0.06], [0, -0.09, -0.03], [0.25, 0, 0])
+      box(g, poly, [0.036, 0.1, 0.045], [0, -0.075, 0.11], [-0.35, 0, 0])
+      tube(0.017, 0.12, 0, -0.005, 0.2, dark)
+      box(g, tan, [0.044, 0.075, 0.13], [0, -0.02, 0.29])
+      box(g, M({ color: 0x111111, roughness: 0.95 }), [0.046, 0.08, 0.016], [0, -0.02, 0.36])
+      hand()
+      muzzle.position.set(0, 0, -0.53)
+      break
+    }
+    case 'supernail': {
+      // a minigun: six spinning barrels, a motor housing, a carry handle, an ammo box
+      box(g, dark, [0.13, 0.12, 0.22], [0, 0, 0.02])
+      box(g, steel, [0.03, 0.05, 0.16], [0, 0.09, 0.0])
+      box(g, M({ color: 0x3c4a2a, roughness: 0.7 }), [0.12, 0.12, 0.12], [-0.11, -0.04, 0.04])
+      const s2 = new THREE.Group()
+      s2.position.set(0, 0.0, -0.22)
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2
+        part(s2, G.cyl, steel, [0.012, 0.42, 0.012], [Math.cos(a) * 0.035, Math.sin(a) * 0.035, -0.12], [Math.PI / 2, 0, 0])
+      }
+      for (const z of [-0.02, -0.3]) part(s2, G.cyl, dark, [0.055, 0.02, 0.055], [0, 0, z], [Math.PI / 2, 0, 0])
+      g.add(s2)
+      spinner = s2
+      hand()
+      muzzle.position.set(0, 0, -0.56)
+      break
+    }
+    case 'grenadel': {
+      // a revolver grenade launcher: a fat cylinder, a short barrel, a frame, a stock
+      tube(0.04, 0.24, 0, 0.0, -0.26, dark)
+      tube(0.046, 0.03, 0, 0.0, -0.37, steel)
+      const cyl6 = new THREE.Group()
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2
+        part(cyl6, G.cyl, steel, [0.026, 0.12, 0.026], [Math.cos(a) * 0.045, Math.sin(a) * 0.045, 0], [Math.PI / 2, 0, 0])
+      }
+      part(cyl6, G.cyl, dark, [0.08, 0.12, 0.08], [0, 0, 0], [Math.PI / 2, 0, 0])
+      cyl6.position.set(0, -0.01, -0.06)
+      g.add(cyl6)
+      rail(-0.2, 0.06, 0.06)
+      box(g, poly, [0.04, 0.11, 0.05], [0, -0.09, 0.07], [-0.3, 0, 0])
+      box(g, poly, [0.04, 0.08, 0.24], [0, -0.03, 0.24], [0.1, 0, 0])
+      hand()
+      muzzle.position.set(0, 0, -0.4)
+      break
+    }
+    case 'rocketl': {
+      // a launcher tube with its sight, the grip, a warhead showing at the front
+      tube(0.055, 0.72, 0, 0.0, -0.18, M({ color: 0x4a5a3a, roughness: 0.6 }))
+      tube(0.062, 0.05, 0, 0.0, -0.53, dark)
+      tube(0.062, 0.05, 0, 0.0, 0.16, dark)
+      part(g, G.cone, M({ color: 0x7a7a6a, roughness: 0.5 }), [0.04, 0.09, 0.04], [0, 0, -0.6], [-Math.PI / 2, 0, 0])
+      box(g, dark, [0.04, 0.06, 0.12], [-0.07, 0.04, -0.12])
+      part(g, G.cyl, M({ color: 0x223344, roughness: 0.1, metalness: 0.5 }), [0.018, 0.02, 0.018], [-0.07, 0.04, -0.19], [Math.PI / 2, 0, 0])
+      box(g, poly, [0.04, 0.12, 0.05], [0, -0.1, 0.0], [-0.2, 0, 0])
+      box(g, poly, [0.04, 0.1, 0.05], [0, -0.1, -0.22])
+      box(g, M({ color: 0xc8a020, roughness: 0.5 }), [0.112, 0.012, 0.03], [0, 0.0, -0.4])
+      hand()
+      muzzle.position.set(0, 0, -0.62)
+      break
+    }
     case 'thunder': {
-      part(g, G.box, dark, [0.12, 0.12, 0.3], [0, 0, 0])
+      // the arc gun: a capacitor body with glowing coils and a forked emitter
+      box(g, dark, [0.12, 0.12, 0.3], [0, 0, 0])
       const coil = M({ color: 0x406080, roughness: 0.3, metalness: 0.8, emissive: 0x2050ff, emissiveIntensity: 1.6, glow: true })
-      for (let i = 0; i < 4; i++) part(g, G.cyl, coil, [0.05, 0.03, 0.05], [0, 0.0, -0.2 - i * 0.06], [Math.PI / 2, 0, 0])
+      for (let i = 0; i < 5; i++) part(g, G.cyl, coil, [0.05, 0.022, 0.05], [0, 0.0, -0.18 - i * 0.05], [Math.PI / 2, 0, 0])
       tube(0.015, 0.34, 0, 0, -0.3, steel)
+      for (const sx of [-1, 1]) box(g, steel, [0.008, 0.008, 0.12], [sx * 0.03, 0.0, -0.46])
+      rail(-0.12, 0.1, 0.065)
+      box(g, poly, [0.04, 0.12, 0.05], [0, -0.1, 0.06], [-0.3, 0, 0])
       hand()
-      muzzle.position.set(0, 0, -0.48)
+      muzzle.position.set(0, 0, -0.5)
+      break
+    }
+    case 'railgun': {
+      // the railgun: two long rails with a glowing channel between them, a scope, a stock
+      const glowRail = M({ color: 0x1a3040, emissive: 0x40c0ff, emissiveIntensity: 2.2, glow: true })
+      for (const sy of [-1, 1]) box(g, steel, [0.026, 0.014, 0.62], [0, sy * 0.028, -0.3])
+      box(g, glowRail, [0.01, 0.03, 0.6], [0, 0, -0.3])
+      for (let k = 0; k < 6; k++) box(g, dark, [0.05, 0.08, 0.02], [0, 0, -0.06 - k * 0.1])
+      box(g, dark, [0.07, 0.09, 0.22], [0, 0, 0.06])
+      part(g, G.cyl, dark, [0.022, 0.18, 0.022], [0, 0.08, -0.02], [Math.PI / 2, 0, 0])
+      part(g, G.cyl, M({ color: 0x223344, roughness: 0.1, metalness: 0.5 }), [0.02, 0.01, 0.02], [0, 0.08, -0.115], [Math.PI / 2, 0, 0])
+      box(g, poly, [0.04, 0.11, 0.05], [0, -0.09, 0.1], [-0.3, 0, 0])
+      box(g, poly, [0.045, 0.08, 0.22], [0, -0.02, 0.27])
+      hand()
+      muzzle.position.set(0, 0, -0.62)
       break
     }
   }
@@ -530,14 +679,12 @@ export function makeItem(kind: ItemKind): { group: THREE.Group; mats: THREE.Mesh
     }
     case 'key_silver':
     case 'key_gold': {
-      const col = kind === 'key_silver' ? 0xd8dde4 : 0xe0b040
-      const m = M({ color: col, roughness: 0.25, metalness: 1, emissive: col, emissiveIntensity: 0.5, glow: true })
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 10, 24), m)
-      ring.position.y = 0.95
-      g.add(ring)
-      part(g, G.box, m, [0.05, 0.4, 0.05], [0, 0.65, 0])
-      part(g, G.box, m, [0.14, 0.05, 0.05], [0.07, 0.5, 0])
-      part(g, G.box, m, [0.1, 0.05, 0.05], [0.05, 0.6, 0])
+      // a keycard: blue (silver doors) or red (gold doors), with its chip and a stripe
+      const col = kind === 'key_silver' ? 0x2070ff : 0xe02020
+      const m = M({ color: col, roughness: 0.3, metalness: 0.2, emissive: col, emissiveIntensity: 0.6, glow: true })
+      part(g, G.box, m, [0.34, 0.22, 0.012], [0, 0.85, 0])
+      part(g, G.box, M({ color: 0xe8e8e8, roughness: 0.4 }), [0.34, 0.04, 0.014], [0, 0.92, 0])
+      part(g, G.box, M({ color: 0xc8a030, roughness: 0.3, metalness: 1 }), [0.06, 0.05, 0.016], [-0.1, 0.82, 0])
       glow = col
       break
     }

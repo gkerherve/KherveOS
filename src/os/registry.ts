@@ -6,7 +6,7 @@ import {
   Settings, Sheet, Sigma, Sparkles, SquareTerminal, StickyNote,
 } from 'lucide-react'
 import { Calculator, Hexagon, Pipette, Shapes, TrainFrontTunnel } from 'lucide-react'
-import { CircuitBoard, Radical, Zap } from 'lucide-react'
+import { CircuitBoard, Radical, ServerCrash, Zap } from 'lucide-react'
 import { Activity, Binary, CloudSun, Cog, Droplets, NotebookTabs, Triangle } from 'lucide-react'
 import { AudioWaveform, ChartScatter, Microscope, Mountain, Rainbow, Ruler, Waves } from 'lucide-react'
 import { BarChart3, Beaker, CalendarDays, Cpu, LineChart, Thermometer } from 'lucide-react'
@@ -865,13 +865,13 @@ export const APPS: AppManifest[] = [
   },
   {
     id: 'runekeep',
-    name: 'Rune Keep',
-    icon: Castle,
-    color: '#c8862a',
-    brand: { label: 'Keep', from: '#f0c060', to: '#7a3a10' },
+    name: 'DataCenter Assault',
+    icon: ServerCrash,
+    color: '#1f8fd8',
+    brand: { label: 'DCA', from: '#6fd0ff', to: '#0b3a6a' },
     category: 'games',
     group: 'Games',
-    description: 'A fast 3D shooter in the style of the 90s classics: keys, lava, secrets and eight weapons',
+    description: 'A fast 3D shooter in an overrun data centre: corridors, server halls, keycards and ten weapons',
     load: () => import('@/apps/minigames/RuneKeep'),
     defaultSize: { w: 1040, h: 680 },
     minSize: { w: 640, h: 440 },

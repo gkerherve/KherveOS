@@ -236,8 +236,8 @@ export class RuneKeepEngine {
   private health = 100
   private armor = 0
   private armorType = 0
-  private ammo: Record<AmmoType, number> = { shells: 25, nails: 0, rockets: 0, cells: 0 }
-  private owned = new Set<WeaponId>(['axe', 'shotgun'])
+  private ammo: Record<AmmoType, number> = { shells: 25, nails: 40, rockets: 0, cells: 0 }
+  private owned = new Set<WeaponId>(['axe', 'pistol', 'shotgun'])
   private weapon: WeaponId = 'shotgun'
   private keysHeld = new Set<Key>()
   private quadT = 0
@@ -393,8 +393,8 @@ export class RuneKeepEngine {
     this.health = 100
     this.armor = 0
     this.armorType = 0
-    this.ammo = { shells: 25, nails: 0, rockets: 0, cells: 0 }
-    this.owned = new Set(['axe', 'shotgun'])
+    this.ammo = { shells: 25, nails: 40, rockets: 0, cells: 0 }
+    this.owned = new Set(['axe', 'pistol', 'shotgun'])
     this.loadLevel(0)
   }
 
@@ -550,9 +550,9 @@ export class RuneKeepEngine {
   keyDown(code: string) {
     this.keys.add(code)
     if (this.stage !== 'play') return
-    const n = /^Digit([1-8])$/.exec(code)
+    const n = /^Digit([0-9])$/.exec(code)
     if (n) {
-      const w = WEAPONS[Number(n[1]) - 1]
+      const w = WEAPONS[n[1] === '0' ? 9 : Number(n[1]) - 1]
       if (!this.owned.has(w.id)) this.message(`You don't have the ${w.name}`)
       else if (w.ammo && this.ammo[w.ammo] < w.use) this.message(`Not enough ${w.ammo}`)
       else this.selectWeapon(w.id)
@@ -708,7 +708,7 @@ export class RuneKeepEngine {
           d.unlocked = true
           this.message(`The ${def.key} key opens the door`)
         } else if (this.needKeyT <= 0) {
-          this.say(`You need the ${def.key} key`, 1.8)
+          this.say(`You need the ${def.key === 'silver' ? 'blue' : 'red'} keycard`, 1.8)
           this.needKeyT = 2.5
           sfx('locked', () => tone({ freq: 140, dur: 0.25, type: 'square', vol: 0.06 }))
         }
@@ -994,6 +994,12 @@ export class RuneKeepEngine {
     if (this.stage === 'play' && this.firing && this.weapon === 'thunder' && this.ammo.cells > 0) this.beamOn = true
     this.beam.visible = this.beamOn
     if (this.beamOn) this.drawBeam()
+    if (this.rail && this.railT > 0) {
+      this.railT -= dt
+      ;(this.rail.material as THREE.MeshBasicMaterial).opacity = Math.max(0, this.railT / 0.5)
+      this.rail.scale.x = this.rail.scale.z = 1 + (0.5 - this.railT) * 3
+      this.rail.visible = this.railT > 0
+    }
     this.animateViewmodel(dt)
   }
 
@@ -1072,6 +1078,44 @@ export class RuneKeepEngine {
         })
         break
       }
+      case 'pistol': {
+        this.pellets(eye, 1, 0.008, 0.008, 16 * quad)
+        flash(0.2)
+        this.punch += 0.02
+        sfx('pistol', () => {
+          noise({ dur: 0.14, freq: 2400, to: 500, filter: 'bandpass', q: 0.8, vol: 0.35 })
+          tone({ freq: 150, to: 50, dur: 0.1, type: 'sine', vol: 0.25 })
+        }, 0.04)
+        break
+      }
+      case 'railgun': {
+        // a slug that goes through everything in its line, to the wall
+        const d = this.aimDir()
+        const wall = this.level.ray(eye, d, 150)
+        const far = wall ? wall.dist : 150
+        // each one it kills, it goes on to the next; one that survives stops it
+        for (let k = 0; k < 12; k++) {
+          const h = this.rayMonsters(eye, d, far)
+          if (!h) break
+          this.hurtMonster(h.m, 140 * quad, d, h.point)
+          if (h.m.state !== 'dead') break
+        }
+        if (wall) {
+          this.emit(this.sparks, wall.point, wall.normal, 18, 4, 0.4)
+          this.hole(wall.point, wall.normal)
+        }
+        const from = new THREE.Vector3()
+        vm.muzzle.getWorldPosition(from)
+        this.railTrail(from, wall ? wall.point : eye.clone().addScaledVector(d, far))
+        flash(0.5, 0x60d0ff)
+        this.punch += 0.09
+        sfx('rail', () => {
+          tone({ freq: 2400, to: 300, dur: 0.5, type: 'sawtooth', vol: 0.12 })
+          noise({ dur: 0.5, freq: 3000, to: 400, filter: 'bandpass', vol: 0.3 })
+          tone({ freq: 70, to: 30, dur: 0.4, type: 'sine', vol: 0.35 })
+        }, 0.1)
+        break
+      }
       case 'thunder': {
         const d = this.aimDir()
         const hit = this.rayMonsters(eye, d, 40)
@@ -1089,6 +1133,27 @@ export class RuneKeepEngine {
   }
 
   private flashLightT = 0
+  /** The railgun's trail: a blue line that fades. */
+  private rail: THREE.Mesh | null = null
+  private railT = 0
+
+  private railTrail(from: THREE.Vector3, to: THREE.Vector3) {
+    if (!this.rail) {
+      this.rail = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, 1, 8, 1, true),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(0.6, 2.2, 3.2), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }),
+      )
+      this.rail.frustumCulled = false
+      this.scene.add(this.rail)
+    }
+    const len = from.distanceTo(to)
+    this.rail.position.copy(from).lerp(to, 0.5)
+    this.rail.scale.set(1, len, 1)
+    this.rail.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize())
+    this.rail.visible = true
+    this.railT = 0.5
+    this.dynWant.push({ p: to.clone(), color: 0x40c0ff, power: 3 })
+  }
 
   private pellets(eye: THREE.Vector3, n: number, sx: number, sy: number, dmg: number) {
     const hits = new Map<Mon, { dmg: number; d: THREE.Vector3; p: THREE.Vector3 }>()
@@ -1366,7 +1431,7 @@ export class RuneKeepEngine {
   }
 
   private voice(k: MonsterKind) {
-    return { grunt: 160, hound: 300, knight: 130, brute: 80, wraith: 400, ravager: 70 }[k]
+    return { grunt: 160, hound: 300, knight: 130, brute: 80, wraith: 400, ravager: 70, core: 50 }[k]
   }
 
   private kill(m: Mon, dir: THREE.Vector3) {
@@ -1376,6 +1441,17 @@ export class RuneKeepEngine {
     this.totalKills++
     this.score += m.s.points
     m.rig.eyes.forEach((e) => (e.visible = false))
+    if (m.kind === 'core') {
+      // a core server goes up: the cabinet is gone, a blast, sparks and smoke
+      m.rig.root.visible = false
+      const c = m.pos.clone().add(new THREE.Vector3(0, 1.2, 0))
+      this.explode(c, 60, false)
+      this.emit(this.sparks, c, new THREE.Vector3(0, 1, 0), 80, 6, 0.8)
+      this.emit(this.smoke, c, new THREE.Vector3(0, 1, 0), 20, 1.2, 2.5, -0.1)
+      const left = this.mons.filter((x) => x.kind === 'core' && x.state !== 'dead').length
+      this.message(left ? `Core server destroyed — ${left} to go` : 'The last core is down — the data centre is finished. Get out!')
+      return
+    }
     const gib = m.hp < -40 || (m.hp < -20 && m.s.hp < 60)
     if (gib) {
       // Quake's finest tradition
@@ -1481,6 +1557,11 @@ export class RuneKeepEngine {
           m.rig.root.rotation.x = m.fall * k * 1.45
           m.rig.hips.position.y = (m.kind === 'hound' ? 0.62 : 0.95) - k * 0.5
         }
+        m.rig.root.position.copy(m.pos)
+        continue
+      }
+      // a core server only stands there and hums
+      if (m.kind === 'core') {
         m.rig.root.position.copy(m.pos)
         continue
       }
@@ -1650,7 +1731,7 @@ export class RuneKeepEngine {
       m.rig.root.rotation.y = m.yaw
       m.rig.root.rotation.x = 0
       if (m.kind === 'brute' && Math.random() < dt * 2) this.play3d('saw', m.pos, (v) => noise({ dur: 0.25, freq: 900, filter: 'bandpass', q: 4, vol: 0.05 * v }))
-      if (m.kind === 'wraith' || m.kind === 'ravager') this.dynWant.push({ p: m.pos.clone().setY(m.pos.y + m.s.height * 0.85), color: m.kind === 'wraith' ? 0x4080ff : 0xff8020, power: 0.5 })
+      if (m.kind === 'wraith' || m.kind === 'ravager') this.dynWant.push({ p: m.pos.clone().setY(m.pos.y + m.s.height * 0.85), color: m.kind === 'wraith' ? 0xff3020 : 0x40a0ff, power: 0.5 })
     }
   }
 
@@ -1708,7 +1789,7 @@ export class RuneKeepEngine {
     for (const it of this.items) {
       if (it.taken) continue
       it.t += dt
-      const spin = it.kind.startsWith('key') || it.kind.startsWith('armor') || it.kind === 'quad' || ['shotgun2', 'nailgun', 'supernail', 'grenadel', 'rocketl', 'thunder'].includes(it.kind)
+      const spin = it.kind.startsWith('key') || it.kind.startsWith('armor') || it.kind === 'quad' || ['pistol', 'shotgun2', 'nailgun', 'supernail', 'grenadel', 'rocketl', 'thunder', 'railgun'].includes(it.kind)
       if (spin) it.group.rotation.y += dt * 1.8
       if (it.kind === 'quad' || it.kind.startsWith('key')) it.group.position.y = it.pos.y + Math.sin(it.t * 2.5) * 0.08
       if (it.kind === 'quad' || it.kind === 'mega') this.dynWant.push({ p: it.pos.clone().setY(it.pos.y + 0.7), color: 0x4060ff, power: 0.8 })
@@ -1783,7 +1864,7 @@ export class RuneKeepEngine {
       case 'key_gold': {
         const k = kind.slice(4) as Key
         this.keysHeld.add(k)
-        this.message(`You got the ${k} key`)
+        this.message(`You got the ${k === 'silver' ? 'blue' : 'red'} keycard`)
         ding(1320)
         return true
       }

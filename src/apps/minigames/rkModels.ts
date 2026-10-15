@@ -12,7 +12,7 @@ import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { applySurfaceDetail, surfaceKindOf } from './rkSurface'
 
-export type ModelKind = 'grunt' | 'knight' | 'brute' | 'ravager' | 'hound' | 'wraith' | 'zombie'
+export type ModelKind = 'grunt' | 'knight' | 'brute' | 'ravager' | 'hound' | 'wraith' | 'core' | 'zombie'
 export type Move = 'idle' | 'walk' | 'run' | 'attack' | 'shoot' | 'leap' | 'hit' | 'death'
 
 interface Variant {
@@ -42,30 +42,39 @@ const VARIANTS: Record<ModelKind, Variant[]> = {
       },
     },
   ],
+  // DataCenter Assault: the military, then the androids
   knight: [
-    { file: 'king', height: 1.9, weapon: 'sword' },
-    { file: 'skeleton', height: 1.85 },
-    { file: 'orc', height: 1.95, prefer: { attack: ['Weapon', 'Punch'] } },
+    // the commando: a soldier with a knife, fast, at close quarters
+    {
+      file: 'soldier2', height: 1.8, detail: true,
+      prefer: { idle: ['Idle'], run: ['Run'], walk: ['Walk', 'Run'], attack: ['Punch', 'Idle_Shoot'] },
+      props: {
+        among: ['Sniper', 'SMG', 'RocketLauncher', 'Revolver', 'Revolver_Small', 'Pistol', 'GrenadeLauncher', 'ShortCannon', 'Shotgun', 'Sniper_2', 'Shovel', 'Knife_2', 'AK', 'Knife_1'],
+        keep: ['Knife_1', 'Knife_2'],
+      },
+    },
   ],
   brute: [
-    { file: 'giant', height: 2.5 },
-    { file: 'yeti', height: 2.4 },
-    { file: 'enemy-large', height: 2.3, prefer: { attack: ['Weapon', 'Punch'] } },
+    // the heavy gunner: a big soldier in dark armour with a grenade launcher
+    {
+      file: 'soldier2', height: 2.25, detail: true,
+      prefer: { idle: ['Idle'], shoot: ['Idle_Shoot'], attack: ['Idle_Shoot'], run: ['Run_Gun', 'Run'], walk: ['Run_Gun', 'Walk'] },
+      props: {
+        among: ['Sniper', 'SMG', 'RocketLauncher', 'Revolver', 'Revolver_Small', 'Pistol', 'GrenadeLauncher', 'ShortCannon', 'Shotgun', 'Sniper_2', 'Shovel', 'Knife_2', 'AK', 'Knife_1'],
+        keep: ['GrenadeLauncher', 'RocketLauncher', 'ShortCannon'],
+      },
+    },
   ],
   ravager: [
-    { file: 'demon', height: 2.2 },
-    { file: 'blue-demon', height: 2.2, prefer: { run: ['Run2', 'Run'] } },
+    // the android: a soldier's frame in chrome (coloured in rkActors.makeMonster)
+    { file: 'soldier-cad', height: 1.95, prefer: { run: ['Run'], attack: ['Punch', 'Idle_Shoot'] } },
   ],
   hound: [
     { file: 'wolf', height: 1.05 },
-    { file: 'goblin', height: 1.2 },
   ],
-  wraith: [
-    { file: 'ghost', height: 1.7 },
-    { file: 'ghost-skull', height: 1.5 },
-    { file: 'dragon', height: 1.9 },
-    { file: 'winged-demon', height: 1.8 },
-  ],
+  // the drone and the core servers are built from shapes (rkActors.makeMonster)
+  wraith: [],
+  core: [],
   zombie: [
     { file: 'zombie', height: 1.8, prefer: { run: ['Run_Arms', 'Run'], attack: ['Punch', 'Idle_Attack'] } },
     { file: 'zombie2', height: 1.8 },

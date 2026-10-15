@@ -20,7 +20,7 @@ import type { RKHud, RKResult, RKSave, RuneKeepEngine } from './rkEngine'
 import './runeKeep.css'
 
 const ID = 'runekeep'
-const NAME = 'Rune Keep'
+const NAME = 'DataCenter Assault'
 type Phase = 'loading' | 'ready' | 'playing' | 'paused' | 'over'
 
 const fmt = (n: number) => n.toLocaleString('en-US')
@@ -30,11 +30,11 @@ const CONTROLS: [string, string][] = [
   ['Mouse', 'Look · left click to fire'],
   ['W A S D', 'Move · Space jump · Shift walk'],
   ['← → ↑ ↓', 'Turn · look up and down'],
-  ['1 – 8 · Q · wheel', 'Weapons'],
+  ['1 – 9, 0 · Q · wheel', 'Weapons'],
   ['Esc', 'Pause'],
 ]
-const SLOT_NAMES = ['Axe', 'SG', 'SSG', 'NG', 'SNG', 'GL', 'RL', 'LG']
-const ORDER = ['axe', 'shotgun', 'shotgun2', 'nailgun', 'supernail', 'grenadel', 'rocketl', 'thunder'] as const
+const SLOT_NAMES = ['Knife', 'Pistol', 'Pump', 'Combat', 'AR', 'Mini', 'GL', 'RL', 'Arc', 'Rail']
+const ORDER = ['axe', 'pistol', 'shotgun', 'shotgun2', 'nailgun', 'supernail', 'grenadel', 'rocketl', 'thunder', 'railgun'] as const
 
 export default function RuneKeep({ win }: AppProps) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -138,6 +138,7 @@ export default function RuneKeep({ win }: AppProps) {
           releaseMouse()
         })
         engineRef.current = engine
+        if (import.meta.env.DEV) Object.assign(window, { dcAssault: engine }) // debugging: dcAssault.pos, dcAssault.yaw…
         // in dev the console can reach the game (kherveos.runeKeep.pos.set(…))
         if (import.meta.env.DEV) Object.assign((window as unknown as { kherveos: object }).kherveos ?? {}, { runeKeep: engine })
         engine.onCheckpoint = (cp) => {
@@ -411,7 +412,7 @@ export default function RuneKeep({ win }: AppProps) {
                 </span>
               ))}
               <span className="rk-ammos">
-                <b>S</b> {hud.ammoAll.shells} <b>N</b> {hud.ammoAll.nails} <b>R</b> {hud.ammoAll.rockets} <b>C</b> {hud.ammoAll.cells}
+                <b>S</b> {hud.ammoAll.shells} <b>B</b> {hud.ammoAll.nails} <b>R</b> {hud.ammoAll.rockets} <b>C</b> {hud.ammoAll.cells}
               </span>
             </div>
             <div className="rk-main">
@@ -454,8 +455,8 @@ export default function RuneKeep({ win }: AppProps) {
           <div className="rk-card">
             {phase === 'ready' ? (
               <>
-                <div className="rk-title">RUNE KEEP</div>
-                <p className="rk-tag">Three levels of stone, lava and runes. Find the keys, find the secrets, find the way out.</p>
+                <div className="rk-title">DATACENTER ASSAULT</div>
+                <p className="rk-tag">The military has taken the data centre. Fight through its corridors and server halls, face what they built down there — and destroy the core servers.</p>
               </>
             ) : (
               <div className="rk-title rk-small">Paused</div>

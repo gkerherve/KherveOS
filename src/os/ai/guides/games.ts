@@ -51,7 +51,7 @@ export const GAME_GUIDES: AppGuide[] = [
   ]),
   miniGame('pinball', 'Pinball table with flippers and bumpers', 'Flippers, bumpers and a plunger: keep the ball in play.', ['The state has the ball number, bonus and multiplier.']),
   miniGame('asteroids', 'Space shooter: blast meteors (Asteroids-like)', 'Steer your ship and blast the meteors to pieces.', ['The state has the wave, lives and meteors left.']),
-  miniGame('runekeep', 'Fast first-person shooter in the style of the 90s classics (Quake-like)', 'Fight through three levels of a rune-carved keep: find the silver and gold keys, the secrets and the exit portal. Eight weapons, six monsters, lava, lifts, rocket jumps.', [
+  miniGame('runekeep', 'DataCenter Assault: fast first-person shooter in a military data centre', 'Three levels of corridors, server halls and plant rooms: soldiers, dogs, drones and heavies, then androids; blue and red keycards, sliding, shutter, double and blast doors. In the last level every core server must be destroyed before the exit opens. Ten weapons, from the knife to the railgun.', [
     'It needs the mouse: `runekeep_play` brings the window to the front, but only the player\'s click starts or resumes. Pausing works from the tools.',
     'The state has the level, stage (play, dead, intermission, finished), health, armor, weapon and ammo, weapons owned, keys, kills, secrets and time.',
     'It is an original game in that style: none of Quake\'s maps, models, textures, sounds or names.',

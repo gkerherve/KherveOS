@@ -6,7 +6,7 @@
 // carry you, lava glows, the sky drifts.
 
 import * as THREE from 'three'
-import { cellOf, STEP, type Cell, type Liquid, type MapDef, type Tex } from './rkMaps'
+import { cellOf, STEP, type Cell, type DoorStyle, type Liquid, type MapDef, type Tex } from './rkMaps'
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 
@@ -350,6 +350,146 @@ function makeTex(kind: Tex): SurfaceTex {
       glowCanvas = gc
       break
     }
+    case 'server': {
+      // rack fronts: a row of cabinets, each a stack of units with status lights (they glow)
+      rough = 0.4
+      metal = 0.6
+      g.fillStyle = '#16181c'
+      g.fillRect(0, 0, 512, 512)
+      bg.fillStyle = '#707070'
+      bg.fillRect(0, 0, 512, 512)
+      const [gc, gg] = canvas()
+      gg.fillStyle = '#000'
+      gg.fillRect(0, 0, 512, 512)
+      for (const x0 of [0, 256]) {
+        // the cabinet frame and its perforated door
+        g.fillStyle = '#0c0d10'
+        g.fillRect(x0, 0, 256, 512)
+        g.fillStyle = '#23262c'
+        g.fillRect(x0 + 10, 8, 236, 496)
+        for (let y = 16; y < 500; y += 22) {
+          // one unit: a server's face
+          const v = 34 + Math.floor(r() * 18)
+          g.fillStyle = `rgb(${v},${v + 2},${v + 6})`
+          g.fillRect(x0 + 16, y, 224, 18)
+          bg.fillStyle = '#c0c0c0'
+          bg.fillRect(x0 + 16, y, 224, 18)
+          // vents
+          g.fillStyle = '#121316'
+          for (let k = 0; k < 14; k++) g.fillRect(x0 + 96 + k * 9, y + 4, 4, 10)
+          // drive bays
+          g.fillStyle = '#3c4048'
+          for (let k = 0; k < 4; k++) g.fillRect(x0 + 22 + k * 17, y + 3, 14, 12)
+          // status lights: mostly green and blue, a red one here and there
+          for (let k = 0; k < 3; k++) {
+            const roll = r()
+            const col = roll < 0.06 ? '#ff3020' : roll < 0.5 ? '#30ff70' : roll < 0.8 ? '#30a0ff' : '#ffb020'
+            gg.fillStyle = col
+            gg.fillRect(x0 + 206 + k * 9, y + 6, 5, 5)
+            g.fillStyle = col
+            g.fillRect(x0 + 206 + k * 9, y + 6, 5, 5)
+          }
+        }
+      }
+      glowCanvas = gc
+      break
+    }
+    case 'panel': {
+      // white wall panels with dark seams, a skirting at the bottom
+      rough = 0.55
+      g.fillStyle = '#c9ccd0'
+      g.fillRect(0, 0, 512, 512)
+      bg.fillStyle = '#909090'
+      bg.fillRect(0, 0, 512, 512)
+      for (const [x, y, w, h] of [[0, 0, 256, 256], [256, 0, 256, 256], [0, 256, 256, 200], [256, 256, 256, 200]]) {
+        const v = 196 + Math.floor(r() * 18)
+        g.fillStyle = `rgb(${v},${v + 2},${v + 5})`
+        g.fillRect(x + 3, y + 3, w - 6, h - 6)
+        bg.fillStyle = '#b0b0b0'
+        bg.fillRect(x + 3, y + 3, w - 6, h - 6)
+      }
+      g.fillStyle = '#3a3e44'
+      g.fillRect(0, 456, 512, 56)
+      g.fillStyle = '#1f8fd8'
+      g.fillRect(0, 440, 512, 10)
+      grain(g, r, 4000, 0.12, 0.05)
+      break
+    }
+    case 'raised': {
+      // the raised floor: 60 cm tiles, some perforated for the cold air
+      rough = 0.5
+      metal = 0.2
+      g.fillStyle = '#7c8086'
+      g.fillRect(0, 0, 512, 512)
+      bg.fillStyle = '#808080'
+      bg.fillRect(0, 0, 512, 512)
+      for (let ty = 0; ty < 2; ty++)
+        for (let tx = 0; tx < 2; tx++) {
+          const x = tx * 256
+          const y = ty * 256
+          const v = 120 + Math.floor(r() * 20)
+          g.fillStyle = `rgb(${v},${v + 3},${v + 8})`
+          g.fillRect(x + 4, y + 4, 248, 248)
+          bg.fillStyle = '#c0c0c0'
+          bg.fillRect(x + 4, y + 4, 248, 248)
+          if ((tx + ty) % 2 === 0) {
+            g.fillStyle = '#30343a'
+            bg.fillStyle = '#202020'
+            for (let py = y + 24; py < y + 236; py += 14)
+              for (let px = x + 24; px < x + 236; px += 14) {
+                g.fillRect(px, py, 6, 6)
+                bg.fillRect(px, py, 6, 6)
+              }
+          }
+        }
+      grain(g, r, 5000, 0.15, 0.06)
+      break
+    }
+    case 'ceiltile': {
+      // ceiling tiles, one in four a light panel (it glows)
+      g.fillStyle = '#a8aaae'
+      g.fillRect(0, 0, 512, 512)
+      bg.fillStyle = '#808080'
+      bg.fillRect(0, 0, 512, 512)
+      const [gc, gg] = canvas()
+      gg.fillStyle = '#000'
+      gg.fillRect(0, 0, 512, 512)
+      for (let ty = 0; ty < 4; ty++)
+        for (let tx = 0; tx < 4; tx++) {
+          const x = tx * 128
+          const y = ty * 128
+          g.fillStyle = '#5a5c60'
+          g.fillRect(x, y, 128, 128)
+          const light = tx % 2 === 0 && ty % 2 === 0
+          g.fillStyle = light ? '#eef4ff' : `rgb(${176 + r() * 12},${178 + r() * 12},${182 + r() * 12})`
+          g.fillRect(x + 3, y + 3, 122, 122)
+          if (light) {
+            gg.fillStyle = '#cfe0ff'
+            gg.fillRect(x + 8, y + 8, 112, 112)
+          }
+        }
+      grain(g, r, 3000, 0.1, 0.04)
+      glowCanvas = gc
+      break
+    }
+    case 'hazard': {
+      // yellow and black stripes (blast doors, the edges of danger)
+      rough = 0.5
+      metal = 0.4
+      for (let k = -512; k < 1024; k += 64) {
+        g.fillStyle = (k / 64) % 2 === 0 ? '#e0b020' : '#16161a'
+        g.beginPath()
+        g.moveTo(k, 0)
+        g.lineTo(k + 64, 0)
+        g.lineTo(k + 64 - 512, 512)
+        g.lineTo(k - 512, 512)
+        g.fill()
+      }
+      bg.fillStyle = '#909090'
+      bg.fillRect(0, 0, 512, 512)
+      grain(g, r, 6000, 0.25, 0.08)
+      break
+    }
     case 'rune': {
       blocks(g, bg, r, 3, 2, [70, 66, 72], 0.25, '#151317')
       grain(g, r, 8000)
@@ -503,7 +643,21 @@ export class Level {
   readonly lights: BakeLight[] = []
   readonly time = { value: 0 }
   /** Door panels and their state (0 closed .. 1 open). */
-  doors: { mesh: THREE.Mesh; open: number; hold: number; unlocked: boolean; cx: number; cz: number; f: number; c: number }[] = []
+  doors: {
+    mesh: THREE.Object3D
+    open: number
+    hold: number
+    unlocked: boolean
+    cx: number
+    cz: number
+    f: number
+    c: number
+    style: DoorStyle
+    /** Double doors: the two leaves, how far each slides, and along which axis. */
+    leaves?: [THREE.Object3D, THREE.Object3D]
+    reach?: number
+    alongX?: boolean
+  }[] = []
   lifts: { mesh: THREE.Mesh; y: number; state: 'low' | 'up' | 'high' | 'down'; t: number }[] = []
   private owned: { dispose(): void }[] = []
   private sunDir: THREE.Vector3
@@ -889,31 +1043,73 @@ export class Level {
 
   private buildMovers() {
     const m = this.map
-    const doorTex = this.tex('metal')
-    const doorMat = new THREE.MeshStandardMaterial({ map: doorTex.map, bumpMap: doorTex.bump, bumpScale: 2, roughness: 0.5, metalness: 0.6 })
-    const keyMats = {
-      silver: new THREE.MeshStandardMaterial({ color: 0xd8dde4, roughness: 0.3, metalness: 1, emissive: 0x405060, emissiveIntensity: 0.4 }),
-      gold: new THREE.MeshStandardMaterial({ color: 0xe0b040, roughness: 0.3, metalness: 1, emissive: 0x604010, emissiveIntensity: 0.5 }),
+    const look = (t: Tex, o: THREE.MeshStandardMaterialParameters = {}) => {
+      const tx = this.tex(t)
+      return new THREE.MeshStandardMaterial({ map: tx.map, bumpMap: tx.bump, bumpScale: 2, roughness: 0.5, metalness: 0.6, ...o })
     }
-    this.owned.push(doorMat, keyMats.silver, keyMats.gold)
+    const doorMats: Record<DoorStyle, THREE.MeshStandardMaterial> = {
+      slide: look('metal'),
+      shutter: look('grate', { metalness: 0.7 }),
+      split: look('panel', { metalness: 0.1, roughness: 0.4 }),
+      blast: look('hazard', { metalness: 0.5 }),
+    }
+    const doorMat = doorMats.slide
+    // keycards: blue (the first key of a level), red (the second)
+    const keyMats = {
+      silver: new THREE.MeshStandardMaterial({ color: 0x2070ff, roughness: 0.3, metalness: 0.4, emissive: 0x1040c0, emissiveIntensity: 0.8 }),
+      gold: new THREE.MeshStandardMaterial({ color: 0xe02020, roughness: 0.3, metalness: 0.4, emissive: 0xa01010, emissiveIntensity: 0.8 }),
+    }
+    const windowMat = new THREE.MeshStandardMaterial({ color: 0x0c1218, roughness: 0.1, metalness: 0.6 })
+    this.owned.push(...Object.values(doorMats), keyMats.silver, keyMats.gold, windowMat)
     for (const d of m.doors) {
       const c = m.cells[d.z0 * m.w + d.x0]
       const w = d.x1 - d.x0 + 1
       const dd = d.z1 - d.z0 + 1
       const h = c.c - c.f
-      const geo = new THREE.BoxGeometry(w, h, dd)
-      this.owned.push(geo)
-      const mesh = new THREE.Mesh(geo, doorMat)
-      mesh.position.set(d.x0 + w / 2, c.f + h / 2, d.z0 + dd / 2)
-      if (d.key) {
-        // a coloured band and lock plates tell which key it takes
-        const band = new THREE.Mesh(new THREE.BoxGeometry(w * 1.001, 0.25, dd * 1.06), keyMats[d.key])
-        band.position.y = 0
-        mesh.add(band)
-        this.owned.push(band.geometry)
+      const style: DoorStyle = d.style ?? 'slide'
+      const mat = doorMats[style]
+      const group = new THREE.Group()
+      group.position.set(d.x0 + w / 2, c.f + h / 2, d.z0 + dd / 2)
+      const alongX = w >= dd
+      const thick = style === 'blast' ? 1 : 0.6
+      let leaves: [THREE.Object3D, THREE.Object3D] | undefined
+      if (style === 'split') {
+        // two leaves meeting in the middle, each with a window strip
+        const mk = (s: number) => {
+          const geo = alongX ? new THREE.BoxGeometry(w / 2, h, dd * thick) : new THREE.BoxGeometry(w * thick, h, dd / 2)
+          this.owned.push(geo)
+          const leaf = new THREE.Mesh(geo, mat)
+          leaf.position.set(alongX ? (s * w) / 4 : 0, 0, alongX ? 0 : (s * dd) / 4)
+          const win = new THREE.Mesh(alongX ? new THREE.BoxGeometry(w / 2 - 0.3, 0.6, dd * thick + 0.02) : new THREE.BoxGeometry(w * thick + 0.02, 0.6, dd / 2 - 0.3), windowMat)
+          this.owned.push(win.geometry)
+          win.position.y = h * 0.15
+          leaf.add(win)
+          group.add(leaf)
+          return leaf
+        }
+        leaves = [mk(-1), mk(1)]
+      } else {
+        const geo = alongX ? new THREE.BoxGeometry(w, h, dd * thick) : new THREE.BoxGeometry(w * thick, h, dd)
+        this.owned.push(geo)
+        group.add(new THREE.Mesh(geo, mat))
+        if (style === 'shutter') {
+          // the slats of a roll-up shutter
+          for (let y = -h / 2 + 0.15; y < h / 2; y += 0.22) {
+            const slat = new THREE.Mesh(alongX ? new THREE.BoxGeometry(w, 0.03, dd * thick + 0.04) : new THREE.BoxGeometry(w * thick + 0.04, 0.03, dd), doorMat)
+            this.owned.push(slat.geometry)
+            slat.position.y = y
+            group.add(slat)
+          }
+        }
       }
-      this.group.add(mesh)
-      this.doors.push({ mesh, open: 0, hold: 0, unlocked: !d.key, cx: d.x0 + w / 2, cz: d.z0 + dd / 2, f: c.f, c: c.c })
+      if (d.key) {
+        // a coloured band and lock plates tell which keycard it takes
+        const band = new THREE.Mesh(new THREE.BoxGeometry(alongX ? w * 1.001 : w * thick + 0.06, 0.25, alongX ? dd * thick + 0.06 : dd * 1.001), keyMats[d.key])
+        this.owned.push(band.geometry)
+        group.add(band)
+      }
+      this.group.add(group)
+      this.doors.push({ mesh: group, open: 0, hold: 0, unlocked: !d.key, cx: d.x0 + w / 2, cz: d.z0 + dd / 2, f: c.f, c: c.c, style, leaves, reach: (alongX ? w : dd) / 2 - 0.05, alongX })
     }
     const liftTex = this.tex('grate')
     const liftMat = new THREE.MeshStandardMaterial({ map: liftTex.map, bumpMap: liftTex.bump, roughness: 0.5, metalness: 0.7 })
@@ -931,7 +1127,7 @@ export class Level {
     // the doors and lifts are not vertex-lit: tint them with the light where they stand
     const tint = new THREE.Color()
     this.lightAt(new THREE.Vector3(m.doors[0] ? this.doors[0].cx : 0, 1.5, m.doors[0] ? this.doors[0].cz : 0), tint)
-    doorMat.color.setRGB(Math.min(1.4, tint.r + 0.25), Math.min(1.4, tint.g + 0.22), Math.min(1.4, tint.b + 0.2))
+    for (const dm of Object.values(doorMats)) dm.color.setRGB(Math.min(1.4, tint.r + 0.25), Math.min(1.4, tint.g + 0.22), Math.min(1.4, tint.b + 0.2))
     if (m.lifts[0]) {
       const l = m.lifts[0]
       this.lightAt(new THREE.Vector3(l.x0 + 1, l.low + 1.5, l.z0 + 1), tint)
@@ -1021,10 +1217,23 @@ export class Level {
       const target = d.hold > 0 ? 1 : 0
       if (target === 0 && d.open > 0 && near(d.cx, d.cz, 1.1)) d.hold = 0.5 // never close on someone
       const before = d.open
-      d.open = THREE.MathUtils.clamp(d.open + (target ? dt : -dt) / 0.9, 0, 1)
+      // blast doors are slow, shutters roll up a bit slower than plain doors
+      const time = d.style === 'blast' ? 1.8 : d.style === 'shutter' ? 1.3 : 0.9
+      d.open = THREE.MathUtils.clamp(d.open + (target ? dt : -dt) / time, 0, 1)
       if ((before === 0 && d.open > 0) || (before === 1 && d.open < 1)) sound('door', d.cx, d.cz)
       const h = d.c - d.f
-      d.mesh.position.y = d.f + h / 2 + d.open * (h - 0.12)
+      if (d.leaves) {
+        // double doors part sideways
+        const k = d.open * d.reach!
+        const [a, b] = d.leaves
+        if (d.alongX) {
+          a.position.x = -d.reach! / 2 - k
+          b.position.x = d.reach! / 2 + k
+        } else {
+          a.position.z = -d.reach! / 2 - k
+          b.position.z = d.reach! / 2 + k
+        }
+      } else d.mesh.position.y = d.f + h / 2 + d.open * (h - 0.12)
     }
     for (const [i, l] of this.lifts.entries()) {
       const def = this.map.lifts[i]
