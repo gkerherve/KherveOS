@@ -705,6 +705,12 @@ export class LastTrainEngine {
 
   keyDown(code: string) {
     this.keys.add(code)
+    if (code === 'KeyW') {
+      // W twice in quick succession: run for as long as W stays down
+      const now = performance.now()
+      if (now - this.lastW < 300) this.runLatch = true
+      this.lastW = now
+    }
     if (this.stage === 'dying') return
     if (/^Digit[1-9]$/.test(code)) this.switchTo(Number(code.slice(5)) - 1)
     else if (code === 'KeyQ') this.cycleGun(-1)
@@ -717,9 +723,11 @@ export class LastTrainEngine {
 
   keyUp(code: string) {
     this.keys.delete(code)
+    if (code === 'KeyW') this.runLatch = false
   }
 
   releaseAll() {
+    this.runLatch = false
     this.keys.clear()
     this.firing = false
     this.aiming = false
@@ -1330,7 +1338,7 @@ export class LastTrainEngine {
     const turn = (k.has('ArrowRight') ? 1 : 0) - (k.has('ArrowLeft') ? 1 : 0)
     const tilt = (k.has('ArrowDown') ? 1 : 0) - (k.has('ArrowUp') ? 1 : 0)
     if (turn || tilt) this.look(turn * 1100 * dt, tilt * 650 * dt)
-    const sprinting = (k.has('ShiftLeft') || k.has('ShiftRight')) && f > 0 && !this.aiming
+    const sprinting = (k.has('ShiftLeft') || k.has('ShiftRight') || this.runLatch) && f > 0 && !this.aiming
     const speed = (sprinting ? SPRINT : WALK) * (this.aiming ? 0.55 : 1)
     const fwd = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw))
     const right = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw))
@@ -1422,6 +1430,9 @@ export class LastTrainEngine {
   }
 
   private sprinting = false
+  /** Running after a double tap of W (until W is let go). */
+  private runLatch = false
+  private lastW = 0
 
   private step(vol: number) {
     sfx('step', () => {

@@ -27,7 +27,7 @@ const fmt = (n: number) => n.toLocaleString('en-US')
 
 const CONTROLS: [string, string][] = [
   ['Mouse', 'Look · left click to shoot · right click to aim'],
-  ['W A S D', 'Move · Shift sprint · Space jump'],
+  ['W A S D', 'Move · W W or Shift run · Space jump'],
   ['← → ↑ ↓', 'Turn · look up and down'],
   ['1–7 · Q · wheel', 'Pistol, rifle, shotgun — one more gun found at each station'],
   ['R', 'Reload'],
