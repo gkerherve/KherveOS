@@ -620,7 +620,41 @@ interface Ad {
   fg: string
   /** The app's icon (public/icons/apps); none for the station's own notices. */
   icon?: string
+  /** A small drawing in place of an icon (the science posters). */
+  art?: Art
+  /** The heading over the three lines (HOW TO for the apps). */
+  label?: string
 }
+
+type Art = 'atom' | 'dna' | 'planet' | 'wave' | 'crystal' | 'tile' | 'flask' | 'eye'
+
+/** Science posters: what's on in the city, and things worth knowing. They alternate with the apps. */
+const SCIENCE: Ad[] = [
+  { name: 'Science Museum', tag: 'Free entry every Sunday', art: 'atom', label: "WHAT'S ON", bg: '#1c1430', fg: '#c9a0ff',
+    steps: ['The hall of fossils and minerals', 'Planetarium shows on the hour', 'A hands-on lab for children'] },
+  { name: 'Did you know?', tag: 'The DNA in one cell', art: 'dna', label: 'GOOD TO KNOW', bg: '#0f2420', fg: '#5fe0b0',
+    steps: ['Unwound, it is about 2 metres long', 'It is read three letters at a time', 'Each letter pair is A–T or C–G'] },
+  { name: 'Planetarium', tag: 'Nights under the dome', art: 'planet', label: "WHAT'S ON", bg: '#0b1230', fg: '#ffd27a',
+    steps: ['Saturn and its rings, live', 'Telescopes on the roof after dark', 'Free for students'] },
+  { name: 'Speed of light', tag: '299 792 km every second', art: 'wave', label: 'GOOD TO KNOW', bg: '#20101a', fg: '#ff9ac8',
+    steps: ['Sunlight left the Sun 8 minutes ago', 'Nothing with mass can reach it', 'Fibre carries it under the oceans'] },
+  { name: 'Public lecture', tag: 'Black holes, explained', art: 'planet', label: "WHAT'S ON", bg: '#101010', fg: '#f0f0f0',
+    steps: ['Thursday 19:00, Hall B', 'Free, no booking needed', 'Questions and tea afterwards'] },
+  { name: 'Crystals', tag: 'Order, atom by atom', art: 'crystal', label: 'GOOD TO KNOW', bg: '#0e1f2c', fg: '#8fe3ff',
+    steps: ['Table salt grows in cubes', 'Snowflakes always have six arms', 'Diamond and graphite: both carbon'] },
+  { name: 'The Moon', tag: 'Our nearest neighbour', art: 'planet', label: 'GOOD TO KNOW', bg: '#14161c', fg: '#d8dce6',
+    steps: ['It drifts 3.8 cm further every year', 'The same face always looks at us', 'Twelve people have walked on it'] },
+  { name: 'Science Fair', tag: 'Young researchers show their work', art: 'flask', label: "WHAT'S ON", bg: '#2a1c08', fg: '#ffc24a',
+    steps: ['Saturday, 10:00 to 16:00', 'Robots, rockets and slime', 'Vote for the best project'] },
+  { name: 'Water', tag: 'The strangest common liquid', art: 'atom', label: 'GOOD TO KNOW', bg: '#0a1e2e', fg: '#6fc3ff',
+    steps: ['H–O–H bends at 104.5°', 'It is densest at 4 °C, so ice floats', 'It covers 71% of the Earth'] },
+  { name: 'Hydrogen', tag: 'Element number 1', art: 'tile', label: 'GOOD TO KNOW', bg: '#16220e', fg: '#9fe05a',
+    steps: ['The lightest of all the elements', 'About three quarters of ordinary matter', 'Stars burn it into helium'] },
+  { name: 'Microscopy Club', tag: 'See the invisible', art: 'eye', label: "WHAT'S ON", bg: '#1e1226', fg: '#e08aff',
+    steps: ['Cells at 400 times', 'Bring a leaf, a hair, pond water', 'Every Wednesday, 18:00'] },
+  { name: 'Citizen science', tag: 'Anyone can do research', art: 'flask', label: 'HOW TO', bg: '#0e2218', fg: '#6ee08f',
+    steps: ['Count the birds in your street', 'Sort galaxies from your sofa', 'Measure the rain at home'] },
+]
 
 const POSTERS: Ad[] = [
   { name: 'KherveFitting', tag: 'XPS peak fitting, made easy', icon: 'khervefitting', bg: '#2b1d10', fg: '#f0a540',
@@ -653,6 +687,148 @@ const POSTERS: Ad[] = [
     steps: ['Let passengers off first', 'Keep the doors clear', 'Report anything unusual'] },
 ]
 
+/** The apps and the science posters, one after the other, so every station has both. */
+const WALL: Ad[] = (() => {
+  const out: Ad[] = []
+  for (let k = 0; k < Math.max(POSTERS.length, SCIENCE.length); k++) {
+    if (POSTERS[k]) out.push(POSTERS[k])
+    if (SCIENCE[k]) out.push(SCIENCE[k])
+  }
+  return out
+})()
+
+/** A small line drawing for a science poster, in the poster's colour, in the box (x, y, size). */
+function drawArt(g: CanvasRenderingContext2D, art: Art, fg: string, x: number, y: number, size: number) {
+  const cx = x + size / 2
+  const cy = y + size / 2
+  const r = size * 0.42
+  g.save()
+  g.strokeStyle = fg
+  g.fillStyle = fg
+  g.lineWidth = 5
+  g.lineCap = 'round'
+  g.beginPath()
+  switch (art) {
+    case 'atom':
+      for (const a of [0, Math.PI / 3, -Math.PI / 3]) {
+        g.ellipse(cx, cy, r, r * 0.36, a, 0, Math.PI * 2)
+        g.moveTo(cx + r, cy)
+      }
+      g.stroke()
+      g.beginPath()
+      g.arc(cx, cy, 9, 0, Math.PI * 2)
+      g.fill()
+      break
+    case 'dna':
+      for (const ph of [0, Math.PI]) {
+        g.beginPath()
+        for (let t = 0; t <= 1; t += 0.02) {
+          const yy = y + 8 + t * (size - 16)
+          const xx = cx + Math.sin(t * Math.PI * 3 + ph) * r * 0.6
+          if (t === 0) g.moveTo(xx, yy)
+          else g.lineTo(xx, yy)
+        }
+        g.stroke()
+      }
+      g.lineWidth = 3
+      for (let t = 0.05; t < 1; t += 0.1) {
+        const yy = y + 8 + t * (size - 16)
+        const dx = Math.sin(t * Math.PI * 3) * r * 0.6
+        g.beginPath()
+        g.moveTo(cx + dx, yy)
+        g.lineTo(cx - dx, yy)
+        g.stroke()
+      }
+      break
+    case 'planet':
+      g.arc(cx, cy, r * 0.6, 0, Math.PI * 2)
+      g.stroke()
+      g.beginPath()
+      g.ellipse(cx, cy, r, r * 0.28, -0.35, 0, Math.PI * 2)
+      g.stroke()
+      g.beginPath()
+      g.arc(x + size * 0.85, y + size * 0.12, 4, 0, Math.PI * 2)
+      g.arc(x + size * 0.12, y + size * 0.8, 3, 0, Math.PI * 2)
+      g.fill()
+      break
+    case 'wave':
+      for (let t = 0; t <= 1; t += 0.01) {
+        const xx = x + t * size
+        const yy = cy + Math.sin(t * Math.PI * 6) * r * 0.6 * (0.4 + t * 0.6)
+        if (t === 0) g.moveTo(xx, yy)
+        else g.lineTo(xx, yy)
+      }
+      g.stroke()
+      break
+    case 'crystal': {
+      // a cube seen from a corner, with its lattice points
+      const s = r * 0.8
+      const pts: [number, number][] = [[cx, cy - s], [cx + s, cy - s / 2], [cx + s, cy + s / 2], [cx, cy + s], [cx - s, cy + s / 2], [cx - s, cy - s / 2]]
+      pts.forEach(([px, py], k) => (k ? g.lineTo(px, py) : g.moveTo(px, py)))
+      g.closePath()
+      g.moveTo(cx, cy)
+      g.lineTo(cx, cy + s)
+      g.moveTo(cx, cy)
+      g.lineTo(cx + s, cy - s / 2)
+      g.moveTo(cx, cy)
+      g.lineTo(cx - s, cy - s / 2)
+      g.stroke()
+      for (const [px, py] of [...pts, [cx, cy] as [number, number]]) {
+        g.beginPath()
+        g.arc(px, py, 6, 0, Math.PI * 2)
+        g.fill()
+      }
+      break
+    }
+    case 'tile':
+      g.strokeRect(x + 10, y + 10, size - 20, size - 20)
+      g.font = `bold ${Math.round(size * 0.42)}px Helvetica, Arial, sans-serif`
+      g.textAlign = 'center'
+      g.fillText('H', cx, cy + size * 0.16)
+      g.font = `${Math.round(size * 0.13)}px Helvetica, Arial, sans-serif`
+      g.textAlign = 'left'
+      g.fillText('1', x + 20, y + 34)
+      g.textAlign = 'center'
+      g.fillText('1.008', cx, y + size - 22)
+      break
+    case 'flask':
+      g.moveTo(cx - 12, y + 12)
+      g.lineTo(cx - 12, cy - 6)
+      g.lineTo(cx - r, y + size - 14)
+      g.lineTo(cx + r, y + size - 14)
+      g.lineTo(cx + 12, cy - 6)
+      g.lineTo(cx + 12, y + 12)
+      g.stroke()
+      g.globalAlpha = 0.5
+      g.beginPath()
+      g.moveTo(cx - r * 0.72, y + size - 36)
+      g.lineTo(cx + r * 0.72, y + size - 36)
+      g.lineTo(cx + r, y + size - 14)
+      g.lineTo(cx - r, y + size - 14)
+      g.fill()
+      g.globalAlpha = 1
+      for (const [bx, by, br] of [[cx - 6, cy + 8, 5], [cx + 8, cy - 16, 4], [cx - 2, cy - 36, 3]]) {
+        g.beginPath()
+        g.arc(bx, by, br, 0, Math.PI * 2)
+        g.stroke()
+      }
+      break
+    case 'eye':
+      // a microscope: eyepiece, arm, stage, base
+      g.moveTo(cx - 10, y + 10)
+      g.lineTo(cx + 6, y + size * 0.55)
+      g.moveTo(cx + 22, y + size * 0.3)
+      g.quadraticCurveTo(cx + r, cy + 10, cx + 10, y + size - 26)
+      g.moveTo(cx - r * 0.7, y + size * 0.62)
+      g.lineTo(cx + r * 0.6, y + size * 0.62)
+      g.moveTo(cx - r, y + size - 14)
+      g.lineTo(cx + r, y + size - 14)
+      g.stroke()
+      break
+  }
+  g.restore()
+}
+
 /** Icons, loaded once and drawn onto every poster that shows them. */
 const iconCache = new Map<string, HTMLImageElement>()
 
@@ -671,7 +847,7 @@ function wrapText(g: CanvasRenderingContext2D, text: string, x: number, y: numbe
 }
 
 export function poster(i: number, seed: number): THREE.CanvasTexture {
-  const ad = POSTERS[i % POSTERS.length]
+  const ad = WALL[i % WALL.length]
   const W = 768
   const H = 512
   const [c, g] = canvas(W, H)
@@ -691,7 +867,8 @@ export function poster(i: number, seed: number): THREE.CanvasTexture {
     g.stroke()
   }
   g.globalAlpha = 1
-  const tx = ad.icon ? 210 : 44
+  const tx = ad.icon || ad.art ? 210 : 44
+  if (ad.art) drawArt(g, ad.art, ad.fg, 44, 40, 140)
   g.fillStyle = ad.fg
   g.font = 'bold 66px Helvetica, Arial, sans-serif'
   g.fillText(ad.name, tx, 104)
@@ -702,7 +879,7 @@ export function poster(i: number, seed: number): THREE.CanvasTexture {
   g.fillStyle = ad.fg
   g.fillRect(44, 196, W - 88, 3)
   g.font = 'bold 22px Helvetica, Arial, sans-serif'
-  g.fillText(ad.icon ? 'HOW TO' : 'GOOD TO KNOW', 44, 236)
+  g.fillText(ad.label ?? (ad.icon ? 'HOW TO' : 'GOOD TO KNOW'), 44, 236)
   ad.steps.forEach((step, k) => {
     const y = 290 + k * 62
     g.fillStyle = ad.fg
