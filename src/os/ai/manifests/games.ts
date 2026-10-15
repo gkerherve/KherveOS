@@ -190,7 +190,7 @@ export const GAME_TOOL_SETS: AppToolSet[] = [
   miniGame(
     'titrationrush',
     'Titration Rush',
-    'the titration game: ten acid–base titrations against the clock, scored on how close the end point is to the equivalence point.',
+    'the titration game: ten acid–base titrations against the clock, scored on how close you stop to equivalence.',
     ['titration rush', 'titrationrush', 'titration game', 'end point game'],
     'round, round phase (choose, titrate, result), the flask and titrant, indicator, mL added, pH (training rounds), seconds left, results',
     [
