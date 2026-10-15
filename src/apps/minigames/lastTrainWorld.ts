@@ -611,53 +611,149 @@ export function words(text: string, w: number, h: number, bg: string, fg: string
   return texture(c)
 }
 
-const POSTERS: [string, string, string, string][] = [
-  ['KherveOS', 'An OS for the people', '#0d2a1c', '#2fbf71'],
-  ['Learn to code', 'Free lessons in kCode', '#1b2340', '#7aa7ff'],
-  ['KherveFitting', 'Peak fitting, made easy', '#2b1d10', '#f0a540'],
-  ['Open source', 'Open minds', '#102a2a', '#3fd0c9'],
-  ['City Science Museum', 'Free entry every Sunday', '#2a1030', '#d07ae8'],
-  ['Mind the gap', 'Stand behind the yellow line', '#303030', '#e8c330'],
-  ['KherveSheet', 'Spreadsheets that do science', '#122818', '#7ee08a'],
-  ['Night trains', 'Every 10 minutes', '#101626', '#9fb4ff'],
+/** An advertisement: a Kherve app, what it is for, and how to use it in three steps. */
+interface Ad {
+  name: string
+  tag: string
+  steps: [string, string, string]
+  bg: string
+  fg: string
+  /** The app's icon (public/icons/apps); none for the station's own notices. */
+  icon?: string
+}
+
+const POSTERS: Ad[] = [
+  { name: 'KherveFitting', tag: 'XPS peak fitting, made easy', icon: 'khervefitting', bg: '#2b1d10', fg: '#f0a540',
+    steps: ['Open a spectrum (.vms, .xlsx)', 'Pick a background, add peaks', 'Fit, then export the table'] },
+  { name: 'kSheet', tag: 'Spreadsheets that do science', icon: 'khervesheet', bg: '#122818', fg: '#7ee08a',
+    steps: ['Paste or open your data', 'Type =PY to run Python in a cell', 'Insert a chart, add a trendline'] },
+  { name: 'KherveCAD', tag: 'Real parts, in 3D, for free', icon: 'khervecad', bg: '#101a2a', fg: '#6fb6ff',
+    steps: ['Insert a part from the library', 'Set its size in the panel', 'Export STL and print it'] },
+  { name: 'kPaint', tag: 'Draw, sketch, annotate', icon: 'khervepaint', bg: '#2a1020', fg: '#ff7ab8',
+    steps: ['Pick a brush or a shape', 'Work in layers', 'Save as PNG for your slides'] },
+  { name: 'kNote', tag: 'Notes that write themselves', icon: 'khervenote', bg: '#1d1a2e', fg: '#b49cff',
+    steps: ['Press record in a talk', 'kNote writes down what is said', 'Tidy it up, export a PDF'] },
+  { name: 'kLab', tag: 'Book the lab, not a meeting', icon: 'khervelab', bg: '#0f2626', fg: '#4fd6c8',
+    steps: ['Choose an instrument', 'Pick a free slot', 'Get reminded on the day'] },
+  { name: 'kSlide', tag: 'Talks in minutes', icon: 'kherveslide', bg: '#2a1a0c', fg: '#ffb35a',
+    steps: ['Start from an example deck', 'Drop in plots and text', 'Present full screen'] },
+  { name: 'kTeX', tag: 'Papers that typeset themselves', icon: 'khervetex', bg: '#18202a', fg: '#9fd0ff',
+    steps: ['Write as in a word processor', 'Insert equations and figures', 'Compile to a PDF'] },
+  { name: 'kWord', tag: 'Documents, without the licence', icon: 'kherveword', bg: '#0e1a33', fg: '#6f9bff',
+    steps: ['Open or start a .docx', 'Styles, tables, comments', 'Export Word or PDF'] },
+  { name: 'kBook', tag: 'Notebooks for your experiments', icon: 'khervebook', bg: '#1a1f12', fg: '#c6e05a',
+    steps: ['Add a Python cell', 'Run it: plots appear below', 'Share the .kbook'] },
+  { name: 'kMol', tag: 'Molecules in 3D', icon: 'khervemol', bg: '#14202a', fg: '#5fd0ff',
+    steps: ['Search a molecule by name', 'Rotate it, measure bonds', 'Export a picture or a file'] },
+  { name: 'kRef', tag: 'References in one click', icon: 'kherveref', bg: '#261616', fg: '#ff8a7a',
+    steps: ['Paste a DOI', 'kRef fills in the rest', 'Export BibTeX for kTeX'] },
+  { name: 'KherveOS', tag: 'An OS for the people', bg: '#0d2a1c', fg: '#2fbf71',
+    steps: ['Free and open source', 'Every Kherve tool, one desktop', 'Runs in your browser'] },
+  { name: 'Mind the gap', tag: 'Stand behind the yellow line', bg: '#303030', fg: '#e8c330',
+    steps: ['Let passengers off first', 'Keep the doors clear', 'Report anything unusual'] },
 ]
 
+/** Icons, loaded once and drawn onto every poster that shows them. */
+const iconCache = new Map<string, HTMLImageElement>()
+
+function wrapText(g: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lh: number): number {
+  let line = ''
+  for (const w of text.split(' ')) {
+    const t = line ? line + ' ' + w : w
+    if (g.measureText(t).width > maxW && line) {
+      g.fillText(line, x, y)
+      y += lh
+      line = w
+    } else line = t
+  }
+  if (line) g.fillText(line, x, y)
+  return y + lh
+}
+
 export function poster(i: number, seed: number): THREE.CanvasTexture {
-  const [title, sub, bg, fg] = POSTERS[i % POSTERS.length]
-  const W = 384
-  const H = 256
+  const ad = POSTERS[i % POSTERS.length]
+  const W = 768
+  const H = 512
   const [c, g] = canvas(W, H)
   const r = rng(seed)
   const grad = g.createLinearGradient(0, 0, W, H)
-  grad.addColorStop(0, bg)
-  grad.addColorStop(1, shade(fg, 0.35))
+  grad.addColorStop(0, ad.bg)
+  grad.addColorStop(1, shade(ad.fg, 0.3))
   g.fillStyle = grad
   g.fillRect(0, 0, W, H)
-  g.globalAlpha = 0.5
+  // rings in the corner, the brand's colour
+  g.globalAlpha = 0.35
   for (let k = 0; k < 6; k++) {
-    g.strokeStyle = fg
-    g.lineWidth = 1 + r() * 3
+    g.strokeStyle = ad.fg
+    g.lineWidth = 2 + r() * 4
     g.beginPath()
-    g.arc(W * 0.78, H * 0.45, 20 + k * 16, 0, Math.PI * 2)
+    g.arc(W * 0.86, H * 0.2, 30 + k * 26, 0, Math.PI * 2)
     g.stroke()
   }
   g.globalAlpha = 1
-  g.fillStyle = fg
-  g.font = 'bold 42px Helvetica, Arial, sans-serif'
-  g.fillText(title, 22, 92)
+  const tx = ad.icon ? 210 : 44
+  g.fillStyle = ad.fg
+  g.font = 'bold 66px Helvetica, Arial, sans-serif'
+  g.fillText(ad.name, tx, 104)
   g.fillStyle = '#f2f2ea'
-  g.font = '22px Helvetica, Arial, sans-serif'
-  g.fillText(sub, 22, 132)
-  g.fillRect(22, 150, 90, 4)
+  g.font = '30px Helvetica, Arial, sans-serif'
+  g.fillText(ad.tag, tx, 150)
+  // how to: three numbered steps
+  g.fillStyle = ad.fg
+  g.fillRect(44, 196, W - 88, 3)
+  g.font = 'bold 22px Helvetica, Arial, sans-serif'
+  g.fillText(ad.icon ? 'HOW TO' : 'GOOD TO KNOW', 44, 236)
+  ad.steps.forEach((step, k) => {
+    const y = 290 + k * 62
+    g.fillStyle = ad.fg
+    g.beginPath()
+    g.arc(66, y - 9, 20, 0, Math.PI * 2)
+    g.fill()
+    g.fillStyle = ad.bg
+    g.font = 'bold 24px Helvetica, Arial, sans-serif'
+    g.textAlign = 'center'
+    g.fillText(String(k + 1), 66, y)
+    g.textAlign = 'left'
+    g.fillStyle = '#f2f2ea'
+    g.font = '28px Helvetica, Arial, sans-serif'
+    wrapText(g, step, 104, y, W - 150, 32)
+  })
+  if (ad.icon) {
+    g.fillStyle = 'rgba(242,242,234,0.65)'
+    g.font = '18px Helvetica, Arial, sans-serif'
+    g.fillText('Free and open source · in KherveOS', 44, H - 22)
+  }
   // wear: a torn corner and scuffs
   g.fillStyle = 'rgba(230,225,210,0.85)'
   g.beginPath()
   g.moveTo(W, H)
-  g.lineTo(W - 30 - r() * 40, H)
-  g.lineTo(W, H - 20 - r() * 40)
+  g.lineTo(W - 60 - r() * 80, H)
+  g.lineTo(W, H - 40 - r() * 80)
   g.fill()
   grime(g, W, H, r, 0.5)
-  return texture(c)
+  const tex = texture(c)
+  // the app's icon, drawn in when it has loaded (a rounded tile at the top left)
+  if (ad.icon && typeof Image !== 'undefined') {
+    const url = `/icons/apps/${ad.icon}.png`
+    let img = iconCache.get(url)
+    const draw = () => {
+      g.save()
+      g.beginPath()
+      g.roundRect(44, 40, 140, 140, 30)
+      g.clip()
+      g.drawImage(img!, 44, 40, 140, 140)
+      g.restore()
+      tex.needsUpdate = true
+    }
+    if (!img) {
+      img = new Image()
+      img.src = url
+      iconCache.set(url, img)
+    }
+    if (img.complete && img.naturalWidth) draw()
+    else img.addEventListener('load', draw, { once: true })
+  }
+  return tex
 }
 
 /** Spray paint on a wall: words in a shaky hand, drips running down. Transparent around the letters. */

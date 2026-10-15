@@ -1321,8 +1321,12 @@ export class LastTrainEngine {
   private updatePlayer(dt: number) {
     if (this.stage === 'dying') return
     const k = this.keys
-    const f = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0)
-    const s = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0)
+    // WASD moves; the arrows turn and look up and down (like the mouse, at a steady speed)
+    const f = (k.has('KeyW') ? 1 : 0) - (k.has('KeyS') ? 1 : 0)
+    const s = (k.has('KeyD') ? 1 : 0) - (k.has('KeyA') ? 1 : 0)
+    const turn = (k.has('ArrowRight') ? 1 : 0) - (k.has('ArrowLeft') ? 1 : 0)
+    const tilt = (k.has('ArrowDown') ? 1 : 0) - (k.has('ArrowUp') ? 1 : 0)
+    if (turn || tilt) this.look(turn * 1100 * dt, tilt * 650 * dt)
     const sprinting = (k.has('ShiftLeft') || k.has('ShiftRight')) && f > 0 && !this.aiming
     const speed = (sprinting ? SPRINT : WALK) * (this.aiming ? 0.55 : 1)
     const fwd = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw))

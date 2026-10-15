@@ -22,6 +22,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
   var webView: WKWebView!
   var started: [Process] = []
   var downloadTargets: [ObjectIdentifier: URL] = [:]
+  /** A game holds the mouse: the cursor is hidden and frozen, its movement goes to the page. */
+  var mouseHeld = false
+  var mouseMonitor: Any?
+  var pendingDX: CGFloat = 0
+  var pendingDY: CGFloat = 0
+  var deltaQueued = false
 
   var repo: String {
     Bundle.main.object(forInfoDictionaryKey: "KherveOSRepo") as? String ?? "\(NSHomeDirectory())/Documents/PycharmProjects/KherveOS"
@@ -48,6 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     window.appearance = NSAppearance(named: .darkAqua)
     window.collectionBehavior = [.fullScreenPrimary]
     window.delegate = self
+    window.acceptsMouseMovedEvents = true
     window.contentView = webView
     window.center()
     window.setFrameAutosaveName("KherveOSMain")
@@ -75,6 +82,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
       if window.styleMask.contains(.fullScreen) != on { window.toggleFullScreen(nil) }
       return
     }
+    // {type: 'mouse', capture}: a first-person game takes the mouse or gives it back (WebKit has no pointer
+    // lock for pages in an app, so it is done here).
+    if body["type"] as? String == "mouse" {
+      holdMouse(body["capture"] as? Bool ?? false, tellPage: false)
+      return
+    }
     guard body["type"] as? String == "shutdown" else { return }
     // The page has closed every window and flushed the drive: quit (which stops our servers).
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { NSApp.terminate(nil) }
@@ -90,6 +103,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
   func windowDidEnterFullScreen(_ notification: Notification) { tellFullScreen() }
   func windowDidExitFullScreen(_ notification: Notification) { tellFullScreen() }
   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { tellFullScreen() }
+
+  // MARK: the mouse, for games
+
+  func holdMouse(_ on: Bool, tellPage: Bool) {
+    if on == mouseHeld { return }
+    mouseHeld = on
+    if on {
+      NSCursor.hide()
+      CGAssociateMouseAndMouseCursorPosition(0)
+      pendingDX = 0
+      pendingDY = 0
+      if mouseMonitor == nil {
+        mouseMonitor = NSEvent.addLocalMonitorForEvents(
+          matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+        ) { [weak self] event in
+          guard let self = self, self.mouseHeld else { return event }
+          self.pendingDX += event.deltaX
+          self.pendingDY += event.deltaY
+          // one message per turn of the run loop, however many events came
+          if !self.deltaQueued {
+            self.deltaQueued = true
+            DispatchQueue.main.async {
+              self.deltaQueued = false
+              let dx = self.pendingDX
+              let dy = self.pendingDY
+              self.pendingDX = 0
+              self.pendingDY = 0
+              if self.mouseHeld && (dx != 0 || dy != 0) {
+                self.webView.evaluateJavaScript("window.dispatchEvent(new CustomEvent('kherveos:mouse-delta', {detail: [\(dx), \(dy)]}))")
+              }
+            }
+          }
+          return event
+        }
+      }
+    } else {
+      CGAssociateMouseAndMouseCursorPosition(1)
+      NSCursor.unhide()
+      if tellPage { webView.evaluateJavaScript("window.dispatchEvent(new Event('kherveos:mouse-released'))") }
+    }
+  }
+
+  // switching to another app (⌘Tab, a notification…) gives the mouse back; the game pauses
+  func applicationDidResignActive(_ notification: Notification) { holdMouse(false, tellPage: true) }
+  func windowDidResignKey(_ notification: Notification) { holdMouse(false, tellPage: true) }
 
   // MARK: servers
 

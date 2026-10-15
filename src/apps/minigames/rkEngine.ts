@@ -779,8 +779,12 @@ export class RuneKeepEngine {
     }
     const k = this.keys
     const alive = this.stage === 'play'
-    const fwd = alive ? (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0) : 0
-    const side = alive ? (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0) : 0
+    // WASD moves; the arrows turn and look up and down (like the mouse, at a steady speed)
+    const fwd = alive ? (k.has('KeyW') ? 1 : 0) - (k.has('KeyS') ? 1 : 0) : 0
+    const side = alive ? (k.has('KeyD') ? 1 : 0) - (k.has('KeyA') ? 1 : 0) : 0
+    const turn = (k.has('ArrowRight') ? 1 : 0) - (k.has('ArrowLeft') ? 1 : 0)
+    const tilt = (k.has('ArrowDown') ? 1 : 0) - (k.has('ArrowUp') ? 1 : 0)
+    if (alive && (turn || tilt)) this.look(turn * 1100 * dt, tilt * 650 * dt)
     const walk = k.has('ShiftLeft') || k.has('ShiftRight') ? 0.5 : 1
     let wx = -Math.sin(this.yaw) * fwd + Math.cos(this.yaw) * side
     let wz = -Math.cos(this.yaw) * fwd - Math.sin(this.yaw) * side

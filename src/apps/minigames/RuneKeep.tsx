@@ -14,7 +14,7 @@ import { addScore, DEFAULT_NAME, getScores, lastName } from './scores'
 import { useScores } from './GameShell'
 import { clearCheckpoint, loadCheckpoint, saveCheckpoint } from './checkpoints'
 import { gameCode } from './fpsKeys'
-import { captureMouse } from './pointerCapture'
+import { captureMouse, isMouseCaptured, nativeCapture, onCaptureChange, onMouseDelta, releaseMouse } from './pointerCapture'
 import { isGameFullscreen, toggleGameFullscreen, useGameFullscreen } from './gameFullscreen'
 import type { RKHud, RKResult, RKSave, RuneKeepEngine } from './rkEngine'
 import './runeKeep.css'
@@ -29,6 +29,7 @@ const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2,
 const CONTROLS: [string, string][] = [
   ['Mouse', 'Look · left click to fire'],
   ['W A S D', 'Move · Space jump · Shift walk'],
+  ['← → ↑ ↓', 'Turn · look up and down'],
   ['1 – 8 · Q · wheel', 'Weapons'],
   ['Esc', 'Pause'],
 ]
@@ -58,11 +59,11 @@ export default function RuneKeep({ win }: AppProps) {
   const setPhase = useCallback((p: Phase) => {
     phaseRef.current = p
     // paused, over, on the menu: the mouse is always given back
-    if (p !== 'playing' && document.pointerLockElement) document.exitPointerLock()
+    if (p !== 'playing') releaseMouse()
     setPhaseState(p)
   }, [])
 
-  const locked = () => !!canvasRef.current && document.pointerLockElement === canvasRef.current
+  const locked = () => isMouseCaptured(canvasRef.current)
 
   /** Play: starts at once, then asks for the mouse (if refused, look by moving over the view). */
   const engage = useCallback((e?: { stopPropagation(): void }) => {
@@ -87,7 +88,7 @@ export default function RuneKeep({ win }: AppProps) {
   const pause = useCallback(() => {
     if (phaseRef.current === 'playing') setPhase('paused')
     engineRef.current?.releaseAll()
-    if (locked()) document.exitPointerLock()
+    if (locked()) releaseMouse()
   }, [setPhase])
 
   const newGame = useCallback(() => {
@@ -96,7 +97,7 @@ export default function RuneKeep({ win }: AppProps) {
     e.newGame()
     setResult(null)
     setPhase('ready')
-    if (locked()) document.exitPointerLock()
+    if (locked()) releaseMouse()
   }, [setPhase])
 
   /** Pick up from the last checkpoint (the click is the gesture that takes the mouse). */
@@ -134,7 +135,7 @@ export default function RuneKeep({ win }: AppProps) {
             setSave(null)
           }
           setPhase('over')
-          if (document.pointerLockElement) document.exitPointerLock()
+          releaseMouse()
         })
         engineRef.current = engine
         // in dev the console can reach the game (kherveos.runeKeep.pos.set(…))
@@ -163,7 +164,7 @@ export default function RuneKeep({ win }: AppProps) {
           if (p === 'ready') engine!.frame(dt, 'attract')
           else if (p === 'playing') {
             engine!.frame(dt, 'playing')
-            if (engine!.stage === 'intermission' && locked()) document.exitPointerLock()
+            if (engine!.stage === 'intermission' && locked()) releaseMouse()
           } else if (now - lastStill > 250) {
             lastStill = now
             engine!.frame(0, 'still')
@@ -180,7 +181,7 @@ export default function RuneKeep({ win }: AppProps) {
       alive = false
       cancelAnimationFrame(raf)
       ro?.disconnect()
-      if (document.pointerLockElement === canvasRef.current) document.exitPointerLock()
+      if (locked()) releaseMouse()
       engine?.dispose()
       engineRef.current = null
       releaseAudio()
@@ -208,7 +209,7 @@ export default function RuneKeep({ win }: AppProps) {
         }
       }
     }
-    const onMove = (e: MouseEvent) => playing() && inView(e) && engineRef.current?.look(e.movementX, e.movementY)
+    const onMove = (e: MouseEvent) => !nativeCapture() && playing() && inView(e) && engineRef.current?.look(e.movementX, e.movementY)
     const onDown = (e: MouseEvent) => {
       if (!playing() || !inView(e)) return
       e.preventDefault()
@@ -252,7 +253,7 @@ export default function RuneKeep({ win }: AppProps) {
         if (e.type === 'keydown') {
           e.stopPropagation()
           engineRef.current?.releaseAll()
-          document.exitPointerLock()
+          releaseMouse()
           setPhase('paused')
         }
         return
@@ -271,7 +272,9 @@ export default function RuneKeep({ win }: AppProps) {
         else if (!e.repeat) engineRef.current?.keyDown(code)
       } else engineRef.current?.keyUp(code)
     }
-    document.addEventListener('pointerlockchange', onLock)
+    const offLock = onCaptureChange(onLock)
+    // the Mac app sends the mouse's movement itself while it holds it
+    const offDelta = onMouseDelta((dx, dy) => playing() && engineRef.current?.look(dx, dy))
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mousedown', onDown)
     document.addEventListener('mouseup', onUp)
@@ -279,7 +282,8 @@ export default function RuneKeep({ win }: AppProps) {
     window.addEventListener('keydown', onKey, true)
     window.addEventListener('keyup', onKey, true)
     return () => {
-      document.removeEventListener('pointerlockchange', onLock)
+      offLock()
+      offDelta()
       document.removeEventListener('mousemove', onMove)
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('mouseup', onUp)

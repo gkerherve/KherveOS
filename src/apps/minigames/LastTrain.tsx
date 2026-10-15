@@ -14,7 +14,7 @@ import { addScore, DEFAULT_NAME, getScores, lastName } from './scores'
 import { useScores } from './GameShell'
 import { clearCheckpoint, loadCheckpoint, saveCheckpoint } from './checkpoints'
 import { gameCode } from './fpsKeys'
-import { captureMouse } from './pointerCapture'
+import { captureMouse, isMouseCaptured, nativeCapture, onCaptureChange, onMouseDelta, releaseMouse } from './pointerCapture'
 import { isGameFullscreen, toggleGameFullscreen, useGameFullscreen } from './gameFullscreen'
 import type { GameResult, Hud, LastTrainEngine, LTSave } from './lastTrainEngine'
 import './lastTrain.css'
@@ -28,6 +28,7 @@ const fmt = (n: number) => n.toLocaleString('en-US')
 const CONTROLS: [string, string][] = [
   ['Mouse', 'Look · left click to shoot · right click to aim'],
   ['W A S D', 'Move · Shift sprint · Space jump'],
+  ['← → ↑ ↓', 'Turn · look up and down'],
   ['1–7 · Q · wheel', 'Pistol, rifle, shotgun — one more gun found at each station'],
   ['R', 'Reload'],
   ['F', 'Full screen'],
@@ -56,11 +57,11 @@ export default function LastTrain({ win }: AppProps) {
   const setPhase = useCallback((p: Phase) => {
     phaseRef.current = p
     // paused, over, on the menu: the mouse is always given back
-    if (p !== 'playing' && document.pointerLockElement) document.exitPointerLock()
+    if (p !== 'playing') releaseMouse()
     setPhaseState(p)
   }, [])
 
-  const locked = () => document.pointerLockElement === canvasRef.current && !!canvasRef.current
+  const locked = () => isMouseCaptured(canvasRef.current)
 
   /** Was the mouse captured when this game started? Then losing it (Esc) pauses. */
   const wasLocked = useRef(false)
@@ -86,7 +87,7 @@ export default function LastTrain({ win }: AppProps) {
   const pause = useCallback(() => {
     if (phaseRef.current === 'playing') setPhase('paused')
     engineRef.current?.releaseAll()
-    if (locked()) document.exitPointerLock()
+    if (locked()) releaseMouse()
   }, [setPhase])
 
   const newGame = useCallback(() => {
@@ -95,7 +96,7 @@ export default function LastTrain({ win }: AppProps) {
     e.reset()
     setResult(null)
     setPhase('ready')
-    if (locked()) document.exitPointerLock()
+    if (locked()) releaseMouse()
   }, [setPhase])
 
   /** Pick up from the last checkpoint (the click is the gesture that takes the mouse). */
@@ -133,7 +134,7 @@ export default function LastTrain({ win }: AppProps) {
           }
           setResult({ ...r, rank })
           setPhase('over')
-          if (document.pointerLockElement) document.exitPointerLock()
+          releaseMouse()
         })
         engineRef.current = engine
         if (import.meta.env.DEV) Object.assign(window, { lastTrain: engine }) // debugging: lastTrain.pos, lastTrain.yaw…
@@ -177,7 +178,7 @@ export default function LastTrain({ win }: AppProps) {
       alive = false
       cancelAnimationFrame(raf)
       ro?.disconnect()
-      if (document.pointerLockElement === canvasRef.current) document.exitPointerLock()
+      if (locked()) releaseMouse()
       engine?.dispose()
       engineRef.current = null
       releaseAudio()
@@ -206,7 +207,7 @@ export default function LastTrain({ win }: AppProps) {
         }
       }
     }
-    const onMove = (e: MouseEvent) => playing() && inView(e) && engineRef.current?.look(e.movementX, e.movementY)
+    const onMove = (e: MouseEvent) => !nativeCapture() && playing() && inView(e) && engineRef.current?.look(e.movementX, e.movementY)
     const onDown = (e: MouseEvent) => {
       if (!playing() || !inView(e)) return
       e.preventDefault()
@@ -250,7 +251,7 @@ export default function LastTrain({ win }: AppProps) {
         if (e.type === 'keydown') {
           e.stopPropagation()
           engineRef.current?.releaseAll()
-          document.exitPointerLock()
+          releaseMouse()
           setPhase('paused')
         }
         return
@@ -268,7 +269,9 @@ export default function LastTrain({ win }: AppProps) {
         if (!e.repeat) engineRef.current?.keyDown(code)
       } else engineRef.current?.keyUp(code)
     }
-    document.addEventListener('pointerlockchange', onLock)
+    const offLock = onCaptureChange(onLock)
+    // the Mac app sends the mouse's movement itself while it holds it
+    const offDelta = onMouseDelta((dx, dy) => playing() && engineRef.current?.look(dx, dy))
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mousedown', onDown)
     document.addEventListener('mouseup', onUp)
@@ -276,7 +279,8 @@ export default function LastTrain({ win }: AppProps) {
     window.addEventListener('keydown', onKey, true)
     window.addEventListener('keyup', onKey, true)
     return () => {
-      document.removeEventListener('pointerlockchange', onLock)
+      offLock()
+      offDelta()
       document.removeEventListener('mousemove', onMove)
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('mouseup', onUp)
