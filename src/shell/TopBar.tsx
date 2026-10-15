@@ -288,7 +288,7 @@ export function TopBar() {
         </button>
         <button
           className="k-topbar-icon"
-          title={fullscreen ? 'Exit full screen (hold Esc)' : 'Full screen — hide the browser around KherveOS'}
+          title={fullscreen ? 'Exit full screen' : 'Full screen — hide the browser around KherveOS'}
           onClick={() => void toggleFullscreen()}
         >
           {fullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}

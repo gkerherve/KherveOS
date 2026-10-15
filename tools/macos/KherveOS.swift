@@ -6,6 +6,8 @@
 // only the servers this app started. The project folder is read from the
 // KherveOSRepo key of Info.plist (written by build_app.sh).
 //
+// Full screen is the window's own (see userContentController): Esc never leaves it.
+//
 // Note: files on the KherveOS drive live in each browser's storage, so this
 // window has its own drive, separate from Chrome's or Safari's.
 
@@ -15,7 +17,7 @@ import WebKit
 let frontURL = URL(string: "http://localhost:5173/")!
 let serverURL = URL(string: "http://127.0.0.1:8787/api/health")!
 
-final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate, WKScriptMessageHandler {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate, WKScriptMessageHandler {
   var window: NSWindow!
   var webView: WKWebView!
   var started: [Process] = []
@@ -45,6 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     window.title = "KherveOS"
     window.appearance = NSAppearance(named: .darkAqua)
     window.collectionBehavior = [.fullScreenPrimary]
+    window.delegate = self
     window.contentView = webView
     window.center()
     window.setFrameAutosaveName("KherveOSMain")
@@ -64,11 +67,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
   // MARK: messages from KherveOS
 
   func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-    guard message.name == "kherveos", let body = message.body as? [String: Any],
-          body["type"] as? String == "shutdown" else { return }
+    guard message.name == "kherveos", let body = message.body as? [String: Any] else { return }
+    // {type: 'fullscreen', on}: the top-bar button (or a game) asks for the Mac window's own full screen, which
+    // Esc does not leave (WebKit's page full screen always ends on Esc): KherveOS decides what Esc does.
+    if body["type"] as? String == "fullscreen" {
+      let on = body["on"] as? Bool ?? false
+      if window.styleMask.contains(.fullScreen) != on { window.toggleFullScreen(nil) }
+      return
+    }
+    guard body["type"] as? String == "shutdown" else { return }
     // The page has closed every window and flushed the drive: quit (which stops our servers).
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { NSApp.terminate(nil) }
   }
+
+  // MARK: full screen: the page is told when the window goes in or out (green button, menu, or its own request)
+
+  func tellFullScreen() {
+    let on = window.styleMask.contains(.fullScreen)
+    webView.evaluateJavaScript("window.dispatchEvent(new CustomEvent('kherveos:native-fullscreen', {detail: \(on)}))")
+  }
+
+  func windowDidEnterFullScreen(_ notification: Notification) { tellFullScreen() }
+  func windowDidExitFullScreen(_ notification: Notification) { tellFullScreen() }
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { tellFullScreen() }
 
   // MARK: servers
 

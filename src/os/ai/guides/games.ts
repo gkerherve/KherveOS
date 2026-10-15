@@ -56,9 +56,10 @@ export const GAME_GUIDES: AppGuide[] = [
     'The state has the level, stage (play, dead, intermission, finished), health, armor, weapon and ammo, weapons owned, keys, kills, secrets and time.',
     'It is an original game in that style: none of Quake\'s maps, models, textures, sounds or names.',
   ]),
-  miniGame('lasttrain', '3D subway zombie shooter (first person)', 'Hold a subway station against zombie waves; when a wave is cleared a train pulls in, the player boards and rides to the next station for a harder wave.', [
+  miniGame('lasttrain', '3D subway zombie shooter (first person)', 'Hold a subway station against zombie waves; when a wave is cleared a train pulls in, the player boards any of its three cars and rides to the next station for a harder wave. The street gates are chained shut (a crowd claws at them) until the last station, Pyodide Park: clear its wave, climb the stairs and walk out to win.', [
+    'A staff door on each landing leads up to a ticket hall behind ticket gates; zombies also come in through its shutter. Bloaters burst (hurting everything near), spitters lob acid. A new gun is found at each station (SMG, .44, Auto-12, DMR): keys 1–7, Q or the wheel.',
     'It needs the mouse (pointer lock): `lasttrain_play` brings the window to the front, but only the player\'s click starts or resumes. Pausing works from the tools.',
-    'The state has the wave, station, stage (fight, cleared, trainIn, board, depart, arrive, alight, dying), health, weapon, ammo, enemies left and kills.',
+    'The state has the wave, station, stage (fight, cleared, trainIn, board, depart, arrive, alight, exit, escaped, dying), health, weapon, ammo, enemies left and kills.',
   ]),
   miniGame('flappy', 'Flappy-Bird-like game with shooting', 'Flap through the pipes and shoot the birds and bees.', ['The state has the stage and difficulty.'], [
     '`flappy_set_difficulty` (easy, medium, hard) only between games: before starting or after game over.',

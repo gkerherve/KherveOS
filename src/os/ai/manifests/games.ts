@@ -73,7 +73,7 @@ export const GAME_TOOL_SETS: AppToolSet[] = [
   miniGame('pinball', 'Pinball', 'the pinball table with flippers and bumpers.', ['pinball', 'flipper', 'flippers'], 'ball number, bonus, multiplier'),
   miniGame('asteroids', 'Meteor Smash', 'the space shooter where you blast meteors (Asteroids-like).', ['asteroids', 'meteor', 'meteors'], 'wave, lives, meteors left'),
   miniGame('runekeep', 'Rune Keep', 'the fast 90s-style first-person shooter: three levels of keeps, lava, keys and secrets.', ['rune keep', 'quake', 'fps', 'shooter', 'doom', 'boomer shooter', 'arena'], 'level, stage (play, dead, intermission, finished), health, armor, weapon, ammo, weapons owned, keys, kills, secrets, time'),
-  miniGame('lasttrain', 'Last Train', 'the 3D first-person shooter in a subway station: clear zombie waves, ride the train to the next station.', ['last train', 'subway', 'metro', 'fps', 'shooter', 'zombies', 'train'], 'wave, station, stage, health, weapon, ammo, enemies left, kills'),
+  miniGame('lasttrain', 'Last Train', 'the 3D first-person subway shooter: clear zombie waves, ride the train, escape from the last station.', ['last train', 'subway', 'metro', 'fps', 'shooter', 'zombies', 'train'], 'wave, station, stage, health, weapon, ammo, enemies left, kills'),
   miniGame('flappy', 'Flappy Khervey', 'the Flappy Bird-like game: flap through pipes, shoot birds and bees.', ['flappy', 'flappy bird', 'khervey'], 'stage, difficulty', [
     {
       action: 'set_difficulty',

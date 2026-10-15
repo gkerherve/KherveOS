@@ -325,3 +325,31 @@
   align-items: center;
   gap: 8px;
 }
+
+.rk-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* playing: no arrow, no cursor at all — only the game's own crosshair */
+.rk-playing,
+.rk-playing * {
+  cursor: none !important;
+}
+
+.rk-mouse-note {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80%;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffd27a;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 5;
+}

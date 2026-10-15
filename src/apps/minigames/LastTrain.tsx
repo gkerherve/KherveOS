@@ -5,15 +5,17 @@
 // cards, menus, high scores and the AI tools (get_state, new_game, play).
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CircleHelp, Pause, Play, RotateCcw, VolumeX } from 'lucide-react'
+import { CircleHelp, Maximize, Pause, Play, RotateCcw, VolumeX } from 'lucide-react'
 import type { AppProps } from '@/os'
 import { useWindows } from '@/os/windows'
 import { useAppTools } from '@/os/ai/appTools'
 import { releaseAudio, retainAudio, setSoundOn, unlockAudio, useSound } from './sound'
 import { addScore, DEFAULT_NAME, getScores, lastName } from './scores'
 import { useScores } from './GameShell'
-import { loadCheckpoint, saveCheckpoint } from './checkpoints'
+import { clearCheckpoint, loadCheckpoint, saveCheckpoint } from './checkpoints'
 import { gameCode } from './fpsKeys'
+import { captureMouse } from './pointerCapture'
+import { isGameFullscreen, toggleGameFullscreen, useGameFullscreen } from './gameFullscreen'
 import type { GameResult, Hud, LastTrainEngine, LTSave } from './lastTrainEngine'
 import './lastTrain.css'
 
@@ -26,8 +28,9 @@ const fmt = (n: number) => n.toLocaleString('en-US')
 const CONTROLS: [string, string][] = [
   ['Mouse', 'Look · left click to shoot · right click to aim'],
   ['W A S D', 'Move · Shift sprint · Space jump'],
-  ['1 2 3 · Q · wheel', 'Pistol, rifle, shotgun'],
+  ['1–7 · Q · wheel', 'Pistol, rifle, shotgun — one more gun found at each station'],
   ['R', 'Reload'],
+  ['F', 'Full screen'],
   ['Esc', 'Pause'],
 ]
 
@@ -43,6 +46,8 @@ export default function LastTrain({ win }: AppProps) {
   const [hud, setHud] = useState<Hud | null>(null)
   const [result, setResult] = useState<(GameResult & { rank: number }) | null>(null)
   const [error, setError] = useState('')
+  /** Why the browser would not give the game the mouse (shown until a click captures it). */
+  const [mouseNote, setMouseNote] = useState('')
   const scores = useScores(ID)
   const [save, setSave] = useState<LTSave | null>(() => loadCheckpoint<LTSave>(ID))
   const soundOn = useSound((s) => s.on)
@@ -50,6 +55,8 @@ export default function LastTrain({ win }: AppProps) {
 
   const setPhase = useCallback((p: Phase) => {
     phaseRef.current = p
+    // paused, over, on the menu: the mouse is always given back
+    if (p !== 'playing' && document.pointerLockElement) document.exitPointerLock()
     setPhaseState(p)
   }, [])
 
@@ -71,13 +78,9 @@ export default function LastTrain({ win }: AppProps) {
     if (p === 'over' || p === 'loading') return
     if (p !== 'playing') setPhase('playing')
     rootRef.current?.focus({ preventScroll: true })
-    if (locked()) return
-    try {
-      const req = c.requestPointerLock() as unknown as Promise<void> | undefined
-      req?.catch?.(() => {})
-    } catch {
-      // refused: free-mouse mode
-    }
+    // the mouse stays inside the game; if the browser says no, the player is told and a click asks again
+    setMouseNote('')
+    captureMouse(c, setMouseNote)
   }, [setPhase])
 
   const pause = useCallback(() => {
@@ -122,12 +125,18 @@ export default function LastTrain({ win }: AppProps) {
         if (!alive || !canvasRef.current) return
         engine = new LastTrainEngine(canvasRef.current, (r) => {
           const name = lastName() || DEFAULT_NAME
-          const rank = addScore(ID, { name, score: r.score, summary: `Wave ${r.wave} · ${r.kills} kills`, date: Date.now() })
+          const rank = addScore(ID, { name, score: r.score, summary: `${r.won ? 'Escaped · ' : ''}Wave ${r.wave} · ${r.kills} kills`, date: Date.now() })
+          if (r.won) {
+            // out of the last station: nothing left to continue
+            clearCheckpoint(ID)
+            setSave(null)
+          }
           setResult({ ...r, rank })
           setPhase('over')
           if (document.pointerLockElement) document.exitPointerLock()
         })
         engineRef.current = engine
+        if (import.meta.env.DEV) Object.assign(window, { lastTrain: engine }) // debugging: lastTrain.pos, lastTrain.yaw…
         engine.onCheckpoint = (cp) => {
           saveCheckpoint(ID, cp)
           setSave(cp)
@@ -179,10 +188,14 @@ export default function LastTrain({ win }: AppProps) {
 
   useEffect(() => {
     const playing = () => phaseRef.current === 'playing'
+    const relock = () => captureMouse(canvasRef.current, setMouseNote)
+    /** The game's own full screen (F), the mouse kept. */
+    const fullToggle = () => toggleGameFullscreen(rootRef.current, () => playing() || phaseRef.current === 'paused' ? relock() : undefined)
     /** Without pointer lock, the mouse only counts over the 3D view. */
     const inView = (e: Event) => locked() || (e.target instanceof Node && !!canvasRef.current?.contains(e.target))
     const onLock = () => {
       if (locked()) {
+        setMouseNote('')
         wasLocked.current = true
         if (phaseRef.current === 'ready' || phaseRef.current === 'paused') setPhase('playing')
       } else if (wasLocked.current) {
@@ -197,6 +210,8 @@ export default function LastTrain({ win }: AppProps) {
     const onDown = (e: MouseEvent) => {
       if (!playing() || !inView(e)) return
       e.preventDefault()
+      // the mouse got away (a refused or dropped capture): this click takes it back
+      if (!locked()) relock()
       engineRef.current?.mouseDown(e.button)
     }
     const onUp = (e: MouseEvent) => playing() && engineRef.current?.mouseUp(e.button)
@@ -204,10 +219,42 @@ export default function LastTrain({ win }: AppProps) {
     const onKey = (e: KeyboardEvent) => {
       // ours when the mouse is captured, our window is in front, or the focus is inside it
       const mine = locked() || useWindows.getState().focusedId === win.id || !!rootRef.current?.contains(document.activeElement)
+      // the game's own full screen answers F and Esc whatever the game is doing (playing, paused, on its menu)
+      const typing = document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement
+      // only when the game itself has the keyboard (a click on the desktop takes it away)
+      const inGame = locked() || !!rootRef.current?.contains(document.activeElement)
+      if (inGame && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (e.code === 'KeyF') {
+          e.stopPropagation()
+          e.preventDefault()
+          if (e.type === 'keydown' && !e.repeat) fullToggle()
+          return
+        }
+        if (e.code === 'Escape' && isGameFullscreen(rootRef.current)) {
+          e.stopPropagation()
+          e.preventDefault()
+          if (e.type === 'keydown' && !e.repeat) {
+            engineRef.current?.releaseAll()
+            if (phaseRef.current === 'playing') setPhase('paused')
+            toggleGameFullscreen(rootRef.current)
+          }
+          return
+        }
+      }
       if (!playing() || !mine) return
       if (e.metaKey || e.ctrlKey) return
       const code = gameCode(e)
       if (!code) return
+      if (code === 'Escape' && locked()) {
+        // the mouse is let go (the OS full screen keeps the browser from doing it): the game pauses
+        if (e.type === 'keydown') {
+          e.stopPropagation()
+          engineRef.current?.releaseAll()
+          document.exitPointerLock()
+          setPhase('paused')
+        }
+        return
+      }
       e.stopPropagation()
       if (code === 'Escape' && !locked()) {
         if (e.type === 'keydown') {
@@ -251,6 +298,8 @@ export default function LastTrain({ win }: AppProps) {
 
   // ---- menus
 
+  const fullscreen = useGameFullscreen(rootRef)
+
   useEffect(() => {
     win.setMenus([
       {
@@ -260,11 +309,12 @@ export default function LastTrain({ win }: AppProps) {
           { label: phase === 'playing' ? 'Pause' : 'Resume', icon: phase === 'playing' ? Pause : Play, disabled: phase !== 'playing' && phase !== 'paused', onClick: () => (phase === 'playing' ? pause() : engage()) },
           '-',
           { label: 'Sound', icon: VolumeX, checked: soundOn, onClick: () => setSoundOn(!useSound.getState().on) },
+          { label: 'Full Screen', icon: Maximize, checked: fullscreen, onClick: () => toggleGameFullscreen(rootRef.current) },
         ],
       },
       { label: 'Help', items: [{ label: `How to Play ${NAME}`, icon: CircleHelp, onClick: () => pause() }] },
     ])
-  }, [win, phase, soundOn, newGame, pause, engage])
+  }, [win, phase, soundOn, fullscreen, newGame, pause, engage])
 
   // ---- AI tools (specs in src/os/ai/manifests/games.ts)
 
@@ -321,12 +371,15 @@ export default function LastTrain({ win }: AppProps) {
   // ---- the page
 
   const best = scores[0]?.score ?? 0
-  const lowAmmo = hud && hud.mag <= Math.ceil((hud.slot === 2 ? 6 : hud.slot === 1 ? 30 : 12) * 0.25) && !hud.reloading
+  const lowAmmo = hud && hud.mag <= Math.ceil(hud.magSize * 0.25) && !hud.reloading
   const showHud = phase === 'playing' || phase === 'paused'
 
   return (
-    <div ref={rootRef} className="lt-app" tabIndex={-1} onContextMenu={(e) => e.preventDefault()}>
+    <div ref={rootRef} className={`lt-app${phase === 'playing' && locked() ? ' lt-playing' : ''}`} tabIndex={-1} onContextMenu={(e) => e.preventDefault()}>
       <canvas ref={canvasRef} className="lt-canvas" onClick={() => engage()} />
+      {phase === 'playing' && mouseNote && !locked() && (
+        <div className="lt-mouse-note">The browser did not give the game the mouse ({mouseNote}). Click the game to try again — Esc pauses.</div>
+      )}
 
       <div className={`lt-hud${showHud ? '' : ' lt-hidden'}`}>
         <div ref={hurtRef} className="lt-hurt" />
@@ -381,9 +434,9 @@ export default function LastTrain({ win }: AppProps) {
                 <span>/ {hud.reserve < 0 ? '∞' : hud.reserve}</span>
               </div>
               <div className="lt-slots">
-                {['Pistol', 'Rifle', 'Shotgun'].map((n, i) => (
-                  <span key={n} className={i === hud.slot ? 'lt-on' : ''}>
-                    {i + 1} {n}
+                {hud.slots.map((s) => (
+                  <span key={s.slot} className={s.slot === hud.slot ? 'lt-on' : ''}>
+                    {s.slot + 1} {s.name}
                   </span>
                 ))}
               </div>
@@ -404,7 +457,7 @@ export default function LastTrain({ win }: AppProps) {
             {phase === 'ready' ? (
               <>
                 <div className="lt-title">Last Train</div>
-                <p className="lt-tag">The station is overrun. Clear each wave, board the train, and ride it to the next stop — if you can.</p>
+                <p className="lt-tag">The stations are overrun and the street gates are chained shut. Clear each wave, board the train, and ride it on — to the last station, where the way up is open.</p>
               </>
             ) : (
               <div className="lt-title lt-small">Paused</div>
@@ -433,6 +486,15 @@ export default function LastTrain({ win }: AppProps) {
                 {phase === 'ready' ? 'Click to play' : 'Click to resume'}
               </button>
             )}
+            <button
+              className="k-btn lt-full"
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleGameFullscreen(rootRef.current)
+              }}
+            >
+              <Maximize size={14} /> {fullscreen ? 'Leave full screen' : 'Full screen (recommended)'}
+            </button>
             {phase === 'ready' && best > 0 && <p className="lt-best">Best: {fmt(best)}</p>}
           </div>
         </div>
@@ -440,7 +502,7 @@ export default function LastTrain({ win }: AppProps) {
       {phase === 'over' && result && (
         <div className="lt-card-wrap lt-dead">
           <div className="lt-card">
-            <div className="lt-title lt-small">You didn't make the train</div>
+            <div className="lt-title lt-small">{result.won ? 'You made it out' : "You didn't make the train"}</div>
             <div className="lt-result">
               <div>
                 <b>{fmt(result.score)}</b>

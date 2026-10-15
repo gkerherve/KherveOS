@@ -72,6 +72,11 @@ function output(): { ac: AudioContext; dest: GainNode } | null {
   return { ac: ctx, dest: master }
 }
 
+/** The live audio output, for sounds that keep playing (music, wind): null while sound is off or not started. */
+export function audioOut(): { ac: AudioContext; dest: GainNode } | null {
+  return output()
+}
+
 /** The frequency of a MIDI note (69 = A4 = 440 Hz). */
 export function note(n: number): number {
   return 440 * Math.pow(2, (n - 69) / 12)

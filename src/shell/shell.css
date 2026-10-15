@@ -832,3 +832,19 @@
 .k-cal-day.other { color: #b5b5b5; }
 .k-cal-day.today { background: #1f9d55; color: #ffffff; font-weight: 600; }
 .k-cal-foot { margin-top: 8px; font-size: 11px; color: #6b6b6b; text-align: center; }
+
+/* a game full screen (minigames/gameFullscreen.ts): its window over everything, no title bar */
+.k-window.k-game-full {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2147483000 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.k-window.k-game-full > .k-titlebar,
+.k-window.k-game-full .k-titlebar {
+  display: none !important;
+}

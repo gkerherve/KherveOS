@@ -5,7 +5,7 @@
 // canvas, mouse capture, the status bar, cards, menus, scores, AI tools.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CircleHelp, Pause, Play, RotateCcw, VolumeX } from 'lucide-react'
+import { CircleHelp, Maximize, Pause, Play, RotateCcw, VolumeX } from 'lucide-react'
 import type { AppProps } from '@/os'
 import { useWindows } from '@/os/windows'
 import { useAppTools } from '@/os/ai/appTools'
@@ -14,6 +14,8 @@ import { addScore, DEFAULT_NAME, getScores, lastName } from './scores'
 import { useScores } from './GameShell'
 import { clearCheckpoint, loadCheckpoint, saveCheckpoint } from './checkpoints'
 import { gameCode } from './fpsKeys'
+import { captureMouse } from './pointerCapture'
+import { isGameFullscreen, toggleGameFullscreen, useGameFullscreen } from './gameFullscreen'
 import type { RKHud, RKResult, RKSave, RuneKeepEngine } from './rkEngine'
 import './runeKeep.css'
 
@@ -45,6 +47,8 @@ export default function RuneKeep({ win }: AppProps) {
   const [hud, setHud] = useState<RKHud | null>(null)
   const [result, setResult] = useState<(RKResult & { rank: number }) | null>(null)
   const [error, setError] = useState('')
+  /** Why the browser would not give the game the mouse (shown until a click captures it). */
+  const [mouseNote, setMouseNote] = useState('')
   const scores = useScores(ID)
   const [save, setSave] = useState<RKSave | null>(() => loadCheckpoint<RKSave>(ID))
   const soundOn = useSound((s) => s.on)
@@ -53,6 +57,8 @@ export default function RuneKeep({ win }: AppProps) {
 
   const setPhase = useCallback((p: Phase) => {
     phaseRef.current = p
+    // paused, over, on the menu: the mouse is always given back
+    if (p !== 'playing' && document.pointerLockElement) document.exitPointerLock()
     setPhaseState(p)
   }, [])
 
@@ -73,13 +79,9 @@ export default function RuneKeep({ win }: AppProps) {
     }
     if (p !== 'playing') setPhase('playing')
     rootRef.current?.focus({ preventScroll: true })
-    if (locked()) return
-    try {
-      const req = c.requestPointerLock() as unknown as Promise<void> | undefined
-      req?.catch?.(() => {})
-    } catch {
-      // refused: free-mouse mode
-    }
+    // the mouse stays inside the game; if the browser says no, the player is told and a click asks again
+    setMouseNote('')
+    captureMouse(c, setMouseNote)
   }, [setPhase])
 
   const pause = useCallback(() => {
@@ -189,9 +191,13 @@ export default function RuneKeep({ win }: AppProps) {
 
   useEffect(() => {
     const playing = () => phaseRef.current === 'playing' && engineRef.current?.stage !== 'intermission'
+    const relock = () => captureMouse(canvasRef.current, setMouseNote)
+    /** The game's own full screen (F), the mouse kept. */
+    const fullToggle = () => toggleGameFullscreen(rootRef.current, () => (playing() || phaseRef.current === 'paused' ? relock() : undefined))
     const inView = (e: Event) => locked() || (e.target instanceof Node && !!canvasRef.current?.contains(e.target))
     const onLock = () => {
       if (locked()) {
+        setMouseNote('')
         wasLocked.current = true
         if (phaseRef.current === 'ready' || phaseRef.current === 'paused') setPhase('playing')
       } else if (wasLocked.current) {
@@ -206,6 +212,8 @@ export default function RuneKeep({ win }: AppProps) {
     const onDown = (e: MouseEvent) => {
       if (!playing() || !inView(e)) return
       e.preventDefault()
+      // the mouse got away (a refused or dropped capture): this click takes it back
+      if (!locked()) relock()
       engineRef.current?.mouseDown(e.button)
     }
     const onUp = (e: MouseEvent) => engineRef.current?.mouseUp(e.button)
@@ -213,10 +221,42 @@ export default function RuneKeep({ win }: AppProps) {
     const onKey = (e: KeyboardEvent) => {
       // ours when the mouse is captured, our window is in front, or the focus is inside it
       const mine = locked() || useWindows.getState().focusedId === win.id || !!rootRef.current?.contains(document.activeElement)
+      // the game's own full screen answers F and Esc whatever the game is doing (playing, paused, on its menu)
+      const typing = document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement
+      // only when the game itself has the keyboard (a click on the desktop takes it away)
+      const inGame = locked() || !!rootRef.current?.contains(document.activeElement)
+      if (inGame && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (e.code === 'KeyF') {
+          e.stopPropagation()
+          e.preventDefault()
+          if (e.type === 'keydown' && !e.repeat) fullToggle()
+          return
+        }
+        if (e.code === 'Escape' && isGameFullscreen(rootRef.current)) {
+          e.stopPropagation()
+          e.preventDefault()
+          if (e.type === 'keydown' && !e.repeat) {
+            engineRef.current?.releaseAll()
+            if (phaseRef.current === 'playing') setPhase('paused')
+            toggleGameFullscreen(rootRef.current)
+          }
+          return
+        }
+      }
       if (phaseRef.current !== 'playing' || !mine) return
       if (e.metaKey || e.ctrlKey) return
       const code = gameCode(e)
       if (!code) return
+      if (code === 'Escape' && locked()) {
+        // the mouse is let go (the OS full screen keeps the browser from doing it): the game pauses
+        if (e.type === 'keydown') {
+          e.stopPropagation()
+          engineRef.current?.releaseAll()
+          document.exitPointerLock()
+          setPhase('paused')
+        }
+        return
+      }
       e.stopPropagation()
       if (code === 'Escape' && !locked()) {
         if (e.type === 'keydown') {
@@ -260,6 +300,8 @@ export default function RuneKeep({ win }: AppProps) {
 
   // ---- menus
 
+  const fullscreen = useGameFullscreen(rootRef)
+
   useEffect(() => {
     win.setMenus([
       {
@@ -269,11 +311,12 @@ export default function RuneKeep({ win }: AppProps) {
           { label: phase === 'playing' ? 'Pause' : 'Resume', icon: phase === 'playing' ? Pause : Play, disabled: phase !== 'playing' && phase !== 'paused', onClick: () => (phase === 'playing' ? pause() : engage()) },
           '-',
           { label: 'Sound', icon: VolumeX, checked: soundOn, onClick: () => setSoundOn(!useSound.getState().on) },
+          { label: 'Full Screen', icon: Maximize, checked: fullscreen, onClick: () => toggleGameFullscreen(rootRef.current) },
         ],
       },
       { label: 'Help', items: [{ label: `How to Play ${NAME}`, icon: CircleHelp, onClick: () => pause() }] },
     ])
-  }, [win, phase, soundOn, newGame, pause, engage])
+  }, [win, phase, soundOn, fullscreen, newGame, pause, engage])
 
   // ---- AI tools (specs in src/os/ai/manifests/games.ts)
 
@@ -337,8 +380,11 @@ export default function RuneKeep({ win }: AppProps) {
   const inter = phase !== 'over' && hud?.stage === 'intermission'
 
   return (
-    <div ref={rootRef} className="rk-app" tabIndex={-1} onContextMenu={(e) => e.preventDefault()}>
+    <div ref={rootRef} className={`rk-app${phase === 'playing' && locked() ? ' rk-playing' : ''}`} tabIndex={-1} onContextMenu={(e) => e.preventDefault()}>
       <canvas ref={canvasRef} className="rk-canvas" onClick={() => engage()} />
+      {phase === 'playing' && mouseNote && !locked() && (
+        <div className="rk-mouse-note">The browser did not give the game the mouse ({mouseNote}). Click the game to try again — Esc pauses.</div>
+      )}
       <div ref={tintRef} className="rk-tint" />
       <div ref={hurtRef} className="rk-hurt" />
       <div ref={flashRef} className="rk-flash" />
@@ -434,6 +480,9 @@ export default function RuneKeep({ win }: AppProps) {
                 {phase === 'ready' ? 'Click to play' : 'Click to resume'}
               </button>
             )}
+            <button className="k-btn rk-full" onClick={(e) => { e.stopPropagation(); toggleGameFullscreen(rootRef.current) }}>
+              <Maximize size={14} /> {fullscreen ? 'Leave full screen' : 'Full screen'}
+            </button>
             {phase === 'ready' && best > 0 && <p className="rk-best">Best: {fmt(best)}</p>}
           </div>
         </div>

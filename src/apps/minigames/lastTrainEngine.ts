@@ -15,55 +15,32 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { noise, sfx, tone } from './sound'
+import { ScaryMusic } from './lastTrainMusic'
 import { hasModel, instanceModel, type ModelInstance } from './rkModels'
 import {
-  buildStation, buildTrain, CAR, DOORS, drawBoard, PILLARS, PLATFORM, rng, sprite, STAIRS, stationAt, texture, TRACK_Y, TRAVEL,
-  updateTrainMap, type StationBuild, type TrainBuild,
+  CAR_L, CAR_PITCH, CAR_W, CAR_XS, CAR_Z, DOORS, drawBoard, FINAL_STATION, HALL, hallAt, hallY, LANDING, PLATFORM, rng, sprite, STAIR, stairSlope, stairY, STAIRS, stationAt, texture,
+  TRACK_Y, TRAVEL,
 } from './lastTrainWorld'
+import { buildStation, type ExitBuild, type StationBuild } from './lastTrainStation'
+import { buildTrain, setTrainDisplay, updateTrainMap, type TrainBuild } from './lastTrainCars'
+import {
+  buildGuns, magReloadTime, makeMag, poseReload, PUMP_T, restGun, SHELL_LEAD, SHELL_T, type Gun, type Pose, type ReloadEvent, type ReloadState,
+} from './lastTrainGuns'
 
 const EYE = 1.62
 const WALK = 4.6
 const SPRINT = 7.4
 const GRAVITY = 22
 
-// ---------------------------------------------------------------- weapons
+// ---------------------------------------------------------------- weapons: see lastTrainGuns.ts
 
-export interface WeaponDef {
-  id: 'pistol' | 'rifle' | 'shotgun'
-  name: string
-  auto: boolean
-  damage: number
-  pellets: number
-  rpm: number
-  mag: number
-  /** Starting spare ammo; -1 = endless. */
-  reserve: number
-  reload: number
-  spread: number
-  kick: number
-  range: number
-}
-
-export const WEAPONS: WeaponDef[] = [
-  { id: 'pistol', name: 'K-9 Pistol', auto: false, damage: 34, pellets: 1, rpm: 380, mag: 12, reserve: -1, reload: 1.15, spread: 0.010, kick: 0.028, range: 80 },
-  { id: 'rifle', name: 'KR-4 Rifle', auto: true, damage: 26, pellets: 1, rpm: 640, mag: 30, reserve: 150, reload: 1.9, spread: 0.016, kick: 0.017, range: 120 },
-  { id: 'shotgun', name: 'Breacher 12', auto: false, damage: 15, pellets: 9, rpm: 72, mag: 6, reserve: 30, reload: 0.5, spread: 0.065, kick: 0.085, range: 40 },
-]
-
-interface Gun {
-  def: WeaponDef
-  mag: number
-  reserve: number
-  model: THREE.Group
-  muzzle: THREE.Object3D
-  /** Moves during reloads (magazine or pump). */
-  moving: THREE.Object3D | null
-}
+export type { WeaponDef } from './lastTrainGuns'
 
 // ---------------------------------------------------------------- zombies
 
-type Kind = 'walker' | 'runner' | 'brute'
-type ZState = 'track' | 'climb' | 'stairs' | 'chase' | 'dead'
+type Kind = 'walker' | 'runner' | 'brute' | 'bloater' | 'spitter'
+/** `wait`: standing still in the dark of the intro, staring. */
+type ZState = 'track' | 'climb' | 'stairs' | 'chase' | 'wait' | 'dead'
 
 interface Zombie {
   kind: Kind
@@ -96,22 +73,59 @@ interface Zombie {
   goalX: number
   stairX: number
   points: number
+  /** One of the crowd pressed against a gate: it never dies, it only reaches through the bars. */
+  crowd: boolean
+  next: number
+  /** The spitter's time to its next glob. */
+  spit: number
+}
+
+/** A sheet of paper blowing about the platform. */
+interface Paper {
+  mesh: THREE.Mesh
+  v: THREE.Vector3
+  spin: THREE.Vector3
+  air: boolean
+  /** How easily the wind lifts it (newspaper flies, cardboard barely). */
+  lift: number
+  phase: number
+}
+
+/** The intro: when the lights come on (start, end in seconds) and how far away they stand by then. */
+const INTRO_ON: [number, number, number][] = [
+  [1.0, 1.08, 18], [1.25, 1.33, 17], [2.3, 2.95, 13], [3.7, 3.76, 10], [3.9, 4.0, 9.5], [5.0, 5.7, 7], [6.4, 6.46, 5], [6.6, 6.68, 4.4],
+]
+const INTRO_END = 7.5
+
+interface Glob {
+  mesh: THREE.Mesh
+  v: THREE.Vector3
+  life: number
 }
 
 const KINDS: Record<Kind, { hp: number; speed: number; dmg: number; scale: number; points: number }> = {
   walker: { hp: 100, speed: 1.55, dmg: 12, scale: 1, points: 100 },
   runner: { hp: 62, speed: 4.3, dmg: 8, scale: 0.95, points: 150 },
   brute: { hp: 340, speed: 1.25, dmg: 26, scale: 1.32, points: 450 },
+  /** Swollen and green: bursts when shot dead or when it reaches you, and hurts everything around it. */
+  bloater: { hp: 170, speed: 1.15, dmg: 0, scale: 1.12, points: 300 },
+  /** Thin and pale: keeps its distance and spits acid. */
+  spitter: { hp: 85, speed: 2.1, dmg: 6, scale: 1.04, points: 250 },
 }
+/** How far a bloater's burst reaches, and what it does to the player at its centre. */
+const BURST = { r: 3.4, dmg: 42 }
 
 // ---------------------------------------------------------------- HUD
 
-export type Stage = 'fight' | 'cleared' | 'trainIn' | 'board' | 'depart' | 'arrive' | 'alight' | 'dying'
+export type Stage = 'intro' | 'fight' | 'cleared' | 'trainIn' | 'board' | 'depart' | 'arrive' | 'alight' | 'exit' | 'escaped' | 'dying'
 
 export interface Hud {
   health: number
   weapon: string
   slot: number
+  /** The guns found so far: their slot (key = slot + 1) and short name. */
+  slots: { slot: number; name: string }[]
+  magSize: number
   mag: number
   reserve: number
   reloading: boolean
@@ -147,6 +161,8 @@ export interface GameResult {
   score: number
   wave: number
   kills: number
+  /** True when the player climbed out of the last station. */
+  won?: boolean
 }
 
 interface Particle {
@@ -172,10 +188,13 @@ interface Casing {
   bounced: number
 }
 
+type Rect = [number, number, number, number]
+
 interface Pickup {
   mesh: THREE.Group
   kind: 'ammo' | 'health'
   t: number
+  y0: number
 }
 
 const ease = {
@@ -184,6 +203,17 @@ const ease = {
   inOut: (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2),
 }
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
+
+/** The door, the flight and the hall of a stairway as walkable rectangles, kept r from the walls. */
+function hallRects(sx: number, r: number): Rect[] {
+  const X = (u: number) => sx - 2 - u
+  const H = HALL
+  return [
+    [X(H.flightU0 + 0.1), X(-0.45), H.doorZ0 + r - 0.15, H.doorZ1 - r + 0.15],
+    [X(H.flightU1 + 0.2), X(0.1), H.flightZ0 + r, H.flightZ1 - r],
+    [X(H.u1 - r), X(H.flightU1 + r - 0.15), H.z0 + r, H.z1 - r],
+  ]
+}
 const RIDE_TIME = 7
 
 export class LastTrainEngine {
@@ -244,6 +274,13 @@ export class LastTrainEngine {
   private cooldown = 0
   private reloadT = 0
   private triggerHeld = false
+  /** The reload in progress: how far the animation is (see lastTrainGuns.ts), the pose it asks of the viewmodel. */
+  private rs: ReloadState = { clock: 0, prev: 0, empty: false, phase: 'mag', first: true }
+  private pose: Pose = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0 }
+  /** The magazines that fell out of the gun and lie on the floor. */
+  private magDrops: { kind: 'pistol' | 'rifle'; mesh: THREE.Group; v: THREE.Vector3; spin: THREE.Vector3; life: number; t: number; bounced: number }[] = []
+  /** A spent shotgun shell leaves the gun when the pump is worked, a moment after the shot. */
+  private pendingEject = 0
   private bloomSpread = 0
   private kickT = 0
   private vm = new THREE.Group()
@@ -255,6 +292,10 @@ export class LastTrainEngine {
   // effects
   private sparks!: { points: THREE.Points; list: Particle[] }
   private blood!: { points: THREE.Points; list: Particle[] }
+  private acid!: { points: THREE.Points; list: Particle[] }
+  private globs: Glob[] = []
+  private globGeo = new THREE.SphereGeometry(0.11, 12, 8)
+  private globMat = new THREE.MeshStandardMaterial({ color: 0x5a1a6a, emissive: 0xa8ff3a, emissiveIntensity: 1.8, roughness: 0.2 })
   private dust: THREE.Points
   private tracers: Tracer[] = []
   private casings: Casing[] = []
@@ -279,9 +320,27 @@ export class LastTrainEngine {
   private hud: HudEls = { crosshair: null, hit: null, hurt: null }
   private hitT = 0
   private attractT = 0
+  private music = new ScaryMusic()
+  private papers: Paper[] = []
+  private windT = Math.random() * 100
+  /** The draught along the platform (m/s, towards +x), gusting. */
+  private windSpeed = 0
+  private introZ: Zombie[] = []
+  private introStep = -1
+  private introLit = false
   private boardT = 0
   private rumbleT = 0
   private lastBoard = ''
+  /** The gates: how far open (0 shut … 1 open), the crowd behind them, what the player has been told. */
+  private exitOpen = 0
+  private crowd: { z: Zombie; exit: number; base: THREE.Vector3; rank: number }[] = []
+  private crowdNear: boolean[] = []
+  private waveTotal = 1
+  private gateHurtT = 0
+  private gateTold = false
+  private clangT = 0
+  private escapeT = 0
+  private overSent = false
 
   private onOver: (r: GameResult) => void
 
@@ -321,6 +380,8 @@ export class LastTrainEngine {
       walker: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.35, 0.6) }),
       runner: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.8, 1.6, 1.5) }),
       brute: new THREE.MeshBasicMaterial({ color: new THREE.Color(3.0, 0.5, 0.25) }),
+      bloater: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 3.0, 0.4) }),
+      spitter: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 0.6, 2.6) }),
     }
     this.makeZombieTextures()
 
@@ -334,11 +395,14 @@ export class LastTrainEngine {
       new THREE.SpriteMaterial({ map: this.tex.flash, color: 0xffd9a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }),
     )
     this.flashSprite.visible = false
-    this.buildGuns()
+    this.guns = buildGuns()
+    for (const g of this.guns) this.vm.add(g.model)
 
     this.sparks = this.particles(0xffc768, 0.05, THREE.AdditiveBlending, 400)
     this.blood = this.particles(0x6a0a06, 0.07, THREE.NormalBlending, 600)
+    this.acid = this.particles(0x6aff2a, 0.09, THREE.AdditiveBlending, 400)
     this.dust = this.makeDust()
+    this.makePapers()
 
     for (let i = 0; i < 24; i++) {
       const mesh = new THREE.Mesh(
@@ -351,8 +415,8 @@ export class LastTrainEngine {
     }
     const brass = new THREE.MeshStandardMaterial({ color: 0xc9a14a, roughness: 0.3, metalness: 1 })
     const red = new THREE.MeshStandardMaterial({ color: 0x9a1c14, roughness: 0.5 })
-    const casingGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.026, 8)
-    const shellGeo = new THREE.CylinderGeometry(0.011, 0.011, 0.06, 10)
+    const casingGeo = new THREE.CylinderGeometry(0.0085, 0.0085, 0.036, 8)
+    const shellGeo = new THREE.CylinderGeometry(0.0145, 0.0145, 0.075, 10)
     for (let i = 0; i < 30; i++) {
       const mesh = new THREE.Mesh(i % 3 === 2 ? shellGeo : casingGeo, i % 3 === 2 ? red : brass)
       mesh.visible = false
@@ -365,23 +429,58 @@ export class LastTrainEngine {
   // ---------------------------------------------------------------- setup
 
   private setStation(index: number) {
+    for (const c of this.crowd) this.removeZombie(c.z)
+    this.crowd = []
+    this.crowdNear = []
     if (this.station) {
       this.world.remove(this.station.group)
       this.station.dispose()
     }
     for (const p of this.pickups) p.mesh.removeFromParent()
     this.pickups = []
+    for (const g of this.globs) g.mesh.removeFromParent()
+    this.globs = []
     this.holes = []
     this.stationIndex = index
     this.station = buildStation(index)
     this.world.add(this.station.group)
     updateTrainMap(this.train, index)
+    const fog = this.scene.fog as THREE.FogExp2
+    fog.color.setHex(this.station.style.fog)
+    ;(this.scene.background as THREE.Color).setHex(this.station.style.fog)
+    this.exitOpen = 0
+    this.gateHurtT = 0
+    this.gateTold = false
+    this.escapeT = 0
+    this.renderer.toneMappingExposure = 1.05
+    this.fillCrowd()
     this.lastBoard = ''
     this.refreshTargets()
   }
 
+  /** The crowd that presses against the gates at the top of the stairs. */
+  private fillCrowd() {
+    this.station.exits.forEach((ex, e) => {
+      ex.crowd.forEach(([x, zz], rank) => {
+        const kind: Kind = rank % 5 === 4 ? 'brute' : rank % 3 === 1 ? 'runner' : 'walker'
+        const z = this.makeZombie(kind)
+        z.crowd = true
+        z.state = 'chase'
+        z.root.position.set(x, LANDING.y, zz)
+        z.root.rotation.y = Math.PI
+        z.phase = Math.random() * 10
+        z.next = Math.random() * 2
+        z.shadow.visible = false
+        ex.crowdGroup.add(z.root)
+        this.crowd.push({ z, exit: e, base: z.root.position.clone(), rank })
+      })
+      this.crowdNear[e] = false
+    })
+  }
+
   private refreshTargets() {
-    this.hitTargets = [...this.station.solids, ...this.train.solids, ...this.zombies.filter((z) => z.state !== 'dead').flatMap((z) => z.meshes)]
+    const crowd = this.crowd.filter((c) => this.crowdNear[c.exit] && c.z.root.visible).flatMap((c) => c.z.meshes)
+    this.hitTargets = [...this.station.solids, ...this.train.solids, ...this.zombies.filter((z) => z.state !== 'dead').flatMap((z) => z.meshes), ...crowd]
   }
 
   private makeZombieTextures() {
@@ -487,120 +586,6 @@ export class LastTrainEngine {
     return pts
   }
 
-  // ---------------------------------------------------------------- the guns
-
-  private buildGuns() {
-    const black = new THREE.MeshStandardMaterial({ color: 0x1d1f22, roughness: 0.42, metalness: 0.8 })
-    const dark = new THREE.MeshStandardMaterial({ color: 0x2c2f33, roughness: 0.6, metalness: 0.5 })
-    const polymer = new THREE.MeshStandardMaterial({ color: 0x3a3d35, roughness: 0.75, metalness: 0.1 })
-    const wood = new THREE.MeshStandardMaterial({ color: 0x6a4425, roughness: 0.55 })
-    const steel = new THREE.MeshStandardMaterial({ color: 0x9ea3a8, roughness: 0.25, metalness: 1 })
-    const glove = new THREE.MeshStandardMaterial({ color: 0x222420, roughness: 0.85 })
-    const sleeve = new THREE.MeshStandardMaterial({ color: 0x2f4a3a, roughness: 0.9 })
-    const dot = new THREE.MeshBasicMaterial({ color: new THREE.Color(4, 0.4, 0.3) })
-    const sight = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.6, 2.5, 0.8) })
-    const B = (p: THREE.Object3D, m: THREE.Material, w: number, h: number, d: number, x: number, y: number, z: number) => {
-      const mesh = new THREE.Mesh(this.zGeo.box, m)
-      mesh.scale.set(w, h, d)
-      mesh.position.set(x, y, z)
-      p.add(mesh)
-      return mesh
-    }
-    const C = (p: THREE.Object3D, m: THREE.Material, r: number, len: number, x: number, y: number, z: number) => {
-      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 14), m)
-      mesh.rotation.x = Math.PI / 2
-      mesh.position.set(x, y, z)
-      p.add(mesh)
-      return mesh
-    }
-    /** A gloved hand at `hand` and a sleeved forearm running back to an elbow below and behind it. */
-    const limb = (p: THREE.Object3D, hand: THREE.Vector3, elbow: THREE.Vector3) => {
-      const dir = elbow.clone().sub(hand)
-      const len = dir.length()
-      const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.042, len, 4, 10), sleeve)
-      arm.position.copy(hand).addScaledVector(dir, 0.5 + 0.06 / len)
-      arm.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize())
-      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.04, 0.05, 12), glove)
-      cuff.position.copy(hand).addScaledVector(dir, 0.05)
-      cuff.quaternion.copy(arm.quaternion)
-      const fist = new THREE.Mesh(new THREE.SphereGeometry(0.042, 12, 10), glove)
-      fist.scale.set(0.95, 1.1, 1.35)
-      fist.position.copy(hand)
-      p.add(arm, cuff, fist)
-    }
-    const arms = (p: THREE.Object3D, rightZ: number, leftZ: number, leftY = -0.02) => {
-      limb(p, new THREE.Vector3(0.005, -0.07, rightZ), new THREE.Vector3(0.1, -0.36, rightZ + 0.34))
-      limb(p, new THREE.Vector3(-0.012, leftY - 0.035, leftZ), new THREE.Vector3(-0.26, -0.34, Math.max(leftZ + 0.38, 0.2)))
-    }
-
-    // pistol
-    {
-      const g = new THREE.Group()
-      B(g, black, 0.034, 0.036, 0.2, 0, 0.0, -0.02)
-      B(g, polymer, 0.03, 0.03, 0.17, 0, -0.03, -0.0)
-      const grip = B(g, polymer, 0.03, 0.11, 0.045, 0, -0.085, 0.055)
-      grip.rotation.x = 0.25
-      B(g, black, 0.006, 0.012, 0.008, 0, 0.024, -0.11)
-      B(g, black, 0.026, 0.01, 0.01, 0, 0.022, 0.07)
-      C(g, steel, 0.007, 0.03, 0, 0.004, -0.125)
-      const slide = B(g, black, 0.035, 0.02, 0.06, 0, 0.012, 0.04)
-      const muzzle = new THREE.Object3D()
-      muzzle.position.set(0, 0.004, -0.15)
-      g.add(muzzle)
-      arms(g, 0.06, 0.07, -0.05)
-      this.guns.push({ def: WEAPONS[0], mag: 0, reserve: 0, model: g, muzzle, moving: slide })
-    }
-    // rifle
-    {
-      const g = new THREE.Group()
-      B(g, black, 0.05, 0.06, 0.26, 0, 0, 0.02)
-      B(g, dark, 0.055, 0.055, 0.24, 0, -0.005, -0.22)
-      for (let i = 0; i < 6; i++) B(g, black, 0.058, 0.008, 0.02, 0, 0.026, -0.12 - i * 0.035)
-      C(g, steel, 0.011, 0.2, 0, 0.0, -0.42)
-      C(g, black, 0.018, 0.06, 0, 0.0, -0.53)
-      const mag = B(g, polymer, 0.035, 0.13, 0.06, 0, -0.09, -0.03)
-      mag.rotation.x = 0.2
-      const grip = B(g, polymer, 0.035, 0.1, 0.045, 0, -0.07, 0.12)
-      grip.rotation.x = 0.35
-      B(g, polymer, 0.045, 0.07, 0.2, 0, -0.015, 0.25)
-      // red-dot sight
-      B(g, black, 0.03, 0.02, 0.08, 0, 0.045, 0.0)
-      C(g, black, 0.024, 0.07, 0, 0.075, -0.0)
-      const lens = new THREE.Mesh(new THREE.CircleGeometry(0.019, 18), new THREE.MeshStandardMaterial({ color: 0x223322, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.35 }))
-      lens.position.set(0, 0.075, 0.036)
-      g.add(lens)
-      const reddot = new THREE.Mesh(new THREE.CircleGeometry(0.0022, 10), dot)
-      reddot.position.set(0, 0.075, 0.03)
-      g.add(reddot)
-      const muzzle = new THREE.Object3D()
-      muzzle.position.set(0, 0, -0.57)
-      g.add(muzzle)
-      arms(g, 0.13, -0.24)
-      this.guns.push({ def: WEAPONS[1], mag: 0, reserve: 0, model: g, muzzle, moving: mag })
-    }
-    // shotgun
-    {
-      const g = new THREE.Group()
-      B(g, black, 0.05, 0.065, 0.2, 0, 0, 0.0)
-      C(g, steel, 0.014, 0.52, 0, 0.012, -0.34)
-      C(g, black, 0.012, 0.44, 0, -0.018, -0.3)
-      const pump = C(g, wood, 0.022, 0.15, 0, -0.018, -0.25)
-      const stock = B(g, wood, 0.045, 0.08, 0.28, 0, -0.04, 0.22)
-      stock.rotation.x = 0.12
-      B(g, sight, 0.006, 0.008, 0.006, 0, 0.026, -0.6)
-      const muzzle = new THREE.Object3D()
-      muzzle.position.set(0, 0.012, -0.61)
-      g.add(muzzle)
-      arms(g, 0.1, -0.25, -0.03)
-      this.guns.push({ def: WEAPONS[2], mag: 0, reserve: 0, model: g, muzzle, moving: pump })
-    }
-    for (const g of this.guns) {
-      g.model.visible = false
-      g.model.traverse((o) => (o.frustumCulled = false))
-      this.vm.add(g.model)
-    }
-  }
-
   private get gun(): Gun {
     return this.guns[this.slot]
   }
@@ -612,8 +597,8 @@ export class LastTrainEngine {
 
   /** Start again from a checkpoint: on the platform of that station, its wave about to begin. */
   continueFrom(s: LTSave) {
-    this.reset()
-    this.setStation(s.station)
+    this.reset(false)
+    this.setStation(Math.min(s.station, FINAL_STATION))
     this.wave = s.wave
     this.health = Math.max(50, s.health)
     this.score = s.score
@@ -627,7 +612,8 @@ export class LastTrainEngine {
     this.refreshTargets()
   }
 
-  reset() {
+  /** A new game (`intro`: the lights fail and come back on them first; false when continuing from a checkpoint). */
+  reset(intro = true) {
     for (const z of this.zombies) this.removeZombie(z)
     this.zombies = []
     if (this.stationIndex !== 0) this.setStation(0)
@@ -640,6 +626,13 @@ export class LastTrainEngine {
     this.train.group.visible = false
     this.doorOpen = 0
     this.setDoors(0)
+    this.exitOpen = 0
+    this.escapeT = 0
+    this.overSent = false
+    this.gateHurtT = 0
+    this.gateTold = false
+    this.renderer.toneMappingExposure = 1.05
+    for (const ex of this.station.exits) ex.setOpen(0)
     this.pos.set(-4, 0, 6)
     this.vel.set(0, 0, 0)
     this.yaw = Math.PI / 2 + 0.25
@@ -664,7 +657,8 @@ export class LastTrainEngine {
     this.keys.clear()
     this.firing = false
     this.aiming = false
-    this.startWave()
+    if (intro) this.beginIntro()
+    else this.startWave()
     this.refreshTargets()
   }
 
@@ -690,6 +684,8 @@ export class LastTrainEngine {
       health: Math.max(0, Math.ceil(this.health)),
       weapon: g.def.name,
       slot: this.slot,
+      slots: this.guns.flatMap((x, i) => (this.hasGun(i) ? [{ slot: i, name: x.def.short }] : [])),
+      magSize: g.def.mag,
       mag: g.mag,
       reserve: g.reserve,
       reloading: this.reloadT > 0,
@@ -708,10 +704,10 @@ export class LastTrainEngine {
   keyDown(code: string) {
     this.keys.add(code)
     if (this.stage === 'dying') return
-    if (code === 'Digit1' || code === 'Digit2' || code === 'Digit3') this.switchTo(Number(code.slice(5)) - 1)
-    else if (code === 'KeyQ') this.switchTo((this.slot + 2) % 3)
+    if (/^Digit[1-9]$/.test(code)) this.switchTo(Number(code.slice(5)) - 1)
+    else if (code === 'KeyQ') this.cycleGun(-1)
     else if (code === 'KeyR') this.startReload()
-    else if (code === 'Space' && this.onGround) {
+    else if (code === 'Space' && this.onGround && this.stage !== 'escaped') {
       this.vel.y = 6.4
       this.onGround = false
     }
@@ -753,7 +749,7 @@ export class LastTrainEngine {
 
   wheel(dy: number) {
     if (Math.abs(dy) < 4) return
-    this.switchTo((this.slot + (dy > 0 ? 1 : 2)) % 3)
+    this.cycleGun(dy > 0 ? 1 : -1)
   }
 
   /** One animation frame. `playing` false: the scene is drawn, nothing moves (or the attract camera glides). */
@@ -761,10 +757,17 @@ export class LastTrainEngine {
     dt = Math.min(dt, 0.05)
     if (mode === 'playing') this.update(dt)
     else if (mode === 'attract') this.attract(dt)
+    if (mode !== 'still') this.updateWind(dt)
+    const alive = this.zombies.filter((z) => z.state !== 'dead' && z.state !== 'wait').length
+    const tense = this.stage === 'intro' ? 0.5 : mode === 'playing' ? clamp(alive / 9, 0, 1) : 0.15
+    this.music.intensity += (tense - this.music.intensity) * Math.min(1, dt * 0.5)
+    this.music.windLevel = clamp(this.windSpeed / 6, 0, 1)
+    this.music.tick(dt)
     this.composer.render()
   }
 
   dispose() {
+    this.music.dispose()
     this.station.dispose()
     this.train.dispose()
     this.composer.dispose()
@@ -801,8 +804,10 @@ export class LastTrainEngine {
     this.updatePlayer(dt)
     this.updateWeapon(dt)
     this.updateZombies(dt)
+    this.updateGates(dt)
     this.updateEffects(dt)
     this.updatePickups(dt)
+    this.updateGlobs(dt)
     this.animateStation(dt)
     this.placeCamera(dt)
     this.updateHudEls(dt)
@@ -814,21 +819,224 @@ export class LastTrainEngine {
     this.messageT = secs
   }
 
+  // ---------------------------------------------------------------- the intro: the lights fail
+
+  /** The new game opens in the dark: the tubes stutter, and each time they come on, they are closer. */
+  private beginIntro() {
+    this.stage = 'intro'
+    this.stageT = 0
+    this.introStep = -1
+    this.introLit = false
+    this.introZ = []
+    const kinds: Kind[] = ['walker', 'walker', 'runner', 'brute', 'walker']
+    for (const kind of kinds) {
+      const z = this.makeZombie(kind)
+      const scale = 1
+      z.maxHp = z.hp = KINDS[kind].hp * scale
+      z.speed = KINDS[kind].speed * (0.85 + Math.random() * 0.3)
+      z.state = 'wait'
+      z.root.visible = false
+      this.world.add(z.root)
+      this.zombies.push(z)
+      this.introZ.push(z)
+    }
+    setTrainDisplay(this.train, 'NEXT STOP', stationAt(1).name)
+  }
+
+  private updateIntro() {
+    const t = this.stageT
+    const i = INTRO_ON.findIndex(([a, b]) => t >= a && t < b)
+    const lit = i >= 0 || t >= INTRO_END
+    // the tubes: dark but for the red signals, then a stutter of light
+    this.renderer.toneMappingExposure = lit ? (t >= INTRO_END ? 1.05 : 0.75 + Math.random() * 0.3) : 0.03
+    if (lit !== this.introLit) {
+      this.introLit = lit
+      this.music.flicker(lit)
+    }
+    // each time they come on, they stand a little closer, between you and the far end
+    if (i >= 0 && i !== this.introStep) {
+      this.introStep = i
+      const d = INTRO_ON[i][2]
+      const fx = -Math.sin(this.yaw)
+      const fz = -Math.cos(this.yaw)
+      const sx = fz
+      const sz = -fx
+      this.introZ.forEach((z, k) => {
+        if (z.state !== 'wait') return
+        const side = (k - 2) * 1.15 + Math.sin(k * 7.1 + i) * 0.35
+        const back = (k % 2) * 1.2
+        const x = clamp(this.pos.x + fx * (d + back) + sx * side, PLATFORM.x0 + 0.5, PLATFORM.x1 - 0.5)
+        const zz = clamp(this.pos.z + fz * (d + back) + sz * side, PLATFORM.z0 + 0.6, PLATFORM.z1 - 0.6)
+        z.root.position.set(x, 0, zz)
+        z.root.rotation.y = Math.atan2(this.pos.x - x, this.pos.z - zz)
+        z.root.visible = true
+      })
+      if (i === 2) this.music.stinger(0.45)
+      if (i === 5) this.groan(this.introZ[3])
+    }
+    if (t >= INTRO_END) {
+      // the lights hold: they come for you
+      this.music.stinger(1)
+      this.shake = Math.max(this.shake, 0.05)
+      for (const z of this.introZ) if (z.state === 'wait') z.state = 'chase'
+      this.introZ = []
+      this.startWave()
+      this.toSpawn = Math.max(0, this.toSpawn - 5)
+      this.refreshTargets()
+    }
+  }
+
+  // ---------------------------------------------------------------- the wind and the paper
+
+  /** Sheets of newspaper, flyers and tickets lying about the platform. */
+  private makePapers() {
+    const kinds = [
+      { w: 0.42, h: 0.3, lift: 1.0 },
+      { w: 0.21, h: 0.3, lift: 1.25 },
+      { w: 0.15, h: 0.21, lift: 1.4 },
+      { w: 0.07, h: 0.05, lift: 1.7 },
+      { w: 0.5, h: 0.36, lift: 0.55 },
+    ]
+    const mats = [0, 1, 2, 3, 4, 5].map((i) => new THREE.MeshStandardMaterial({ map: this.paperTexture(i), side: THREE.DoubleSide, roughness: 0.9 }))
+    for (let i = 0; i < 46; i++) {
+      const k = kinds[i % kinds.length]
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(k.w, k.h, 3, 1), mats[i % mats.length])
+      // a slight fold down the middle
+      const pos = mesh.geometry.attributes.position as THREE.BufferAttribute
+      for (let v = 0; v < pos.count; v++) pos.setZ(v, Math.abs(pos.getX(v)) * 0.12 * (i % 3 === 0 ? 1 : -0.5))
+      mesh.geometry.computeVertexNormals()
+      mesh.rotation.order = 'YXZ'
+      mesh.position.set(PLATFORM.x0 + Math.random() * (PLATFORM.x1 - PLATFORM.x0), 0.006, 0.8 + Math.random() * 8.4)
+      mesh.rotation.set(-Math.PI / 2, Math.random() * 6.3, 0)
+      mesh.receiveShadow = true
+      this.world.add(mesh)
+      this.papers.push({ mesh, v: new THREE.Vector3(), spin: new THREE.Vector3(), air: false, lift: k.lift * (0.8 + Math.random() * 0.4), phase: Math.random() * 10 })
+    }
+  }
+
+  private paperTexture(i: number): THREE.CanvasTexture {
+    const c = document.createElement('canvas')
+    c.width = 128
+    c.height = 160
+    const g = c.getContext('2d')!
+    const r = rng(500 + i)
+    const bg = ['#e8e3d4', '#d9d2bd', '#f1efe6', '#e0c66a', '#cfd8e4', '#b9a98a'][i]
+    g.fillStyle = bg
+    g.fillRect(0, 0, 128, 160)
+    g.fillStyle = 'rgba(30,30,30,0.85)'
+    if (i <= 2) {
+      // newspaper: a headline and columns of grey lines
+      g.font = 'bold 18px Georgia, serif'
+      g.fillText(['EVACUATE', 'NO TRAINS', 'STAY HOME'][i], 8, 24)
+      g.fillStyle = 'rgba(40,40,40,0.5)'
+      for (let col = 0; col < 3; col++) for (let y = 36; y < 150; y += 5) if (r() > 0.08) g.fillRect(8 + col * 39, y, 32 - r() * 8, 2)
+      g.fillStyle = 'rgba(60,60,60,0.35)'
+      g.fillRect(48, 40, 36, 30)
+    } else if (i === 3) {
+      // a ticket
+      g.font = 'bold 22px Helvetica, sans-serif'
+      g.fillText('SINGLE', 12, 60)
+      g.font = '14px Helvetica, sans-serif'
+      g.fillText('ZONE 1–2', 12, 90)
+      g.fillStyle = '#7a5a10'
+      g.fillRect(0, 120, 128, 12)
+    } else {
+      // a flyer, a cardboard scrap
+      g.font = 'bold 16px Helvetica, sans-serif'
+      g.fillText(i === 4 ? 'MISSING' : 'FRAGILE', 14, 30)
+      g.strokeStyle = 'rgba(30,30,30,0.6)'
+      g.strokeRect(24, 44, 80, 70)
+    }
+    // dirt and a boot print
+    for (let k = 0; k < 14; k++) {
+      g.fillStyle = `rgba(60,45,30,${r() * 0.18})`
+      g.beginPath()
+      g.arc(r() * 128, r() * 160, 3 + r() * 14, 0, Math.PI * 2)
+      g.fill()
+    }
+    if (r() < 0.5) {
+      g.fillStyle = 'rgba(90,10,8,0.5)'
+      g.beginPath()
+      g.ellipse(r() * 128, r() * 160, 10, 6, r() * 3, 0, Math.PI * 2)
+      g.fill()
+    }
+    return texture(c)
+  }
+
+  /** The draught from the tunnels: gusts lift the paper and send it tumbling down the platform. */
+  private updateWind(dt: number) {
+    this.windT += dt
+    const t = this.windT
+    let gust = Math.max(0, Math.sin(t * 0.21) + Math.sin(t * 0.57 + 1.3) * 0.7 + Math.sin(t * 1.7) * 0.2 - 0.35) * 3.2
+    // a train in or out of the station pushes the air before it
+    if (this.stage === 'trainIn' || this.stage === 'depart' || this.stage === 'arrive') gust += 3
+    const target = 0.7 + gust
+    this.windSpeed += (target - this.windSpeed) * Math.min(1, dt * 1.2)
+    const w = this.windSpeed
+    for (const p of this.papers) {
+      const m = p.mesh
+      p.phase += dt
+      // the station's own floor under it (the world moves while the train rides, the papers go with it)
+      const floor = (m.position.z > PLATFORM.z0 ? 0 : TRACK_Y) + 0.006
+      if (!p.air) {
+        // lying flat: a strong enough gust (with a little luck) picks it up
+        if (w * p.lift > 2.6 + Math.sin(p.phase * 1.3) * 0.8 && Math.random() < dt * 1.5 * p.lift) {
+          p.air = true
+          p.v.set(w * 0.4, 1.2 + Math.random() * 1.8 * p.lift, (Math.random() - 0.5) * 1.2)
+          p.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 9)
+        } else if (w * p.lift > 1.6) {
+          // skittering along the floor
+          m.position.x += w * p.lift * 0.08 * dt * (1 + Math.sin(p.phase * 5))
+        }
+      } else {
+        // flying: pulled along by the air, fluttering, slowly falling
+        const flutter = Math.sin(p.phase * 7.3) * 1.6
+        p.v.x += (w * 0.9 - p.v.x) * dt * 1.4 * p.lift
+        p.v.z += (Math.sin(p.phase * 1.9) * 0.8 - p.v.z) * dt * 0.9
+        p.v.y += (-1.1 + flutter * 0.5 + (w > 3 ? (w - 3) * 0.35 : 0)) * dt
+        p.v.y = clamp(p.v.y, -1.6, 2.5)
+        m.position.addScaledVector(p.v, dt)
+        m.rotation.x += p.spin.x * dt
+        m.rotation.y += p.spin.y * dt
+        m.rotation.z += p.spin.z * dt
+        p.spin.multiplyScalar(1 - dt * 0.3)
+        if (m.position.y > 3.6) p.v.y = -Math.abs(p.v.y)
+        if (m.position.y <= floor && p.v.y < 0) {
+          // landed: flat on the floor
+          p.air = false
+          m.position.y = floor
+          m.rotation.set(-Math.PI / 2, m.rotation.y, 0)
+          p.v.set(0, 0, 0)
+        }
+      }
+      // keep it in the station: the platform, a little over the track
+      m.position.z = clamp(m.position.z, -2.4, 9.5)
+      if (m.position.x > PLATFORM.x1) m.position.x = PLATFORM.x0 + Math.random() * 3
+      if (m.position.x < PLATFORM.x0) m.position.x = PLATFORM.x1
+    }
+  }
+
   private startWave() {
+    this.renderer.toneMappingExposure = 1.05
     this.stage = 'fight'
     this.stageT = 0
     const w = this.wave
     this.toSpawn = 5 + w * 4
+    this.waveTotal = this.toSpawn
     this.maxAlive = Math.min(16, 4 + w * 2)
     this.spawnT = 2.5
     this.station.signals.red.emissiveIntensity = 4
     this.station.signals.green.emissiveIntensity = 0
-    this.say(`Wave ${w}`, stationAt(this.stationIndex).name, 3)
+    this.say(`Wave ${w}`, this.station.final ? 'The last station — hold it, then climb out' : stationAt(this.stationIndex).name, 3)
+    setTrainDisplay(this.train, 'NEXT STOP', this.station.final ? 'TERMINUS' : stationAt(this.stationIndex + 1).name)
   }
 
   private updateStage(dt: number) {
     const train = this.train.group
     switch (this.stage) {
+      case 'intro':
+        this.updateIntro()
+        break
       case 'fight': {
         this.spawnT -= dt
         const alive = this.zombies.filter((z) => z.state !== 'dead').length
@@ -840,14 +1048,42 @@ export class LastTrainEngine {
         if (this.toSpawn === 0 && alive === 0 && this.stageT > 3) {
           const bonus = 500 * this.wave
           this.score += bonus
-          this.stage = 'cleared'
           this.stageT = 0
-          this.say('Wave cleared', `+${bonus} — the train is coming`, 4)
           this.station.signals.red.emissiveIntensity = 0
           this.station.signals.green.emissiveIntensity = 4
+          if (this.station.final) {
+            // the last station: nothing is left on the street, the gate unlocks
+            this.stage = 'exit'
+            this.say('Wave cleared', `+${bonus} — the gate is open: climb the stairs`, 6)
+            this.chime()
+          } else {
+            this.stage = 'cleared'
+            this.say('Wave cleared', `+${bonus} — the train is coming`, 4)
+          }
         }
         break
       }
+      case 'exit': {
+        // the gate slides open, daylight comes down the stairs; walk out through it
+        const ex = this.nearestExit()
+        if (this.pos.z > LANDING.gateZ + 0.9 && Math.abs(this.pos.x - ex.x) < 2) {
+          this.stage = 'escaped'
+          this.stageT = 0
+          this.escapeT = 0
+          this.score += 2000 + Math.ceil(this.health) * 10
+          this.say('You made it out', 'Daylight at last', 5)
+          this.chime()
+        }
+        break
+      }
+      case 'escaped':
+        this.escapeT += dt
+        this.renderer.toneMappingExposure = 1.05 + ease.in(clamp(this.escapeT / 2.2, 0, 1)) * 7
+        if (this.escapeT > 2.4 && !this.overSent) {
+          this.overSent = true
+          this.onOver({ score: this.score, wave: this.wave, kills: this.kills, won: true })
+        }
+        break
       case 'cleared':
         if (this.stageT > 3) {
           this.stage = 'trainIn'
@@ -855,6 +1091,7 @@ export class LastTrainEngine {
           train.visible = true
           train.position.x = -TRAVEL
           this.setDoors(0)
+          setTrainDisplay(this.train, 'NEXT STOP', stationAt(this.stationIndex + 1).name)
           sfx('horn', () => {
             tone({ freq: 220, dur: 1.1, type: 'sawtooth', vol: 0.05 })
             tone({ freq: 277, dur: 1.1, type: 'sawtooth', vol: 0.04 })
@@ -902,7 +1139,10 @@ export class LastTrainEngine {
           this.world.position.x = TRAVEL
           this.stage = 'arrive'
           this.stageT = 0
-          this.say('Next station', stationAt(this.stationIndex).name, 4)
+          const found = this.guns.findIndex((g) => g.def.from === this.stationIndex)
+          if (found >= 0) this.say(`Found: ${this.guns[found].def.name}`, `${stationAt(this.stationIndex).name} — press ${found + 1}`, 5)
+          else this.say('Next station', stationAt(this.stationIndex).name, 4)
+          setTrainDisplay(this.train, 'NOW ARRIVING', stationAt(this.stationIndex).name)
           // a little resupply on the way
           this.health = Math.min(100, this.health + 25)
           for (const g of this.guns) if (g.reserve >= 0) g.reserve = Math.min(g.def.reserve * 2, g.reserve + Math.ceil(g.def.mag * 1.5))
@@ -924,6 +1164,7 @@ export class LastTrainEngine {
             score: this.score, kills: this.kills, guns: this.guns.map((g) => ({ mag: g.mag, reserve: g.reserve })),
           })
           this.say(stationAt(this.stationIndex).name, `Step off the train for wave ${this.wave}`, 5)
+          setTrainDisplay(this.train, stationAt(this.stationIndex).name.toUpperCase(), 'ALIGHT HERE')
         }
         break
       }
@@ -983,28 +1224,98 @@ export class LastTrainEngine {
   private setDoors(open: number) {
     const e = ease.inOut(open)
     for (const l of this.train.leaves) l.mesh.position.x = l.x + l.dir * e * 0.68
+    this.train.lamp.emissiveIntensity = open > 0.02 ? 3.2 + Math.sin(performance.now() * 0.012) * 0.8 : 0
   }
 
+  /** Inside the train: any of the three cars, or the gangways between them. */
   private inCar(): boolean {
-    return this.pos.x > CAR.x0 && this.pos.x < CAR.x1 && this.pos.z < -0.75 && this.pos.z > CAR.z0 - 0.1
+    return this.pos.x > CAR_XS[0] - CAR_L / 2 && this.pos.x < CAR_XS[2] + CAR_L / 2 && this.pos.z < -0.5 && this.pos.z > CAR_Z - CAR_W / 2
+  }
+
+  /** The stairway whose foot is nearest to the player. */
+  private nearestExit(): ExitBuild {
+    return this.station.exits.reduce((a, b) => (Math.abs(a.x - this.pos.x) <= Math.abs(b.x - this.pos.x) ? a : b))
+  }
+
+  /** The floor under (x, z): the platform, the steps of a stairway, its landing. */
+  private groundAt(x: number, z: number): number {
+    if (z > STAIR.z0 && STAIRS.some((sx) => Math.abs(x - sx) < 2)) return stairY(z)
+    const h = hallAt(x, z)
+    if (h) return hallY(h.u)
+    return 0
   }
 
   // ---------------------------------------------------------------- the player
 
   /** Where the player may stand right now: axis-aligned rectangles. */
-  private walkable(): [number, number, number, number][] {
-    const plat: [number, number, number, number] = [PLATFORM.x0, PLATFORM.x1, PLATFORM.z0, PLATFORM.z1]
-    const car: [number, number, number, number] = [CAR.x0, CAR.x1, CAR.z0, CAR.z1]
+  private walkable(): Rect[] {
+    const plat: Rect = [PLATFORM.x0, PLATFORM.x1, PLATFORM.z0, PLATFORM.z1]
+    // the stairways: up the steps, over the landing, as far as the gate (or out of it, once it is open)
+    const top = this.exitOpen > 0.9 ? LANDING.endZ - 0.7 : LANDING.gateZ - 0.55
+    const stairs = STAIRS.map((sx) => [sx - STAIR.halfW + 0.1, sx + STAIR.halfW - 0.1, 9.0, top] as Rect)
+    // through the staff door, up the flight, into the ticket hall
+    for (const sx of STAIRS) stairs.push(...hallRects(sx, 0.3))
+    // the train: the aisle of each car, the door zones between the seats, the gangways
+    const train = (doors: boolean): Rect[] => {
+      const out: Rect[] = []
+      for (const cx of CAR_XS) {
+        out.push([cx - 9.5, cx + 9.5, CAR_Z - 0.75, CAR_Z + 0.75])
+        for (const d of DOORS) out.push([cx + d - 0.6, cx + d + 0.6, CAR_Z - 1.1, doors ? 0.5 : CAR_Z + 1.1])
+      }
+      for (const gx of [-CAR_PITCH / 2, CAR_PITCH / 2]) out.push([gx - 1.0, gx + 1.0, CAR_Z - 0.55, CAR_Z + 0.55])
+      return out
+    }
     const docked = this.train.group.visible && Math.abs(this.train.group.position.x) < 0.01 && Math.abs(this.world.position.x) < 0.01
-    if (this.stage === 'depart' || this.stage === 'arrive') return [car]
-    if (docked && this.doorOpen > 0.85) return [plat, car, ...DOORS.map((d) => [d - 0.42, d + 0.42, -0.8, 0.5] as [number, number, number, number])]
-    if (docked && this.inCar()) return [car]
-    return [plat]
+    if (this.stage === 'depart' || this.stage === 'arrive') return train(false)
+    if (docked && this.doorOpen > 0.85) return [plat, ...stairs, ...train(true)]
+    if (docked && this.inCar()) return train(false)
+    return [plat, ...stairs]
   }
 
-  private free(x: number, z: number, rects: [number, number, number, number][]): boolean {
-    if (!rects.some(([x0, x1, z0, z1]) => x >= x0 && x <= x1 && z >= z0 && z <= z1)) return false
-    return true
+  private free(x: number, z: number, rects: Rect[]): boolean {
+    return rects.some(([x0, x1, z0, z1]) => x >= x0 && x <= x1 && z >= z0 && z <= z1)
+  }
+
+  /** The nearest point that is walkable. */
+  private nearestFree(x: number, z: number, rects: Rect[]): [number, number] {
+    let best: [number, number] = [x, z]
+    let bd = Infinity
+    for (const [x0, x1, z0, z1] of rects) {
+      const cx = clamp(x, x0, x1)
+      const cz = clamp(z, z0, z1)
+      const d = (cx - x) ** 2 + (cz - z) ** 2
+      if (d < bd) {
+        bd = d
+        best = [cx, cz]
+      }
+    }
+    return best
+  }
+
+  /** Push a point (radius r) out of the furniture and clutter standing on the platform. */
+  private pushBlocks(p: { x: number; z: number }, r: number) {
+    for (const b of this.station.blocks) {
+      const nx = clamp(p.x, b.x0, b.x1)
+      const nz = clamp(p.z, b.z0, b.z1)
+      const dx = p.x - nx
+      const dz = p.z - nz
+      const d = Math.hypot(dx, dz)
+      if (d >= r) continue
+      if (d > 1e-4) {
+        p.x = nx + (dx / d) * r
+        p.z = nz + (dz / d) * r
+      } else {
+        const l = p.x - b.x0
+        const rr = b.x1 - p.x
+        const t = p.z - b.z0
+        const bt = b.z1 - p.z
+        const m = Math.min(l, rr, t, bt)
+        if (m === l) p.x = b.x0 - r
+        else if (m === rr) p.x = b.x1 + r
+        else if (m === t) p.z = b.z0 - r
+        else p.z = b.z1 + r
+      }
+    }
   }
 
   private updatePlayer(dt: number) {
@@ -1030,8 +1341,8 @@ export class LastTrainEngine {
     const nz = this.pos.z + this.vel.z * dt
     if (this.free(this.pos.x, nz, rects)) this.pos.z = nz
     else this.vel.z = 0
-    // pillars
-    for (const p of PILLARS) {
+    // columns and furniture
+    for (const p of this.station.pillars) {
       const dx = this.pos.x - p.x
       const dz = this.pos.z - p.z
       const d = Math.hypot(dx, dz)
@@ -1041,6 +1352,7 @@ export class LastTrainEngine {
         this.pos.z = p.z + (dz / d) * min
       }
     }
+    this.pushBlocks(this.pos, 0.3)
     // zombies push back a little
     for (const z of this.zombies) {
       if (z.state === 'dead') continue
@@ -1059,19 +1371,33 @@ export class LastTrainEngine {
     }
     if (!this.free(this.pos.x, this.pos.z, rects)) {
       // pushed out of bounds: back to the nearest point inside
-      const [x0, x1, z0, z1] = rects[0]
-      this.pos.x = clamp(this.pos.x, x0, x1)
-      this.pos.z = clamp(this.pos.z, z0, z1)
+      const [nx3, nz3] = this.nearestFree(this.pos.x, this.pos.z, rects)
+      this.pos.x = nx3
+      this.pos.z = nz3
     }
 
-    // jump and gravity
-    this.vel.y -= GRAVITY * dt
-    this.pos.y += this.vel.y * dt
-    if (this.pos.y <= 0) {
-      if (!this.onGround && this.vel.y < -4) this.step(0.6)
-      this.pos.y = 0
+    // the floor under the feet (steps, landing), jumping and gravity
+    const gy = this.groundAt(this.pos.x, this.pos.z)
+    if (this.onGround) {
+      // walking: ride the steps up and down
       this.vel.y = 0
-      this.onGround = true
+      this.pos.y += (gy - this.pos.y) * Math.min(1, dt * 18)
+      if (Math.abs(gy - this.pos.y) < 0.003) this.pos.y = gy
+      if (this.pos.y - gy > 0.7) this.onGround = false
+    } else {
+      this.vel.y -= GRAVITY * dt
+      this.pos.y += this.vel.y * dt
+      if (this.pos.y <= gy && this.vel.y <= 0) {
+        if (this.vel.y < -4) this.step(0.6)
+        this.pos.y = gy
+        this.vel.y = 0
+        this.onGround = true
+      }
+    }
+    // the low roof of a car: no jumping through it
+    if (this.inCar() && this.pos.y > 0.5) {
+      this.pos.y = 0.5
+      this.vel.y = Math.min(0, this.vel.y)
     }
 
     const hs = Math.hypot(this.vel.x, this.vel.z)
@@ -1121,7 +1447,7 @@ export class LastTrainEngine {
       this.pos.z + (Math.random() - 0.5) * sh,
     )
     c.rotation.set(this.pitch + this.punch.x, this.yaw + this.punch.y, roll + sway)
-    const fov = 72 - this.aim * (this.gun.def.id === 'rifle' ? 24 : 14)
+    const fov = 72 - this.aim * (this.gun.def.zoom)
     if (Math.abs(c.fov - fov) > 0.01) {
       c.fov = fov
       c.updateProjectionMatrix()
@@ -1129,7 +1455,7 @@ export class LastTrainEngine {
   }
 
   hurt(dmg: number) {
-    if (this.stage === 'dying') return
+    if (this.stage === 'dying' || this.stage === 'escaped') return
     this.health -= dmg
     this.hurtT = 0.6
     this.punch.x += 0.05
@@ -1149,43 +1475,137 @@ export class LastTrainEngine {
 
   // ---------------------------------------------------------------- shooting
 
+  /** A gun is in hand once the train has reached the station where it is found. */
+  private hasGun(i: number): boolean {
+    return i >= 0 && i < this.guns.length && this.guns[i].def.from <= this.stationIndex
+  }
+
+  /** The next (or previous) gun found so far. */
+  private cycleGun(step: number) {
+    const n = this.guns.length
+    const from = this.nextSlot >= 0 ? this.nextSlot : this.slot
+    for (let k = 1; k < n; k++) {
+      const i = (((from + step * k) % n) + n) % n
+      if (this.hasGun(i)) return this.switchTo(i)
+    }
+  }
+
   private switchTo(i: number) {
     if (i === this.slot && this.nextSlot < 0) return
-    if (i < 0 || i > 2) return
+    if (!this.hasGun(i)) return
     this.nextSlot = i
     this.switchT = 0.36
     this.reloadT = 0
+    this.pendingEject = 0
     sfx('switch', () => noise({ dur: 0.08, freq: 3000, filter: 'highpass', vol: 0.06 }))
   }
 
   private startReload() {
     const g = this.gun
     if (this.reloadT > 0 || this.switchT > 0 || g.mag >= g.def.mag || g.reserve === 0) return
-    this.reloadT = g.def.id === 'shotgun' ? g.def.reload + 0.25 : g.def.reload
-    sfx('reload', () => {
-      noise({ dur: 0.05, freq: 2400, filter: 'bandpass', q: 3, vol: 0.12 })
-      noise({ dur: 0.05, freq: 1800, filter: 'bandpass', q: 3, vol: 0.12, at: g.def.reload * 0.7 })
-    })
+    const shotgun = g.def.base === 'shotgun'
+    this.rs = { clock: 0, prev: 0, empty: g.mag <= 0, phase: shotgun ? 'load' : 'mag', first: true }
+    this.reloadT = shotgun ? SHELL_LEAD + SHELL_T : magReloadTime(g, this.rs.empty)
+    if (shotgun) sfx('lift', () => noise({ dur: 0.05, freq: 900, filter: 'lowpass', vol: 0.06 }), 0.05)
   }
 
   private finishReload() {
     const g = this.gun
-    if (g.def.id === 'shotgun') {
-      // one shell at a time; keep going while the tube is not full
+    if (g.def.base === 'shotgun') {
+      if (this.rs.phase === 'pump') return // the pump is worked: ready
+      // one shell at a time; keep going while the tube is not full, then pump
       g.mag++
       if (g.reserve > 0) g.reserve--
-      sfx('shell', () => noise({ dur: 0.06, freq: 1500, filter: 'bandpass', q: 2, vol: 0.12 }))
-      if (g.mag < g.def.mag && g.reserve !== 0 && !this.firing) this.reloadT = g.def.reload
-      else sfx('pump', () => {
-        noise({ dur: 0.05, freq: 1200, filter: 'bandpass', q: 2, vol: 0.14 })
-        noise({ dur: 0.05, freq: 1700, filter: 'bandpass', q: 2, vol: 0.14, at: 0.12 })
-      })
+      const more = g.mag < g.def.mag && g.reserve !== 0 && !this.firing
+      this.rs = { clock: 0, prev: 0, empty: false, phase: more ? 'load' : 'pump', first: false }
+      this.reloadT = more ? SHELL_T : PUMP_T
       return
     }
     const need = g.def.mag - g.mag
     const got = g.reserve < 0 ? need : Math.min(need, g.reserve)
     g.mag += got
     if (g.reserve >= 0) g.reserve -= got
+  }
+
+  /** The animation reaches a moment worth a sound (or a magazine falling). */
+  private reloadEvent(e: ReloadEvent) {
+    switch (e) {
+      case 'release':
+        sfx('rel', () => {
+          noise({ dur: 0.025, freq: 3600, filter: 'bandpass', q: 4, vol: 0.13 })
+          noise({ dur: 0.18, freq: 1100, to: 500, filter: 'lowpass', vol: 0.05, at: 0.03 })
+        })
+        break
+      case 'drop':
+        this.dropMag()
+        break
+      case 'grab':
+        sfx('grab', () => noise({ dur: 0.12, freq: 1300, to: 600, filter: 'bandpass', q: 0.8, vol: 0.06 }))
+        break
+      case 'insert':
+        sfx('ins', () => {
+          noise({ dur: 0.03, freq: 2000, filter: 'bandpass', q: 3, vol: 0.16 })
+          tone({ freq: 160, to: 90, dur: 0.06, type: 'triangle', vol: 0.1 })
+          noise({ dur: 0.025, freq: 3000, filter: 'bandpass', q: 4, vol: 0.12, at: 0.05 })
+        })
+        break
+      case 'rack':
+        sfx('rack', () => {
+          noise({ dur: 0.04, freq: 1500, filter: 'bandpass', q: 2, vol: 0.18 })
+          noise({ dur: 0.03, freq: 2600, filter: 'bandpass', q: 3, vol: 0.12, at: 0.03 })
+          tone({ freq: 200, to: 110, dur: 0.05, type: 'square', vol: 0.04 })
+        })
+        break
+      case 'pull':
+        sfx('pull', () => noise({ dur: 0.1, freq: 1200, to: 2200, filter: 'bandpass', q: 2, vol: 0.12 }))
+        break
+      case 'shell':
+        sfx('shell', () => {
+          noise({ dur: 0.03, freq: 1600, filter: 'bandpass', q: 2.5, vol: 0.15 })
+          tone({ freq: 760, to: 520, dur: 0.05, type: 'triangle', vol: 0.05 })
+        })
+        break
+      case 'pumpBack':
+        sfx('pumpb', () => noise({ dur: 0.07, freq: 1100, to: 1800, filter: 'bandpass', q: 1.5, vol: 0.15 }))
+        break
+      case 'pumpFwd':
+        sfx('pumpf', () => {
+          noise({ dur: 0.05, freq: 1700, filter: 'bandpass', q: 2, vol: 0.18 })
+          tone({ freq: 180, to: 100, dur: 0.05, type: 'square', vol: 0.035, at: 0.02 })
+        })
+        break
+    }
+  }
+
+  /** The old magazine leaves the gun: a real one, tumbling to the floor with its rounds showing. */
+  private dropMag() {
+    const g = this.gun
+    if (!g.magMesh || g.def.base === 'shotgun') return
+    const kind = g.def.base as 'pistol' | 'rifle'
+    const wp = g.magMesh.getWorldPosition(new THREE.Vector3())
+    const wq = g.magMesh.getWorldQuaternion(new THREE.Quaternion())
+    let d = this.magDrops.find((x) => x.life <= 0 && x.kind === kind)
+    if (!d) {
+      const mesh = makeMag(kind)
+      mesh.traverse((o) => (o.frustumCulled = false))
+      this.scene.add(mesh)
+      d = { kind, mesh, v: new THREE.Vector3(), spin: new THREE.Vector3(), life: 0, t: 0, bounced: 0 }
+      this.magDrops.push(d)
+    }
+    const right = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw))
+    const fwd = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw))
+    d.mesh.visible = true
+    d.mesh.position.copy(wp)
+    d.mesh.quaternion.copy(wq)
+    d.mesh.scale.setScalar(this.vm.scale.x)
+    d.v.set(0, -1.1, 0).addScaledVector(right, -0.3 + Math.random() * 0.5).addScaledVector(fwd, 0.2 + Math.random() * 0.4)
+    d.v.x += this.vel.x
+    d.v.z += this.vel.z
+    d.spin.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 9)
+    d.life = 6
+    d.t = 0
+    d.bounced = 0
+    g.magMesh.visible = false
   }
 
   private updateWeapon(dt: number) {
@@ -1215,7 +1635,7 @@ export class LastTrainEngine {
     const g = this.gun
     const canShoot = this.stage !== 'dying' && this.switchT <= 0 && !this.sprinting
     if (this.firing && canShoot && this.cooldown <= 0 && (g.def.auto || !this.triggerHeld)) {
-      if (g.def.id === 'shotgun' && this.reloadT > 0 && g.mag > 0) this.reloadT = 0 // interrupt the shell-by-shell reload
+      if (g.def.base === 'shotgun' && this.reloadT > 0 && g.mag > 0) this.reloadT = 0 // interrupt the shell-by-shell reload
       if (this.reloadT > 0) {
         // still reloading
       } else if (g.mag <= 0) {
@@ -1229,6 +1649,10 @@ export class LastTrainEngine {
       }
     }
     if (!this.firing) this.triggerHeld = false
+    if (this.pendingEject > 0) {
+      this.pendingEject -= dt
+      if (this.pendingEject <= 0 && this.gun.def.base === 'shotgun') this.eject('shotgun')
+    }
     this.animateViewmodel(dt)
   }
 
@@ -1246,9 +1670,9 @@ export class LastTrainEngine {
     this.bloomSpread = Math.min(0.06, this.bloomSpread + d.spread * 0.6)
     this.flashT = 0.05
     this.flashSprite.material.rotation = Math.random() * Math.PI
-    this.flashSprite.scale.setScalar(d.id === 'shotgun' ? 0.32 : d.id === 'rifle' ? 0.24 : 0.17)
+    this.flashSprite.scale.setScalar(d.base === 'shotgun' ? 0.32 : d.base === 'rifle' ? 0.24 : 0.17)
     g.muzzle.add(this.flashSprite)
-    this.gunSound(d.id)
+    this.gunSound(d.base)
 
     this.scene.updateMatrixWorld()
     const origin = new THREE.Vector3()
@@ -1272,7 +1696,7 @@ export class LastTrainEngine {
         const isHead = z.model
           ? hit.point.y - (z.root.position.y + this.world.position.y) > z.model.height * KINDS[z.kind].scale * 0.8
           : hit.object.userData.part === 'head'
-        const falloff = d.id === 'shotgun' ? clamp(1.3 - hit.distance / 18, 0.25, 1) : 1
+        const falloff = d.base === 'shotgun' ? clamp(1.3 - hit.distance / 18, 0.25, 1) : 1
         this.damage(z, d.damage * falloff * (isHead ? 2.4 : 1), isHead, this.raycaster.ray.direction, hit.point)
         hits++
         head ||= isHead
@@ -1284,17 +1708,18 @@ export class LastTrainEngine {
       }
     }
     if (hits) this.hitMarker(head)
-    this.eject(d.id)
+    if (d.base === 'shotgun') this.pendingEject = 0.34 // the shell comes out as the pump goes back
+    else this.eject(d.base)
   }
 
   private currentSpread(): number {
     const d = this.gun.def
     const move = Math.min(1, Math.hypot(this.vel.x, this.vel.z) / WALK)
     const air = this.onGround ? 0 : 0.03
-    return (d.spread + this.bloomSpread + move * 0.02 + air) * (1 - this.aim * (d.id === 'shotgun' ? 0.3 : 0.75))
+    return (d.spread + this.bloomSpread + move * 0.02 + air) * (1 - this.aim * (d.base === 'shotgun' ? 0.3 : 0.75))
   }
 
-  private gunSound(id: WeaponDef['id']) {
+  private gunSound(id: Gun['def']['base']) {
     if (id === 'pistol') {
       noise({ dur: 0.16, freq: 2200, to: 500, filter: 'bandpass', q: 0.8, vol: 0.4 })
       tone({ freq: 160, to: 50, dur: 0.12, type: 'sine', vol: 0.3 })
@@ -1335,18 +1760,20 @@ export class LastTrainEngine {
     if (this.holes.length > 90) this.holes.shift()!.removeFromParent()
   }
 
-  private eject(id: WeaponDef['id']) {
-    const c = this.casings.find((x) => x.life <= 0) ?? this.casings[0]
+  private eject(id: Gun['def']['base']) {
+    const g = this.gun
     const shell = id === 'shotgun'
     // shotgun shells are the red ones (every third casing mesh)
-    const pick = this.casings.filter((x, i) => x.life <= 0 && (i % 3 === 2) === shell)[0] ?? c
-    const right = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw))
-    const fwd = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw))
-    pick.mesh.position.copy(this.camera.position).addScaledVector(right, 0.12).addScaledVector(fwd, 0.25).add(new THREE.Vector3(0, -0.1, 0))
-    pick.v.copy(right).multiplyScalar(1.6 + Math.random()).addScaledVector(fwd, -0.3 + Math.random() * 0.4).add(new THREE.Vector3(0, 1.8 + Math.random(), 0))
+    const pick = this.casings.find((x, i) => x.life <= 0 && (i % 3 === 2) === shell) ?? this.casings[shell ? 2 : 0]
+    const m = g.model.matrixWorld
+    const right = new THREE.Vector3(1, 0, 0).transformDirection(m)
+    const up = new THREE.Vector3(0, 1, 0).transformDirection(m)
+    const back = new THREE.Vector3(0, 0, 1).transformDirection(m)
+    g.port.getWorldPosition(pick.mesh.position)
+    pick.v.copy(right).multiplyScalar(1.5 + Math.random() * 0.9).addScaledVector(up, 1.1 + Math.random() * 0.8).addScaledVector(back, 0.3 + Math.random() * 0.5)
     pick.v.x += this.vel.x
     pick.v.z += this.vel.z
-    pick.spin.set(Math.random() * 20, Math.random() * 20, Math.random() * 20)
+    pick.spin.set(Math.random() * 24, Math.random() * 24, Math.random() * 24)
     pick.life = 4
     pick.bounced = 0
     pick.mesh.visible = true
@@ -1366,33 +1793,33 @@ export class LastTrainEngine {
     const bobAmt = this.onGround ? Math.min(1, Math.hypot(this.vel.x, this.vel.z) / WALK) : 0
     const aim = this.aim
     const hip = new THREE.Vector3(0.17, -0.165, -0.36)
-    const ads = new THREE.Vector3(0, g.def.id === 'rifle' ? -0.075 : g.def.id === 'pistol' ? -0.022 : -0.022, g.def.id === 'pistol' ? -0.3 : -0.26)
+    const ads = new THREE.Vector3(0, g.def.base === 'rifle' ? -0.075 : g.def.base === 'pistol' ? -0.022 : -0.022, g.def.base === 'pistol' ? -0.3 : -0.26)
     const p = hip.lerp(ads, aim)
     const breathe = Math.sin(t * 1.6) * 0.003 * (1 - aim)
     p.x += Math.cos(this.bob) * 0.012 * bobAmt * (1 - aim * 0.85) - this.vmSway.x
     p.y += -Math.abs(Math.sin(this.bob)) * 0.012 * bobAmt * (1 - aim * 0.85) + breathe + this.vmSway.y
     // recoil
     const kick = ease.out(this.kickT)
-    const kz = g.def.id === 'shotgun' ? 0.09 : g.def.id === 'rifle' ? 0.035 : 0.05
+    const kz = g.def.base === 'shotgun' ? 0.09 : g.def.base === 'rifle' ? 0.035 : 0.05
     p.z += kick * kz * (1 - aim * 0.5)
-    let rx = kick * (g.def.id === 'shotgun' ? 0.3 : 0.12)
+    let rx = kick * (g.def.base === 'shotgun' ? 0.3 : 0.12)
     let ry = 0
     let rz = 0
-    // reload and switch dips
+    // the left arm, the magazine, the slide: a reload, or the gun at rest
     const g2 = g.def
     if (this.reloadT > 0) {
-      const k = 1 - this.reloadT / g2.reload
-      const dip = Math.sin(clamp(k, 0, 1) * Math.PI)
-      p.y -= dip * 0.07
-      rx -= dip * 0.35
-      rz += dip * 0.4
-      if (g.moving && g2.id !== 'shotgun') g.moving.position.y = (g2.id === 'rifle' ? -0.09 : 0.012) - (g2.id === 'rifle' ? dip * 0.25 : 0)
-      if (g.moving && g2.id === 'pistol') g.moving.position.z = 0.04 + (k > 0.85 ? (1 - k) * 0.3 : 0)
-    } else if (g.moving) {
-      if (g2.id === 'rifle') g.moving.position.y = -0.09
-      if (g2.id === 'pistol') g.moving.position.z = 0.04 + kick * 0.035 // the slide cycles
-      if (g2.id === 'shotgun') g.moving.position.z = -0.25 + Math.sin(clamp(1 - this.cooldown / (60 / g2.rpm), 0, 1) * Math.PI) * 0.07 * (this.cooldown > 0 ? 1 : 0)
+      this.rs.prev = this.rs.clock
+      this.rs.clock += dt
+      poseReload(g, this.rs, this.pose, (e) => this.reloadEvent(e))
+    } else {
+      restGun(g, this.pose, kick, g2.base === 'shotgun' && this.cooldown > 0 ? 1 - this.cooldown / (60 / g2.rpm) : 0)
     }
+    p.x += this.pose.x
+    p.y += this.pose.y
+    p.z += this.pose.z
+    rx += this.pose.rx
+    ry += this.pose.ry
+    rz += this.pose.rz
     if (this.switchT > 0) {
       const k = this.switchT / 0.36
       const dip = Math.sin(k * Math.PI)
@@ -1417,20 +1844,34 @@ export class LastTrainEngine {
   private spawn() {
     const w = this.wave
     const roll = Math.random()
-    const kind: Kind = w >= 3 && roll < Math.min(0.22, 0.06 * (w - 2)) ? 'brute' : w >= 2 && roll > 1 - Math.min(0.45, 0.12 * w) ? 'runner' : 'walker'
+    const roll2 = Math.random()
+    const kind: Kind =
+      w >= 2 && roll2 < Math.min(0.16, 0.05 * (w - 1)) ? 'bloater'
+      : w >= 2 && roll2 > 1 - Math.min(0.16, 0.05 * (w - 1)) ? 'spitter'
+      : w >= 3 && roll < Math.min(0.22, 0.06 * (w - 2)) ? 'brute' : w >= 2 && roll > 1 - Math.min(0.45, 0.12 * w) ? 'runner' : 'walker'
     const z = this.makeZombie(kind)
     const scale = 1 + (w - 1) * 0.12
     z.maxHp = z.hp = KINDS[kind].hp * scale
     z.speed = KINDS[kind].speed * (1 + (w - 1) * 0.04) * (0.85 + Math.random() * 0.3)
     // nothing comes out of the tunnels while a train is still in the station
     const where = this.leaving >= 0 || this.train.group.visible ? 0 : Math.random()
-    if (where < 0.35) {
-      // down the stairs, the further one from the player first
-      const sx = STAIRS[Math.abs(this.pos.x - STAIRS[0]) > Math.abs(this.pos.x - STAIRS[1]) ? 0 : 1]
-      const x = Math.random() < 0.7 ? sx : STAIRS.find((s) => s !== sx)!
+    if (where < 0.22) {
+      // in through the shutter at the far end of a ticket hall, through its gates, down to the platform
+      const ex = this.station.exits[Math.floor(Math.random() * this.station.exits.length)]
+      z.state = 'chase'
+      z.root.position.copy(ex.hallSpawn)
+      z.root.position.z += (Math.random() - 0.5) * 2.4
+    } else if (where < 0.42) {
+      // out of the staff door on a landing and down the stairs: the stairway farther from the player first
+      const exits = this.station.exits
+      const far = exits.filter((e) => Math.hypot(this.pos.x - e.spawn.x, this.pos.z - e.spawn.z) > 7)
+      const pool = far.length ? far : exits
+      const ex = pool.reduce((a, b) => (Math.abs(a.x - this.pos.x) >= Math.abs(b.x - this.pos.x) ? a : b))
+      const pick = Math.random() < 0.7 ? ex : pool[Math.floor(Math.random() * pool.length)]
       z.state = 'stairs'
-      z.stairX = x + (Math.random() - 0.5) * 2.4
-      z.root.position.set(z.stairX, 3.8, 15.6)
+      z.stairX = pick.x + (Math.random() - 0.5) * 2.2
+      z.root.position.copy(pick.spawn)
+      z.root.position.x += (Math.random() - 0.5) * 0.3
     } else {
       // out of a tunnel, along the track, then up onto the platform
       const s = Math.random() < 0.5 ? -1 : 1
@@ -1545,11 +1986,12 @@ export class LastTrainEngine {
     shadow.rotation.x = -Math.PI / 2
     shadow.position.y = 0.01
     root.add(shadow)
+    this.dress(kind, body, meshes, mats, 1.75)
     for (const m of meshes) m.userData.zombie = z
     Object.assign(z, {
       kind, root, hips, spine, head: neck, arms, fores, thighs, shins, mats, eyes, meshes, shadow,
       hp: 100, maxHp: 100, speed: 1, state: 'chase', t: 0, phase: r() * 10, attack: 0, hitT: 0, flash: 0,
-      deadT: 0, fall: r() < 0.5 ? -1 : 1, groan: 1 + r() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points,
+      deadT: 0, fall: r() < 0.5 ? -1 : 1, groan: 1 + r() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2,
     })
     return z as Zombie
   }
@@ -1568,10 +2010,48 @@ export class LastTrainEngine {
       kind, model, root, hips: dummy(), spine: dummy(), head: dummy(), arms: [dummy(), dummy()], fores: [dummy(), dummy()],
       thighs: [dummy(), dummy()], shins: [dummy(), dummy()], mats: model.mats, eyes: [], meshes: model.meshes, shadow,
       hp: 100, maxHp: 100, speed: 1, state: 'chase', t: 0, phase: Math.random() * 10, attack: 0, hitT: 0, flash: 0,
-      deadT: 0, fall: 1, groan: 1 + Math.random() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points,
+      deadT: 0, fall: 1, groan: 1 + Math.random() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2,
     } as unknown as Zombie
+    const extra: THREE.Mesh[] = []
+    this.dress(kind, model.root, extra, model.mats, model.height)
+    model.meshes.push(...extra)
     for (const m of model.meshes) m.userData.zombie = z
     return z
+  }
+
+  /** The look of the special kinds: a bloater swollen and green with a glowing sac, a spitter thin and pale with an acid throat. */
+  private dress(kind: Kind, body: THREE.Object3D, meshes: THREE.Mesh[], mats: THREE.MeshStandardMaterial[], height: number) {
+    if (kind !== 'bloater' && kind !== 'spitter') return
+    const bloat = kind === 'bloater'
+    body.scale.x *= bloat ? 1.5 : 0.82
+    body.scale.z *= bloat ? 1.45 : 0.82
+    if (!bloat) body.scale.y *= 1.08
+    const tint = bloat ? new THREE.Color(0.7, 1.12, 0.5) : new THREE.Color(1.05, 0.88, 1.15)
+    for (const m of mats) if (!m.userData.glow) m.color.multiply(tint)
+    const glow = new THREE.MeshStandardMaterial({
+      color: bloat ? 0x6f8a1a : 0x7a2a8a, emissive: bloat ? 0x8aff2a : 0xd03aff, emissiveIntensity: bloat ? 1.2 : 1.6, roughness: 0.3, transparent: true, opacity: 0.9,
+    })
+    glow.userData.glow = true
+    mats.push(glow)
+    const h = height * KINDS[kind].scale
+    const sac = new THREE.Mesh(this.zGeo.head, glow)
+    if (bloat) {
+      // a swollen belly and growths on the back
+      sac.scale.set(2.4, 2.2, 2.0)
+      sac.position.set(0, h * 0.52, 0.2)
+      const lump = new THREE.Mesh(this.zGeo.head, glow)
+      lump.scale.set(1.3, 1.2, 1.1)
+      lump.position.set(0.15, h * 0.7, -0.2)
+      lump.userData.part = 'body'
+      body.parent ? body.parent.add(lump) : body.add(lump)
+      meshes.push(lump)
+    } else {
+      sac.scale.set(0.7, 0.9, 0.7)
+      sac.position.set(0, h * 0.84, 0.1)
+    }
+    sac.userData.part = 'body'
+    ;(body.parent ?? body).add(sac)
+    meshes.push(sac)
   }
 
   private removeZombie(z: Zombie) {
@@ -1582,6 +2062,13 @@ export class LastTrainEngine {
 
   private damage(z: Zombie, dmg: number, head: boolean, dir: THREE.Vector3, at: THREE.Vector3) {
     if (z.state === 'dead') return
+    if (z.crowd) {
+      // the crowd behind a gate shrugs it off: more of them keep coming
+      z.flash = 1
+      z.hitT = 0.25
+      this.emit(this.blood, at, dir.clone().multiplyScalar(-0.3).add(new THREE.Vector3(0, 0.4, 0)), 6, 2.0, 0.6)
+      return
+    }
     z.hp -= dmg
     z.flash = 1
     z.hitT = 0.25
@@ -1606,19 +2093,137 @@ export class LastTrainEngine {
       this.score += pts
       this.kills++
       this.refreshTargets()
+      if (z.kind === 'bloater') this.burst(z)
       if (Math.random() < (z.kind === 'brute' ? 0.9 : 0.28)) this.drop(z.root.position, Math.random() < 0.45 ? 'health' : 'ammo')
     }
+  }
+
+  /** A bloater bursts: acid all round, and everything near it (the player, other zombies) is hurt. */
+  private burst(z: Zombie) {
+    const at = z.root.position.clone()
+    at.y += 1.0
+    z.root.visible = false
+    z.deadT = 7.4
+    const wat = at.clone().add(this.world.position)
+    this.emit(this.acid, wat, new THREE.Vector3(0, 1, 0), 90, 4.5, 1.2)
+    this.emit(this.blood, wat, new THREE.Vector3(0, 0.6, 0), 40, 3.5, 1.0)
+    const d = Math.hypot(this.pos.x - wat.x, this.pos.y + 1 - wat.y, this.pos.z - wat.z)
+    if (d < BURST.r && this.stage !== 'dying' && this.stage !== 'escaped') this.hurt(5 + BURST.dmg * (1 - d / BURST.r))
+    this.shake = Math.max(this.shake, clamp(0.09 - d * 0.006, 0.02, 0.09))
+    sfx('burst', () => {
+      noise({ dur: 0.5, freq: 380, to: 90, filter: 'lowpass', vol: 0.35 * clamp(1 - d / 30, 0.15, 1) })
+      tone({ freq: 90, to: 40, dur: 0.4, type: 'sine', vol: 0.18 * clamp(1 - d / 30, 0.1, 1) })
+    }, 0.05)
+    for (const o of this.zombies) {
+      if (o === z || o.state === 'dead') continue
+      const od = o.root.position.distanceTo(z.root.position)
+      if (od > BURST.r) continue
+      const dir = o.root.position.clone().sub(z.root.position).setY(0).normalize()
+      this.damage(o, 40 + 260 * (1 - od / BURST.r), false, dir, o.root.position.clone().add(new THREE.Vector3(0, 1.1, 0)).add(this.world.position))
+    }
+  }
+
+  /** A spitter's glob of acid, lobbed at the player's chest. */
+  private spitGlob(z: Zombie) {
+    const from = z.root.position.clone()
+    from.y += (z.model ? z.model.height : 1.75) * KINDS.spitter.scale * 0.85
+    const to = new THREE.Vector3(this.pos.x - this.world.position.x, this.pos.y + 1.1, this.pos.z)
+    // lead a little where the player is going
+    to.addScaledVector(new THREE.Vector3(this.vel.x, 0, this.vel.z), 0.35)
+    const T = clamp(from.distanceTo(to) / 11, 0.45, 1.3)
+    const v = to.sub(from).divideScalar(T)
+    v.y += 0.5 * 9.8 * T
+    const mesh = new THREE.Mesh(this.globGeo, this.globMat)
+    mesh.position.copy(from)
+    this.world.add(mesh)
+    this.globs.push({ mesh, v, life: 0 })
+    z.t = 0
+    z.attack = 0.6
+    sfx('spit', () => noise({ dur: 0.22, freq: 900, to: 300, filter: 'bandpass', q: 2, vol: 0.12 }), 0.1)
+  }
+
+  private updateGlobs(dt: number) {
+    for (const g of this.globs) {
+      g.life += dt
+      g.v.y -= 9.8 * dt
+      g.mesh.position.addScaledVector(g.v, dt)
+      g.mesh.scale.setScalar(1 + Math.sin(g.life * 30) * 0.12)
+      const p = g.mesh.position
+      const wp = p.clone().add(this.world.position)
+      const hitPlayer = Math.hypot(this.pos.x - wp.x, this.pos.y + 1.1 - wp.y, this.pos.z - wp.z) < 0.75
+      if (hitPlayer && this.stage !== 'dying' && this.stage !== 'escaped') {
+        this.hurt(12 + this.wave * 0.8)
+        this.say('Acid!', '', 0.8)
+      }
+      if (hitPlayer || p.y < this.groundAt(p.x, p.z) || g.life > 3) {
+        this.emit(this.acid, wp, new THREE.Vector3(0, 1, 0), 18, 1.6, 0.6)
+        g.mesh.removeFromParent()
+        g.life = -1
+      }
+    }
+    this.globs = this.globs.filter((g) => g.life >= 0)
   }
 
   private groan(z: Zombie) {
     const d = z.root.position.clone().add(this.world.position).distanceTo(this.pos)
     const vol = clamp(1 - d / 28, 0, 1)
     if (vol <= 0.02) return
-    const base = z.kind === 'brute' ? 70 : z.kind === 'runner' ? 150 : 100
+    const base = z.kind === 'brute' ? 70 : z.kind === 'bloater' ? 55 : z.kind === 'spitter' ? 190 : z.kind === 'runner' ? 150 : 100
     sfx('groan', () => {
       tone({ freq: base * (0.9 + Math.random() * 0.3), to: base * 0.7, dur: 0.7 + Math.random() * 0.6, type: 'sawtooth', vol: 0.05 * vol })
       noise({ dur: 0.6, freq: 500, filter: 'bandpass', q: 3, vol: 0.04 * vol })
     }, 0.4)
+  }
+
+  /**
+   * Where a zombie at p heads to reach the player: straight at them when they share a space,
+   * else the next doorway on the way (platform ⇄ stairs ⇄ staff door ⇄ flight ⇄ hall ⇄ the wide ticket gate).
+   */
+  private route(p: THREE.Vector3): [number, number] {
+    const H = HALL
+    const lane = H.laneZ
+    // cells: 0 platform and stairs, 1 the flight, 2 the hall this side of the gates, 3 beyond them
+    const cell = (x: number, z: number): [number, number] => {
+      const h = hallAt(x, z)
+      if (!h || h.u < 0.05) return [0, STAIRS.reduce((a, b) => (Math.abs(a - x) < Math.abs(b - x) ? a : b))]
+      return [h.u < H.flightU1 ? 1 : h.u < H.gatesU ? 2 : 3, h.sx]
+    }
+    const X = (sx: number, u: number) => sx - 2 - u
+    const [zc, zsx] = cell(p.x, p.z)
+    const [pc, psx] = cell(this.pos.x, this.pos.z)
+    if (zc === pc && (zc === 0 || zsx === psx)) return [this.pos.x, this.pos.z]
+    // the cell to go to next, and through which hall
+    const sx = zc === 0 ? psx : zsx
+    const want = zc !== 0 && (pc === 0 || psx !== zsx) ? zc - 1 : zc + 1
+    const lz = (z: number) => clamp(z, lane - 0.4, lane + 0.4)
+    if (zc === 0) {
+      // up the stairs to the staff door
+      if (Math.abs(p.x - sx) > STAIR.halfW - 0.2 || p.z < STAIR.z0 + 0.3) return [sx, STAIR.z0 + 1]
+      if (p.z < LANDING.z0 - 0.2) return [sx - 0.8, LANDING.z0 + 0.4]
+      // line up with the doorway, then go through it
+      const lined = Math.abs(p.z - lane) < 0.36 && p.x < X(sx, -0.9)
+      return lined || p.x < X(sx, -0.3) ? [X(sx, 1.2), lane] : [X(sx, -0.6), lane]
+    }
+    const u = sx - 2 - p.x
+    // the portal between this cell and the wanted one, and a point just past it
+    const portal = Math.max(zc, want) === 1 ? 0 : Math.max(zc, want) === 2 ? H.flightU1 : H.gatesU
+    const dir = want > zc ? 1 : -1
+    const before = portal - dir * (portal === H.gatesU ? 1.0 : 0.6)
+    if (Math.abs(u - before) < 0.5 || (dir > 0 ? u > before : u < before)) return [X(sx, portal + dir * 1.2), lz(p.z)]
+    return [X(sx, before), lane]
+  }
+
+  /** Keep a zombie (radius r) on the floor it walks: the platform, the stairs, a hall. */
+  private navClamp(p: THREE.Vector3) {
+    const h = hallAt(p.x, p.z)
+    if (h && h.u > 0.05) {
+      const rects = hallRects(h.sx, 0.35)
+      const [nx, nz] = this.free(p.x, p.z, rects) ? [p.x, p.z] : this.nearestFree(p.x, p.z, rects)
+      p.x = nx
+      p.z = nz
+      return true
+    }
+    return false
   }
 
   private updateZombies(dt: number) {
@@ -1660,6 +2265,14 @@ export class LastTrainEngine {
       const dx = player.x - p.x
       const dz = player.z - p.z
       const dist = Math.hypot(dx, dz)
+      if (z.state === 'wait') {
+        // staring, swaying a little
+        let dy = Math.atan2(dx, dz) - z.root.rotation.y
+        dy = Math.atan2(Math.sin(dy), Math.cos(dy))
+        z.root.rotation.y += dy * Math.min(1, dt * 6)
+        this.animateZombie(z, dt, 0, dist)
+        continue
+      }
       z.groan -= dt
       if (z.groan <= 0) {
         z.groan = 2.5 + Math.random() * 4
@@ -1693,16 +2306,20 @@ export class LastTrainEngine {
         speed = 0
         if (z.t < 0.05 && Math.random() < 0.5) this.groan(z)
       } else if (z.state === 'stairs') {
+        const sx = STAIRS.reduce((a, b) => (Math.abs(a - p.x) < Math.abs(b - p.x) ? a : b))
         move.set((z.stairX - p.x) * 0.5, 0, -1)
         face = Math.PI
-        p.y = clamp(((p.z - 10.1) / 5.7) * 3.8, 0, 3.8)
+        p.x = clamp(p.x, sx - 1.55, sx + 1.55)
+        p.y = stairSlope(p.z)
         if (p.z <= 9.7) {
           z.state = 'chase'
           p.y = 0
         }
       } else {
-        // chase, keeping apart from the others and out of the pillars
-        move.set(dx, 0, dz).normalize()
+        // chase (through the halls if need be), keeping apart from the others and out of the pillars
+        const [tx0, tz0] = this.route(p)
+        move.set(tx0 - p.x, 0, tz0 - p.z).normalize()
+        if (Math.hypot(tx0 - this.pos.x, tz0 - this.pos.z) > 0.01) face = Math.atan2(move.x, move.z)
         for (const o of this.zombies) {
           if (o === z || o.state === 'dead') continue
           const ox = p.x - o.root.position.x
@@ -1710,7 +2327,7 @@ export class LastTrainEngine {
           const d = Math.hypot(ox, oz)
           if (d < 0.9 && d > 1e-3) move.add(new THREE.Vector3(ox / d, 0, oz / d).multiplyScalar((0.9 - d) * 2))
         }
-        for (const pl of PILLARS) {
+        for (const pl of this.station.pillars) {
           const ox = p.x - pl.x
           const oz = p.z - pl.z
           const d = Math.hypot(ox, oz)
@@ -1723,15 +2340,33 @@ export class LastTrainEngine {
           }
         }
         if (dist < 1.05 * KINDS[z.kind].scale) speed = 0
+        const sameSpace = Math.hypot(tx0 - player.x, tz0 - player.z) < 0.01 && Math.abs(p.y - player.y) < 2.5
+        if (z.kind === 'bloater' && sameSpace && dist < 1.5 && this.stage !== 'dying' && this.stage !== 'escaped') {
+          // it reaches you and bursts
+          z.points = 0
+          this.damage(z, 1e6, false, new THREE.Vector3(0, 0, 1), p.clone())
+          continue
+        }
+        if (z.kind === 'spitter' && sameSpace && dist < 13) {
+          // hang back and spit
+          if (dist < 6) move.multiplyScalar(-0.6)
+          else if (dist < 9) speed = 0
+          face = Math.atan2(dx, dz)
+          z.spit -= dt
+          if (z.spit <= 0 && dist > 3 && this.stage !== 'dying' && this.stage !== 'escaped') {
+            z.spit = 2.2 + Math.random() * 1.6
+            this.spitGlob(z)
+          }
+        }
         // attack
         z.attack -= dt
-        if (dist < 1.25 * KINDS[z.kind].scale && z.attack <= 0 && this.stage !== 'dying') {
+        if (dist < 1.25 * KINDS[z.kind].scale && Math.abs(p.y - player.y) < 1.4 && z.attack <= 0 && this.stage !== 'dying' && this.stage !== 'escaped') {
           z.attack = z.kind === 'runner' ? 0.75 : 1.15
           z.t = 0
           window.setTimeout(() => {
             if (z.state === 'dead') return
             const d2 = Math.hypot(this.pos.x - z.root.position.x, this.pos.z - z.root.position.z)
-            if (d2 < 1.5 * KINDS[z.kind].scale) this.hurt(KINDS[z.kind].dmg * (1 + (this.wave - 1) * 0.06))
+            if (d2 < 1.5 * KINDS[z.kind].scale && Math.abs(this.pos.y - z.root.position.y) < 1.4) this.hurt(KINDS[z.kind].dmg * (1 + (this.wave - 1) * 0.06))
           }, 280)
           sfx('swipe', () => noise({ dur: 0.18, freq: 1200, to: 400, filter: 'bandpass', vol: 0.08 }), 0.1)
         }
@@ -1741,10 +2376,20 @@ export class LastTrainEngine {
         move.normalize().multiplyScalar(speed * dt)
         p.add(move)
       }
-      if (z.state === 'chase') {
+      if (z.state === 'chase' && this.navClamp(p)) {
+        const h = hallAt(p.x, p.z)!
+        p.y += (hallY(h.u, true) - p.y) * Math.min(1, dt * 10)
+        this.pushBlocks(p, 0.38)
+      } else if (z.state === 'chase') {
+        // the platform, and the stairways that open off it
+        const sx = STAIRS.find((x) => Math.abs(p.x - x) < (p.z > PLATFORM.z1 + 0.5 ? STAIR.halfW + 0.4 : STAIR.halfW - 0.25))
         p.x = clamp(p.x, PLATFORM.x0, PLATFORM.x1)
-        p.z = clamp(p.z, PLATFORM.z0, PLATFORM.z1)
-        for (const pl of PILLARS) {
+        p.z = clamp(p.z, PLATFORM.z0, sx !== undefined ? LANDING.gateZ - 0.9 : PLATFORM.z1)
+        const atDoor = sx !== undefined && Math.abs(p.z - HALL.laneZ) < 0.4 && p.z > LANDING.z0
+        if (sx !== undefined && p.z > PLATFORM.z1) p.x = clamp(p.x, sx - STAIR.halfW + (atDoor ? -0.3 : 0.35), sx + STAIR.halfW - 0.35)
+        const floorY = sx !== undefined && p.z > STAIR.z0 - 0.2 ? stairSlope(p.z) : 0
+        p.y += (floorY - p.y) * Math.min(1, dt * 10)
+        for (const pl of this.station.pillars) {
           const ox = p.x - pl.x
           const oz = p.z - pl.z
           const d = Math.hypot(ox, oz)
@@ -1753,6 +2398,7 @@ export class LastTrainEngine {
             p.z = pl.z + (oz / d) * (pl.r + 0.25)
           }
         }
+        this.pushBlocks(p, 0.38)
       }
       // turn towards where it goes
       let dy = face - z.root.rotation.y
@@ -1763,6 +2409,109 @@ export class LastTrainEngine {
       z.shadow.visible = z.state === 'chase' || z.state === 'track'
     }
     if (removed) this.zombies = this.zombies.filter((z) => z.root.parent)
+  }
+
+  // ---------------------------------------------------------------- the gates at the top of the stairs
+
+  /** The gates: shut (and shaken by the crowd behind them) or, in the last station once its wave is cleared, open. */
+  private updateGates(dt: number) {
+    const exits = this.station.exits
+    const t = performance.now() * 0.001
+    const want = this.station.final && (this.stage === 'exit' || this.stage === 'escaped') ? 1 : 0
+    if (this.exitOpen !== want) {
+      this.exitOpen = clamp(this.exitOpen + Math.sign(want - this.exitOpen) * (dt / 2.6), 0, 1)
+      for (const e of exits) e.setOpen(this.exitOpen)
+      this.rumble(dt, 0.35, 12)
+    }
+    const alive = this.zombies.filter((z) => z.state !== 'dead').length
+    // the last station: the crowd thins as the wave comes down the stairs, and the street is empty at the end
+    const left = this.station.final ? (this.stage === 'fight' ? clamp((this.toSpawn + alive) / Math.max(1, this.waveTotal), 0, 1) : this.stage === 'dying' ? 1 : 0) : 1
+    let retarget = false
+    for (const [i, e] of exits.entries()) {
+      const gx = Math.abs(this.pos.x - e.x)
+      const dGate = Math.hypot(gx, this.pos.z - LANDING.gateZ)
+      const near = dGate < 26 && this.exitOpen < 1
+      if (near !== this.crowdNear[i]) {
+        this.crowdNear[i] = near
+        retarget = true
+      }
+      const members = this.crowd.filter((c) => c.exit === i)
+      const showing = Math.ceil(members.length * left)
+      for (const c of members) {
+        const vis = c.rank < showing && (this.exitOpen < 0.5 || !this.station.final)
+        if (c.z.root.visible !== vis) {
+          c.z.root.visible = vis
+          retarget = true
+        }
+      }
+      const upstairs = this.pos.y > 2.5 && this.pos.y < HALL.y - 0.5 && gx < 1.95 && this.pos.z > LANDING.gateZ - 5
+      // the player on the landing, up against the bars: they reach through
+      if (upstairs && this.exitOpen < 0.5) {
+        if (!this.gateTold && this.pos.z > LANDING.gateZ - 4) {
+          this.gateTold = true
+          this.say('The gate is chained shut', this.station.final ? 'The street is swarming — clear the station first' : 'The street is full of them — only the last station is open', 5)
+        }
+        if (this.pos.z > LANDING.gateZ - 1.2 && this.stage !== 'dying') {
+          this.gateHurtT -= dt
+          if (this.gateHurtT <= 0) {
+            this.gateHurtT = 0.9
+            this.hurt(5 + this.wave * 0.6)
+            this.shake = Math.max(this.shake, 0.03)
+            sfx('claw', () => noise({ dur: 0.2, freq: 1500, to: 500, filter: 'bandpass', q: 1.2, vol: 0.14 }), 0.1)
+          }
+        }
+      }
+      if (near && this.exitOpen < 0.05) {
+        const amt = upstairs ? 0.012 : 0.0025
+        e.gate.position.x = e.x + Math.sin(t * 41 + i) * amt
+        e.gate.position.z = LANDING.gateZ + Math.sin(t * 53 + i * 2) * amt * 0.7
+        this.clangT -= dt / Math.max(1, exits.length)
+        if (upstairs && this.clangT <= 0) {
+          this.clangT = 0.5 + Math.random() * 0.9
+          sfx('clang', () => {
+            tone({ freq: 190 + Math.random() * 60, to: 120, dur: 0.22, type: 'square', vol: 0.06 })
+            noise({ dur: 0.1, freq: 3200, filter: 'bandpass', q: 3, vol: 0.07 })
+          }, 0.2)
+        }
+        for (const c of members) if (near && c.z.root.visible) this.animateCrowd(c.z, c.base, dt, t, upstairs)
+      } else if (this.exitOpen >= 0.05) {
+        e.gate.position.x = e.x
+        e.gate.position.z = LANDING.gateZ
+      }
+    }
+    // the red lamps of the ticket halls stutter
+    for (const e of exits) e.hallLight.intensity = Math.sin(t * 7.3 + e.x) > 0.93 ? 1 : 7 + Math.sin(t * 2.1 + e.x) * 1.5
+    if (retarget) this.refreshTargets()
+  }
+
+  /** One of the crowd: shoves against the bars, reaches through them now and then. */
+  private animateCrowd(z: Zombie, base: THREE.Vector3, dt: number, t: number, agitated: boolean) {
+    z.t += dt
+    z.flash = Math.max(0, z.flash - dt * 6)
+    for (const m of z.mats) if (!m.userData.glow) m.emissive.setRGB(z.flash * 0.5, 0, 0)
+    z.root.position.z = base.z + Math.sin(t * (1.5 + (z.phase % 1)) + z.phase) * 0.05 - (agitated ? 0.1 : 0)
+    z.root.position.x = base.x + Math.sin(t * 1.1 + z.phase * 1.7) * 0.03
+    if (z.model) {
+      const m = z.model
+      if (z.t >= z.next) {
+        z.next = z.t + (agitated ? 0.6 : 1.3) + Math.random() * (agitated ? 0.9 : 2.6)
+        z.attack = 0.9
+        m.play('attack', 0.8)
+      } else {
+        z.attack -= dt
+        if (z.attack <= 0 && m.current === 'attack') m.play('idle')
+        else if (z.hitT > 0.15) m.play('hit', 0.3)
+      }
+      z.hitT = Math.max(0, z.hitT - dt)
+      m.mixer.update(dt)
+    } else {
+      // a cycle of reaching arms
+      const t0 = z.t
+      z.t = (t + z.phase) % (agitated ? 1.2 : 2.2)
+      z.attack = 1
+      this.animateZombie(z, dt, 0, 1)
+      z.t = t0
+    }
   }
 
   private animateZombie(z: Zombie, dt: number, speed: number, dist: number) {
@@ -1830,25 +2579,26 @@ export class LastTrainEngine {
       s.scale.set(0.37, 0.04, 0.245)
       g.add(s)
     }
-    g.position.set(at.x, 0.35, at.z)
+    const y0 = at.y + 0.35
+    g.position.set(at.x, y0, at.z)
     if (g.position.z < PLATFORM.z0) g.position.z = PLATFORM.z0 + 0.2
     this.station.litter.add(g)
-    this.pickups.push({ mesh: g, kind, t: 0 })
+    this.pickups.push({ mesh: g, kind, t: 0, y0 })
   }
 
   private updatePickups(dt: number) {
     for (const p of this.pickups) {
       p.t += dt
       p.mesh.rotation.y += dt * 1.6
-      p.mesh.position.y = 0.35 + Math.sin(p.t * 3) * 0.06
+      p.mesh.position.y = p.y0 + Math.sin(p.t * 3) * 0.06
       const d = Math.hypot(p.mesh.position.x + this.world.position.x - this.pos.x, p.mesh.position.z - this.pos.z)
-      if (d < 1.1 && this.stage !== 'dying') {
+      if (d < 1.1 && Math.abs(p.y0 - 0.35 - this.pos.y) < 1.2 && this.stage !== 'dying') {
         if (p.kind === 'health') {
           if (this.health >= 100) continue
           this.health = Math.min(100, this.health + 35)
           this.say('+35 health', '', 1.2)
         } else {
-          for (const g of this.guns) if (g.reserve >= 0) g.reserve += g.def.id === 'shotgun' ? 8 : 45
+          for (const g of this.guns) if (g.reserve >= 0) g.reserve += g.def.base === 'shotgun' ? 8 : Math.max(6, Math.round(g.def.mag * 1.5))
           this.say('Ammo', '', 1.2)
         }
         sfx('pickup', () => {
@@ -1865,7 +2615,7 @@ export class LastTrainEngine {
   // ---------------------------------------------------------------- effects
 
   private updateEffects(dt: number) {
-    for (const sys of [this.sparks, this.blood]) {
+    for (const sys of [this.sparks, this.blood, this.acid]) {
       const arr = sys.points.geometry.attributes.position as THREE.BufferAttribute
       sys.list.forEach((p, i) => {
         if (p.life > 0) {
@@ -1873,8 +2623,9 @@ export class LastTrainEngine {
           p.v.y -= 9.8 * dt
           p.v.multiplyScalar(1 - dt * 1.5)
           p.p.addScaledVector(p.v, dt)
-          if (p.p.y < 0.01 && p.p.z > 0) {
-            p.p.y = 0.01
+          const gy = p.p.z > 0 ? this.groundAt(p.p.x - this.world.position.x, p.p.z) + 0.01 : -99
+          if (p.p.y < gy) {
+            p.p.y = gy
             p.v.set(0, 0, 0)
           }
           arr.setXYZ(i, p.p.x, p.p.y, p.p.z)
@@ -1904,7 +2655,7 @@ export class LastTrainEngine {
       c.mesh.rotation.x += c.spin.x * dt
       c.mesh.rotation.y += c.spin.y * dt
       c.mesh.rotation.z += c.spin.z * dt
-      const floor = c.mesh.position.z < 0 && !this.inCar() ? TRACK_Y : 0.006
+      const floor = c.mesh.position.z < 0 && !this.inCar() ? TRACK_Y : this.groundAt(c.mesh.position.x, c.mesh.position.z) + 0.006
       if (c.mesh.position.y < floor) {
         c.mesh.position.y = floor
         if (c.v.y < -0.8 && c.bounced < 3) {
@@ -1923,12 +2674,48 @@ export class LastTrainEngine {
       }
       if (c.life <= 0) c.mesh.visible = false
     }
+    // magazines that fell out of the gun
+    for (const d of this.magDrops) {
+      if (d.life <= 0) continue
+      d.life -= dt
+      d.t += dt
+      d.v.y -= 9.8 * dt
+      d.mesh.position.addScaledVector(d.v, dt)
+      d.mesh.rotation.x += d.spin.x * dt
+      d.mesh.rotation.y += d.spin.y * dt
+      d.mesh.rotation.z += d.spin.z * dt
+      // from the size it had in the hand to its real size, as it falls away from the eye
+      d.mesh.scale.setScalar(THREE.MathUtils.lerp(this.vm.scale.x, 1, clamp(d.t * 4, 0, 1)))
+      const p = d.mesh.position
+      const floor = (p.z < 0 && !this.inCar() ? TRACK_Y : this.groundAt(p.x, p.z)) + 0.05
+      if (p.y < floor) {
+        p.y = floor
+        if (d.v.y < -0.8 && d.bounced < 3) {
+          d.bounced++
+          sfx('magdrop', () => {
+            noise({ dur: 0.06, freq: 1600, filter: 'bandpass', q: 1.5, vol: 0.1 })
+            tone({ freq: 220, to: 110, dur: 0.07, type: 'triangle', vol: 0.08 })
+          }, 0.08)
+        }
+        d.v.y = Math.abs(d.v.y) * 0.3
+        d.v.x *= 0.45
+        d.v.z *= 0.45
+        d.spin.multiplyScalar(0.4)
+        if (Math.abs(d.v.y) < 0.3) {
+          d.v.set(0, 0, 0)
+          d.spin.set(0, 0, 0)
+        }
+      }
+      if (d.life <= 0) d.mesh.visible = false
+    }
     // the dust drifts
     const dp = this.dust.geometry.attributes.position as THREE.BufferAttribute
     const now = performance.now() * 0.001
     for (let i = 0; i < dp.count; i += 7) {
       dp.setY(i, (dp.getY(i) + dt * 0.03) % 4.3)
-      dp.setX(i, dp.getX(i) + Math.sin(now + i) * dt * 0.05)
+      let x = dp.getX(i) + Math.sin(now + i) * dt * 0.05 + this.windSpeed * dt * 0.35
+      if (x > 40) x -= 80
+      dp.setX(i, x)
     }
     dp.needsUpdate = true
   }
@@ -1937,12 +2724,14 @@ export class LastTrainEngine {
     const f = this.station.flicker
     const t = performance.now() * 0.001
     const on = Math.sin(t * 13) + Math.sin(t * 7.3) + Math.sin(t * 2.1) > 0.4 || Math.sin(t * 0.7) > 0.6
-    f.mat.emissiveIntensity = on ? 3.2 : 0.15
-    f.light.intensity = on ? 14 : 5
+    f.mat.emissiveIntensity = on ? f.matOn : 0.15
+    f.light.intensity = on ? f.lightOn : f.lightOn * 0.36
     // the next-train board
-    let l1 = `1  ${stationAt(this.stationIndex + 1).name}`
-    let l2 = 'Service suspended'
-    if (this.stage === 'cleared') l2 = 'Approaching'
+    const last = this.station.final
+    let l1 = last ? 'Terminus  Street level' : `1  ${stationAt(this.stationIndex + 1).name}`
+    let l2 = last ? 'Gate locked' : 'Service suspended'
+    if (this.stage === 'exit' || this.stage === 'escaped') l2 = 'Gate open: climb'
+    else if (this.stage === 'cleared') l2 = 'Approaching'
     else if (this.stage === 'trainIn') l2 = 'Arriving'
     else if (this.stage === 'board' || this.stage === 'alight') l2 = 'Stand clear of doors'
     else if (this.stage === 'fight') l2 = `${Math.max(1, this.toSpawn + this.zombies.length)} on the line`
@@ -1962,7 +2751,7 @@ export class LastTrainEngine {
       const h = this.renderer.domElement.clientHeight
       const gap = 4 + (Math.tan(this.currentSpread()) / tan) * (h / 2)
       ch.style.setProperty('--gap', `${gap.toFixed(1)}px`)
-      ch.style.opacity = String(this.sprinting || this.stage === 'dying' ? 0 : 1 - this.aim * (this.gun.def.id === 'shotgun' ? 0.3 : 0.9))
+      ch.style.opacity = String(this.sprinting || this.stage === 'dying' ? 0 : 1 - this.aim * (this.gun.def.base === 'shotgun' ? 0.3 : 0.9))
     }
     if (this.hud.hit) this.hud.hit.style.opacity = String(this.hitT > 0 ? 1 : 0)
     if (this.hud.hurt) {
