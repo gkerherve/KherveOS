@@ -645,6 +645,8 @@ export interface CarModel {
   setCompound(c: Compound): void
   /** Show what is broken: wings that droop, hang crooked or are gone, a wheel bent by the suspension. */
   setDamage(d: Damage): void
+  /** The cockpit camera is in this car: hide what it draws itself (the wheel, the driver). */
+  setCockpit?(on: boolean): void
   dispose(): void
 }
 

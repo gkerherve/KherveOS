@@ -41,12 +41,12 @@ export interface CarSpec {
 const SPECS: Record<Series, CarSpec> = {
   // a modern single-seater: light, huge downforce, a hybrid V6
   modern: {
-    mass: 800, iz: 1150, a: 1.72, b: 1.88, power: 760e3, cda: 1.25, cla: 3.6, rho: 1.2, mu: 1.75, aeroFront: 0.44, wheelR: 0.36, roll: 0.014,
+    mass: 800, iz: 1150, a: 1.72, b: 1.88, power: 760e3, cda: 1.25, cla: 4.3, rho: 1.2, mu: 2.05, aeroFront: 0.51, wheelR: 0.36, roll: 0.014,
     gears: [86, 128, 164, 199, 234, 268, 302, 340], idle: 4200, redline: 12400, top: 96, lock: 0.46,
   },
   // a late-1960s / early-70s sports coupé: heavier, almost no downforce, skinny tyres, a five-speed box
   classic: {
-    mass: 1020, iz: 1450, a: 1.32, b: 1.0, power: 235e3, cda: 0.72, cla: 0.12, rho: 1.2, mu: 1.12, aeroFront: 0.45, wheelR: 0.31, roll: 0.015,
+    mass: 1020, iz: 1450, a: 1.32, b: 1.0, power: 235e3, cda: 0.72, cla: 0.12, rho: 1.2, mu: 1.5, aeroFront: 0.45, wheelR: 0.31, roll: 0.015,
     gears: [72, 118, 165, 212, 262], idle: 2600, redline: 7900, top: 76, lock: 0.52,
   },
 }
@@ -63,7 +63,7 @@ export function setSeries(s: Series) {
 }
 
 /** The front wheels' full lock at a speed (m/s): it shrinks gently as the car goes faster. */
-export const steerLock = (v: number) => CAR.lock / (1 + Math.abs(v) / 36)
+export const steerLock = (v: number) => CAR.lock / (1 + Math.abs(v) / 50)
 
 /** Gear and revs at a speed (m/s), for the sound and the dials. */
 export function gearRpm(speed: number, gear: number): { gear: number; rpm: number } {
@@ -261,7 +261,10 @@ export class CarBody {
     // the steering wheel: limited at speed (a keyboard is all or nothing), turned at a finite rate
     // quick and direct: the lock shrinks only gently with speed, and opens up in a drift to catch the slide
     const v = Math.abs(this.vx)
-    const lock = steerLock(v) * (1 + this.drift * 0.35)
+    // a keyboard steers all or nothing: full key gives the angle that turns hardest at this speed
+    // (the turn the grip allows, plus the tyre's best slip angle), full lock at walking pace
+    const best = ((CAR.a + CAR.b) * latLimit(v, env.grip)) / Math.max(v * v, 1) + 0.12
+    const lock = (env.analog ? steerLock(v) : Math.min(CAR.lock, best * 1.12)) * (1 + this.drift * 0.35)
     const target = inp.steer * lock
     if (env.analog) this.steer = target
     else {

@@ -30,7 +30,8 @@ function drive(s: Session, t: Track, v: Float32Array, pace: number) {
   s.input = {
     throttle: s.phase === 'lights' ? 0 : err > 0 ? Math.min(1, err * 0.5) : 0,
     brake,
-    steer: Math.max(-max, Math.min(max, Math.atan((7.2 * Math.sin(a)) / look) / lock)),
+    // pure pursuit, a pull back towards the racing line when the car is off it, and some damping of the yaw
+    steer: Math.max(-max, Math.min(max, (Math.atan((7.2 * Math.sin(a)) / look) - 0.015 * (q.d - sampleAt(t, t.line, q.s)) - 0.03 * (b.r - (b.vx * Math.tan(b.steer)) / 3.6)) / lock)),
     analog: true,
   }
 }

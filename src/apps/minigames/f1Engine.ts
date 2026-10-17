@@ -8,7 +8,9 @@
 
 import * as THREE from 'three'
 import { buildTrack, inRange, locate, pointAt, trackDef, wrap, type Track, type TrackId } from './f1Track.ts'
-import { COMPOUNDS, newTyres, SERIES, speedProfile, tyreGrip, type Compound, type Series } from './f1Physics.ts'
+import { CAR, COMPOUNDS, newTyres, SERIES, speedProfile, steerLock, tyreGrip, type Compound, type Series } from './f1Physics.ts'
+import { Cockpit } from './f1Cockpit.ts'
+import { CarAudio } from './f1Audio.ts'
 import { DIFFICULTY, Session, TEAMS, fmtLap, setRaceSeries, type Classified, type ClassicModel, type Difficulty, type RaceCar, type SessionEvent } from './f1Race.ts'
 import { buildClassic, classicCams } from './f1Classics.ts'
 import { buildCar, buildCarGeometry, sharedMaterials, teamLook, type CarGeometry, type CarModel, type Shared, type TeamLook } from './f1Models.ts'
@@ -163,8 +165,7 @@ export class GrandPrixEngine {
   private sparks: { s: THREE.Sprite; life: number; v: THREE.Vector3 }[] = []
   private sparkMat: THREE.SpriteMaterial
   private lastLights = 0
-  private audio: EngineAudio | null = null
-  private prevGear = 1
+  private audio: CarAudio | null = null
   private lastHit = 0
   private bodyPitch = new Map<number, { p: number; r: number; v: number }>()
 
@@ -239,7 +240,12 @@ export class GrandPrixEngine {
       this.models.push(m)
       this.scene.add(m.root)
     }
+    // the driver's view of their own cockpit, for the cockpit camera
+    this.cockpit?.dispose()
+    this.cockpit = new Cockpit(SERIES, TEAMS[0].color, TEAMS[0].color2)
   }
+
+  private cockpit: Cockpit | null = null
 
   /** Switch between the modern single-seaters and the classic coupés (the player's team races `model`). */
   setSeries(series: Series, model: ClassicModel = this.settings.classic) {
@@ -487,12 +493,48 @@ export class GrandPrixEngine {
         }
       }
     }
+    // the cockpit layer: only in the cockpit camera, with the live wheel, pedals, gear, revs and speed
+    const inside = !!live && this.cam === 'cockpit' && s.player.pit !== 'garage'
+    this.inside = inside
+    if (this.cockpit) {
+      if (inside) {
+        const b = s.body
+        this.cockpit.update(dt, {
+          steer: Math.max(-1.3, Math.min(1.3, b.steer / Math.max(0.01, steerLock(b.vx)))),
+          throttle: s.input.throttle, brake: s.input.brake, gear: s.player.gear, gears: CAR.gears.length,
+          rpm: s.player.rpm, idle: CAR.idle, redline: CAR.redline, speed: s.player.speed * 3.6,
+        })
+      }
+    }
+    this.models[0]?.setCockpit?.(inside)
     this.sound(s, !!live, dt)
     this.render()
   }
 
+  /** How far the cockpit view looks down: a coupé driver glances into the footwell. */
+  private cockpitPitch() {
+    return SERIES === 'classic' ? 0.23 : 0.07
+  }
+
+  /** The cockpit camera is on: the cockpit scene is drawn after the world. */
+  private inside = false
+
   private render() {
-    this.renderer.render(this.scene, this.camera)
+    if (!this.inside || !this.cockpit || !this.world) {
+      this.renderer.render(this.scene, this.camera)
+      return
+    }
+    // the world, then (depth cleared) the cockpit, lit by the same sun and sky
+    const r = this.renderer
+    r.autoClear = false
+    r.clear()
+    r.render(this.scene, this.camera)
+    r.clearDepth()
+    const sun = this.world.sun
+    const dir = sun.position.clone().sub(sun.target.position).normalize()
+    this.cockpit.sync(this.camera, this.cockpitPitch(), dir, sun.color, sun.intensity, this.scene.environment)
+    r.render(this.cockpit.scene, this.cockpit.camera)
+    r.autoClear = true
   }
 
   private drawCars(s: Session, dt: number) {
@@ -732,9 +774,11 @@ export class GrandPrixEngine {
       cam.position.copy(at)
       cam.position.y += jitter() * 0.4
       this.camLook.copy(at).addScaledVector(fwd, 20)
-      this.camLook.y += this.cam === 'tcam' ? -1.3 : -1.0
+      // (the cockpit view looks a little down, over the dashboard and into the footwell)
+      this.camLook.y += this.cam === 'tcam' ? -1.3 : -20 * Math.tan(this.cockpitPitch())
       cam.lookAt(this.camLook)
-      cam.fov = this.cam === 'tcam' ? 68 : 74
+      // the cockpit view is a little wider, so the pedals and the gear lever are in sight
+      cam.fov = this.cam === 'tcam' ? 68 : SERIES === 'classic' ? 90 : 80
     } else {
       // trackside TV: the camera nearest the car, zoomed in
       const tv = this.world!.tvCams
@@ -811,52 +855,45 @@ export class GrandPrixEngine {
       this.audio = null
       return
     }
-    if (!this.audio || this.audio.ac !== out.ac) this.audio = new EngineAudio(out.ac, out.dest)
+    if (!this.audio || this.audio.ac !== out.ac) this.audio = new CarAudio(out.ac, out.dest, SERIES)
     const a = this.audio
+    a.setSeries(SERIES)
     const cam = this.camera.position
-    // the nearest other car going by
-    let near: RaceCar | null = null
-    let nd = Infinity
-    for (const c of s.cars) {
-      if (live && c.player) continue
-      const d = Math.hypot(c.x - cam.x, c.y - cam.y, c.z - cam.z)
-      if (d < nd) {
-        nd = d
-        near = c
-      }
-    }
+    // the two nearest other cars going by
+    const others = s.cars
+      .filter((c) => !(live && c.player) && c.pit !== 'garage')
+      .map((c) => {
+        const dx = c.x - cam.x
+        const dz = c.z - cam.z
+        const dist = Math.max(1, Math.hypot(dx, c.y - cam.y, dz))
+        // speed towards the listener (positive: coming closer)
+        const closing = -(Math.cos(c.h) * c.speed * dx + Math.sin(c.h) * c.speed * dz) / dist
+        return { rpm: c.rpm, dist, closing }
+      })
+      .sort((p, q) => p.dist - q.dist)
+      .slice(0, 2)
+    a.others(others)
     if (live) {
       const p = s.player
       const b = s.body
-      const onboard = this.cam !== 'tv'
-      a.engine(p.rpm, p.pit === 'none' ? s.input.throttle : 0.3, onboard ? (this.cam === 'chase' ? 0.8 : 1) : 0.25)
-      a.tyres(p.pit === 'none' ? clamp(b.slide * 1.4 + b.lock + b.spin * 0.8, 0, 1) * (b.speed > 5 ? 1 : 0) : 0)
-      a.wind(p.speed)
-      a.rumble(p.surface === 'kerb' && p.speed > 8 ? 1 : p.surface === 'gravel' && p.speed > 3 ? 0.8 : 0)
-      if (p.gear !== this.prevGear) {
-        if (p.gear > this.prevGear) sfx('f1shift', () => noise({ dur: 0.05, freq: 2500, vol: 0.08, filter: 'bandpass' }))
-        this.prevGear = p.gear
-      }
+      a.player({
+        rpm: p.rpm, idle: CAR.idle, redline: CAR.redline,
+        throttle: p.pit === 'none' ? s.input.throttle : 0.25,
+        gear: p.gear, speed: p.speed,
+        slide: p.pit === 'none' ? clamp(b.slide * 1.4 + b.lock + b.spin * 0.8, 0, 1) * (b.speed > 5 ? 1 : 0) : 0,
+        kerb: p.surface === 'kerb' && p.speed > 8 ? 1 : p.surface === 'gravel' && p.speed > 3 ? 0.8 : 0,
+        listener: this.cam === 'cockpit' || this.cam === 'tcam' ? 'cockpit' : this.cam === 'tv' ? 'far' : 'chase',
+        on: p.pit !== 'garage' && p.pit !== 'toGarage',
+      })
       if (p.hit > 0.15 && this.time - this.lastHit > 0.4) {
         this.lastHit = this.time
         noise({ dur: 0.35, freq: 300, to: 80, vol: 0.4 * p.hit + 0.1, filter: 'lowpass' })
       }
-    } else {
-      a.engine(0, 0, 0)
-      a.tyres(0)
-      a.wind(0)
-      a.rumble(0)
-    }
-    if (near) {
-      const rel = new THREE.Vector3(near.x - cam.x, 0, near.z - cam.z)
-      const dist = Math.max(1, rel.length())
-      rel.normalize()
-      const vr = Math.cos(near.h) * near.speed * rel.x + Math.sin(near.h) * near.speed * rel.z
-      a.other(near.rpm * (1 - clamp(vr / 343, -0.3, 0.3)), clamp(0.5 / Math.pow(1 + dist / 10, 1.3), 0, 0.5))
-    } else a.other(0, 0)
-    a.crowd(this.stage === 'menu' || live ? 0.025 : 0)
+    } else a.silenceMe()
+    a.crowd(this.stage === 'menu' || live ? 0.02 : 0)
     void dt
   }
+
 
   // ---------------------------------------------------------------- the HUD
 
@@ -945,6 +982,7 @@ export class GrandPrixEngine {
 
   dispose() {
     this.audio?.stop()
+    this.cockpit?.dispose()
     this.audio = null
     if (this.world) {
       this.scene.remove(this.world.group)
@@ -974,156 +1012,5 @@ export class GrandPrixEngine {
     this.sparkMat.dispose()
     for (const m of Object.values(this.smokeMats)) m.dispose()
     this.renderer.dispose()
-  }
-}
-
-// ---------------------------------------------------------------- engine sound
-
-class EngineAudio {
-  readonly ac: AudioContext
-  private nodes: AudioNode[] = []
-  private srcs: (OscillatorNode | AudioBufferSourceNode)[] = []
-  private eng: { o1: OscillatorNode; o2: OscillatorNode; o3: OscillatorNode; f: BiquadFilterNode; g: GainNode }
-  private oth: { o1: OscillatorNode; o2: OscillatorNode; f: BiquadFilterNode; g: GainNode }
-  private tyreG: GainNode
-  private windG: GainNode
-  private windF: BiquadFilterNode
-  private rumbleG: GainNode
-  private crowdG: GainNode
-
-  constructor(ac: AudioContext, dest: AudioNode) {
-    this.ac = ac
-    const len = ac.sampleRate
-    const buf = ac.createBuffer(1, len, ac.sampleRate)
-    const d = buf.getChannelData(0)
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
-    const noiseSrc = () => {
-      const s = ac.createBufferSource()
-      s.buffer = buf
-      s.loop = true
-      s.start(0, Math.random())
-      this.srcs.push(s)
-      return s
-    }
-    const osc = (type: OscillatorType) => {
-      const o = ac.createOscillator()
-      o.type = type
-      o.start()
-      this.srcs.push(o)
-      return o
-    }
-    const gain = (v: number) => {
-      const g = ac.createGain()
-      g.gain.value = v
-      this.nodes.push(g)
-      return g
-    }
-    const filt = (type: BiquadFilterType, f: number, q = 1) => {
-      const n = ac.createBiquadFilter()
-      n.type = type
-      n.frequency.value = f
-      n.Q.value = q
-      this.nodes.push(n)
-      return n
-    }
-    // the player's engine: three oscillators through a filter
-    {
-      const o1 = osc('sawtooth')
-      const o2 = osc('square')
-      const o3 = osc('sawtooth')
-      const m2 = gain(0.35)
-      const m3 = gain(0.18)
-      const f = filt('lowpass', 1500, 2)
-      const g = gain(0)
-      o1.connect(f)
-      o2.connect(m2).connect(f)
-      o3.connect(m3).connect(f)
-      f.connect(g).connect(dest)
-      this.eng = { o1, o2, o3, f, g }
-    }
-    {
-      const o1 = osc('sawtooth')
-      const o2 = osc('square')
-      const m2 = gain(0.3)
-      const f = filt('lowpass', 2200, 1.5)
-      const g = gain(0)
-      o1.connect(f)
-      o2.connect(m2).connect(f)
-      f.connect(g).connect(dest)
-      this.oth = { o1, o2, f, g }
-    }
-    {
-      const f = filt('bandpass', 1900, 7)
-      this.tyreG = gain(0)
-      noiseSrc().connect(f).connect(this.tyreG).connect(dest)
-    }
-    {
-      this.windF = filt('lowpass', 400, 0.7)
-      this.windG = gain(0)
-      noiseSrc().connect(this.windF).connect(this.windG).connect(dest)
-    }
-    {
-      const f = filt('lowpass', 140, 1)
-      this.rumbleG = gain(0)
-      noiseSrc().connect(f).connect(this.rumbleG).connect(dest)
-    }
-    {
-      const f = filt('bandpass', 1100, 0.5)
-      this.crowdG = gain(0)
-      noiseSrc().connect(f).connect(this.crowdG).connect(dest)
-    }
-  }
-
-  private set(p: AudioParam, v: number, tc = 0.04) {
-    p.setTargetAtTime(v, this.ac.currentTime, tc)
-  }
-
-  engine(rpm: number, throttle: number, vol: number) {
-    const f0 = Math.max(30, rpm / 20)
-    this.set(this.eng.o1.frequency, f0, 0.02)
-    this.set(this.eng.o2.frequency, f0 / 2, 0.02)
-    this.set(this.eng.o3.frequency, f0 * 1.5, 0.02)
-    this.set(this.eng.f.frequency, 700 + throttle * 2600 + rpm * 0.08)
-    this.set(this.eng.g.gain, vol * (0.06 + throttle * 0.07))
-  }
-
-  other(rpm: number, vol: number) {
-    const f0 = Math.max(30, rpm / 20)
-    this.set(this.oth.o1.frequency, f0, 0.03)
-    this.set(this.oth.o2.frequency, f0 / 2, 0.03)
-    this.set(this.oth.g.gain, vol * 0.18, 0.06)
-  }
-
-  tyres(v: number) {
-    this.set(this.tyreG.gain, v * 0.12, 0.05)
-  }
-
-  wind(speed: number) {
-    this.set(this.windG.gain, Math.min(0.12, speed * 0.0013), 0.1)
-    this.set(this.windF.frequency, 250 + speed * 8, 0.1)
-  }
-
-  rumble(v: number) {
-    this.set(this.rumbleG.gain, v * 0.25, 0.03)
-  }
-
-  crowd(v: number) {
-    this.set(this.crowdG.gain, v, 0.3)
-  }
-
-  quiet() {
-    for (const g of [this.eng.g, this.oth.g, this.tyreG, this.windG, this.rumbleG, this.crowdG]) this.set(g.gain, 0, 0.05)
-  }
-
-  stop() {
-    for (const s of this.srcs) {
-      try {
-        s.stop()
-      } catch {
-        // already stopped
-      }
-      s.disconnect()
-    }
-    for (const n of this.nodes) n.disconnect()
   }
 }
