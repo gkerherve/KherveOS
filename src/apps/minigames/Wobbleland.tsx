@@ -43,7 +43,8 @@ const INFO: GameInfo = {
       <ul>
         <li><b>Roller Coaster</b>: shoot the loop ramp on the left hard; the ball rides the track, loops the loop and comes back to your left flipper. Three rides. Straight after an inlane it's a <b>combo</b>, worth double.</li>
         <li><b>Ferris Wheel</b>: the scoop under the wheel locks a ball in a gondola. Lock three for <b>multiball</b>: every scoop is then a jackpot.</li>
-        <li><b>Teacups</b>: the three pop bumpers. Thirty spins.</li>
+        <li><b>Teacups</b>: the three pop bumpers, going round on their turntable. Thirty spins.</li>
+        <li><b>Runaway balloon</b>: a balloon drifts across the upper playfield, faster each time. Pop it for 5,000, then 10,000… up to 25,000; every fifth pop pays a 50,000 bonus.</li>
         <li><b>High Striker</b>: hit the red pad from below, hard, to send the puck up the tower and ring the bell.</li>
         <li><b>Shooting Gallery</b>: knock down all four ducks on the right.</li>
         <li><b>Carousel</b>: the turntable in the middle swings the ball round; stay on it for five seconds.</li>

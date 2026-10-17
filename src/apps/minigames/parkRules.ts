@@ -159,6 +159,10 @@ export const SCOOP = { x: 470, y: 338, r: 15 }
 /** The High Striker: the pad (a target facing down) and the tower above it. */
 export const STRIKER = { x0: 262, x1: 318, y: 476, top: 334 }
 /** The Carousel turntable. */
+/** The teacups turn round this point. */
+export const TEACUPS = { x: 290, y: 240, r: 56 }
+/** The runaway balloon's path across the upper playfield. */
+export const BALLOON = { y: 372, x0: 140, x1: 438, r: 15, speed: 75 }
 export const CAROUSEL = { x: 280, y: 612, r: 50, omega: 5.2 }
 /** Ducks: four drop targets facing left, on the right. */
 export const DUCK_X = 518
@@ -320,7 +324,7 @@ export type ParkEvent =
   | { type: 'outlane' }
   | { type: 'launch'; power: number }
   | { type: 'rampStart' }
-  | { type: 'rampEnd'; points: number; combo: boolean }
+  | { type: 'rampEnd'; points: number; combo: boolean; chain: number }
   | { type: 'rampFail' }
   | { type: 'scoop' }
   | { type: 'lock'; n: number }
@@ -330,6 +334,15 @@ export type ParkEvent =
   | { type: 'multiballEnd' }
   | { type: 'striker'; level: number; bell: boolean; points: number }
   | { type: 'carouselTick' }
+  | { type: 'balloon'; points: number; x: number; y: number; pops: number }
+  | { type: 'balloonBonus'; points: number }
+  | { type: 'playfield'; mult: number }
+  | { type: 'playfieldEnd' }
+  | { type: 'superLit' }
+  | { type: 'superJackpot'; points: number }
+  | { type: 'hurryStart'; value: number }
+  | { type: 'hurry'; points: number }
+  | { type: 'hurryEnd' }
   | { type: 'ride'; ride: Ride; done: number }
   | { type: 'finale' }
   | { type: 'extraBall' }
@@ -401,7 +414,7 @@ export class Park {
   multiball = false
   /** Grand Finale: every ride done; jackpots are worth more. */
   finale = false
-  jackpot = 50000
+  jackpot = 100000
   /** The High Striker's puck: how high it is going (0..1), how high it is, and the bell's ring. */
   strikerGoal = 0
   strikerLevel = 0
@@ -414,6 +427,23 @@ export class Park {
   wheelAngle = 0
   /** A ramp shot right after an inlane scores double. */
   comboTime = 0
+  /** The teacups' turn round their centre (radians). */
+  cupsAngle = 0
+  /** The runaway balloon: where it is, which way it drifts, and whether it is there to pop. */
+  balloon = { x: 200, dir: 1, alive: true, wait: 0, color: 0 }
+  /** Playfield multiplier: everything scores ×2 or ×3 while it lasts (seconds). */
+  pfMult = 1
+  pfTime = 0
+  /** Super Jackpot lit at the High Striker (multiball, after a jackpot), and its value. */
+  superLit = false
+  superJackpot = 3000000
+  /** Coaster rides back to back: how many in the chain, and how long until it breaks. */
+  chain = 0
+  chainTime = 0
+  /** Hurry-up: a value counting down, collected on the coaster (0: none). */
+  hurry = 0
+  /** Balloons popped this ball (each is worth more; every fifth pays a bonus). */
+  pops = 0
   /** Balls waiting to be shot out of the shooter lane automatically (multiball). */
   autoLaunch = 0
   private autoTimer = 0
@@ -468,7 +498,8 @@ export class Park {
     this.locked = 0
     this.multiball = false
     this.finale = false
-    this.jackpot = 50000
+    this.jackpot = 100000
+    this.superJackpot = 3000000
     for (const r of RIDES) {
       this.progress[r] = 0
       this.done[r] = false
@@ -487,6 +518,14 @@ export class Park {
     for (const d of this.ducks) d.down = false
     for (const t of this.tix) t.lit = false
     this.carouselTime = 0
+    this.pops = 0
+    this.pfMult = 1
+    this.pfTime = 0
+    this.superLit = false
+    this.chain = 0
+    this.chainTime = 0
+    this.hurry = 0
+    this.balloon = { x: BALLOON.x0 + 40, dir: 1, alive: true, wait: 0, color: 0 }
     this.saveUsed = false
     this.balls = []
     this.serve()
@@ -565,6 +604,37 @@ export class Park {
     const a = this.strikerAge
     this.strikerLevel = a < 0.45 ? this.strikerGoal * Math.sin((a / 0.45) * (Math.PI / 2)) : a < 0.75 ? this.strikerGoal : Math.max(0, this.strikerGoal * (1 - (a - 0.75) / 0.6))
     this.carouselAngle += CAROUSEL.omega * dt
+    if (this.pfTime > 0 && (this.pfTime -= dt) <= 0) {
+      this.pfTime = 0
+      this.pfMult = 1
+      this.events.push({ type: 'playfieldEnd' })
+    }
+    if (this.chainTime > 0 && (this.chainTime -= dt) <= 0) this.chain = 0
+    if (this.hurry > 0 && this.state === 'play') {
+      this.hurry = Math.max(500000, this.hurry - 75000 * dt)
+      if (this.hurry === 500000) {
+        this.hurry = 0
+        this.events.push({ type: 'hurryEnd' })
+      }
+    }
+    // The teacups go round (faster in multiball); the balloon drifts, or comes back after a pop.
+    this.cupsAngle += (this.multiball || this.finale ? 1.1 : 0.45) * dt
+    this.bumpers.forEach((b, i) => {
+      const a = this.cupsAngle + (i / 3) * Math.PI * 2 - Math.PI / 2
+      b.x = TEACUPS.x + Math.cos(a) * TEACUPS.r
+      b.y = TEACUPS.y + Math.sin(a) * TEACUPS.r
+    })
+    const bl = this.balloon
+    if (bl.alive) {
+      bl.x += bl.dir * BALLOON.speed * (1 + this.pops * 0.12) * dt
+      if (bl.x > BALLOON.x1) (bl.x = BALLOON.x1), (bl.dir = -1)
+      if (bl.x < BALLOON.x0) (bl.x = BALLOON.x0), (bl.dir = 1)
+    } else if ((bl.wait -= dt) <= 0) {
+      bl.alive = true
+      bl.dir = this.rng() < 0.5 ? 1 : -1
+      bl.x = bl.dir > 0 ? BALLOON.x0 : BALLOON.x1
+      bl.color = (bl.color + 1) % 5
+    }
     this.wheelAngle += (this.multiball ? 0.9 : 0.25) * dt
     this.comboTime = Math.max(0, this.comboTime - dt)
     this.scoopCool = Math.max(0, this.scoopCool - dt)
@@ -751,7 +821,7 @@ export class Park {
     this.carouselTick += h
     if (this.carouselTick >= 0.25) {
       this.carouselTick = 0
-      this.score += 100
+      this.add(100)
       this.bonus += 50
       this.events.push({ type: 'carouselTick' })
       const secs = Math.floor(this.carouselTime)
@@ -786,7 +856,7 @@ export class Park {
         this.kick(b, hit, SLING_KICK)
         if (b.vy < 0) b.vy *= 0.45
         this.slingAge[w.sling!] = 0
-        this.score += 10
+        this.add(10)
         this.events.push({ type: 'sling', i: w.sling! })
       } else if (w.kind === 'ramp' && hit.ny > 0.5 && impact > 200) this.events.push({ type: 'rampFail' })
       else if (impact > 160) this.events.push({ type: 'wall', speed: impact, x: hit.px, y: hit.py })
@@ -811,12 +881,21 @@ export class Park {
       bu.age = 0
       bu.spinV = (i % 2 ? -1 : 1) * 9
       this.kick(b, hit, BUMPER_KICK)
-      const points = this.done.teacups ? 1000 : 250
-      this.score += points
+      const points = this.add(this.done.teacups ? 1000 : 250)
       this.bonus += 100
       this.events.push({ type: 'bumper', i, points })
       this.advance('teacups', 1)
     })
+
+    // The runaway balloon: a hit pops it.
+    if (this.balloon.alive) {
+      const bl = this.balloon
+      const hit = hitCircle(b.x, b.y, R, bl.x, BALLOON.y, BALLOON.r)
+      if (hit) {
+        this.resolve(b, hit, 0.5)
+        if (first) this.popBalloon()
+      }
+    }
 
     // The High Striker's pad: a hit from below sends the puck up the tower.
     {
@@ -895,7 +974,7 @@ export class Park {
         case 'inlaneL':
         case 'inlaneR':
           if (down) {
-            this.score += 1000
+            this.add(1000)
             this.bonus += 500
             this.comboTime = 3
             this.events.push({ type: 'inlane', side: w.id === 'inlaneL' ? 'L' : 'R' })
@@ -903,7 +982,7 @@ export class Park {
           break
         case 'outlane':
           if (down) {
-            this.score += 2500
+            this.add(2500)
             this.events.push({ type: 'outlane' })
           }
           break
@@ -936,11 +1015,17 @@ export class Park {
     b.vx = q.dx * 420
     b.vy = Math.max(200, q.dy * 420)
     const combo = this.comboTime > 0
-    const points = (this.done.coaster ? 25000 : 10000) * (combo ? 2 : 1)
-    this.score += points
+    this.chain = this.chainTime > 0 ? this.chain + 1 : 1
+    this.chainTime = 7
+    const points = this.add((this.done.coaster ? 25000 : 10000) * (combo ? 2 : 1) * this.chain)
     this.bonus += 2000
     this.comboTime = 0
-    this.events.push({ type: 'rampEnd', points, combo })
+    this.events.push({ type: 'rampEnd', points, combo, chain: this.chain })
+    if (this.hurry > 0) {
+      const got = this.add(this.hurry / 10)
+      this.hurry = 0
+      this.events.push({ type: 'hurry', points: got })
+    }
     this.advance('coaster', 1)
     if (this.multiball) this.award(this.jackpot / 2, 60, 300)
   }
@@ -951,7 +1036,7 @@ export class Park {
     b.vx = b.vy = 0
     b.x = SCOOP.x
     b.y = SCOOP.y
-    this.score += 2000
+    this.add(2000)
     this.events.push({ type: 'scoop' })
     if (this.multiball) {
       this.award(this.jackpot, SCOOP.x, SCOOP.y)
@@ -976,18 +1061,60 @@ export class Park {
     this.events.push({ type: 'multiball' })
   }
 
-  private award(points: number, x: number, y: number) {
-    this.score += points
+  private award(raw: number, x: number, y: number) {
+    const points = this.add(raw)
+    this.jackpot += 25000
     this.events.push({ type: 'jackpot', points, x, y })
+    if (this.multiball && !this.superLit) {
+      this.superLit = true
+      this.events.push({ type: 'superLit' })
+    }
+  }
+
+  /** Points, scaled to the table's millions and by the playfield multiplier; returns what was scored. */
+  private add(raw: number): number {
+    const p = Math.round(raw * 10 * this.pfMult)
+    this.score += p
+    return p
+  }
+
+  /** Everything scores ×mult for 20 s (a higher one replaces a lower one). */
+  private playfield(mult: number) {
+    this.pfMult = Math.max(this.pfMult, mult)
+    this.pfTime = 20
+    this.events.push({ type: 'playfield', mult: this.pfMult })
+  }
+
+  private popBalloon() {
+    const bl = this.balloon
+    bl.alive = false
+    bl.wait = 1.6
+    this.pops++
+    const points = this.add(5000 * Math.min(5, this.pops))
+    this.bonus += 1000
+    this.events.push({ type: 'balloon', points, x: bl.x, y: BALLOON.y, pops: this.pops })
+    if (this.pops % 5 === 0) {
+      this.events.push({ type: 'balloonBonus', points: this.add(50000) })
+      this.playfield(3)
+    }
   }
 
   private strike(impact: number) {
+    if (this.superLit && this.multiball) {
+      this.superLit = false
+      const points = this.add(this.superJackpot / 10)
+      this.superJackpot += 1000000
+      this.bellAge = 0
+      this.strikerGoal = 1
+      this.strikerAge = 0
+      this.events.push({ type: 'superJackpot', points })
+      return
+    }
     const level = Math.min(1, impact / 1250)
     this.strikerGoal = level
     this.strikerAge = 0
     const bell = level >= 0.9
-    const points = bell ? 50000 : Math.round(level * 10) * 1000
-    this.score += points
+    const points = this.add(bell ? 50000 : Math.round(level * 10) * 1000)
     this.bonus += 1000
     if (bell) {
       this.bellAge = 0
@@ -998,12 +1125,11 @@ export class Park {
 
   private duck(t: Target, i: number) {
     t.down = true
-    this.score += 1500
+    this.add(1500)
     this.bonus += 1000
     this.events.push({ type: 'duck', i })
     if (this.ducks.every((d) => d.down)) {
-      const points = this.done.gallery ? 40000 : 25000
-      this.score += points
+      const points = this.add(this.done.gallery ? 40000 : 25000)
       this.gallerySet = 1.6
       this.events.push({ type: 'gallery', points })
       this.advance('gallery', 1)
@@ -1011,14 +1137,15 @@ export class Park {
   }
 
   private ticket(t: Target, i: number) {
-    this.score += t.lit ? 500 : 2000
+    this.add(t.lit ? 500 : 2000)
     this.tickets += t.lit ? 1 : 5
     this.bonus += 500
     t.lit = true
     this.events.push({ type: 'tix', i })
     if (this.tix.every((x) => x.lit) && this.tixReset < 0) {
       this.tickets += 25
-      this.score += 15000
+      this.add(15000)
+      this.playfield(2)
       this.tixReset = 1
       // A second chance: the ball save comes back for a while.
       this.saveTime = Math.max(this.saveTime, 12)
@@ -1030,24 +1157,23 @@ export class Park {
   private rollover(i: number) {
     if (this.skillLane >= 0 && this.skillTime > 0) {
       if (i === this.skillLane) {
-        this.score += 20000
-        this.events.push({ type: 'skill', points: 20000 })
+        this.events.push({ type: 'skill', points: this.add(20000) })
       }
       this.skillLane = -1
     }
     if (this.lanes[i]) {
-      this.score += 250
+      this.add(250)
       this.events.push({ type: 'lane', i, lit: false })
       return
     }
     this.lanes[i] = true
-    this.score += 1000
+    this.add(1000)
     this.bonus += 1000
     this.events.push({ type: 'lane', i, lit: true })
     if (this.lanes.every(Boolean)) {
       this.lanes = [false, false, false, false]
       if (this.multiplier < 6) this.multiplier++
-      this.score += this.multiplier >= 6 ? 50000 : 10000
+      this.add(this.multiplier >= 6 ? 50000 : 10000)
       this.events.push({ type: 'lanes', multiplier: this.multiplier })
     }
   }
@@ -1058,18 +1184,22 @@ export class Park {
     this.progress[ride] = Math.min(RIDE_GOALS[ride], this.progress[ride] + by)
     if (this.progress[ride] < RIDE_GOALS[ride]) return
     this.done[ride] = true
-    this.score += 30000
+    this.add(30000)
     this.bonus += 10000
     const n = this.ridesDone
     this.events.push({ type: 'ride', ride, done: n })
+    if (n < RIDES.length) {
+      this.hurry = 2000000
+      this.events.push({ type: 'hurryStart', value: this.hurry })
+    }
     if (n === 3) {
       this.extraBalls++
       this.events.push({ type: 'extraBall' })
     }
     if (n === RIDES.length && !this.finale) {
       this.finale = true
-      this.jackpot = 150000
-      this.score += 250000
+      this.jackpot = 300000
+      this.add(500000)
       this.events.push({ type: 'finale' })
       if (!this.multiball) this.startMultiball(2)
     }
@@ -1105,10 +1235,10 @@ export class Park {
     this.multiball = false
     this.state = 'drain'
     this.stateTime = 0
-    this.tally = { bonus: this.bonus, multiplier: this.multiplier }
-    this.score += this.bonus * this.multiplier
+    this.tally = { bonus: this.bonus * 10, multiplier: this.multiplier }
+    this.score += this.bonus * 10 * this.multiplier
     this.events.push({ type: 'drain' })
-    this.events.push({ type: 'bonus', bonus: this.bonus, multiplier: this.multiplier })
+    this.events.push({ type: 'bonus', bonus: this.bonus * 10, multiplier: this.multiplier })
   }
 
   private nextBall() {

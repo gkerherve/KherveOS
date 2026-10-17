@@ -10,7 +10,7 @@ import { arpeggio, noise, sfx, tone } from './sound'
 import { ParkMusic } from './parkMusic'
 import { C, LAMPS, LANE_LETTERS, insertShape, offscreen, paintBackglass, paintCoaster, paintPlayfield, paintScene, sceneLights, type Lamp, type SceneLights } from './parkArt'
 import {
-  ARCH, BALL_R, CAROUSEL, DUCK_H, DUCK_X, LANE_GUIDES, LANE_X, LANE_X0, LANE_X1, PLUNGER_Y, Park, RIDES, RIDE_GOALS, RIDE_NAMES, SCOOP, SLINGS,
+  ARCH, BALL_R, BALLOON, CAROUSEL, TEACUPS, DUCK_H, DUCK_X, LANE_GUIDES, LANE_X, LANE_X0, LANE_X1, PLUNGER_Y, Park, RIDES, RIDE_GOALS, RIDE_NAMES, SCOOP, SLINGS,
   STRIKER, TH, TIX_H, TIX_X, TW, WHEEL, trackAt, type Ball, type Flipper, type ParkEvent, type Ride,
 } from './parkRules'
 
@@ -323,7 +323,7 @@ export class WobblelandEngine implements GameEngine {
         break
       case 'lanes':
         this.light('mult')
-        this.show(`${e.multiplier}× BONUS`, e.multiplier >= 6 ? 'Maxed out: +50,000' : 'P·A·R·K complete', C.teal)
+        this.show(`${e.multiplier}× BONUS`, e.multiplier >= 6 ? 'Maxed out: +500,000' : 'P·A·R·K complete', C.teal)
         this.say(`BONUS ${e.multiplier}X`, 'PARK COMPLETE')
         arpeggio([67, 71, 74, 79, 83], 0.06, { dur: 0.12, type: 'triangle', vol: 0.12 })
         break
@@ -355,8 +355,9 @@ export class WobblelandEngine implements GameEngine {
       case 'rampEnd':
         this.light('coaster')
         this.floaters.add(`+${fmt(e.points)}`, 90, 640, C.magenta, { size: 16, life: 1, vy: -40, pop: true })
-        if (e.combo) this.show('COMBO!', `Inlane to the loop · +${fmt(e.points)}`, C.magenta)
-        this.say(e.combo ? 'COMBO LOOP' : 'LOOP THE LOOP', `+${fmt(e.points)}`, 'coaster', 1.6)
+        if (e.chain > 1) this.show(`COASTER CHAIN ×${e.chain}`, `Back to back · +${fmt(e.points)}`, C.magenta)
+        else if (e.combo) this.show('COMBO!', `Inlane to the loop · +${fmt(e.points)}`, C.magenta)
+        this.say(e.chain > 1 ? `CHAIN X${e.chain}` : e.combo ? 'COMBO LOOP' : 'LOOP THE LOOP', `+${fmt(e.points)}`, 'coaster', 1.6)
         arpeggio([60, 64, 67, 72], 0.05, { dur: 0.1, type: 'square', vol: 0.08 })
         break
       case 'rampFail':
@@ -416,12 +417,66 @@ export class WobblelandEngine implements GameEngine {
         }
         break
       }
+      case 'balloon': {
+        const colors = [C.red, C.sky, C.gold, C.magenta, C.green]
+        const col = colors[g.balloon.color % colors.length]
+        this.particles.burst(e.x, e.y, col, { count: 26, speed: [80, 260], life: [0.3, 0.7], size: [2, 4], gravity: 260 })
+        this.particles.burst(e.x, e.y, '#ffffff', { count: 10, speed: [30, 120], life: [0.2, 0.4], size: [1.5, 2.5], gravity: 0, square: false })
+        this.floaters.add(`POP! +${fmt(e.points)}`, e.x, e.y - 24, col, { size: 15, life: 0.9, vy: -50, pop: true })
+        noise({ dur: 0.07, freq: 2600, vol: 0.2, q: 0.6 })
+        noise({ dur: 0.25, freq: 600, to: 200, vol: 0.06, filter: 'lowpass', at: 0.03 })
+        this.shake = Math.min(5, this.shake + 2)
+        this.say('POP!', `BALLOON ${e.pops}  +${fmt(e.points)}`, 'fireworks', 1.2)
+        break
+      }
+      case 'balloonBonus':
+        this.light('show')
+        this.show('BALLOON BONANZA', `Five balloons popped · +${fmt(e.points)}`, C.red, 2)
+        this.fireworks(3)
+        arpeggio([72, 76, 79, 84, 88], 0.06, { dur: 0.14, type: 'square', vol: 0.09 })
+        break
+      case 'playfield':
+        this.light('show')
+        this.show(`${e.mult}× PLAYFIELD`, 'Everything scores more for 20 s', C.teal, 2)
+        this.say(`${e.mult}X PLAYFIELD`, 'EVERYTHING SCORES MORE', 'fireworks')
+        arpeggio([60, 67, 72, 79, 84], 0.05, { dur: 0.14, type: 'sawtooth', vol: 0.07 })
+        break
+      case 'playfieldEnd':
+        this.say('PLAYFIELD', 'MULTIPLIER OVER', null, 1.2)
+        break
+      case 'superLit':
+        this.say('SUPER JACKPOT', 'RING THE STRIKER', 'bell', 2)
+        tone({ freq: 880, to: 1760, dur: 0.4, type: 'square', vol: 0.07 })
+        break
+      case 'superJackpot':
+        this.light('show')
+        this.show('SUPER JACKPOT', `+${fmt(e.points)}`, C.gold, 3)
+        this.say('SUPER JACKPOT', fmt(e.points), 'fireworks', 3)
+        this.floaters.add(`+${fmt(e.points)}`, 290, STRIKER.top + 20, C.gold, { size: 24, life: 1.5, vy: -30, pop: true })
+        this.fireworks(10)
+        this.shake = 9
+        for (const [f, v] of [[1760, 0.12], [2637, 0.07], [4186, 0.04]] as const) tone({ freq: f, dur: 1.6, type: 'sine', vol: v })
+        arpeggio([72, 76, 79, 84, 88, 91, 96, 100], 0.06, { dur: 0.2, type: 'square', vol: 0.09, at: 0.2 })
+        break
+      case 'hurryStart':
+        this.say('HURRY UP', 'SHOOT THE COASTER', 'coaster', 2)
+        break
+      case 'hurry':
+        this.light('show')
+        this.show('HURRY-UP COLLECTED', `+${fmt(e.points)}`, C.magenta, 2)
+        this.say('HURRY UP', `+${fmt(e.points)}`, 'fireworks', 2)
+        this.fireworks(3)
+        arpeggio([79, 84, 88, 91], 0.06, { dur: 0.14, type: 'square', vol: 0.09 })
+        break
+      case 'hurryEnd':
+        this.say('HURRY UP', 'TOO LATE', null, 1.2)
+        break
       case 'carouselTick':
         sfx('carousel', () => tone({ freq: 2093 + Math.random() * 400, dur: 0.12, type: 'sine', vol: 0.04 }), 0.2)
         break
       case 'ride':
         this.light(`ride-${e.ride}`)
-        this.show(`${RIDE_NAMES[e.ride].toUpperCase()}!`, `Ride ${e.done} of 6 complete · +30,000`, RIDE_COLORS[e.ride], 2.4)
+        this.show(`${RIDE_NAMES[e.ride].toUpperCase()}!`, `Ride ${e.done} of 6 complete · +300,000`, RIDE_COLORS[e.ride], 2.4)
         this.say(RIDE_NAMES[e.ride].toUpperCase(), `RIDE ${e.done} OF 6 DONE`, 'fireworks', 2.2)
         this.light('show')
         this.fireworks(3)
@@ -433,8 +488,8 @@ export class WobblelandEngine implements GameEngine {
         arpeggio([72, 77, 81, 84], 0.09, { dur: 0.2, type: 'square', vol: 0.08 })
         break
       case 'finale':
-        this.show('GRAND FINALE', 'Every ride ridden · +250,000', C.gold, 3.5)
-        this.say('GRAND FINALE', 'JACKPOTS 150,000', 'fireworks', 3.5)
+        this.show('GRAND FINALE', 'Every ride ridden · +5,000,000', C.gold, 3.5)
+        this.say('GRAND FINALE', 'JACKPOTS 3,000,000', 'fireworks', 3.5)
         this.light('show')
         this.fireworks(14)
         this.shake = 8
@@ -831,7 +886,7 @@ export class WobblelandEngine implements GameEngine {
     d.textAlign = 'right'
     d.fillText(`${g.ridesDone}/6 RIDES`, 126, 27)
     d.textAlign = 'center'
-    d.fillText(g.multiball ? 'MULTIBALL' : g.multiplier > 1 ? `${g.multiplier}X` : `TIX ${g.tickets}`, 64, 27)
+    d.fillText(g.hurry > 0 ? `HURRY ${fmt(g.hurry)}` : g.pfMult > 1 ? `${g.pfMult}X PLAYFIELD` : g.multiball ? 'MULTIBALL' : g.multiplier > 1 ? `${g.multiplier}X BONUS` : `TIX ${g.tickets}`, 64, 27)
   }
 
   /** Little animations behind the display's messages. */
@@ -1068,8 +1123,8 @@ export class WobblelandEngine implements GameEngine {
     cell('Bonus', `${g.multiplier}×`, x + 270, sy, C.teal)
     cell('Tickets', fmt(g.tickets), x + 430, sy, C.amber)
     cell('Locked', g.multiball ? 'MULTI' : `${g.locked} / 3`, x + 110, sy + 90, C.sky)
-    cell('Jackpot', fmt(g.jackpot), x + 270, sy + 90, C.gold)
-    cell('Extra ball', g.extraBalls ? `${g.extraBalls}` : '—', x + 430, sy + 90, C.red)
+    cell('Jackpot', fmt(g.jackpot * 10), x + 270, sy + 90, C.gold)
+    cell('Playfield', g.pfMult > 1 ? `${g.pfMult}× ${Math.ceil(g.pfTime)}s` : '1×', x + 430, sy + 90, g.pfMult > 1 ? C.teal : '#fff')
     ctx.strokeStyle = 'rgba(255,255,255,0.1)'
     ctx.beginPath()
     ctx.moveTo(x + 40, sy + 190)
@@ -1077,12 +1132,21 @@ export class WobblelandEngine implements GameEngine {
     ctx.stroke()
     cell('Score', fmt(g.score), x + 150, sy + 230, '#fff')
     cell('High score', fmt(Math.max(this.best, g.score)), x + 390, sy + 230, C.gold)
-    if (g.saveTime > 0) {
-      ctx.textAlign = 'center'
-      ctx.font = `900 16px ${FONT}`
-      ctx.fillStyle = Math.floor(t * 4) % 2 ? C.red : '#ff8a96'
-      ctx.fillText(`RIDE AGAIN ${Math.ceil(g.saveTime)}s`, x + w / 2, sy + 310)
-    }
+    // What is lit right now, as flashing lines.
+    const live: [string, string][] = []
+    if (g.hurry > 0) live.push([`HURRY-UP ${fmt(g.hurry)} — SHOOT THE COASTER`, C.magenta])
+    if (g.superLit) live.push([`SUPER JACKPOT ${fmt(g.superJackpot)} — HIT THE STRIKER`, C.gold])
+    if (g.chain > 1) live.push([`COASTER CHAIN ×${g.chain} — AGAIN FOR ×${g.chain + 1}`, C.pink])
+    if (g.saveTime > 0) live.push([`RIDE AGAIN ${Math.ceil(g.saveTime)}s`, C.red])
+    if (g.extraBalls) live.push([`EXTRA BALL LIT ×${g.extraBalls}`, C.amber])
+    ctx.textAlign = 'center'
+    ctx.font = `900 15px ${FONT}`
+    live.slice(0, 3).forEach(([text, color], i) => {
+      ctx.globalAlpha = Math.floor(t * 4 + i) % 2 ? 1 : 0.6
+      ctx.fillStyle = color
+      ctx.fillText(text, x + w / 2, sy + 296 + i * 22)
+    })
+    ctx.globalAlpha = 1
   }
 
   /** The small picture of each ride on the board. */
@@ -1239,11 +1303,13 @@ export class WobblelandEngine implements GameEngine {
     this.drawLamps(ctx, f)
     this.drawTopShow(ctx, f)
     this.drawCarousel(ctx, f)
+    this.drawCupsPlatform(ctx, f)
     this.drawWheel(ctx, f)
     this.drawStriker(ctx, f)
     this.drawDucks(ctx, f)
     this.drawTix(ctx)
     this.drawSlings(ctx)
+    this.drawBalloon(ctx, f)
     this.drawPlunger(ctx)
     for (const b of g.bumpers) this.drawTeacup(ctx, b, g.bumpers.indexOf(b))
     for (const fl of g.flippers) this.drawFlipper(ctx, fl)
@@ -1296,11 +1362,11 @@ export class WobblelandEngine implements GameEngine {
     const fl = this.flash.get(l.id) ?? 9
     if (fl < 0.6) return fast ? 1 : 0.2
     const id = l.id
-    if (id === 'coaster') return g.comboTime > 0 ? (fast ? 1 : 0) : g.done.coaster ? 0.6 : blink ? 1 : 0
+    if (id === 'coaster') return g.hurry > 0 || g.chainTime > 0 ? (fast ? 1 : 0) : g.comboTime > 0 ? (fast ? 1 : 0) : g.done.coaster ? 0.6 : blink ? 1 : 0
     if (id.startsWith('coaster')) return g.progress.coaster > Number(id.slice(7)) ? 1 : 0
     if (id === 'scoop') return g.multiball ? (fast ? 1 : 0) : blink ? 1 : 0.15
     if (id.startsWith('lock')) return g.locked > Number(id.slice(4)) || g.multiball ? 1 : 0
-    if (id === 'striker') return g.done.striker ? 0.5 : blink ? 1 : 0
+    if (id === 'striker') return g.superLit ? (fast ? 1 : 0) : g.done.striker ? 0.5 : blink ? 1 : 0
     if (id === 'ducks') return g.ducks.some((d) => d.down) ? (fast ? 1 : 0) : blink ? 1 : 0.2
     if (id === 'tix') return g.tix.some((x) => x.lit) ? 1 : 0
     if (id.startsWith('carousel')) return g.progress.carousel > Number(id.slice(8)) ? 1 : 0
@@ -1502,6 +1568,121 @@ export class WobblelandEngine implements GameEngine {
       ctx.restore()
     }
     ctx.restore()
+  }
+
+  /** The teacups' turntable: a big painted disc turning under the three cups. */
+  private drawCupsPlatform(ctx: CanvasRenderingContext2D, f: Frame) {
+    const { x, y } = TEACUPS
+    const R = TEACUPS.r + 42
+    const t = f.now / 1000
+    ctx.save()
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'
+    ctx.beginPath()
+    ctx.arc(x + 4, y + 6, R, 0, TAU)
+    ctx.fill()
+    ctx.translate(x, y)
+    ctx.rotate(this.game.cupsAngle)
+    for (let i = 0; i < 16; i++) {
+      ctx.fillStyle = i % 2 ? 'rgba(155,107,255,0.55)' : 'rgba(255,140,198,0.5)'
+      ctx.beginPath()
+      ctx.moveTo(0, 0)
+      ctx.arc(0, 0, R, (i / 16) * TAU, ((i + 1) / 16) * TAU)
+      ctx.fill()
+    }
+    ctx.strokeStyle = C.gold
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.arc(0, 0, R - 1.5, 0, TAU)
+    ctx.stroke()
+    for (let i = 0; i < 28; i++) {
+      const a = (i / 28) * TAU
+      const on = (i + Math.floor(t * 10)) % 4 === 0
+      ctx.fillStyle = on ? '#fffbe0' : '#7a5a20'
+      ctx.beginPath()
+      ctx.arc(Math.cos(a) * (R - 1.5), Math.sin(a) * (R - 1.5), 2, 0, TAU)
+      ctx.fill()
+    }
+    // The teapot in the middle.
+    ctx.rotate(-this.game.cupsAngle)
+    const pot = ctx.createRadialGradient(-5, -5, 2, 0, 0, 16)
+    pot.addColorStop(0, '#ffffff')
+    pot.addColorStop(0.5, '#9fe3ff')
+    pot.addColorStop(1, '#3a7fa8')
+    ctx.fillStyle = pot
+    ctx.beginPath()
+    ctx.arc(0, 0, 15, 0, TAU)
+    ctx.fill()
+    ctx.fillStyle = C.gold
+    ctx.beginPath()
+    ctx.arc(0, 0, 4, 0, TAU)
+    ctx.fill()
+    ctx.strokeStyle = '#9fe3ff'
+    ctx.lineWidth = 4
+    ctx.beginPath()
+    ctx.moveTo(13, -2)
+    ctx.quadraticCurveTo(24, -6, 26, -14)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  /** The runaway balloon on its wire, or the empty wire after a pop. */
+  private drawBalloon(ctx: CanvasRenderingContext2D, f: Frame) {
+    const g = this.game
+    const bl = g.balloon
+    const t = f.now / 1000
+    const y = BALLOON.y
+    // Its wire across the table.
+    ctx.strokeStyle = 'rgba(255,241,214,0.25)'
+    ctx.setLineDash([3, 5])
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(BALLOON.x0, y + 26)
+    ctx.lineTo(BALLOON.x1, y + 26)
+    ctx.stroke()
+    ctx.setLineDash([])
+    if (!bl.alive) return
+    const colors = [C.red, C.sky, C.gold, C.magenta, C.green]
+    const col = colors[bl.color % colors.length]
+    const sway = Math.sin(t * 3) * 3
+    const x = bl.x
+    // String down to its little trolley on the wire.
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(x, y + BALLOON.r)
+    ctx.quadraticCurveTo(x - bl.dir * 6 + sway, y + 20, x, y + 26)
+    ctx.stroke()
+    ctx.fillStyle = '#c9d2dc'
+    ctx.fillRect(x - 4, y + 24, 8, 4)
+    // Shadow, then the balloon with its shine and knot.
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'
+    ctx.beginPath()
+    ctx.ellipse(x + 6, y + 9, BALLOON.r, BALLOON.r * 1.15, 0, 0, TAU)
+    ctx.fill()
+    const body = ctx.createRadialGradient(x - 5, y - 7, 2, x, y, BALLOON.r * 1.2)
+    body.addColorStop(0, '#ffffff')
+    body.addColorStop(0.25, col)
+    body.addColorStop(1, shadeOf(col))
+    ctx.fillStyle = body
+    ctx.beginPath()
+    ctx.ellipse(x, y, BALLOON.r, BALLOON.r * 1.15, sway * 0.03, 0, TAU)
+    ctx.fill()
+    ctx.fillStyle = shadeOf(col)
+    ctx.beginPath()
+    ctx.moveTo(x - 3, y + BALLOON.r * 1.15 + 3)
+    ctx.lineTo(x + 3, y + BALLOON.r * 1.15 + 3)
+    ctx.lineTo(x, y + BALLOON.r * 1.15 - 1)
+    ctx.fill()
+    ctx.fillStyle = 'rgba(255,255,255,0.8)'
+    ctx.beginPath()
+    ctx.ellipse(x - 5, y - 7, 3.5, 5, -0.5, 0, TAU)
+    ctx.fill()
+    // Its value, over it.
+    ctx.font = `900 9px ${FONT}`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillStyle = '#fff'
+    ctx.fillText(`${5 * Math.min(5, g.pops + 1)}K`, x, y + 1)
   }
 
   private drawCarousel(ctx: CanvasRenderingContext2D, f: Frame) {
