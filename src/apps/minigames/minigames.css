@@ -490,3 +490,16 @@
   height: 26px;
   vertical-align: middle;
 }
+
+/* Games that draw their own score (Kherve Park): no side panel, the canvas fills the window */
+.mg-app.mg-nopanel .mg-panel {
+  display: none;
+}
+.mg-app.mg-nopanel .mg-stage {
+  padding: 0;
+  background: #05030c;
+}
+.mg-app.mg-nopanel .mg-screen {
+  border-radius: 0;
+  box-shadow: none;
+}

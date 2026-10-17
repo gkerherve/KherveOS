@@ -5,7 +5,7 @@ import {
   Atom, Bird, Blocks, Box, FlaskConical, Ghost, Rocket, Spade, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sheet, Sigma, Sparkles, SquareTerminal, StickyNote,
 } from 'lucide-react'
-import { Calculator, CarFront, Hexagon, Pipette, Shapes, TrainFrontTunnel } from 'lucide-react'
+import { Calculator, CarFront, FerrisWheel, Hexagon, Pipette, Shapes, TrainFrontTunnel } from 'lucide-react'
 import { CircuitBoard, Radical, ServerCrash, Zap } from 'lucide-react'
 import { Activity, Binary, CloudSun, Cog, Droplets, NotebookTabs, Triangle } from 'lucide-react'
 import { AudioWaveform, ChartScatter, Microscope, Mountain, Rainbow, Ruler, Waves } from 'lucide-react'
@@ -888,6 +888,19 @@ export const APPS: AppManifest[] = [
     load: () => import('@/apps/minigames/LastTrain'),
     defaultSize: { w: 1000, h: 640 },
     minSize: { w: 640, h: 420 },
+  },
+  {
+    id: 'wobbleland',
+    name: 'Wobbleland',
+    icon: FerrisWheel,
+    color: '#ff3d9a',
+    brand: { label: 'Park', from: '#ffc93c', to: '#7a1a8c' },
+    category: 'games',
+    group: 'Games',
+    description: 'Full-screen amusement-park pinball: a looping roller coaster, a Ferris wheel multiball, teacups, a high striker, a shooting gallery and a carousel',
+    load: () => import('@/apps/minigames/Wobbleland'),
+    defaultSize: { w: 1120, h: 660 },
+    minSize: { w: 720, h: 420 },
   },
   {
     id: 'grandprix',

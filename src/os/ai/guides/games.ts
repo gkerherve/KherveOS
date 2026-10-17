@@ -50,6 +50,10 @@ export const GAME_GUIDES: AppGuide[] = [
     'The state has the level, lives, dots left, power-pellet seconds, the mode, and the tiles of Pac-Man and the four ghosts.',
   ]),
   miniGame('pinball', 'Pinball table with flippers and bumpers', 'Flippers, bumpers and a plunger: keep the ball in play.', ['The state has the ball number, bonus and multiplier.']),
+  miniGame('wobbleland', 'Wobbleland: full-screen amusement-park pinball', 'A big night-time amusement-park pinball, played full screen (F toggles it). Six rides to finish: the Roller Coaster loop ramp, the Ferris Wheel scoop (lock 3 balls for multiball), the Teacup bumpers, the High Striker pad, the Shooting Gallery ducks and the Carousel turntable; all six start the Grand Finale.', [
+    'The state has the ball number, rides done and each ride\'s progress, multiplier, tickets, locked balls, multiball, extra balls and ball save.',
+    'The player uses the keys (Z and /, or the arrows, for the flippers; Space for the plunger); the tools only start, pause and read it.',
+  ]),
   miniGame('asteroids', 'Space shooter: blast meteors (Asteroids-like)', 'Steer your ship and blast the meteors to pieces.', ['The state has the wave, lives and meteors left.']),
   miniGame('runekeep', 'DataCenter Assault: fast first-person shooter in a military data centre', 'Three levels of corridors, server halls and plant rooms: soldiers, dogs, drones and heavies, then androids; blue and red keycards, sliding, shutter, double and blast doors. In the last level every core server must be destroyed before the exit opens. Ten weapons, from the knife to the railgun.', [
     'It needs the mouse: `runekeep_play` brings the window to the front, but only the player\'s click starts or resumes. Pausing works from the tools.',

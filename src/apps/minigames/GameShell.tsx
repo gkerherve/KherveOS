@@ -5,11 +5,12 @@
 // drawing) and the contents of its panel.
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent, type ReactNode } from 'react'
-import { CircleHelp, Pause, Play, RotateCcw, Trophy, VolumeX } from 'lucide-react'
+import { CircleHelp, Maximize, Pause, Play, RotateCcw, Trophy, VolumeX } from 'lucide-react'
 import { os, type WindowApi } from '@/os'
 import { useWindows } from '@/os/windows'
 import { useAppTools, type AppTools } from '@/os/ai/appTools'
 import { runLoop } from './loop'
+import { isGameFullscreen, toggleGameFullscreen, useGameFullscreen } from './gameFullscreen'
 import { useFitCanvas } from './canvas'
 import { fmt } from './fx'
 import { releaseAudio, retainAudio, setSoundOn, unlockAudio, useSound } from './sound'
@@ -70,6 +71,10 @@ export interface GameInfo {
   help: ReactNode
   /** Hide the mouse pointer over the playfield while playing. */
   hideCursor?: boolean
+  /** Full screen game: F (and Game › Full Screen) toggles it, starting a game goes full screen. */
+  fullscreen?: boolean
+  /** No side panel: the canvas draws the score itself. */
+  noPanel?: boolean
 }
 
 type Card = 'help' | 'scores' | null
@@ -166,9 +171,12 @@ export function GameShell({ win, info, engine, panel, onFrame, className, aiStat
   /** Start from the start card, or resume after a pause. */
   const play = useCallback(() => {
     setCard(null)
+    if (phaseRef.current === 'ready' && info.fullscreen && !isGameFullscreen(rootRef.current)) toggleGameFullscreen(rootRef.current, focusRoot)
     if (phaseRef.current === 'ready' || phaseRef.current === 'paused') setPhase('playing')
     focusRoot()
-  }, [setCard, setPhase, focusRoot])
+  }, [setCard, setPhase, focusRoot, info.fullscreen])
+  const toggleFull = useCallback(() => toggleGameFullscreen(rootRef.current, focusRoot), [focusRoot])
+  const fullscreen = useGameFullscreen(rootRef)
 
   const playAgain = useCallback(() => {
     engine.reset()
@@ -327,6 +335,11 @@ export function GameShell({ win, info, engine, panel, onFrame, className, aiStat
         e.preventDefault()
         openCard('help')
         return
+      case 'KeyF':
+        if (!info.fullscreen) break
+        e.preventDefault()
+        toggleFull()
+        return
     }
 
     if (p === 'playing') {
@@ -451,6 +464,7 @@ export function GameShell({ win, info, engine, panel, onFrame, className, aiStat
           { label: 'High Scores…', icon: Trophy, shortcut: 'H', onClick: () => openCard('scores') },
           '-',
           { label: 'Sound', icon: VolumeX, checked: soundOn, shortcut: 'M', onClick: toggleSound },
+          ...(info.fullscreen ? [{ label: 'Full Screen', icon: Maximize, checked: fullscreen, shortcut: 'F', onClick: toggleFull }] : []),
         ],
       },
       {
@@ -458,7 +472,7 @@ export function GameShell({ win, info, engine, panel, onFrame, className, aiStat
         items: [{ label: `How to Play ${info.name}`, icon: CircleHelp, shortcut: 'F1', onClick: () => openCard('help') }],
       },
     ])
-  }, [win, phase, soundOn, info.name, newGame, togglePause, openCard, toggleSound])
+  }, [win, phase, soundOn, info.name, info.fullscreen, fullscreen, newGame, togglePause, openCard, toggleSound, toggleFull])
 
   // ---- the cards over the playfield
 
@@ -475,7 +489,7 @@ export function GameShell({ win, info, engine, panel, onFrame, className, aiStat
   return (
     <div
       ref={rootRef}
-      className={`k-app mg-app ${className ?? ''}${phase === 'playing' && !card ? ' mg-playing' : ''}${info.hideCursor ? ' mg-hide-cursor' : ''}`}
+      className={`k-app mg-app ${className ?? ''}${phase === 'playing' && !card ? ' mg-playing' : ''}${info.hideCursor ? ' mg-hide-cursor' : ''}${info.noPanel ? ' mg-nopanel' : ''}`}
       tabIndex={-1}
       onKeyDown={onKeyDown}
       onKeyUp={onKeyUp}
