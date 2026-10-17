@@ -20,7 +20,7 @@ import { bounce, crosses, flipperTip, hitArcInside, hitCapsule, hitCircle, hitFl
 
 export const TW = 600
 export const TH = 1000
-export const BALL_R = 10
+export const BALL_R = 13
 const GRAVITY = 1350
 const MAX_MOVE = 2
 const MAX_SPEED = 3200
@@ -114,8 +114,8 @@ function wall(ax: number, ay: number, bx: number, by: number, kind: WallKind = '
 }
 
 const FLIP = { px: 196, py: 890, len: 74, r1: 12, r2: 6, rest: deg(30), up: deg(-28) }
-const SEP_X = 52
-const SLING_X = 92
+const SEP_X = 58
+const SLING_X = 106
 const SLING_TOP = 722
 
 /** The bottom left corner from the flipper (see pinballRules.ts: the same construction, scaled). */
@@ -132,10 +132,10 @@ function bottomLeft() {
   const atX = (base: Pt, x: number): Pt => [x, base[1] + ((x - base[0]) * u[1]) / u[0]]
   const end: Pt = [g0[0] - u[0] * 12, g0[1] - u[1] * 12]
   const start = atX(g0, SEP_X)
-  const edge: Pt = [g0[0] + n[0] * 33, g0[1] + n[1] * 33]
+  const edge: Pt = [g0[0] + n[0] * 40, g0[1] + n[1] * 40]
   return {
     guide: { a: start, b: end, r: guideR },
-    sling: { a: [SLING_X, SLING_TOP] as Pt, b: atX(edge, SLING_X), c: atX(edge, 140) },
+    sling: { a: [SLING_X, SLING_TOP] as Pt, b: atX(edge, SLING_X), c: atX(edge, 152) },
   }
 }
 
@@ -258,8 +258,8 @@ function buildTrack(): Pt[] {
   arc(205, 235, 60, -Math.PI / 2, Math.PI * 0.18)
   const l2 = pts[pts.length - 1]
   line(l2, [150, 520])
-  line([150, 520], [96, 640])
-  line([96, 640], [72, 690])
+  line([150, 520], [104, 640])
+  line([104, 640], [82, 690])
   return pts
 }
 

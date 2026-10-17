@@ -44,7 +44,7 @@ function play(g: Park, seconds: number, rng: () => number): ParkEvent[] {
 test('the coaster track runs from the mouth to the left inlane', () => {
   assert.ok(TRACK_LENGTH > 600, `track ${TRACK_LENGTH}`)
   const end = trackAt(TRACK_LENGTH)
-  assert.ok(end.x > 52 + BALL_R && end.x < 92 && end.dy > 0, `ends at ${end.x},${end.y}`)
+  assert.ok(end.x > 58 + BALL_R && end.x < 106 - BALL_R && end.dy > 0, `ends at ${end.x},${end.y}`)
   assert.ok(TRACK.length > 50)
 })
 

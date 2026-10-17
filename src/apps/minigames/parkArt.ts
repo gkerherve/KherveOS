@@ -334,8 +334,8 @@ export const LAMPS: Lamp[] = [
   { id: 'again', kind: 'oval', x: CX, y: 846, s: 14, angle: 0, color: C.red, label: 'RIDE AGAIN' },
   { id: 'extra', kind: 'round', x: CX, y: 792, s: 9, angle: 0, color: C.amber, label: 'EB' },
   ...[0, 1, 2, 3].map((i): Lamp => ({ id: `lane${i}`, kind: 'round', x: (LANE_GUIDES[i] + LANE_GUIDES[i + 1]) / 2, y: 160, s: 7, angle: 0, color: C.gold })),
-  { id: 'inlaneL', kind: 'arrow', x: 72, y: 800, s: 7, angle: 0, color: C.magenta },
-  { id: 'inlaneR', kind: 'arrow', x: 2 * CX - 72, y: 800, s: 7, angle: 0, color: C.magenta },
+  { id: 'inlaneL', kind: 'arrow', x: 82, y: 800, s: 7, angle: 0, color: C.magenta },
+  { id: 'inlaneR', kind: 'arrow', x: 2 * CX - 82, y: 800, s: 7, angle: 0, color: C.magenta },
 ]
 
 export const LANE_LETTERS = ['P', 'A', 'R', 'K']

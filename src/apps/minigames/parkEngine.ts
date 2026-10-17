@@ -10,15 +10,24 @@ import { arpeggio, noise, sfx, tone } from './sound'
 import { ParkMusic } from './parkMusic'
 import { C, LAMPS, LANE_LETTERS, insertShape, offscreen, paintBackglass, paintCoaster, paintPlayfield, paintScene, sceneLights, type Lamp, type SceneLights } from './parkArt'
 import {
-  BALL_R, CAROUSEL, DUCK_H, DUCK_X, LANE_GUIDES, LANE_X, LANE_X0, LANE_X1, PLUNGER_Y, Park, RIDES, RIDE_GOALS, RIDE_NAMES, SCOOP, SLINGS,
+  ARCH, BALL_R, CAROUSEL, DUCK_H, DUCK_X, LANE_GUIDES, LANE_X, LANE_X0, LANE_X1, PLUNGER_Y, Park, RIDES, RIDE_GOALS, RIDE_NAMES, SCOOP, SLINGS,
   STRIKER, TH, TIX_H, TIX_X, TW, WHEEL, trackAt, type Ball, type Flipper, type ParkEvent, type Ride,
 } from './parkRules'
 
 export const W = 1920
 export const H = 1080
-/** Where the table sits on the screen. */
-const TX = 660
-const TY = 36
+/**
+ * The table is seen tilted, like a real one: drawn flat into its own canvas,
+ * then laid on the screen in thin slices, narrower and flatter towards the
+ * top (a perspective projection of the playfield's plane).
+ */
+const VIEW = { cx: W / 2, top: 22, height: 1030, bottomScale: 1.3, depth: 0.3 }
+/** Screen position of table point (x, y). */
+export function project(x: number, y: number): [number, number] {
+  const v = y / TH
+  const k = 1 + VIEW.depth * (1 - v)
+  return [VIEW.cx + (x - TW / 2) * (VIEW.bottomScale / k), VIEW.top + (VIEW.height * v) / k]
+}
 
 const LEFT_KEYS = ['KeyZ', 'ShiftLeft', 'ArrowLeft']
 const RIGHT_KEYS = ['Slash', 'ShiftRight', 'ArrowRight']
@@ -91,6 +100,9 @@ export class WobblelandEngine implements GameEngine {
   private glassLayer: HTMLCanvasElement | null = null
   private dotsLayer: HTMLCanvasElement | null = null
   private lights: SceneLights = sceneLights(W, H)
+  private table: HTMLCanvasElement | null = null
+  private tableCtx: CanvasRenderingContext2D | null = null
+  private tableScale = 0
   private dmd: HTMLCanvasElement | null = null
   private dmdCtx: CanvasRenderingContext2D | null = null
 
@@ -178,6 +190,13 @@ export class WobblelandEngine implements GameEngine {
     }
     for (const b of this.trails.keys()) if (!g.balls.includes(b)) this.trails.delete(b)
 
+    // Fireworks over the top of the table in multiball.
+    if ((g.multiball || g.finale) && Math.random() < dt * 2.5) {
+      const colors = [C.gold, C.magenta, C.teal, C.sky, C.pink]
+      this.particles.burst(150 + Math.random() * 300, 50 + Math.random() * 90, colors[Math.floor(Math.random() * colors.length)], {
+        count: 26, speed: [40, 150], life: [0.5, 1], size: [2, 3.5], gravity: 60, drag: 1.2, square: false,
+      })
+    }
     this.particles.update(dt)
     this.floaters.update(dt)
     for (const [k, v] of this.flash) this.flash.set(k, v + dt)
@@ -280,6 +299,7 @@ export class WobblelandEngine implements GameEngine {
         this.show('SHOOTING GALLERY', `All ducks down · +${fmt(e.points)}`, C.green)
         this.say('BULLSEYE!', `+${fmt(e.points)}`, 'duck')
         arpeggio([72, 76, 79, 84], 0.07, { dur: 0.14, type: 'square', vol: 0.09 })
+        this.light('show')
         this.fireworks(1)
         break
       case 'tix': {
@@ -311,6 +331,7 @@ export class WobblelandEngine implements GameEngine {
         this.show('SKILL SHOT', `+${fmt(e.points)}`, C.gold)
         this.say('SKILL SHOT', `+${fmt(e.points)}`, 'fireworks')
         arpeggio([72, 79, 84, 91], 0.07, { dur: 0.16, type: 'square', vol: 0.09 })
+        this.light('show')
         this.fireworks(2)
         break
       case 'inlane':
@@ -359,6 +380,7 @@ export class WobblelandEngine implements GameEngine {
       case 'multiball':
         this.show('PARK AFTER DARK', 'Multiball · every scoop is a jackpot', C.sky, 2.6)
         this.say('MULTIBALL', 'SCOOP = JACKPOT', 'fireworks', 2.6)
+        this.light('show')
         this.fireworks(6)
         arpeggio([60, 64, 67, 72, 76, 79, 84], 0.07, { dur: 0.2, type: 'square', vol: 0.09 })
         noise({ dur: 2.2, freq: 900, to: 1800, vol: 0.08, q: 0.4, at: 0.2 })
@@ -368,6 +390,7 @@ export class WobblelandEngine implements GameEngine {
         this.show('JACKPOT', `+${fmt(e.points)}`, C.gold, 2)
         this.say('JACKPOT', fmt(e.points), 'fireworks', 2)
         this.floaters.add(`+${fmt(e.points)}`, e.x, e.y - 20, C.gold, { size: 20, life: 1.2, vy: -40, pop: true })
+        this.light('show')
         this.fireworks(4)
         this.shake = 6
         arpeggio([72, 76, 79, 84, 88, 91, 96], 0.05, { dur: 0.16, type: 'square', vol: 0.08 })
@@ -385,7 +408,8 @@ export class WobblelandEngine implements GameEngine {
           this.show('DING DING DING!', `You rang the bell · +${fmt(e.points)}`, C.gold, 2)
           this.say('RING THE BELL', `+${fmt(e.points)}`, 'bell')
           this.particles.burst(STRIKER.x0 + 28, STRIKER.top, C.gold, { count: 30, speed: [80, 260], life: [0.4, 0.9], gravity: 120, square: false })
-          this.fireworks(2)
+          this.light('show')
+        this.fireworks(2)
         } else {
           this.floaters.add(fmt(e.points), 290, STRIKER.y - 20 - e.level * 120, C.gold, { size: 12, life: 0.7 })
           this.say('HIGH STRIKER', `${Math.round(e.level * 100)}%  ${fmt(e.points)}`, 'bell', 1.2)
@@ -399,6 +423,7 @@ export class WobblelandEngine implements GameEngine {
         this.light(`ride-${e.ride}`)
         this.show(`${RIDE_NAMES[e.ride].toUpperCase()}!`, `Ride ${e.done} of 6 complete · +30,000`, RIDE_COLORS[e.ride], 2.4)
         this.say(RIDE_NAMES[e.ride].toUpperCase(), `RIDE ${e.done} OF 6 DONE`, 'fireworks', 2.2)
+        this.light('show')
         this.fireworks(3)
         arpeggio([67, 72, 76, 79, 84], 0.08, { dur: 0.2, type: 'triangle', vol: 0.1 })
         break
@@ -410,6 +435,7 @@ export class WobblelandEngine implements GameEngine {
       case 'finale':
         this.show('GRAND FINALE', 'Every ride ridden · +250,000', C.gold, 3.5)
         this.say('GRAND FINALE', 'JACKPOTS 150,000', 'fireworks', 3.5)
+        this.light('show')
         this.fireworks(14)
         this.shake = 8
         arpeggio([60, 64, 67, 72, 76, 79, 84, 88, 91, 96], 0.08, { dur: 0.3, type: 'square', vol: 0.09 })
@@ -446,8 +472,9 @@ export class WobblelandEngine implements GameEngine {
     if (s === this.layerScale && this.sceneLayer) return
     this.layerScale = s
     this.sceneLayer = offscreen(W, H, s, (c) => paintScene(c, W, H))
-    this.fieldLayer = offscreen(TW, TH, s, paintPlayfield)
-    this.coasterLayer = offscreen(TW, TH, s, paintCoaster)
+    const ts = Math.min(3.5, s * VIEW.bottomScale)
+    this.fieldLayer = offscreen(TW, TH, ts, paintPlayfield)
+    this.coasterLayer = offscreen(TW, TH, ts, paintCoaster)
     this.glassLayer = offscreen(540, 470, s, (c) => paintBackglass(c, 540, 470))
     this.dotsLayer = offscreen(540, 136, s, (c) => {
       c.fillStyle = '#0b0603'
@@ -475,10 +502,40 @@ export class WobblelandEngine implements GameEngine {
     this.drawCard(ctx)
     this.drawBoard(ctx, f)
 
-    ctx.save()
-    ctx.translate(TX + this.shakeX, TY + this.shakeY)
+    // The table, drawn flat at the resolution its nearest end needs, then tilted onto the screen.
+    const ts = Math.min(3.5, this.layerScale * VIEW.bottomScale)
+    if (!this.table || this.tableScale !== ts) {
+      this.table = document.createElement('canvas')
+      this.table.width = Math.round(TW * ts)
+      this.table.height = Math.round(TH * ts)
+      this.tableCtx = this.table.getContext('2d')
+      this.tableScale = ts
+    }
+    const tc = this.tableCtx!
+    tc.setTransform(ts, 0, 0, ts, 0, 0)
+    this.drawTable(tc, f)
     this.drawCabinet(ctx)
-    this.drawTable(ctx, f)
+    this.warp(ctx)
+    this.drawBanner(ctx)
+  }
+
+  /** Lays the flat table onto the screen in slices, with the perspective of a tilted playfield. */
+  private warp(ctx: CanvasRenderingContext2D) {
+    const src = this.table!
+    const n = 260
+    const sx = this.shakeX
+    const sy = this.shakeY
+    ctx.save()
+    ctx.imageSmoothingQuality = 'high'
+    for (let i = 0; i < n; i++) {
+      const y0 = (i / n) * TH
+      const y1 = ((i + 1) / n) * TH
+      const [, top] = project(0, y0)
+      const [, bottom] = project(0, y1)
+      const [l, ] = project(0, (y0 + y1) / 2)
+      const [r, ] = project(TW, (y0 + y1) / 2)
+      ctx.drawImage(src, 0, (y0 / TH) * src.height, src.width, ((y1 - y0) / TH) * src.height, l + sx, top + sy, r - l, bottom - top + 0.75)
+    }
     ctx.restore()
   }
 
@@ -523,6 +580,7 @@ export class WobblelandEngine implements GameEngine {
     if (f.phase === 'ready' || f.phase === 'over' || this.game.multiball || this.game.finale) {
       this.nextAmbient -= dt
       if (this.nextAmbient <= 0) {
+        this.light('show')
         this.fireworks(1)
         this.nextAmbient = this.game.multiball || this.game.finale ? 0.7 : 3 + Math.random() * 4
       }
@@ -554,7 +612,7 @@ export class WobblelandEngine implements GameEngine {
   // ---- the backglass and its display
 
   private drawBackglass(ctx: CanvasRenderingContext2D, f: Frame) {
-    const x = 60
+    const x = 24
     const y = 40
     const w = 540
     const h = 470
@@ -676,7 +734,7 @@ export class WobblelandEngine implements GameEngine {
     this.dmdContent(d, f)
     const px = d.getImageData(0, 0, 128, 32).data
 
-    const X = 60
+    const X = 24
     const Y = 532
     ctx.drawImage(this.dotsLayer!, X, Y, 540, 136)
     const buckets: [number, number][][] = [[], [], [], []]
@@ -858,7 +916,7 @@ export class WobblelandEngine implements GameEngine {
 
   /** The instruction card under the display, like the ones on a real cabinet's apron. */
   private drawCard(ctx: CanvasRenderingContext2D) {
-    const x = 60
+    const x = 24
     const y = 700
     const w = 540
     const h = 330
@@ -915,7 +973,7 @@ export class WobblelandEngine implements GameEngine {
 
   private drawBoard(ctx: CanvasRenderingContext2D, f: Frame) {
     const g = this.game
-    const x = 1320
+    const x = 1356
     const y = 40
     const w = 540
     const t = f.now / 1000
@@ -1116,38 +1174,59 @@ export class WobblelandEngine implements GameEngine {
   // ---- the cabinet and the table
 
   private drawCabinet(ctx: CanvasRenderingContext2D) {
-    // The cabinet's side rails and lockdown bar around the playfield.
+    // The cabinet round the tilted playfield: dark wood, chrome side rails, the lockdown bar.
+    const [tlx, tly] = project(0, 0)
+    const [trx] = project(TW, 0)
+    const [blx, bly] = project(0, TH)
+    const [brx] = project(TW, TH)
     ctx.save()
-    ctx.shadowColor = 'rgba(0,0,0,0.8)'
-    ctx.shadowBlur = 50
+    ctx.shadowColor = 'rgba(0,0,0,0.85)'
+    ctx.shadowBlur = 60
     ctx.fillStyle = '#16060f'
     ctx.beginPath()
-    ctx.roundRect(-26, -22, TW + 52, TH + 62, 18)
+    ctx.moveTo(tlx - 26, tly - 16)
+    ctx.lineTo(trx + 26, tly - 16)
+    ctx.lineTo(brx + 40, bly + 6)
+    ctx.lineTo(blx - 40, bly + 6)
+    ctx.closePath()
     ctx.fill()
     ctx.restore()
-    const side = (x: number) => {
-      const g = ctx.createLinearGradient(x, 0, x + 18, 0)
-      g.addColorStop(0, '#5c6878')
+    const rail = (x0: number, x1: number, dir: number) => {
+      const g = ctx.createLinearGradient(x1, 0, x1 + dir * 26, 0)
+      g.addColorStop(0, '#4b5664')
       g.addColorStop(0.45, '#f2f6fa')
-      g.addColorStop(1, '#4b5664')
+      g.addColorStop(1, '#5c6878')
       ctx.fillStyle = g
-      ctx.fillRect(x, -16, 18, TH + 22)
+      ctx.beginPath()
+      ctx.moveTo(x0, tly - 10)
+      ctx.lineTo(x0 + dir * 16, tly - 10)
+      ctx.lineTo(x1 + dir * 26, bly)
+      ctx.lineTo(x1, bly)
+      ctx.closePath()
+      ctx.fill()
     }
-    side(-22)
-    side(TW + 4)
-    const bar = ctx.createLinearGradient(0, TH + 8, 0, TH + 36)
+    rail(tlx - 2, blx - 2, -1)
+    rail(trx + 2, brx + 2, 1)
+    // Lockdown bar.
+    const bar = ctx.createLinearGradient(0, bly - 6, 0, bly + 30)
     bar.addColorStop(0, '#f2f6fa')
     bar.addColorStop(0.5, '#8996a6')
     bar.addColorStop(1, '#3c4552')
     ctx.fillStyle = bar
     ctx.beginPath()
-    ctx.roundRect(-24, TH + 6, TW + 48, 30, 8)
+    ctx.roundRect(blx - 36, bly - 4, brx - blx + 72, 28, 8)
     ctx.fill()
     ctx.fillStyle = 'rgba(0,0,0,0.5)'
-    ctx.font = `900 11px ${FONT}`
+    ctx.font = `900 12px ${FONT}`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('WOBBLELAND · FREE SOFTWARE · GPL-3.0', TW / 2, TH + 21)
+    ctx.fillText('WOBBLELAND · FREE SOFTWARE · GPL-3.0', W / 2, bly + 10)
+    // The backbox's foot at the far end, lit from below.
+    const glow = ctx.createLinearGradient(0, tly - 20, 0, tly + 40)
+    glow.addColorStop(0, 'rgba(255,201,60,0.25)')
+    glow.addColorStop(1, 'rgba(255,201,60,0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(tlx, tly - 20, trx - tlx, 60)
   }
 
   private drawTable(ctx: CanvasRenderingContext2D, f: Frame) {
@@ -1158,6 +1237,7 @@ export class WobblelandEngine implements GameEngine {
     ctx.clip()
     ctx.drawImage(this.fieldLayer!, 0, 0, TW, TH)
     this.drawLamps(ctx, f)
+    this.drawTopShow(ctx, f)
     this.drawCarousel(ctx, f)
     this.drawWheel(ctx, f)
     this.drawStriker(ctx, f)
@@ -1174,6 +1254,7 @@ export class WobblelandEngine implements GameEngine {
       this.drawTrain(ctx, b)
       this.drawBall(ctx, b, alpha, true)
     }
+    this.drawSkyRide(ctx, f)
     this.drawLockAnims(ctx)
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'
@@ -1198,7 +1279,6 @@ export class WobblelandEngine implements GameEngine {
     ctx.fillStyle = glare
     ctx.fillRect(0, 0, TW, TH)
     this.floaters.draw(ctx)
-    this.drawBanner(ctx)
     ctx.restore()
   }
 
@@ -1273,6 +1353,154 @@ export class WobblelandEngine implements GameEngine {
       ctx.fillStyle = '#fff4c0'
       ctx.fillText(letter, (LANE_GUIDES[i] + LANE_GUIDES[i + 1]) / 2, 108)
     })
+    ctx.restore()
+  }
+
+  /** What goes on at the top of the table: bulbs chasing round the arch, spotlights on the big top, lit lanes. */
+  private drawTopShow(ctx: CanvasRenderingContext2D, f: Frame) {
+    const g = this.game
+    const t = f.now / 1000
+    const show = (this.flash.get('show') ?? 9) < 2.2
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    // Two spotlights sweeping across the tent.
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(ARCH.x, ARCH.y, ARCH.r - 4, Math.PI, 0)
+    ctx.lineTo(ARCH.x + ARCH.r, 190)
+    ctx.lineTo(ARCH.x - ARCH.r, 190)
+    ctx.clip()
+    for (const [x, ph, col] of [[60, 0, '255,220,150'], [536, 2.1, '150,200,255']] as const) {
+      const a = -Math.PI / 2 + Math.sin(t * (show ? 3 : 0.8) + ph) * 0.9
+      const len = 420
+      const gr = ctx.createLinearGradient(x, 190, x + Math.cos(a) * len, 190 + Math.sin(a) * len)
+      gr.addColorStop(0, `rgba(${col},0.32)`)
+      gr.addColorStop(1, `rgba(${col},0)`)
+      ctx.fillStyle = gr
+      ctx.beginPath()
+      ctx.moveTo(x, 190)
+      ctx.lineTo(x + Math.cos(a - 0.13) * len, 190 + Math.sin(a - 0.13) * len)
+      ctx.lineTo(x + Math.cos(a + 0.13) * len, 190 + Math.sin(a + 0.13) * len)
+      ctx.closePath()
+      ctx.fill()
+    }
+    // A shimmer running over the stripes.
+    const sx = ((t * 160) % 900) - 150
+    const sh = ctx.createLinearGradient(sx - 60, 0, sx + 60, 0)
+    sh.addColorStop(0, 'rgba(255,255,255,0)')
+    sh.addColorStop(0.5, 'rgba(255,240,220,0.12)')
+    sh.addColorStop(1, 'rgba(255,255,255,0)')
+    ctx.fillStyle = sh
+    ctx.fillRect(0, 0, TW, 190)
+    ctx.restore()
+    // Light columns over the lanes just rolled.
+    for (let i = 0; i < 4; i++) {
+      const fl = this.flash.get(`lane${i}`) ?? 9
+      const lit = g.lanes[i]
+      if (fl > 0.6 && !lit) continue
+      const x = (LANE_GUIDES[i] + LANE_GUIDES[i + 1]) / 2
+      const a = fl < 0.6 ? 1 - fl / 0.6 : 0.25 + 0.1 * Math.sin(t * 6 + i)
+      const col = ctx.createLinearGradient(0, 150, 0, 20)
+      col.addColorStop(0, `rgba(255,201,60,${0.55 * a})`)
+      col.addColorStop(1, 'rgba(255,201,60,0)')
+      ctx.fillStyle = col
+      ctx.fillRect(x - 22, 20, 44, 130)
+    }
+    ctx.restore()
+    // Bulbs round the arch: a chase, a rainbow in multiball, all flashing after a big moment.
+    const n = 48
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI + ((i + 0.5) / n) * Math.PI
+      const x = ARCH.x + Math.cos(a) * (ARCH.r - 10)
+      const y = ARCH.y + Math.sin(a) * (ARCH.r - 10)
+      let on: number
+      let color = i % 3 === 0 ? C.gold : i % 3 === 1 ? C.cream : C.magenta
+      if (show) on = Math.floor(t * 12) % 2 ? 1 : 0.15
+      else if (g.multiball || g.finale) {
+        on = 1
+        color = `hsl(${(i * 15 + t * 400) % 360},100%,65%)`
+      } else if (f.phase !== 'playing') on = Math.sin(t * 5 - i * 0.4) > 0.3 ? 1 : 0.15
+      else on = (i + Math.floor(t * 14)) % 6 < 2 || (n - i + Math.floor(t * 14)) % 6 < 1 ? 1 : 0.18
+      this.bulb(ctx, x, y, 3, color, on * this.gi)
+    }
+  }
+
+  /** The sky ride: cable cars going to and fro on two cables over the lanes. */
+  private drawSkyRide(ctx: CanvasRenderingContext2D, f: Frame) {
+    const t = f.now / 1000
+    const x0 = 166
+    const x1 = 430
+    const cableY = (x: number, base: number) => base + Math.sin(((x - x0) / (x1 - x0)) * Math.PI) * 9
+    ctx.save()
+    // Towers with flags.
+    for (const x of [x0, x1]) {
+      ctx.fillStyle = 'rgba(0,0,0,0.35)'
+      ctx.fillRect(x + 4, 52, 6, 50)
+      const tw = ctx.createLinearGradient(x - 3, 0, x + 3, 0)
+      tw.addColorStop(0, '#6c7888')
+      tw.addColorStop(0.5, '#f2f6fa')
+      tw.addColorStop(1, '#6c7888')
+      ctx.fillStyle = tw
+      ctx.fillRect(x - 3, 44, 6, 52)
+      ctx.fillStyle = C.red
+      const wave = Math.sin(t * 6 + x) * 3
+      ctx.beginPath()
+      ctx.moveTo(x, 30)
+      ctx.quadraticCurveTo(x + 8, 32 + wave, x + 16, 34 + wave)
+      ctx.lineTo(x, 40)
+      ctx.fill()
+      ctx.fillStyle = '#ddd'
+      ctx.fillRect(x - 0.8, 28, 1.6, 18)
+    }
+    // Two cables.
+    for (const base of [48, 58]) {
+      ctx.strokeStyle = 'rgba(20,10,30,0.8)'
+      ctx.lineWidth = 1.6
+      ctx.beginPath()
+      for (let x = x0; x <= x1; x += 6) {
+        if (x === x0) ctx.moveTo(x, cableY(x, base))
+        else ctx.lineTo(x, cableY(x, base))
+      }
+      ctx.stroke()
+    }
+    // The cars: three each way, swinging a little.
+    const colors = [C.gold, C.sky, C.magenta, C.teal, C.red, C.violet]
+    for (let k = 0; k < 6; k++) {
+      const back = k >= 3
+      const p = (t * 0.06 + (k % 3) / 3) % 1
+      const x = back ? x1 - p * (x1 - x0) : x0 + p * (x1 - x0)
+      const y = cableY(x, back ? 58 : 48)
+      const swing = Math.sin(t * 2.4 + k) * 0.12
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate(swing)
+      ctx.strokeStyle = '#c9d2dc'
+      ctx.lineWidth = 1.2
+      ctx.beginPath()
+      ctx.moveTo(0, 0)
+      ctx.lineTo(0, 8)
+      ctx.stroke()
+      ctx.fillStyle = 'rgba(0,0,0,0.35)'
+      ctx.beginPath()
+      ctx.roundRect(-8 + 5, 8 + 8, 16, 13, 4)
+      ctx.fill()
+      const body = ctx.createLinearGradient(0, 8, 0, 21)
+      body.addColorStop(0, '#ffffff')
+      body.addColorStop(0.3, colors[k])
+      body.addColorStop(1, shadeOf(colors[k]))
+      ctx.fillStyle = body
+      ctx.beginPath()
+      ctx.roundRect(-8, 8, 16, 13, 4)
+      ctx.fill()
+      ctx.fillStyle = 'rgba(200,235,255,0.75)'
+      ctx.fillRect(-6, 10, 12, 4)
+      ctx.fillStyle = '#ffd9b3'
+      ctx.beginPath()
+      ctx.arc(-2.5, 12.5, 1.8, 0, TAU)
+      ctx.arc(2.5, 12.5, 1.8, 0, TAU)
+      ctx.fill()
+      ctx.restore()
+    }
     ctx.restore()
   }
 
@@ -1842,31 +2070,60 @@ export class WobblelandEngine implements GameEngine {
     ctx.fill()
   }
 
-  /** A chrome ball: the night sky and the park's lights reflected in it. */
+  /** A chrome ball: the night sky above and the purple playfield below reflected in it, the lamps as specks, a sharp highlight. */
   private chrome(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
-    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r)
-    g.addColorStop(0, '#ffffff')
-    g.addColorStop(0.25, '#e8edf4')
-    g.addColorStop(0.6, '#8a95a6')
-    g.addColorStop(0.85, '#3a3048')
-    g.addColorStop(1, '#ab8fc4')
-    ctx.fillStyle = g
+    ctx.save()
     ctx.beginPath()
     ctx.arc(x, y, r, 0, TAU)
-    ctx.fill()
-    // Coloured reflections of the lights round about.
-    ctx.fillStyle = 'rgba(255,61,154,0.35)'
+    ctx.clip()
+    // Reflection: the bright sky over a dark horizon, then the playfield.
+    const env = ctx.createLinearGradient(x, y - r, x, y + r)
+    env.addColorStop(0, '#f4f7ff')
+    env.addColorStop(0.32, '#b9c4d8')
+    env.addColorStop(0.47, '#4d4566')
+    env.addColorStop(0.53, '#241638')
+    env.addColorStop(0.75, '#6b4a8f')
+    env.addColorStop(1, '#2a1840')
+    ctx.fillStyle = env
+    ctx.fillRect(x - r, y - r, r * 2, r * 2)
+    // The lamps round about, as coloured specks along the horizon.
+    const specks = [C.magenta, C.gold, C.teal, C.sky, C.pink]
+    for (let i = 0; i < 5; i++) {
+      ctx.fillStyle = specks[i]
+      ctx.globalAlpha = 0.8
+      ctx.beginPath()
+      ctx.ellipse(x - r * 0.75 + i * r * 0.38, y + r * 0.1 + Math.abs(i - 2) * r * 0.06, r * 0.1, r * 0.05, 0, 0, TAU)
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
+    // Round shading: dark towards the edge, as a sphere.
+    const shade = ctx.createRadialGradient(x - r * 0.25, y - r * 0.3, r * 0.2, x, y, r)
+    shade.addColorStop(0, 'rgba(255,255,255,0.15)')
+    shade.addColorStop(0.7, 'rgba(0,0,0,0)')
+    shade.addColorStop(1, 'rgba(10,0,20,0.6)')
+    ctx.fillStyle = shade
+    ctx.fillRect(x - r, y - r, r * 2, r * 2)
+    // A rim of light from the playfield below.
+    ctx.strokeStyle = 'rgba(255,150,220,0.45)'
+    ctx.lineWidth = r * 0.12
     ctx.beginPath()
-    ctx.ellipse(x + r * 0.45, y + r * 0.35, r * 0.28, r * 0.14, -0.6, 0, TAU)
-    ctx.fill()
-    ctx.fillStyle = 'rgba(76,201,255,0.35)'
+    ctx.arc(x, y, r * 0.95, Math.PI * 0.15, Math.PI * 0.85)
+    ctx.stroke()
+    ctx.restore()
+    // The highlights: a sharp window of light and a soft glint.
+    ctx.fillStyle = 'rgba(255,255,255,0.95)'
     ctx.beginPath()
-    ctx.ellipse(x - r * 0.5, y + r * 0.4, r * 0.2, r * 0.1, 0.6, 0, TAU)
+    ctx.ellipse(x - r * 0.36, y - r * 0.42, r * 0.26, r * 0.15, -0.6, 0, TAU)
     ctx.fill()
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'
     ctx.beginPath()
-    ctx.ellipse(x - r * 0.38, y - r * 0.42, r * 0.22, r * 0.14, -0.6, 0, TAU)
+    ctx.arc(x + r * 0.35, y + r * 0.45, r * 0.08, 0, TAU)
     ctx.fill()
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)'
+    ctx.lineWidth = 0.8
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, TAU)
+    ctx.stroke()
   }
 
   private drawBall(ctx: CanvasRenderingContext2D, b: Ball, alpha: number, raised: boolean) {
@@ -1943,8 +2200,9 @@ export class WobblelandEngine implements GameEngine {
     const scale = 0.6 + 0.4 * (1 - Math.pow(1 - k, 3)) + Math.sin(k * Math.PI) * 0.12
     ctx.save()
     ctx.globalAlpha = out
-    ctx.translate(TW / 2 - 10, 430)
-    ctx.scale(scale, scale)
+    const [bx, by] = project(TW / 2 - 10, 430)
+    ctx.translate(bx, by)
+    ctx.scale(scale * 1.25, scale * 1.25)
     ctx.fillStyle = 'rgba(10,4,24,0.72)'
     ctx.beginPath()
     ctx.roundRect(-230, -48, 460, 96, 18)
