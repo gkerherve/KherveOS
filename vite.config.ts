@@ -1,14 +1,37 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
+import { networkInterfaces } from 'node:os'
+import type { Plugin } from 'vite'
 
 // The KherveOS server (server/) answers everything under /api, including the
 // /api/ws websocket. In dev, Vite proxies to it so the OS and the server share
 // one origin and the session cookie just works.
 const SERVER = process.env.KHERVEOS_SERVER ?? 'http://127.0.0.1:8787'
 
+// This computer's network addresses, for games played across devices (Kherve Grand Prix
+// multiplayer shows them: "tell your friend to open http://192.168.1.20:5173"), and
+// whether other devices can reach this dev server at all (only with `vite --host`).
+function lanInfo(): Plugin {
+  return {
+    name: 'kherveos-lan-info',
+    configureServer(server) {
+      server.middlewares.use('/__kherveos/lan', (_req, res) => {
+        const addresses = Object.values(networkInterfaces())
+          .flat()
+          .filter((a) => a && a.family === 'IPv4' && !a.internal)
+          .map((a) => a!.address)
+        const host = server.config.server.host
+        const reachable = host === true || (typeof host === 'string' && host !== 'localhost' && !host.startsWith('127.'))
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({ addresses, port: server.config.server.port ?? 5173, reachable }))
+      })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), lanInfo()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

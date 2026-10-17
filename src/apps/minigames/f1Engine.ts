@@ -8,10 +8,11 @@
 
 import * as THREE from 'three'
 import { buildTrack, inRange, locate, pointAt, trackDef, wrap, type Track, type TrackId } from './f1Track.ts'
-import { CAR, COMPOUNDS, newTyres, SERIES, speedProfile, steerLock, tyreGrip, type Compound, type Series } from './f1Physics.ts'
+import { CAR, COMPOUNDS, COMPOUND_LIST, newTyres, SERIES, speedProfile, steerLock, tyreGrip, type Compound, type Series } from './f1Physics.ts'
 import { Cockpit } from './f1Cockpit.ts'
 import { CarAudio, engineOf } from './f1Audio.ts'
 import { RaceMusic } from './f1Music.ts'
+import { multiLineup, packCar, unpackCar, type CarState, type RaceStart } from './f1Net.ts'
 import { DIFFICULTY, Session, TEAMS, fmtLap, setRaceSeries, teamsOf, type Classified, type ClassicModel, type Difficulty, type RaceCar, type SessionEvent } from './f1Race.ts'
 import { buildClassic, classicCams } from './f1Classics.ts'
 import { buildCar, buildCarGeometry, sharedMaterials, teamLook, type CarGeometry, type CarModel, type Shared, type TeamLook } from './f1Models.ts'
@@ -377,7 +378,144 @@ export class GrandPrixEngine {
     this.onStage(this.stage)
   }
 
+  // ---------------------------------------------------------------- multiplayer
+
+  /** The race with other players: who drives what, and how to send our cars. Null when racing alone. */
+  private net: {
+    host: boolean
+    send: (m: object) => void
+    /** Local car index -> canonical car, and back. */
+    toCanon: number[]
+    toLocal: Map<number, number>
+    /** Player id -> canonical car. */
+    players: Map<number, number>
+    /** The latest state of each remote car (local index), and when it came. */
+    states: Map<number, { st: CarState; at: number }>
+    sendT: number
+  } | null = null
+
+  get multiplayer() {
+    return !!this.net
+  }
+
+  /**
+   * Start a race with other players (no qualifying: the grid is the order they joined, then the AI).
+   * `you` is this player's id in the room; the host's game drives the AI cars for everyone.
+   */
+  startMulti(start: RaceStart, you: number, host: boolean, mine: GPSettings, send: (m: object) => void) {
+    const r = start.settings
+    const me = start.lineup.find((c) => c.id === you)
+    if (!me) return
+    const series: Series = r.series === 'classic' ? 'classic' : 'modern'
+    const s: GPSettings = {
+      ...mine,
+      track: r.track === 'lake' ? 'lake' : 'park',
+      series,
+      laps: Math.max(1, Math.min(30, Number(r.laps) || 3)),
+      difficulty: r.difficulty === 'easy' || r.difficulty === 'hard' ? r.difficulty : 'medium',
+      damage: r.damage !== false,
+      time: r.time === 'sunset' ? 'sunset' : 'day',
+      team: me.car >> 1,
+      quali: 0,
+    }
+    this.settings = { ...s }
+    this.setSeries(series, me.car >> 1)
+    this.setTime(s.time ?? 'day')
+    this.setTrack(s.track)
+    const { toCanon, toLocal, names, remote, out, players, grid } = multiLineup(start, you, host)
+    this.net = { host, send, toCanon, toLocal, players, states: new Map(), sendT: 0 }
+    this.session = new Session({
+      track: this.track, profile: this.profile.v, profileLap: this.profile.lapTime, kind: 'race', laps: s.laps, minutes: 0,
+      difficulty: s.difficulty, assists: s.assists, playerName: s.name, damage: s.damage !== false, grid, compound: 'medium',
+      seed: start.seed, names, remote, out,
+    })
+    this.qualiResults = []
+    this.stage = 'race'
+    this.lastLights = 0
+    if (this.cam === 'tv') this.cam = 'chase'
+    this.snapCamera()
+    this.onStage(this.stage)
+  }
+
+  /** Car states from the other games. */
+  netCars(list: number[][]) {
+    const n = this.net
+    const s = this.session
+    if (!n || !s) return
+    for (const a of list) {
+      const u = unpackCar(a)
+      if (!u) continue
+      const l = n.toLocal.get(u[0])
+      if (l === undefined || l === 0 || !s.cars[l]?.remote) continue
+      n.states.set(l, { st: u[1], at: this.time })
+    }
+  }
+
+  /** A player left: their car goes back to its garage. */
+  netLeft(id: number) {
+    const n = this.net
+    const s = this.session
+    if (!n || !s) return
+    const c = n.players.get(id)
+    if (c === undefined) return
+    const car = s.cars[n.toLocal.get(c)!]
+    if (!car || car.player) return
+    n.states.delete(car.i)
+    car.out = true
+    car.speed = 0
+    s.event(`${car.driver.name} has left the race`, 'info')
+  }
+
+  endMulti() {
+    this.net = null
+  }
+
+  /** Our cars out (about 20 a second), and the remote cars moved towards where their games say they are. */
+  private netStep(s: Session, dt: number) {
+    const n = this.net!
+    n.sendT -= dt
+    if (n.sendT <= 0) {
+      n.sendT = 0.05
+      const cars = [packCar(n.toCanon[0], s.player)]
+      if (n.host) for (const c of s.cars) if (!c.player && !c.remote && !c.out) cars.push(packCar(n.toCanon[c.i], c))
+      n.send({ t: 'cars', c: cars })
+    }
+    for (const [l, { st, at }] of n.states) {
+      const c = s.cars[l]
+      if (!c || c.out) continue
+      // where it is now: the last state carried on at its speed (a short guess), eased into
+      const age = Math.min(0.25, this.time - at)
+      const px = st.x + Math.cos(st.h) * st.speed * age
+      const pz = st.z + Math.sin(st.h) * st.speed * age
+      const far = Math.hypot(px - c.x, pz - c.z) > 12
+      const k = far ? 1 : Math.min(1, dt * 12)
+      c.x += (px - c.x) * k
+      c.z += (pz - c.z) * k
+      c.y += (st.y - c.y) * k
+      let dh = st.h - c.h
+      dh = Math.atan2(Math.sin(dh), Math.cos(dh))
+      c.h += dh * k
+      c.speed = st.speed
+      c.v = st.speed
+      c.steer = st.steer
+      c.rpm = st.rpm
+      c.gear = st.gear
+      c.s = wrap(st.s + st.speed * age, s.t.len)
+      c.lat = st.lat
+      c.dist = st.dist + st.speed * age
+      c.pit = st.pit
+      c.wheelRot += (c.speed / CAR.wheelR) * dt
+      const tyre = COMPOUND_LIST[st.tyre]
+      if (tyre && tyre !== c.tyres.compound) c.tyres = newTyres(tyre, false)
+      if (st.finished && !c.finished) {
+        c.finished = true
+        c.finishTime = s.time
+      }
+    }
+  }
+
   backToMenu() {
+    this.net = null
     this.session = null
     this.stage = 'menu'
     this.qualiResults = []
@@ -496,6 +634,7 @@ export class GrandPrixEngine {
     const s = live ? this.session! : this.demo!
     if (live) this.readInput(dt)
     s.step(dt)
+    if (live && this.net) this.netStep(s, dt)
     this.drawCars(s, dt)
     this.drawCrews(s, dt)
     this.particles(s, dt)

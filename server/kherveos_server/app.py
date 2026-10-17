@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket
 
-from . import __version__, ai, arduino, auth, clipboard, crashes, db, games, gitproxy, lab, latex, mail, mcp_server, messages, notes_sync, refs, system, webfetch
+from . import __version__, ai, arduino, auth, clipboard, crashes, db, games, gitproxy, grandprix, lab, latex, mail, mcp_server, messages, notes_sync, refs, system, webfetch
 from .realtime import hub
 
 
@@ -25,6 +25,7 @@ app.include_router(auth.users_router)
 app.include_router(messages.router)
 app.include_router(mail.router)
 app.include_router(games.router)
+app.include_router(grandprix.router)
 app.include_router(gitproxy.router)
 app.include_router(latex.router)
 app.include_router(refs.router)

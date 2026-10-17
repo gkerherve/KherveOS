@@ -7,9 +7,10 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { TRACKS, buildTrack, locate, pointAt, sampleAt, surfaceAt, type Track } from '../../src/apps/minigames/f1Track.ts'
 import { CarBody, speedProfile, steerLock, tyreGrip, newTyres } from '../../src/apps/minigames/f1Physics.ts'
-import { Session, TEAMS, setRaceSeries } from '../../src/apps/minigames/f1Race.ts'
+import { Session, TEAMS, setRaceSeries, teamsOf } from '../../src/apps/minigames/f1Race.ts'
 import { EngineDSP, ENGINES, type EngineKind } from '../../src/apps/minigames/f1EngineDSP.ts'
 import { engineOf, workletSource } from '../../src/apps/minigames/f1Audio.ts'
+import { localCar, multiLineup, packCar, unpackCar, type RaceStart } from '../../src/apps/minigames/f1Net.ts'
 
 const built = TRACKS.map((d) => {
   const t = buildTrack(d)
@@ -221,4 +222,89 @@ test('engine sound: every engine fires, gets louder with the throttle, rises in 
   assert.deepEqual(['stoccarda', 'dieppe', 'bavaria'].map((m) => engineOf('classic', m)), ['flat6', 'inline4', 'inline6'])
   // the worklet module is valid JavaScript (compiled, not run: there is no AudioWorkletGlobalScope here)
   assert.doesNotThrow(() => new Function(workletSource()))
+})
+
+test('multiplayer: every game sees the same grid, names and cars; the host drives the AI, guests show it', () => {
+  // each game puts its own car first: the mapping is a permutation, and the player's car is 0
+  for (let mine = 0; mine < 12; mine++) {
+    const seen = new Set(Array.from({ length: 12 }, (_, c) => localCar(c, mine)))
+    assert.equal(seen.size, 12)
+    assert.equal(localCar(mine, mine), 0)
+  }
+  const t = TRACKS[0]
+  const track = buildTrack(t)
+  const prof = speedProfile(track)
+  const humans = [
+    { car: 4, id: 11, name: 'Ann', human: true },
+    { car: 9, id: 12, name: 'Bob', human: true },
+  ]
+  const start: RaceStart = {
+    settings: { track: 'park', series: 'modern', laps: 2, ai: true },
+    seed: 99,
+    lineup: Array.from({ length: 12 }, (_, c) => humans.find((h) => h.car === c) ?? { car: c, id: 0, name: '', human: false }),
+  }
+  const game = (you: number, host: boolean) => {
+    const v = multiLineup(start, you, host)
+    setRaceSeries('modern', v.team)
+    const s = new Session({
+      track, profile: prof.v, profileLap: prof.lapTime, kind: 'race', laps: 2, minutes: 0, difficulty: 'medium', assists: true, playerName: 'x',
+      grid: v.grid, compound: 'medium', seed: start.seed, names: v.names, remote: v.remote, out: v.out, damage: false,
+    })
+    // the team each car shows, by its grid car
+    const teams = Array.from({ length: 12 }, (_, c) => TEAMS[s.cars[v.toLocal.get(c)!].team].name)
+    return { v, s, teams }
+  }
+  const ann = game(11, true)
+  const bob = game(12, false)
+  assert.equal(ann.s.player.driver.name, 'Ann')
+  assert.equal(bob.s.player.driver.name, 'Bob')
+  for (let c = 0; c < 12; c++) {
+    const a = ann.s.cars[ann.v.toLocal.get(c)!]
+    const b = bob.s.cars[bob.v.toLocal.get(c)!]
+    // same driver, same team colours, same grid slot on both games
+    assert.equal(a.driver.name, b.driver.name)
+    assert.equal(ann.teams[c], teamsOf('modern')[c >> 1].name)
+    assert.equal(bob.teams[c], ann.teams[c])
+    assert.ok(Math.hypot(a.x - b.x, a.z - b.z) < 0.01, `car ${c} on the same grid slot`)
+    // the host drives the AI and itself; Bob's game drives only Bob
+    assert.equal(a.remote, c === 9)
+    assert.equal(b.remote, c !== 9)
+  }
+  // the players start at the front, in the order they joined
+  const first = [...ann.s.cars].sort((p, q) => q.dist - p.dist)
+  assert.deepEqual(first.slice(0, 2).map((c) => c.driver.name), ['Ann', 'Bob'])
+  // the same seed: the lights go out at the same moment on both games
+  let ta = 0
+  let tb = 0
+  for (let k = 0; k < 60 * 10 && (ann.s.phase === 'lights' || bob.s.phase === 'lights'); k++) {
+    if (ann.s.phase === 'lights') ann.s.step(1 / 60), (ta = k)
+    if (bob.s.phase === 'lights') bob.s.step(1 / 60), (tb = k)
+  }
+  assert.equal(ann.s.phase, 'green')
+  assert.ok(Math.abs(ta - tb) <= 1, 'lights out together')
+  // a car's state survives the trip; Bob's game leaves the AI to the host's messages
+  const aiCars = ann.s.cars.filter((c) => !c.player && !c.remote)
+  const from = aiCars.map((c) => c.dist)
+  for (let k = 0; k < 60 * 6; k++) ann.s.step(1 / 60)
+  // (the two players sit still on the front row in this test, so some AI cars behind them are boxed in)
+  assert.ok(Math.max(...aiCars.map((c, k) => c.dist - from[k])) > 50, 'the host drives the AI')
+  const ai = ann.s.cars[ann.v.toLocal.get(0)!]
+  const u = unpackCar(packCar(0, ai))!
+  assert.equal(u[0], 0)
+  assert.ok(Math.abs(u[1].x - ai.x) < 0.01 && Math.abs(u[1].dist - ai.dist) < 0.01)
+  const bAi = bob.s.cars[bob.v.toLocal.get(0)!]
+  const before = bAi.dist
+  for (let k = 0; k < 60; k++) bob.s.step(1 / 60)
+  assert.equal(bAi.dist, before, 'guests do not drive the AI themselves')
+  // players only: the AI cars stay in their garages and out of the order
+  const solo = multiLineup({ ...start, lineup: humans }, 11, true)
+  assert.equal(solo.out.length, 10)
+  setRaceSeries('modern', solo.team)
+  const s2 = new Session({
+    track, profile: prof.v, profileLap: prof.lapTime, kind: 'race', laps: 2, minutes: 0, difficulty: 'medium', assists: true, playerName: 'x',
+    grid: solo.grid, seed: 1, names: solo.names, remote: solo.remote, out: solo.out, damage: false,
+  })
+  assert.equal(s2.order().length, 2)
+  assert.equal(s2.results().length, 2)
+  setRaceSeries('modern', 0)
 })

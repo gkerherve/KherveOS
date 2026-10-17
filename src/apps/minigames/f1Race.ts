@@ -164,6 +164,10 @@ export interface RaceCar {
   /** What is broken, and when it last got worse (for the debris). */
   damage: Damage
   surface: Surface
+  /** Multiplayer: another game drives this car (a player, or the host's AI); its state comes over the network. */
+  remote: boolean
+  /** Multiplayer: nobody drives this car (no AI): it stays in its garage and out of the order. */
+  out: boolean
 }
 
 export interface SessionOpts {
@@ -186,6 +190,11 @@ export interface SessionOpts {
   demo?: boolean
   /** Crashes break wings and suspension (on by default). */
   damage?: boolean
+  /** Multiplayer: who drives each car (by car index; null keeps the usual driver). */
+  names?: ({ name: string; code: string; num: number } | null)[]
+  /** Multiplayer: the cars driven elsewhere, and the cars nobody drives. */
+  remote?: number[]
+  out?: number[]
 }
 
 /** A blow the engine shows: debris, sparks, a bang. */
@@ -238,6 +247,9 @@ function rng(seed: number) {
   }
 }
 
+/** A driver's three-letter code from their name. */
+export const codeOf = (name: string) => name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase().padEnd(3, 'X')
+
 export class Session {
   readonly t: Track
   readonly kind: 'qualifying' | 'race'
@@ -287,12 +299,25 @@ export class Session {
     this.mustChange = o.kind === 'race' && o.laps >= 3
     this.wearLaps = o.kind === 'qualifying' ? 10 : Math.max(o.laps, 5)
     for (let i = 0; i < DRIVERS.length; i++) {
-      const d = i === 0 ? { ...DRIVERS[0], name: o.playerName || 'You', code: (o.playerName || 'YOU').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase().padEnd(3, 'X') } : DRIVERS[i]
+      const named = o.names?.[i]
+      const d = named ? { ...DRIVERS[i], ...named } : i === 0 ? { ...DRIVERS[0], name: o.playerName || 'You', code: codeOf(o.playerName || 'YOU') } : DRIVERS[i]
       this.cars.push(this.makeCar(i, d))
     }
     this.player = this.cars[0]
+    for (const i of o.remote ?? []) if (i > 0 && this.cars[i]) this.cars[i].remote = true
+    for (const i of o.out ?? []) if (i > 0 && this.cars[i]) this.cars[i].out = true
     if (o.kind === 'qualifying') this.setupQuali()
-    else this.setupRace(o.grid ?? this.cars.map((c) => c.i), o.compound ?? 'medium')
+    else this.setupRace((o.grid ?? this.cars.map((c) => c.i)).filter((i) => !this.cars[i].out), o.compound ?? 'medium')
+    // the cars nobody drives wait in their garages
+    for (const c of this.cars)
+      if (c.out) {
+        c.pit = 'garage'
+        c.s = this.garageS(c)
+        c.lat = this.t.pit.side * (this.t.pit.garageOff + 3.5)
+        c.dist = c.s - this.t.len
+        c.leaveAt = Infinity
+        this.poseKinematic(c, 0)
+      }
   }
 
   private makeCar(i: number, d: Driver): RaceCar {
@@ -307,6 +332,7 @@ export class Session {
       tyres: newTyres('soft', true), used: [], pit: 'none', pitT: 0, pitLen: 2.5, pitPlan: -1, nextCompound: 'medium', stops: 0,
       leaveAt: 0, runLaps: 0, runs: 0,
       finished: false, finishTime: 0, penalty: 0, drs: false, drsZone: -1, hit: 0, damage: noDamage(), surface: 'asphalt',
+      remote: false, out: false,
     }
   }
 
@@ -436,7 +462,7 @@ export class Session {
   private moveAll(dt: number) {
     const demo = !!this.opts.demo
     for (const c of this.cars) {
-      if (c.player && !demo) continue
+      if ((c.player && !demo) || c.remote || c.out) continue
       if (c.pit !== 'none') this.pitMove(c, dt)
       else this.aiDrive(c, dt)
     }
@@ -1108,7 +1134,7 @@ export class Session {
   // ---------------------------------------------------------------- order and results
 
   order(): RaceCar[] {
-    const list = [...this.cars]
+    const list = this.cars.filter((c) => !c.out)
     if (this.kind === 'qualifying') return list.sort((a, b) => a.bestLap - b.bestLap || a.i - b.i)
     return list.sort((a, b) => {
       if (a.finished !== b.finished) return a.finished ? -1 : 1
@@ -1143,7 +1169,7 @@ export class Session {
       const ord = this.order()
       return ord.map((c) => this.row(c, c.bestLap, 0, c === ord[0] ? fmtLap(c.bestLap) : isFinite(c.bestLap) ? fmtGap(c.bestLap - ord[0].bestLap) : 'no time'))
     }
-    const rows = this.cars.map((c) => {
+    const rows = this.cars.filter((c) => !c.out).map((c) => {
       let time: number
       let laps: number
       if (c.finished) {

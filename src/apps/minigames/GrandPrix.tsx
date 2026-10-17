@@ -4,7 +4,7 @@
 // f1Engine.ts (loaded on demand with three.js); this is the window: the
 // canvas, the HUD, the menu and result cards, scores and the AI tools.
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CircleHelp, Flag, Maximize, Music, Pause, Play, RotateCcw, VolumeX } from 'lucide-react'
 import type { AppProps } from '@/os'
 import { useWindows } from '@/os/windows'
@@ -20,6 +20,9 @@ import { COMPOUNDS, COMPOUND_LIST, type Compound } from './f1Physics'
 import { CLASSIC_MODELS, DIFFICULTY, TEAMS, fmtLap, teamsOf, type Classified, type Difficulty } from './f1Race'
 import type { Series } from './f1Physics'
 import { PoleBurst, Podium, Trophy } from './GPCelebration'
+import { Lobby } from './GPLobby'
+import { TouchControls, isTouchDevice } from './GPTouch'
+import { GPNet, type RoomState } from './f1Net'
 import './grandPrix.css'
 
 const ID = 'grandprix'
@@ -93,6 +96,10 @@ export default function GrandPrix({ win }: AppProps) {
   const [settings, setSettings] = useState<GPSettings>(() => ({
     track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true, music: true, ...loadSettings(),
   }))
+  useEffect(() => {
+    settingsRef.current = settings
+  }, [settings])
+
   /** Music on or off: remembered at once, and it needs the sound on to be heard. */
   const setMusic = useCallback((on: boolean) => {
     setSettings((s) => {
@@ -106,6 +113,17 @@ export default function GrandPrix({ win }: AppProps) {
   const [results, setResults] = useState<Classified[]>([])
   const [score, setScore] = useState<RaceScore | null>(null)
   const [podium, setPodium] = useState(false)
+  // multiplayer: the lobby, the room we are in, its connection
+  const [lobbyOpen, setLobbyOpen] = useState(false)
+  const [room, setRoom] = useState<RoomState | null>(null)
+  const roomRef = useRef<RoomState | null>(null)
+  const [netError, setNetError] = useState('')
+  const [netBusy, setNetBusy] = useState(false)
+  const [multiAi, setMultiAi] = useState(true)
+  const netRef = useRef<GPNet | null>(null)
+  const settingsRef = useRef<GPSettings | null>(null)
+  // a touch screen gets the on-screen pedals and steering
+  const [touch] = useState(isTouchDevice)
   const scores = useScores(ID)
   const soundOn = useSound((s) => s.on)
   const focused = useWindows((s) => s.focusedId === win.id)
@@ -236,12 +254,106 @@ export default function GrandPrix({ win }: AppProps) {
     focusGame()
   }, [setPhase])
 
+  const leaveRoom = useCallback(() => {
+    netRef.current?.close()
+    netRef.current = null
+    roomRef.current = null
+    setRoom(null)
+    engineRef.current?.endMulti()
+  }, [])
+
+  // ---- multiplayer
+
+  /** Connects to the race room service of this KherveOS server, then sends `first` (host or join). */
+  const roomConnect = useCallback(
+    async (first: object) => {
+      setNetError('')
+      setNetBusy(true)
+      unlockAudio()
+      try {
+        let net = netRef.current
+        if (!net) {
+          net = new GPNet({
+            room: (r) => {
+              roomRef.current = r
+              setRoom(r)
+              setNetError('')
+            },
+            start: (st) => {
+              const r = roomRef.current
+              const e = engineRef.current
+              if (!r || !e || !settingsRef.current) return
+              unlockAudio()
+              setLobbyOpen(false)
+              setResults([])
+              setScore(null)
+              setPodium(false)
+              e.startMulti(st, r.you, r.host === r.you, settingsRef.current, (m) => netRef.current?.send(m))
+              focusGame()
+            },
+            cars: (c) => engineRef.current?.netCars(c),
+            left: (id) => engineRef.current?.netLeft(id),
+            error: (text) => setNetError(text),
+            closed: (why) => {
+              netRef.current = null
+              roomRef.current = null
+              setRoom(null)
+              setNetError(why)
+              engineRef.current?.endMulti()
+            },
+          })
+          netRef.current = net
+          await net.connect()
+        }
+        net.send(first)
+      } catch (err) {
+        netRef.current = null
+        setNetError(err instanceof Error ? err.message : String(err))
+      } finally {
+        setNetBusy(false)
+      }
+    },
+    [],
+  )
+
+  const roomSettings = (s: GPSettings) => ({ track: s.track, series: s.series, laps: s.laps, difficulty: s.difficulty, damage: s.damage !== false, time: s.time, ai: multiAi })
+
+  const hostRoom = () => void roomConnect({ t: 'host', name: settings.name, team: settings.team ?? 0, settings: roomSettings(settings) })
+  const joinRoom = (code: string) => void roomConnect({ t: 'join', code, name: settings.name, team: settings.team ?? 0 })
+  const startRoomRace = () => netRef.current?.send({ t: 'start', seed: Math.floor(Math.random() * 2 ** 30) + 1 })
+
+  // the host's choices reach the room; everyone's car choice too
+  const isHost = !!room && room.host === room.you
+  useEffect(() => {
+    if (!isHost || room?.state !== 'lobby') return
+    netRef.current?.send({ t: 'settings', settings: { track: settings.track, series: settings.series, laps: settings.laps, difficulty: settings.difficulty, damage: settings.damage !== false, time: settings.time, ai: multiAi } })
+  }, [isHost, room?.state, settings.track, settings.series, settings.laps, settings.difficulty, settings.damage, settings.time, multiAi])
+  useEffect(() => {
+    if (room) netRef.current?.send({ t: 'team', team: settings.team ?? 0 })
+    // only when the choice changes (the room message would loop otherwise)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.team, !!room])
+  useEffect(() => () => netRef.current?.close(), [])
+
+  /** After a race with others: back to the room (the host reopens it for the next race). */
+  const toLobby = () => {
+    engineRef.current?.backToMenu()
+    setResults([])
+    setScore(null)
+    setPodium(false)
+    setPhase('ready')
+    setLobbyOpen(true)
+    if (roomRef.current && roomRef.current.host === roomRef.current.you) netRef.current?.send({ t: 'lobby' })
+  }
+
   const toMenu = useCallback(() => {
+    // leaving a race with others leaves its room
+    if (engineRef.current?.multiplayer) leaveRoom()
     engineRef.current?.backToMenu()
     setResults([])
     setScore(null)
     setPhase('ready')
-  }, [setPhase])
+  }, [setPhase, leaveRoom])
 
   // ---- keys
 
@@ -397,6 +509,18 @@ export default function GrandPrix({ win }: AppProps) {
     },
   })
 
+  // the on-screen controls press the same keys as the keyboard
+  const touchKeys = useMemo(
+    () => ({
+      down: (code: string) => {
+        unlockAudio()
+        engineRef.current?.keyDown(code)
+      },
+      up: (code: string) => engineRef.current?.keyUp(code),
+    }),
+    [],
+  )
+
   // ---- the page
 
   const best = scores[0]?.score ?? 0
@@ -405,7 +529,7 @@ export default function GrandPrix({ win }: AppProps) {
   const e = engineRef.current
 
   return (
-    <div ref={rootRef} className="gp-app" tabIndex={-1} onContextMenu={(ev) => ev.preventDefault()} onMouseDown={() => {
+    <div ref={rootRef} className={`gp-app ${touch && phase === 'playing' ? 'gp-touchmode' : ''}`} tabIndex={-1} onContextMenu={(ev) => ev.preventDefault()} onMouseDown={() => {
         // the first click starts the sound (browsers wait for a gesture), so the menu has its music
         unlockAudio()
         if (phase === 'playing') focusGame()
@@ -414,13 +538,45 @@ export default function GrandPrix({ win }: AppProps) {
 
       {live && hud && <Hud hud={hud} classic={e?.settings.series === 'classic'} mapPath={e?.mapPath ?? ''} box={e?.mapBox ?? { x: 0, z: 0, w: 1, h: 1 }} />}
 
+      {touch && phase === 'playing' && hud && (
+        <TouchControls keys={touchKeys} drs={hud.drsOpen} inGarage={hud.pit === 'garage'} onPause={pause} onFullscreen={() => toggleGameFullscreen(rootRef.current)} />
+      )}
+
       {phase === 'loading' && (
         <div className="gp-wrap">
           <div className="gp-card">{error ? <p>Could not start: {error}</p> : <p>Building the circuit…</p>}</div>
         </div>
       )}
 
-      {phase === 'ready' && (
+      {phase === 'ready' && lobbyOpen && (
+        <Lobby
+          room={room}
+          error={netError}
+          busy={netBusy}
+          name={settings.name}
+          series={settings.series}
+          team={settings.team ?? 0}
+          track={settings.track}
+          laps={settings.laps}
+          ai={multiAi}
+          onName={(v) => set('name', v)}
+          onSeries={(v) => setSettings((s) => ({ ...s, series: v }))}
+          onTeam={(k) => setSettings((s) => ({ ...s, team: k, classic: teamsOf(s.series)[k]?.model ?? s.classic }))}
+          onTrack={(v) => set('track', v as TrackId)}
+          onLaps={(v) => set('laps', v)}
+          onAi={setMultiAi}
+          onHost={hostRoom}
+          onJoin={joinRoom}
+          onStart={startRoomRace}
+          onLeave={leaveRoom}
+          onClose={() => {
+            setNetError('')
+            setLobbyOpen(false)
+          }}
+        />
+      )}
+
+      {phase === 'ready' && !lobbyOpen && (
         <div className="gp-wrap gp-menu">
           <div className="gp-card gp-wide">
             <div className="gp-title">
@@ -500,6 +656,9 @@ export default function GrandPrix({ win }: AppProps) {
                   Skip qualifying (start last)
                 </button>
               )}
+              <button className="k-btn" onClick={() => setLobbyOpen(true)}>
+                Multiplayer{room ? ` · room ${room.code}` : ''}
+              </button>
               <button className="k-btn" onClick={() => toggleGameFullscreen(rootRef.current)}>
                 <Maximize size={14} /> {fullscreen ? 'Leave full screen' : 'Full screen'}
               </button>
@@ -620,9 +779,20 @@ export default function GrandPrix({ win }: AppProps) {
               </ol>
             )}
             <div className="gp-buttons">
-              <button className="k-btn gp-go" onClick={toMenu}>
-                Next Grand Prix
-              </button>
+              {room ? (
+                <>
+                  <button className="k-btn gp-go" onClick={toLobby}>
+                    Back to room {room.code}
+                  </button>
+                  <button className="k-btn" onClick={toMenu}>
+                    Leave and go to the menu
+                  </button>
+                </>
+              ) : (
+                <button className="k-btn gp-go" onClick={toMenu}>
+                  Next Grand Prix
+                </button>
+              )}
             </div>
           </div>
         </div>
