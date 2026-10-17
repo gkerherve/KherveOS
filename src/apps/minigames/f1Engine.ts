@@ -174,6 +174,8 @@ export class GrandPrixEngine {
   private music: RaceMusic | null = null
   /** Seconds the music stays down (the podium's fanfare). */
   private musicDuck = 0
+  /** How long a steering key has been held (seconds, signed: right positive). */
+  private steerHeld = 0
   private lastHit = 0
   private bodyPitch = new Map<number, { p: number; r: number; v: number }>()
 
@@ -388,7 +390,7 @@ export class GrandPrixEngine {
   keyDown(code: string) {
     this.keys.add(code)
     const s = this.session
-    if (code === 'KeyC') this.cycleCamera()
+    if (code === 'KeyV') this.cycleCamera()
     if (!s) return
     if (code === 'KeyP') {
       s.boxRequest = !s.boxRequest
@@ -438,7 +440,12 @@ export class GrandPrixEngine {
     const s = this.session
     if (!s) return
     const k = this.keys
-    let steer = (k.has('ArrowRight') || k.has('KeyD') ? 1 : 0) - (k.has('ArrowLeft') || k.has('KeyA') ? 1 : 0)
+    const dir = (k.has('ArrowRight') || k.has('KeyD') ? 1 : 0) - (k.has('ArrowLeft') || k.has('KeyA') ? 1 : 0)
+    // a tap of the key turns a little, holding it turns more and more: a third of the lock at once, all of it after 0.45 s
+    if (dir !== Math.sign(this.steerHeld)) this.steerHeld = 0
+    this.steerHeld += dir * dt
+    const held = Math.min(1, Math.abs(this.steerHeld) / 0.45)
+    let steer = dir * (0.3 + 0.7 * held * held * (3 - 2 * held))
     // X accelerates and Z brakes, like two pedals under the left hand (the arrows and W / S work too)
     const wantT = k.has('KeyX') || k.has('ArrowUp') || k.has('KeyW') ? 1 : 0
     const wantB = k.has('KeyZ') || k.has('ArrowDown') || k.has('KeyS') ? 1 : 0
@@ -950,7 +957,7 @@ export class GrandPrixEngine {
     this.musicDuck = Math.max(0, this.musicDuck - dt)
     const m = this.music
     m.setStyle(SERIES === 'classic' ? 'classic' : 'modern')
-    const level = this.settings.music === false || this.musicDuck > 0 ? 0 : mode === 'live' ? 0.42 : mode === 'still' ? 0.5 : 1
+    const level = this.settings.music === false || this.musicDuck > 0 ? 0 : mode === 'live' ? 0.3 : mode === 'still' ? 0.5 : 1
     m.setLevel(level, this.musicDuck > 0 ? 0.25 : 0.8)
     m.update()
   }

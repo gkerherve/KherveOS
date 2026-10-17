@@ -37,7 +37,7 @@ const CONTROLS: [string, string][] = [
   ['P', 'Box this lap (pit stop: new tyres)'],
   ['1 · 2 · 3', 'Tyres for the stop: Soft · Medium · Hard'],
   ['E', 'DRS (in the zone, when allowed)'],
-  ['C', 'Camera: chase, T-cam, cockpit, TV'],
+  ['V', 'View: chase, T-cam, cockpit, TV'],
   ['R', 'Back onto the track'],
   ['Esc · F', 'Pause · full screen'],
 ]
@@ -322,7 +322,7 @@ export default function GrandPrix({ win }: AppProps) {
           { label: phase === 'playing' ? 'Pause' : 'Resume', icon: phase === 'playing' ? Pause : Play, disabled: phase !== 'playing' && phase !== 'paused', onClick: () => (phase === 'playing' ? pause() : resume()) },
           { label: 'End Qualifying', icon: Flag, disabled: stage !== 'qualifying', onClick: () => engineRef.current?.endQualifying() },
           '-',
-          { label: 'Change Camera (C)', disabled: phase !== 'playing' && phase !== 'paused', onClick: () => engineRef.current?.cycleCamera() },
+          { label: 'Change View (V)', disabled: phase !== 'playing' && phase !== 'paused', onClick: () => engineRef.current?.cycleCamera() },
           { label: 'Sound', icon: VolumeX, checked: soundOn, onClick: () => setSoundOn(!useSound.getState().on) },
           { label: 'Music', icon: Music, checked: settings.music !== false, onClick: () => setMusic(settings.music === false) },
           { label: 'Full Screen', icon: Maximize, checked: fullscreen, onClick: () => toggleGameFullscreen(rootRef.current) },

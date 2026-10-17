@@ -304,7 +304,7 @@ class WorkletVoice implements Voice {
     this.set(this.thr, throttle, 0.02)
     this.set(this.tone.frequency, 500 + open * open * 15000, 0.05)
     this.set(this.boom.gain, bass)
-    this.set(this.out.gain, vol * 1.6, 0.05)
+    this.set(this.out.gain, vol * 2.4, 0.05)
   }
 
   /** A gear change: the ignition cut for a moment (and a small dip in the sound). */
@@ -435,7 +435,7 @@ export class CarAudio {
   player(s: PlayerSound) {
     const modern = this.series === 'modern'
     const open = s.listener === 'chase' ? 1 : s.listener === 'cockpit' ? 0.4 : 0.12
-    const vol = !s.on ? 0 : s.listener === 'far' ? 0.05 : s.listener === 'cockpit' ? 0.19 : 0.15
+    const vol = !s.on ? 0 : s.listener === 'far' ? 0.06 : s.listener === 'cockpit' ? 0.24 : 0.2
     const revs = (s.rpm - s.idle) / Math.max(1, s.redline - s.idle)
     this.me.setEngine(s.engine, s.idle, s.redline)
     this.me.drive(s.rpm, s.throttle, vol, open, s.listener === 'cockpit' ? 7 : 2)
