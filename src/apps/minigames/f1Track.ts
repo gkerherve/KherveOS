@@ -15,6 +15,7 @@ export interface TrackDef {
   /** Control points: x, z, height (m). The start line is at point 1; the straight runs from point 0 to point 2. */
   points: [number, number, number][]
   width: number
+  /** The time of day it is raced at by default (the menu can make it sunset). */
   sky: 'noon' | 'golden'
   /** The lake (Lac Bleu): an ellipse of water. */
   lake?: { x: number; z: number; rx: number; rz: number }

@@ -311,16 +311,34 @@ interface SkyLook {
   hemi: number
   fog: number
   exposure: number
+  /** The glow along the horizon towards the sun, how big the sun's disc is, how far the haze reaches. */
+  glow: number
+  glowAmt: number
+  disc: number
+  fogFar: number
+  /** Lights on (windows, lamps) at dusk. */
+  dusk: boolean
+  clouds: number
 }
 
-const SKIES: Record<'noon' | 'golden', SkyLook> = {
+export type SkyName = 'noon' | 'golden' | 'sunset'
+
+const SKIES: Record<SkyName, SkyLook> = {
   noon: {
     top: 0x2f6fcf, horizon: 0xcfe2f1, ground: 0x6d7a5c, sun: new THREE.Vector3(0.45, 0.78, 0.35).normalize(),
     sunColor: 0xfff3df, sunIntensity: 3.1, hemiSky: 0xcfe6ff, hemiGround: 0x4d5a36, hemi: 0.9, fog: 0xc6d9e8, exposure: 1.0,
+    glow: 0xffffff, glowAmt: 0.05, disc: 900, fogFar: 6200, dusk: false, clouds: 0xffffff,
   },
   golden: {
     top: 0x35548f, horizon: 0xffc187, ground: 0x5c5040, sun: new THREE.Vector3(-0.72, 0.17, -0.55).normalize(),
     sunColor: 0xffb46e, sunIntensity: 3.0, hemiSky: 0xffd9b5, hemiGround: 0x4a3f30, hemi: 0.75, fog: 0xe7b78e, exposure: 1.05,
+    glow: 0xffa060, glowAmt: 0.35, disc: 700, fogFar: 7800, dusk: false, clouds: 0xffd2b0,
+  },
+  // the sun sitting on the horizon at the end of the start straight: deep blue overhead, fire along the skyline
+  sunset: {
+    top: 0x15204a, horizon: 0xff8a4a, ground: 0x3a2a2a, sun: new THREE.Vector3(0.9, 0.055, 0.42).normalize(),
+    sunColor: 0xff8c4a, sunIntensity: 2.7, hemiSky: 0x9f8fd0, hemiGround: 0x4a3a32, hemi: 1.05, fog: 0xb8786e, exposure: 1.14,
+    glow: 0xff5a3a, glowAmt: 1.0, disc: 260, fogFar: 6400, dusk: true, clouds: 0xff9f86,
   },
 }
 
@@ -335,18 +353,27 @@ function skyMesh(look: SkyLook): THREE.Mesh {
       ground: { value: new THREE.Color(look.ground) },
       sunDir: { value: look.sun.clone() },
       sunColor: { value: new THREE.Color(look.sunColor) },
+      glow: { value: new THREE.Color(look.glow) },
+      glowAmt: { value: look.glowAmt },
+      disc: { value: look.disc },
     },
     vertexShader: `varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_Position = p.xyww; }`,
     fragmentShader: `
       varying vec3 vDir;
       uniform vec3 top; uniform vec3 horizon; uniform vec3 ground; uniform vec3 sunDir; uniform vec3 sunColor;
+      uniform vec3 glow; uniform float glowAmt; uniform float disc;
       void main(){
         vec3 d = normalize(vDir);
         float h = d.y;
         vec3 c = mix(horizon, top, pow(clamp(h, 0.0, 1.0), 0.55));
+        // the band of glow on the skyline, strongest under the sun, with a rosy layer above it
+        float az = max(dot(normalize(d.xz + 1e-5), normalize(sunDir.xz + 1e-5)), 0.0);
+        float band = exp(-max(h, 0.0) * 9.0);
+        c += glow * glowAmt * band * (0.35 + 0.65 * pow(az, 3.0));
+        c += vec3(0.55, 0.25, 0.45) * glowAmt * 0.35 * exp(-abs(h - 0.18) * 10.0) * (0.4 + 0.6 * az);
         c = mix(c, ground, smoothstep(0.0, -0.08, h));
         float s = max(dot(d, normalize(sunDir)), 0.0);
-        c += sunColor * (pow(s, 900.0) * 14.0 + pow(s, 40.0) * 0.45 + pow(s, 6.0) * 0.18);
+        c += sunColor * (pow(s, disc) * 14.0 + pow(s, 40.0) * 0.45 + pow(s, 6.0) * 0.18);
         gl_FragColor = vec4(c, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -378,9 +405,9 @@ export interface World {
   dispose(): void
 }
 
-export function buildWorld(t: Track, renderer: THREE.WebGLRenderer, braking: number[]): World {
+export function buildWorld(t: Track, renderer: THREE.WebGLRenderer, braking: number[], skyName: SkyName = t.def.sky): World {
   const def = t.def
-  const look = SKIES[def.sky]
+  const look = SKIES[skyName]
   const group = new THREE.Group()
   const disposables: { dispose(): void }[] = []
   const keep = <T extends { dispose(): void }>(x: T) => {
@@ -425,7 +452,7 @@ export function buildWorld(t: Track, renderer: THREE.WebGLRenderer, braking: num
   sun.shadow.bias = -0.0004
   sun.shadow.normalBias = 0.04
   group.add(sun, sun.target)
-  const fog = new THREE.Fog(look.fog, 500, def.sky === 'golden' ? 7800 : 6200)
+  const fog = new THREE.Fog(look.fog, look.dusk ? 900 : 500, look.fogFar)
 
   // ---- heights: the land around the circuit
   const lake = def.lake
@@ -899,6 +926,12 @@ export function buildWorld(t: Track, renderer: THREE.WebGLRenderer, braking: num
     const winTex = keep(windowsTexture(16, 2, '#3a3f45', '#5d88a8'))
     winTex.repeat.set(bLen / 40, 1)
     const glassM = keep(new THREE.MeshPhysicalMaterial({ map: winTex, roughness: 0.08, metalness: 0.6, clearcoat: 1 }))
+    // at dusk the offices and the control tower are lit
+    if (look.dusk) {
+      glassM.emissive.set(0xffc58a)
+      glassM.emissiveMap = winTex
+      glassM.emissiveIntensity = 0.55
+    }
     const shell = new THREE.Mesh(keep(new THREE.BoxGeometry(bLen, 4.4, depth)), concrete)
     shell.position.set(0, 7.0, zz(depth / 2))
     shell.castShadow = true
@@ -1290,7 +1323,7 @@ export function buildWorld(t: Track, renderer: THREE.WebGLRenderer, braking: num
   {
     const cx = (t.minX + t.maxX) / 2
     const cz = (t.minZ + t.maxZ) / 2
-    const snow = def.sky === 'golden'
+    const snow = def.id === 'lake'
     const parts: THREE.BufferGeometry[] = []
     const M = 30
     for (let k = 0; k < M; k++) {
@@ -1341,7 +1374,7 @@ export function buildWorld(t: Track, renderer: THREE.WebGLRenderer, braking: num
   const clouds: THREE.Sprite[] = []
   {
     const ct = keep(cloudTexture())
-    const cm = keep(new THREE.SpriteMaterial({ map: ct, transparent: true, depthWrite: false, fog: false, opacity: def.sky === 'golden' ? 0.85 : 0.95, color: def.sky === 'golden' ? 0xffd2b0 : 0xffffff }))
+    const cm = keep(new THREE.SpriteMaterial({ map: ct, transparent: true, depthWrite: false, fog: false, opacity: skyName === 'noon' ? 0.95 : 0.88, color: look.clouds }))
     const cx = (t.minX + t.maxX) / 2
     const cz = (t.minZ + t.maxZ) / 2
     for (let k = 0; k < 34; k++) {
@@ -1505,6 +1538,178 @@ export function buildWorld(t: Track, renderer: THREE.WebGLRenderer, braking: num
     group.add(church, spire)
   }
 
+  // ---- spectator banks (umbrellas, team flags), bushes and wildflowers, lamp posts
+  const flags: { mesh: THREE.Mesh; phase: number }[] = []
+  {
+    const blocked = (sAt: number, side: number) => {
+      if (side === ps && inRange(sAt, pit.entry - 60, pit.exit + 60, t.len)) return true
+      for (const st of standZones) if (st.side === side && inRange(sAt, st.s0 - 30, st.s1 + 30, t.len)) return true
+      return false
+    }
+    // fans on the grass banks outside the big corners
+    const personG = keep(merge([new THREE.BoxGeometry(0.42, 0.62, 0.3).translate(0, 0.31, 0), new THREE.SphereGeometry(0.13, 8, 6).translate(0, 0.78, 0)]))
+    const umbG = keep(merge([new THREE.ConeGeometry(1.15, 0.45, 12, 1, true).translate(0, 2.05, 0), new THREE.CylinderGeometry(0.025, 0.025, 2.0, 5).translate(0, 1.0, 0)]))
+    const shirts = ['#e63946', '#f1faee', '#1d3557', '#22c55e', '#ffd43b', '#f97316', '#6b2bd9', '#111111', '#2f6fcf', '#16a34a', '#ff7eb6']
+    const umbCols = ['#e63946', '#ffd43b', '#22c55e', '#2f6fcf', '#ffffff', '#f97316', '#6b2bd9']
+    const fans: THREE.Matrix4[] = []
+    const fanCol: THREE.Color[] = []
+    const umbs: THREE.Matrix4[] = []
+    const umbCol: THREE.Color[] = []
+    const poleG = keep(new THREE.CylinderGeometry(0.05, 0.06, 6, 6).translate(0, 3, 0))
+    const poleM = keep(new THREE.MeshStandardMaterial({ color: 0xcfd3d8, metalness: 0.6, roughness: 0.4 }))
+    const flagG = keep(new THREE.PlaneGeometry(1.8, 1.1, 6, 1).translate(0.9, 5.3, 0))
+    let last = -1e9
+    for (let sAt = 200; sAt < t.len - 120; sAt += 20) {
+      const i = Math.floor(sAt / t.ds)
+      if (Math.abs(t.k[i]) < 1 / 260 || sAt - last < 380) continue
+      const side = t.k[i] > 0 ? -1 : 1
+      if (blocked(sAt, side)) continue
+      last = sAt
+      for (let j = -14; j <= 14; j++) {
+        const sj = sAt + j * 2.6
+        const q = pointAt(t, sj, 0)
+        const run = side < 0 ? t.runL[q.i] : t.runR[q.i]
+        for (let row = 0; row < 6; row++) {
+          if (R() < 0.3) continue
+          const off = side * (run + 8 + row * 1.7 + (R() - 0.5) * 0.6)
+          const x = q.x - q.tz * off
+          const z = q.z + q.tx * off
+          const y = heightAt(x, z) + 0.05
+          const face = Math.atan2(-(-q.tz * side), -(q.tx * side))
+          fans.push(new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), face + (R() - 0.5) * 0.6), new THREE.Vector3(1, 0.85 + R() * 0.3, 1)))
+          fanCol.push(new THREE.Color(shirts[(R() * shirts.length) | 0]))
+          if (R() < 0.09) {
+            umbs.push(new THREE.Matrix4().compose(new THREE.Vector3(x + 0.5, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler((R() - 0.5) * 0.3, R() * 6, (R() - 0.5) * 0.3)), new THREE.Vector3(1, 1, 1)))
+            umbCol.push(new THREE.Color(umbCols[(R() * umbCols.length) | 0]))
+          }
+        }
+      }
+      // team flags over the bank
+      for (const j of [-10, 0, 10]) {
+        const q = pointAt(t, sAt + j * 2.6, 0)
+        const run = side < 0 ? t.runL[q.i] : t.runR[q.i]
+        const off = side * (run + 19)
+        const x = q.x - q.tz * off
+        const z = q.z + q.tx * off
+        const y = heightAt(x, z)
+        const pole = new THREE.Mesh(poleG, poleM)
+        pole.position.set(x, y, z)
+        const team = TEAMS[(R() * TEAMS.length) | 0]
+        const fm = keep(new THREE.MeshStandardMaterial({ color: R() < 0.5 ? team.color2 : team.color, side: THREE.DoubleSide, roughness: 0.8 }))
+        const flag = new THREE.Mesh(flagG, fm)
+        flag.position.set(x, y, z)
+        group.add(pole, flag)
+        flags.push({ mesh: flag, phase: R() * 6 })
+      }
+    }
+    if (fans.length) {
+      const fm = new THREE.InstancedMesh(personG, keep(new THREE.MeshStandardMaterial({ roughness: 0.8 })), fans.length)
+      fans.forEach((m, k) => {
+        fm.setMatrixAt(k, m)
+        fm.setColorAt(k, fanCol[k])
+      })
+      group.add(fm)
+    }
+    if (umbs.length) {
+      const um = new THREE.InstancedMesh(umbG, keep(new THREE.MeshStandardMaterial({ roughness: 0.6, side: THREE.DoubleSide })), umbs.length)
+      umbs.forEach((m, k) => {
+        um.setMatrixAt(k, m)
+        um.setColorAt(k, umbCol[k])
+      })
+      um.castShadow = true
+      group.add(um)
+    }
+
+    // bushes along the outside of the barriers, wildflowers in the grass
+    const bushG = keep(new THREE.IcosahedronGeometry(1, 1))
+    const flowerG = keep(new THREE.IcosahedronGeometry(0.16, 0))
+    const bushes: THREE.Matrix4[] = []
+    const bushCol: THREE.Color[] = []
+    const flowers: THREE.Matrix4[] = []
+    const flowerCol: THREE.Color[] = []
+    const petals = ['#ff4d6d', '#ffd43b', '#ffffff', '#b07cff', '#ff9f1c', '#4dabf7']
+    for (let sAt = 0; sAt < t.len; sAt += 5) {
+      for (const side of [-1, 1]) {
+        if (blocked(sAt, side)) continue
+        const q = pointAt(t, sAt, 0)
+        const run = side < 0 ? t.runL[q.i] : t.runR[q.i]
+        if (R() < 0.33) {
+          const off = side * (run + 3 + R() * 7)
+          const x = q.x - q.tz * off
+          const z = q.z + q.tx * off
+          const sc = 0.8 + R() * 1.1
+          bushes.push(new THREE.Matrix4().compose(new THREE.Vector3(x, heightAt(x, z) + sc * 0.45, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), R() * 6), new THREE.Vector3(sc * 1.3, sc * 0.9, sc)))
+          bushCol.push(new THREE.Color().setHSL(0.27 + (R() - 0.5) * 0.06, 0.45, 0.22 + R() * 0.1))
+        }
+        // a drift of flowers: a few clumps beyond the barrier
+        if (R() < 0.22) {
+          const off0 = side * (run + 4 + R() * 40)
+          const col = new THREE.Color(petals[(R() * petals.length) | 0])
+          for (let f = 0; f < 14; f++) {
+            const off = off0 + (R() - 0.5) * 6
+            const along = (R() - 0.5) * 6
+            const x = q.x - q.tz * off + q.tx * along
+            const z = q.z + q.tx * off + q.tz * along
+            flowers.push(new THREE.Matrix4().makeTranslation(x, heightAt(x, z) + 0.12, z))
+            flowerCol.push(col)
+          }
+        }
+      }
+    }
+    const bm = new THREE.InstancedMesh(bushG, keep(new THREE.MeshStandardMaterial({ roughness: 0.95, flatShading: true })), bushes.length)
+    bushes.forEach((m, k) => {
+      bm.setMatrixAt(k, m)
+      bm.setColorAt(k, bushCol[k])
+    })
+    bm.castShadow = true
+    bm.receiveShadow = true
+    const flm = new THREE.InstancedMesh(flowerG, keep(new THREE.MeshStandardMaterial({ roughness: 0.7 })), flowers.length)
+    flowers.forEach((m, k) => {
+      flm.setMatrixAt(k, m)
+      flm.setColorAt(k, flowerCol[k])
+    })
+    group.add(bm, flm)
+
+    // lamp posts along the start straight and round the paddock (lit at dusk, with a soft halo)
+    const lampHead = keep(new THREE.MeshStandardMaterial({ color: 0xfff4dd, emissive: 0xffd9a0, emissiveIntensity: look.dusk ? 2.2 : 0 }))
+    const postG = keep(new THREE.CylinderGeometry(0.09, 0.12, 9, 8).translate(0, 4.5, 0))
+    const armG = keep(new THREE.BoxGeometry(1.6, 0.12, 0.12).translate(0.7, 8.9, 0))
+    const headG = keep(new THREE.BoxGeometry(0.7, 0.18, 0.4).translate(1.4, 8.8, 0))
+    const haloTex = (() => {
+      const c = document.createElement('canvas')
+      c.width = c.height = 64
+      const g = c.getContext('2d')!
+      const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+      grd.addColorStop(0, 'rgba(255,220,160,0.9)')
+      grd.addColorStop(1, 'rgba(255,200,120,0)')
+      g.fillStyle = grd
+      g.fillRect(0, 0, 64, 64)
+      return keep(new THREE.CanvasTexture(c))
+    })()
+    const haloM = keep(new THREE.SpriteMaterial({ map: haloTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }))
+    const lampAt = (sAt: number, off: number, faceIn: number) => {
+      const q = pointAt(t, sAt, off)
+      const lp = new THREE.Group()
+      lp.position.set(q.x, q.y, q.z)
+      lp.rotation.y = Math.atan2(q.tx * faceIn, q.tz * faceIn) - Math.PI / 2
+      lp.add(new THREE.Mesh(postG, steel), new THREE.Mesh(armG, steel), new THREE.Mesh(headG, lampHead))
+      group.add(lp)
+      if (look.dusk) {
+        const halo = new THREE.Sprite(haloM)
+        halo.scale.set(4, 4, 1)
+        lp.updateMatrixWorld()
+        halo.position.copy(new THREE.Vector3(1.4, 8.6, 0).applyMatrix4(lp.matrixWorld))
+        group.add(halo)
+      }
+    }
+    const other = -ps
+    for (let sAt = pit.entryFull; inRange(sAt, pit.entryFull, pit.exitStart, t.len); sAt += 45) {
+      const q = pointAt(t, sAt, 0)
+      lampAt(sAt, other * ((other < 0 ? t.runL[q.i] : t.runR[q.i]) + 1.2), -other)
+    }
+    for (let k = 0; k < 8; k++) lampAt(pit.boxes[0] - 40 + k * 26, ps * (pit.garageOff + 16 + 34), -ps)
+  }
+
   // ---- pit crews (positioned by the engine)
   const crewBodies = new THREE.InstancedMesh(
     keep(merge([new THREE.CapsuleGeometry(0.2, 0.75, 4, 10).translate(0, 0.78, 0), new THREE.CapsuleGeometry(0.07, 0.5, 3, 6).translate(0.25, 1.0, 0)])),
@@ -1546,6 +1751,9 @@ export function buildWorld(t: Track, renderer: THREE.WebGLRenderer, braking: num
       }
       for (const c of clouds) {
         c.position.x += dt * 3
+      }
+      for (const f of flags) {
+        f.mesh.rotation.y = Math.sin(time * 2.6 + f.phase) * 0.35 + Math.sin(time * 5.1 + f.phase * 2) * 0.08
       }
       if (waterTex) {
         waterTex.offset.x = time * 0.004

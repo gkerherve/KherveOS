@@ -6,7 +6,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { TRACKS, buildTrack, locate, pointAt, sampleAt, surfaceAt, type Track } from '../../src/apps/minigames/f1Track.ts'
-import { CAR, CarBody, speedProfile, tyreGrip, newTyres } from '../../src/apps/minigames/f1Physics.ts'
+import { CarBody, speedProfile, steerLock, tyreGrip, newTyres } from '../../src/apps/minigames/f1Physics.ts'
 import { Session, TEAMS, setRaceSeries } from '../../src/apps/minigames/f1Race.ts'
 
 const built = TRACKS.map((d) => {
@@ -22,12 +22,15 @@ function drive(s: Session, t: Track, v: Float32Array, pace: number) {
   const tgt = pointAt(t, q.s + look, sampleAt(t, t.line, q.s + look))
   const ang = Math.atan2(tgt.z - b.z, tgt.x - b.x) - b.h
   const a = Math.atan2(Math.sin(ang), Math.cos(ang))
-  const lock = CAR.lock / (1 + Math.abs(b.vx) / 19)
+  const lock = steerLock(b.vx)
   const err = sampleAt(t, v, q.s + b.speed * 0.15) * pace - b.speed
+  const brake = err < -0.5 ? Math.min(1, -err * 0.3) : 0
+  // a tidy driver: no full lock while braking hard (that is how a drift is started)
+  const max = brake > 0.5 ? 0.55 : 1
   s.input = {
     throttle: s.phase === 'lights' ? 0 : err > 0 ? Math.min(1, err * 0.5) : 0,
-    brake: err < -0.5 ? Math.min(1, -err * 0.3) : 0,
-    steer: Math.max(-1, Math.min(1, Math.atan((7.2 * Math.sin(a)) / look) / lock)),
+    brake,
+    steer: Math.max(-max, Math.min(max, Math.atan((7.2 * Math.sin(a)) / look) / lock)),
     analog: true,
   }
 }
@@ -71,19 +74,19 @@ test('qualifying sets the grid from the best laps, then a race runs to the flag 
     const q = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'qualifying', laps: 5, minutes: 4, difficulty: 'medium', assists: true, playerName: 'Test', seed: 5 })
     q.leaveGarage(q.player)
     for (let n = 0; n < 60 * 60 * 8 && q.phase !== 'done'; n++) {
-      if (q.player.pit === 'none') drive(q, t, prof.v, 0.95)
+      if (q.player.pit === 'none') drive(q, t, prof.v, 0.93)
       q.step(1 / 60)
     }
     assert.equal(q.phase, 'done', `${t.def.name}: qualifying ends`)
     const grid = q.results()
     assert.equal(grid.length, 12)
     for (let k = 1; k < grid.length; k++) assert.ok(grid[k].best >= grid[k - 1].best, 'the grid is in lap-time order')
-    assert.ok(Number.isFinite(grid.find((r) => r.player)!.best), 'the player set a time')
+    assert.ok(Number.isFinite(grid.find((r) => r.player)!.best), `${t.def.name}: the player set a time (${q.events.map((e) => `${e.t.toFixed(0)} ${e.text}`).join(' | ')})`)
 
     const r = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'race', laps: 3, minutes: 0, difficulty: 'medium', assists: true, playerName: 'Test', grid: grid.map((g) => g.car), compound: 'soft', seed: 9 })
     let boxed = false
     for (let n = 0; n < 60 * 60 * 10 && r.phase !== 'done'; n++) {
-      if (r.player.pit === 'none') drive(r, t, prof.v, 0.95)
+      if (r.player.pit === 'none') drive(r, t, prof.v, 0.93)
       if (!boxed && r.player.laps === 1) {
         r.compound = 'medium'
         r.boxRequest = boxed = true
@@ -124,7 +127,7 @@ test('the classics: slower coupés, no DRS, the player\'s chosen car, a race to 
     let boxed = false
     let drs = false
     for (let n = 0; n < 60 * 60 * 12 && r.phase !== 'done'; n++) {
-      if (r.player.pit === 'none') drive(r, t, prof.v, 0.95)
+      if (r.player.pit === 'none') drive(r, t, prof.v, 0.93)
       if (!boxed && r.player.laps === 1) {
         r.compound = 'medium'
         r.boxRequest = boxed = true

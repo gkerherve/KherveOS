@@ -13,6 +13,8 @@ import { DIFFICULTY, Session, TEAMS, fmtLap, setRaceSeries, type Classified, typ
 import { buildClassic, classicCams } from './f1Classics.ts'
 import { buildCar, buildCarGeometry, sharedMaterials, teamLook, type CarGeometry, type CarModel, type Shared, type TeamLook } from './f1Models.ts'
 import { buildWorld, type World } from './f1World.ts'
+
+export type TimeOfDay = 'day' | 'sunset'
 import { audioOut, noise, sfx, tone } from './sound'
 
 export interface GPSettings {
@@ -26,6 +28,8 @@ export interface GPSettings {
   /** Modern single-seaters or classic coupés, and the player's coupé. */
   series: Series
   classic: ClassicModel
+  /** The circuit's own light (noon at Kherve Park, golden afternoon at Lac Bleu) or sunset. */
+  time: TimeOfDay
 }
 
 export type Stage = 'menu' | 'qualifying' | 'qualiResults' | 'race' | 'raceResults'
@@ -115,7 +119,7 @@ export class GrandPrixEngine {
   readonly scene = new THREE.Scene()
   readonly camera = new THREE.PerspectiveCamera(62, 1, 0.1, 14000)
   stage: Stage = 'menu'
-  settings: GPSettings = { track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: 'Player', series: 'modern', classic: 'stoccarda' }
+  settings: GPSettings = { track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: 'Player', series: 'modern', classic: 'stoccarda', time: 'day' }
   track!: Track
   profile!: { v: Float32Array; lapTime: number }
   world: World | null = null
@@ -223,6 +227,13 @@ export class GrandPrixEngine {
     this.setTrack(this.settings.track, true)
   }
 
+  /** Day or sunset: the scenery is rebuilt with the other light. */
+  setTime(time: TimeOfDay) {
+    if (this.settings.time === time && this.world) return
+    this.settings.time = time
+    if (this.track) this.setTrack(this.settings.track, true)
+  }
+
   setTrack(id: TrackId, force = false) {
     if (!force && this.track && this.track.def.id === id && this.world) return
     if (this.world) {
@@ -231,7 +242,7 @@ export class GrandPrixEngine {
     }
     this.track = buildTrack(trackDef(id))
     this.profile = speedProfile(this.track)
-    this.world = buildWorld(this.track, this.renderer, brakingPoints(this.track, this.profile.v))
+    this.world = buildWorld(this.track, this.renderer, brakingPoints(this.track, this.profile.v), this.settings.time === 'sunset' ? 'sunset' : this.track.def.sky)
     this.scene.add(this.world.group)
     this.scene.environment = this.world.env
     this.scene.environmentIntensity = 0.8
@@ -263,6 +274,7 @@ export class GrandPrixEngine {
   startQualifying(s: GPSettings) {
     this.settings = { ...s }
     this.setSeries(s.series, s.classic)
+    this.setTime(s.time ?? 'day')
     this.setTrack(s.track)
     this.session = new Session({
       track: this.track, profile: this.profile.v, profileLap: this.profile.lapTime, kind: 'qualifying', laps: s.laps, minutes: s.quali,
@@ -279,6 +291,7 @@ export class GrandPrixEngine {
   skipQualifying(s: GPSettings) {
     this.settings = { ...s }
     this.setSeries(s.series, s.classic)
+    this.setTime(s.time ?? 'day')
     this.setTrack(s.track)
     const q = new Session({
       track: this.track, profile: this.profile.v, profileLap: this.profile.lapTime, kind: 'qualifying', laps: s.laps, minutes: s.quali,

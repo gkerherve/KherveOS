@@ -42,12 +42,12 @@ const SPECS: Record<Series, CarSpec> = {
   // a modern single-seater: light, huge downforce, a hybrid V6
   modern: {
     mass: 800, iz: 1150, a: 1.72, b: 1.88, power: 760e3, cda: 1.25, cla: 3.6, rho: 1.2, mu: 1.75, aeroFront: 0.44, wheelR: 0.36, roll: 0.014,
-    gears: [86, 128, 164, 199, 234, 268, 302, 340], idle: 4200, redline: 12400, top: 96, lock: 0.36,
+    gears: [86, 128, 164, 199, 234, 268, 302, 340], idle: 4200, redline: 12400, top: 96, lock: 0.46,
   },
   // a late-1960s / early-70s sports coupé: heavier, almost no downforce, skinny tyres, a five-speed box
   classic: {
     mass: 1020, iz: 1450, a: 1.32, b: 1.0, power: 235e3, cda: 0.72, cla: 0.12, rho: 1.2, mu: 1.12, aeroFront: 0.45, wheelR: 0.31, roll: 0.015,
-    gears: [72, 118, 165, 212, 262], idle: 2600, redline: 7900, top: 76, lock: 0.42,
+    gears: [72, 118, 165, 212, 262], idle: 2600, redline: 7900, top: 76, lock: 0.52,
   },
 }
 
@@ -61,6 +61,9 @@ export function setSeries(s: Series) {
   TOP_SPEED = SPECS[s].top
   SERIES = s
 }
+
+/** The front wheels' full lock at a speed (m/s): it shrinks gently as the car goes faster. */
+export const steerLock = (v: number) => CAR.lock / (1 + Math.abs(v) / 36)
 
 /** Gear and revs at a speed (m/s), for the sound and the dials. */
 export function gearRpm(speed: number, gear: number): { gear: number; rpm: number } {
@@ -244,7 +247,7 @@ export class CarBody {
     // the steering wheel: limited at speed (a keyboard is all or nothing), turned at a finite rate
     // quick and direct: the lock shrinks only gently with speed, and opens up in a drift to catch the slide
     const v = Math.abs(this.vx)
-    const lock = (CAR.lock / (1 + v / 32)) * (1 + this.drift * 0.8)
+    const lock = steerLock(v) * (1 + this.drift * 0.8)
     const target = inp.steer * lock
     if (env.analog) this.steer = target
     else {
@@ -307,7 +310,10 @@ export class CarBody {
     // drifting: the handbrake (or a slide the player keeps going) frees the rear; the assists stand back
     const hb = (inp.handbrake ?? 0) > 0.5 && vx > 3
     if (hb && sp > 8) this.drift = 1
-    else if (this.drift > 0) {
+    // trail-braking: hard on the brakes while turning in, the tail steps out into a drift
+    const trail = inp.brake > 0.5 && Math.abs(inp.steer) > 0.6 && sp > 14 && !hb ? Math.min(1, (inp.brake - 0.5) * 2) * Math.min(1, (Math.abs(inp.steer) - 0.6) / 0.35) : 0
+    if (trail > 0) this.drift = Math.max(this.drift, 0.8 * trail)
+    else if (!hb && this.drift > 0) {
       // the slide lasts while the player holds it with throttle; the assists come back as it fades
       const sliding = Math.abs(this.aR) > 0.07 && inp.throttle > 0.2 && sp > 6
       this.drift = Math.max(0, this.drift - h * (sliding ? 0.6 : 2.2))
@@ -337,7 +343,8 @@ export class CarBody {
       let bf = want * 0.6
       let br = want * 0.4
       if (env.assists) {
-        bf = Math.min(bf, capF * 0.96)
+        // ABS: the fronts keep some grip to steer with when the wheel is turned
+        bf = Math.min(bf, capF * (0.96 - 0.3 * Math.min(1, Math.abs(inp.steer))))
         br = Math.min(br, capR * 0.96)
       }
       if (bf > capF) {
@@ -354,7 +361,7 @@ export class CarBody {
     let latR = spin > 0 ? capR * (0.5 - 0.25 * spin) : Math.sqrt(Math.max(0, capR * capR - fxR * fxR))
     // a locked rear lets go; in a held drift it keeps sliding a little more easily
     if (hb) latR *= 0.55
-    else latR *= 1 - 0.12 * this.drift
+    else latR *= 1 - 0.12 * this.drift - 0.55 * trail
     let fyF = -latF * curve(this.aF)
     let fyR = -latR * curve(this.aR)
     if (sp < 1.2 && inp.throttle < 0.05) {
@@ -379,8 +386,8 @@ export class CarBody {
       const rMax = latLimit(sp, env.grip) / Math.max(sp, 1)
       const rDes = Math.max(-rMax, Math.min(rMax, rWant))
       const err = r - rDes
-      const band = 0.06 + 0.3 * this.drift
-      const gain = 9 - 6.5 * this.drift
+      const band = 0.08 + 0.3 * this.drift
+      const gain = 7.5 - 5.5 * this.drift
       if (Math.abs(err) > band) mz -= (err - Math.sign(err) * band) * iz * gain
     }
     // the spin catcher (assists): past ~35° of slide, the nose is turned back towards where the car is going

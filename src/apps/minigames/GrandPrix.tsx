@@ -14,7 +14,7 @@ import { addScore, DEFAULT_NAME, getScores, lastName } from './scores'
 import { useScores } from './GameShell'
 import { gameCode } from './fpsKeys'
 import { isGameFullscreen, toggleGameFullscreen, useGameFullscreen } from './gameFullscreen'
-import type { CamMode, GPHud, GPSettings, GrandPrixEngine, Stage } from './f1Engine'
+import type { CamMode, GPHud, GPSettings, GrandPrixEngine, Stage, TimeOfDay } from './f1Engine'
 import { TRACKS, type TrackId } from './f1Track'
 import { COMPOUNDS, COMPOUND_LIST, type Compound } from './f1Physics'
 import { CLASSIC_LIST, CLASSIC_MODELS, DIFFICULTY, TEAMS, fmtLap, type Classified, type ClassicModel, type Difficulty } from './f1Race'
@@ -90,7 +90,7 @@ export default function GrandPrix({ win }: AppProps) {
   const [hud, setHud] = useState<GPHud | null>(null)
   const [error, setError] = useState('')
   const [settings, setSettings] = useState<GPSettings>(() => ({
-    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', ...loadSettings(),
+    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', time: 'day', ...loadSettings(),
   }))
   const [startTyre, setStartTyre] = useState<Compound>('medium')
   const [results, setResults] = useState<Classified[]>([])
@@ -278,8 +278,9 @@ export default function GrandPrix({ win }: AppProps) {
     const e = engineRef.current
     if (!e || phase !== 'ready') return
     e.setSeries(settings.series, settings.classic)
+    e.setTime(settings.time ?? 'day')
     e.setTrack(settings.track)
-  }, [phase, settings.series, settings.classic, settings.track])
+  }, [phase, settings.series, settings.classic, settings.track, settings.time])
 
   useEffect(() => {
     if (!focused) pause()
@@ -439,6 +440,10 @@ export default function GrandPrix({ win }: AppProps) {
               <label>
                 <span>Qualifying</span>
                 <Seg value={settings.quali} options={[0, 4, 6, 10]} label={(v) => (v ? `${v} min` : 'Skip')} onChange={(v) => set('quali', v)} />
+              </label>
+              <label>
+                <span>Light</span>
+                <Seg value={settings.time ?? 'day'} options={['day', 'sunset'] as TimeOfDay[]} label={(v) => (v === 'day' ? (settings.track === 'lake' ? 'Golden afternoon' : 'Midday sun') : 'Sunset')} onChange={(v) => set('time', v)} />
               </label>
               <label>
                 <span>Rivals</span>
