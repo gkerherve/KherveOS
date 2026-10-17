@@ -84,17 +84,25 @@ function saveLocal(v: LocalClip | null) {
   }
 }
 
+/** 32 random hex digits. crypto.randomUUID only exists on secure pages (https, localhost): a
+ *  tablet opening this computer's http://192.168.x.x address has getRandomValues but not it. */
+function randomHex(): string {
+  const b = new Uint8Array(16)
+  crypto.getRandomValues(b)
+  return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('')
+}
+
 function makeDeviceId(): string {
   try {
     const s = storage()
     let id = s?.getItem(DEVICE_KEY)
     if (!id) {
-      id = crypto.randomUUID().replace(/-/g, '')
+      id = randomHex()
       s?.setItem(DEVICE_KEY, id)
     }
     return id
   } catch {
-    return crypto.randomUUID().replace(/-/g, '')
+    return randomHex()
   }
 }
 
