@@ -366,6 +366,52 @@ export function buildCarGeometry(): CarGeometry {
   })())
   add('tcam', box(0.12, 0.05, 0.07, 0.18, 0.975, 0))
 
+  // ---- the finer details
+  // pitot tube and camera pods on the nose, a radio aerial on the engine cover
+  add('metal', rod(v3(3.13, 0.22, 0), v3(3.36, 0.22, 0), 0.006, 5))
+  for (const sd of [1, -1]) {
+    add('carbon', loft([
+      { x: 2.78, hw: 0.018, yb: 0.3, yt: 0.33, p: 2, zc: 0.13 * sd },
+      { x: 2.7, hw: 0.025, yb: 0.29, yt: 0.34, p: 2, zc: 0.14 * sd },
+      { x: 2.58, hw: 0.018, yb: 0.3, yt: 0.33, p: 2, zc: 0.14 * sd },
+    ], 8, 2))
+    add('carbon', rod(v3(2.68, 0.3, 0.14 * sd), v3(2.68, 0.36, 0.12 * sd), 0.006, 4))
+  }
+  add('black', rod(v3(-0.55, 0.8, 0), v3(-0.62, 1.0, 0), 0.004, 4))
+  // a fourth front-wing flap and the little cascade winglets on the endplates
+  for (const sd of [1, -1]) {
+    add('paint2', box(0.1, 0.014, 0.62, 2.68, 0.3, 0.6 * sd, 0, 0, 0.75))
+    add('carbon', box(0.16, 0.012, 0.1, 2.95, 0.26, 0.86 * sd, 0, 0, 0.3))
+    add('carbon', box(0.12, 0.01, 0.08, 2.88, 0.3, 0.8 * sd, 0, 0, 0.45))
+    add('carbon', box(0.42, 0.012, 0.06, 3.02, 0.055, 0.92 * sd))
+  }
+  // under the nose: turning vanes
+  for (const z of [-0.12, -0.04, 0.04, 0.12]) add('carbon', box(0.28, 0.1, 0.008, 2.55, 0.11, z, 0, 0.12 * Math.sign(z), 0))
+  // sidepod inlet lips, louvres on top of the sidepods, little vanes on their shoulders
+  for (const sd of [1, -1]) {
+    add('paint2', new THREE.TorusGeometry(1, 0.06, 6, 24).scale(0.13, 0.18, 1).rotateY(Math.PI / 2).translate(1.195, 0.33, 0.57 * sd))
+    for (let k = 0; k < 7; k++) add('black', box(0.03, 0.006, 0.2, 0.2 - k * 0.09, 0.505 - k * 0.01, 0.55 * sd, 0, 0, -0.1))
+    add('carbon', box(0.3, 0.07, 0.008, 0.75, 0.6, 0.66 * sd))
+    // floor edge wings and the mirrors' glass
+    add('carbon', box(0.5, 0.008, 0.08, -0.6, 0.075, 0.78 * sd, 0, 0, 0))
+    add('metal', box(0.004, 0.04, 0.13, 0.879, 0.73, 0.52 * sd))
+    // halo mounting fairings
+    add('halo', box(0.12, 0.06, 0.06, 0.52, 0.63, 0.3 * sd))
+  }
+  // the exhaust: a single tailpipe above the crash structure, a wastegate either side
+  add('metal', new THREE.CylinderGeometry(0.055, 0.06, 0.2, 14).rotateZ(Math.PI / 2).translate(-2.4, 0.46, 0))
+  add('black', new THREE.CircleGeometry(0.045, 12).rotateY(-Math.PI / 2).translate(-2.501, 0.46, 0))
+  for (const sd of [1, -1]) add('metal', new THREE.CylinderGeometry(0.02, 0.02, 0.12, 8).rotateZ(Math.PI / 2).translate(-2.4, 0.56, 0.06 * sd))
+  // the rear wing's DRS actuator pod
+  add('carbon', box(0.1, 0.06, 0.05, -2.32, 0.88, 0))
+  // in the cockpit: the steering wheel with its screen and grips, padding round the driver's head
+  add('black', box(0.04, 0.12, 0.26, 1.02, 0.66, 0, 0, 0, 0.35))
+  add('light', box(0.005, 0.05, 0.09, 1.0, 0.68, 0))
+  for (const sd of [1, -1]) {
+    add('black', box(0.05, 0.1, 0.05, 1.04, 0.63, 0.14 * sd, 0, 0, 0.35))
+    add('black', box(0.28, 0.1, 0.07, 0.68, 0.67, 0.19 * sd))
+  }
+
   const parts = new Map<Part, THREE.BufferGeometry>()
   for (const [k, l] of P) parts.set(k, merge(l))
   const flap = box(0.17, 0.016, 1.02, -0.085, 0, 0)
@@ -613,6 +659,30 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
     nm.position.set(-2.31, 0.86, 0.532 * sd)
     body.add(nm)
   }
+  // sponsors: the Kherve apps on the sidepods and the engine cover
+  const sponsor = (text: string, w: number, h: number) => {
+    const [c, g] = canvas(512, 96)
+    g.font = '900 italic 64px system-ui, sans-serif'
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    g.fillStyle = team.accent
+    g.fillText(text, 256, 52)
+    const t = tex(c)
+    const m = new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.35, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
+    decals.push(t, m)
+    return { m, w, h }
+  }
+  const decals: { dispose(): void }[] = []
+  const pod = sponsor('KherveOS', 0.62, 0.12)
+  const cover = sponsor('free software', 0.44, 0.08)
+  for (const sd of [1, -1]) {
+    for (const [d, x, y, z] of [[pod, 0.35, 0.3, 0.797], [cover, -0.85, 0.42, 0.268]] as [typeof pod, number, number, number][]) {
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(d.w, d.h), d.m)
+      if (sd < 0) pl.geometry.rotateY(Math.PI)
+      pl.position.set(x, y, z * sd)
+      body.add(pl)
+    }
+  }
   const flap = new THREE.Mesh(geo.drsFlap, look.paint2)
   flap.position.set(-2.42, 0.935, 0)
   flap.rotation.z = 0.5
@@ -646,6 +716,7 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
     dispose() {
       numTex.dispose()
       numMat.dispose()
+      for (const d of decals) d.dispose()
       nose.geometry.dispose()
       light.dispose()
       body.traverse((o) => {

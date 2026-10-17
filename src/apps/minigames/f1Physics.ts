@@ -247,7 +247,7 @@ export class CarBody {
     // the steering wheel: limited at speed (a keyboard is all or nothing), turned at a finite rate
     // quick and direct: the lock shrinks only gently with speed, and opens up in a drift to catch the slide
     const v = Math.abs(this.vx)
-    const lock = steerLock(v) * (1 + this.drift * 0.8)
+    const lock = steerLock(v) * (1 + this.drift * 0.35)
     const target = inp.steer * lock
     if (env.analog) this.steer = target
     else {
@@ -360,8 +360,8 @@ export class CarBody {
     const latF = lockF ? capF * 0.25 : Math.sqrt(Math.max(0, capF * capF - fxF * fxF))
     let latR = spin > 0 ? capR * (0.5 - 0.25 * spin) : Math.sqrt(Math.max(0, capR * capR - fxR * fxR))
     // a locked rear lets go; in a held drift it keeps sliding a little more easily
-    if (hb) latR *= 0.55
-    else latR *= 1 - 0.12 * this.drift - 0.55 * trail
+    if (hb) latR *= 0.72
+    else latR *= 1 - 0.08 * this.drift - 0.32 * trail
     let fyF = -latF * curve(this.aF)
     let fyR = -latR * curve(this.aR)
     if (sp < 1.2 && inp.throttle < 0.05) {
@@ -386,15 +386,25 @@ export class CarBody {
       const rMax = latLimit(sp, env.grip) / Math.max(sp, 1)
       const rDes = Math.max(-rMax, Math.min(rMax, rWant))
       const err = r - rDes
-      const band = 0.08 + 0.3 * this.drift
-      const gain = 7.5 - 5.5 * this.drift
+      const band = 0.08 + 0.18 * this.drift
+      const gain = 7.5 - 4 * this.drift
       if (Math.abs(err) > band) mz -= (err - Math.sign(err) * band) * iz * gain
     }
-    // the spin catcher (assists): past ~35° of slide, the nose is turned back towards where the car is going
+    // in a drift the wheel steers the slide itself: into it tightens, countersteer straightens
+    // (countersteer fades as the slide closes, so it straightens the car without flicking it the other way)
+    if (this.drift > 0 && sp > 6) {
+      const beta = Math.atan2(vy, Math.max(Math.abs(vx), 1))
+      // caught: straight again, the drift is over and the wheel steers normally
+      if (Math.abs(beta) < 0.05 && !hb && trail === 0) this.drift = 0
+      const counter = Math.sign(inp.steer) === Math.sign(beta)
+      const k = counter ? Math.min(1, Math.abs(beta) / 0.3) : 1
+      mz += inp.steer * iz * 2.2 * this.drift * k
+    }
+    // the spin catcher (assists): past ~20° of slide, the nose is turned back towards where the car is going
     if (env.assists && sp > 3) {
       const beta = Math.atan2(vy, Math.max(Math.abs(vx), 1))
-      const over = Math.abs(beta) - 0.6
-      if (over > 0) mz += (beta * 2.5 - r) * iz * 5 * Math.min(1, over * 3)
+      const over = Math.abs(beta) - 0.34
+      if (over > 0) mz += (beta * 3 - r) * iz * 7 * Math.min(1, over * 4)
     }
 
     this.fyR = fyR

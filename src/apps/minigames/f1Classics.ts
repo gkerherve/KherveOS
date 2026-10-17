@@ -15,7 +15,7 @@ import type { ClassicModel, Team } from './f1Race.ts'
 import type { Compound } from './f1Physics.ts'
 
 type Sec = { x: number; hw: number; yb: number; yt: number; p: number; zc?: number }
-type Part = 'paint' | 'plain' | 'stripe' | 'glass' | 'chrome' | 'black' | 'lamp' | 'tail' | 'helmet' | 'interior'
+type Part = 'paint' | 'plain' | 'decal' | 'stripe' | 'glass' | 'chrome' | 'black' | 'lamp' | 'tail' | 'helmet' | 'interior'
 
 interface Shape {
   /** Axles (x), track half-widths, tyre radius and widths. */
@@ -36,6 +36,15 @@ const v3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
 
 function box(w: number, h: number, d: number, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) {
   return new THREE.BoxGeometry(w, h, d).rotateX(rx).rotateY(ry).rotateZ(rz).translate(x, y, z)
+}
+
+/** A thin rod between two points. */
+function rod(a: THREE.Vector3, b: THREE.Vector3, r: number, seg = 6) {
+  const d = new THREE.Vector3().subVectors(b, a)
+  const g = new THREE.CylinderGeometry(r, r, d.length(), seg, 1)
+  g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()))
+  const m = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5)
+  return g.translate(m.x, m.y, m.z)
 }
 
 /** A round lamp facing forward (tilted up by `tilt`), its chrome ring. */
@@ -212,6 +221,51 @@ const SHAPES: Record<ClassicModel, Shape> = {
   },
 }
 
+/** Where the details go on each body: side at the doors, beltline, door edges, windscreen foot, nose, tail, sill. */
+const BODY: Record<ClassicModel, { side: number; belt: number; door: [number, number]; screen: number; nose: number; tail: number; sill: number; pipes: number[] }> = {
+  stoccarda: { side: 0.775, belt: 0.68, door: [0.55, -0.62], screen: 0.6, nose: 2.06, tail: -2.12, sill: 0.24, pipes: [-0.32] },
+  dieppe: { side: 0.725, belt: 0.61, door: [0.45, -0.55], screen: 0.47, nose: 1.98, tail: -1.92, sill: 0.22, pipes: [0.3, 0.38] },
+  bavaria: { side: 0.825, belt: 0.79, door: [0.72, -0.72], screen: 0.74, nose: 2.32, tail: -2.3, sill: 0.23, pipes: [-0.4, -0.3] },
+}
+
+/** Shut-lines, chrome trim, wipers, exhausts, wheel wells, the cabin's roll cage, seat, wheel and driver, a tow hook. */
+function details(add: (k: Part, g: THREE.BufferGeometry) => void, model: ClassicModel, S: Shape) {
+  const B = BODY[model]
+  const [eyeX, eyeY] = S.eye
+  for (const sd of [1, -1]) {
+    const z = (B.side + 0.004) * sd
+    // the doors' shut-lines and the sill line
+    for (const x of B.door) add('black', box(0.012, B.belt - B.sill - 0.04, 0.006, x, (B.belt + B.sill) / 2, z))
+    add('black', box(B.door[0] - B.door[1], 0.01, 0.006, (B.door[0] + B.door[1]) / 2, B.sill + 0.05, z))
+    // chrome along the bottom of the side window, a door handle
+    add('chrome', box(B.door[0] - B.door[1] + 0.2, 0.018, 0.012, (B.door[0] + B.door[1]) / 2 - 0.1, B.belt - 0.005, z))
+    add('chrome', box(0.12, 0.022, 0.02, B.door[1] + 0.2, B.belt - 0.09, z))
+    // dark wheel wells behind the tyres
+    for (const [x, track, w] of [[S.front, S.trackF, S.wF], [S.rear, S.trackR, S.wR]] as [number, number, number][]) {
+      add('black', new THREE.CylinderGeometry(S.r + 0.05, S.r + 0.05, 0.22, 20, 1, false, 0, Math.PI).rotateX(Math.PI / 2).rotateZ(Math.PI / 2).translate(x, S.r, (track - w / 2 - 0.12) * sd))
+    }
+    // the roll cage's main hoop and a door bar, seen through the glass
+    add('chrome', rod(v3(eyeX - 0.42, B.belt - 0.1, 0.42 * sd), v3(eyeX - 0.42, eyeY + 0.12, 0.38 * sd), 0.018))
+    add('chrome', rod(v3(eyeX - 0.42, B.belt - 0.1, 0.42 * sd), v3(eyeX + 0.55, B.belt - 0.05, 0.44 * sd), 0.016))
+    // a sticker on each front wing
+    add('decal', new THREE.PlaneGeometry(0.42, 0.09).rotateY(sd < 0 ? Math.PI : 0).translate(S.front + 0.5, B.sill + 0.24, (B.side + 0.03) * sd))
+  }
+  add('chrome', rod(v3(eyeX - 0.42, eyeY + 0.12, 0.38), v3(eyeX - 0.42, eyeY + 0.12, -0.38), 0.018))
+  add('chrome', rod(v3(eyeX - 0.42, eyeY + 0.12, 0.38), v3(eyeX - 0.42, B.belt - 0.1, -0.42), 0.014))
+  // the bucket seat, the steering wheel, the driver's shoulders in the team's colour
+  add('interior', box(0.12, 0.55, 0.42, eyeX - 0.3, eyeY - 0.38, -0.3))
+  add('black', new THREE.TorusGeometry(0.17, 0.018, 6, 20).rotateY(Math.PI / 2).rotateZ(-0.45).translate(eyeX + 0.42, eyeY - 0.17, -0.3))
+  add('stripe', box(0.2, 0.18, 0.42, eyeX - 0.08, eyeY - 0.28, -0.3))
+  // windscreen wipers resting at the foot of the screen
+  for (const z of [-0.42, 0.02]) add('black', box(0.02, 0.012, 0.42, B.screen + 0.03, B.belt + 0.03, z + 0.2, 0, 0.12, 0))
+  // exhaust pipes under the tail, a red tow hook at the front
+  for (const z of B.pipes) {
+    add('chrome', new THREE.CylinderGeometry(0.035, 0.035, 0.2, 10).rotateZ(Math.PI / 2).translate(B.tail - 0.04, B.sill - 0.02, z))
+    add('black', new THREE.CircleGeometry(0.026, 10).rotateY(-Math.PI / 2).translate(B.tail - 0.141, B.sill - 0.02, z))
+  }
+  add('tail', box(0.1, 0.03, 0.05, B.nose + 0.02, 0.22, -0.3))
+}
+
 /** Where a classic's cameras sit (in the car's own frame). */
 export function classicCams(model: ClassicModel): { eye: THREE.Vector3; roof: THREE.Vector3 } {
   const s = SHAPES[model]
@@ -255,6 +309,21 @@ function classicLivery(team: Team, model: ClassicModel) {
     g.fillRect(0, 136, 512, 14)
     for (const v of [56, 200]) g.fillRect(0, v - 6, 512, 12)
   }
+  return tex(c)
+}
+
+/** A period sponsor sticker: the team's second colour, the KherveOS name. */
+function stickerTexture(team: Team) {
+  const [c, g] = canvas(512, 112)
+  g.fillStyle = team.color2
+  g.beginPath()
+  g.roundRect(6, 6, 500, 100, 18)
+  g.fill()
+  g.fillStyle = team.color === team.color2 ? '#111' : team.color
+  g.font = '900 italic 66px system-ui, sans-serif'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.fillText('KherveOS', 256, 60)
   return tex(c)
 }
 
@@ -315,17 +384,20 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   const body = new THREE.Group()
   root.add(body)
   const parts = new Map<Part, THREE.BufferGeometry[]>()
-  S.build((k, g) => {
+  const addPart = (k: Part, g: THREE.BufferGeometry) => {
     let l = parts.get(k)
     if (!l) parts.set(k, (l = []))
     l.push(g)
-  })
+  }
+  S.build(addPart)
+  details(addPart, model, S)
   const livery = classicLivery(team, model)
   const light = new THREE.MeshStandardMaterial({ color: 0x400000, emissive: 0xff2020, emissiveIntensity: 0.4 })
   const mats: Record<Part, THREE.Material> = {
     paint: new THREE.MeshPhysicalMaterial({ map: livery, roughness: 0.28, metalness: 0.15, clearcoat: 1, clearcoatRoughness: 0.05 }),
     plain: new THREE.MeshPhysicalMaterial({ color: team.color, roughness: 0.28, metalness: 0.15, clearcoat: 1, clearcoatRoughness: 0.05 }),
     stripe: new THREE.MeshPhysicalMaterial({ color: team.color2, roughness: 0.3, clearcoat: 1 }),
+    decal: new THREE.MeshStandardMaterial({ map: stickerTexture(team), transparent: true, roughness: 0.4, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }),
     glass: new THREE.MeshPhysicalMaterial({ color: 0x101820, roughness: 0.04, metalness: 0.3, transparent: true, opacity: 0.62, depthWrite: false, clearcoat: 1 }),
     chrome: sh.metal,
     black: sh.black,
@@ -334,12 +406,12 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
     helmet: new THREE.MeshPhysicalMaterial({ color: team.color2, roughness: 0.25, clearcoat: 1 }),
     interior: new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.9 }),
   }
-  const owned: (THREE.Material | THREE.Texture | THREE.BufferGeometry)[] = [livery, mats.paint, mats.plain, mats.stripe, mats.glass, mats.lamp, light, mats.helmet, mats.interior]
+  const owned: (THREE.Material | THREE.Texture | THREE.BufferGeometry)[] = [livery, mats.paint, mats.plain, mats.decal, (mats.decal as THREE.MeshStandardMaterial).map!, mats.stripe, mats.glass, mats.lamp, light, mats.helmet, mats.interior]
   for (const [k, list] of parts) {
     const g = merge(list)
     owned.push(g)
     const m = new THREE.Mesh(g, mats[k])
-    m.castShadow = k !== 'glass' && k !== 'lamp'
+    m.castShadow = k !== 'glass' && k !== 'lamp' && k !== 'decal'
     m.receiveShadow = k === 'paint'
     if (k === 'glass') m.renderOrder = 2
     body.add(m)
