@@ -838,3 +838,39 @@
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   animation: gp-pop 0.2s ease-out;
 }
+
+.gp-damage {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 10px;
+}
+.gp-damage div {
+  display: grid;
+  grid-template-columns: 38px 46px;
+  align-items: center;
+  gap: 5px;
+}
+.gp-damage i {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.gp-damage b {
+  display: block;
+  height: 100%;
+  background: #22c55e;
+}
+.gp-damage .gp-dmg-warn b {
+  background: #ffd43b;
+}
+.gp-damage .gp-dmg-bad b {
+  background: #ff3b30;
+}
+.gp-damage .gp-dmg-bad span {
+  color: #ff6b6b;
+  font-weight: 800;
+}

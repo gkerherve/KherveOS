@@ -90,7 +90,7 @@ export default function GrandPrix({ win }: AppProps) {
   const [hud, setHud] = useState<GPHud | null>(null)
   const [error, setError] = useState('')
   const [settings, setSettings] = useState<GPSettings>(() => ({
-    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', time: 'day', ...loadSettings(),
+    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', time: 'day', damage: true, ...loadSettings(),
   }))
   const [startTyre, setStartTyre] = useState<Compound>('medium')
   const [results, setResults] = useState<Classified[]>([])
@@ -336,6 +336,7 @@ export default function GrandPrix({ win }: AppProps) {
           last_lap: fmtLap(h.lastLap),
           tyres: `${COMPOUNDS[h.tyre].name}, ${Math.round(h.wear * 100)}% worn`,
           next_tyres: COMPOUNDS[h.compound].name,
+          damage: h.damage.on ? `front ${Math.round(h.damage.fw * 100)}%, rear ${Math.round(h.damage.rw * 100)}%, suspension ${Math.round(h.damage.susp * 100)}%` : 'off',
           pit: h.pit,
           speed_kmh: h.speed,
           top5: h.tower.slice(0, 5).map((r) => `${r.pos}. ${r.code} ${r.gap}`),
@@ -452,6 +453,10 @@ export default function GrandPrix({ win }: AppProps) {
               <label>
                 <span>Assists</span>
                 <Seg value={settings.assists} options={[true, false]} label={(v) => (v ? 'On' : 'Off')} onChange={(v) => set('assists', v)} />
+              </label>
+              <label>
+                <span>Damage</span>
+                <Seg value={settings.damage !== false} options={[true, false]} label={(v) => (v ? 'On: crashes break wings' : 'Off')} onChange={(v) => set('damage', v)} />
               </label>
             </div>
             <div className="gp-buttons">
@@ -755,6 +760,22 @@ function Hud({ hud, classic, mapPath, box }: { hud: GPHud; classic: boolean; map
           </span>
           {hud.mustChange && !hud.changed && hud.kind === 'race' && <span className="gp-warn">Stop needed</span>}
         </div>
+        {hud.damage.on && (
+          <div className="gp-damage" title="Damage: box (P) to repair">
+            {([
+              [classic ? 'Nose' : 'F wing', hud.damage.fw],
+              [classic ? 'Tail' : 'R wing', hud.damage.rw],
+              ['Susp.', hud.damage.susp],
+            ] as [string, number][]).map(([name, v]) => (
+              <div key={name} className={v >= 0.75 ? 'gp-dmg-bad' : v >= 0.25 ? 'gp-dmg-warn' : ''}>
+                <span>{name}</span>
+                <i>
+                  <b style={{ width: `${Math.round((1 - v) * 100)}%` }} />
+                </i>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* speed, gear, revs */}

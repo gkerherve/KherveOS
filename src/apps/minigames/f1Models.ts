@@ -10,7 +10,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { Team } from './f1Race.ts'
-import { COMPOUNDS, type Compound } from './f1Physics.ts'
+import { COMPOUNDS, type Compound, type Damage } from './f1Physics.ts'
 
 // ---------------------------------------------------------------- helpers
 
@@ -159,6 +159,9 @@ type Part = 'paint' | 'paint2' | 'carbon' | 'black' | 'metal' | 'halo' | 'helmet
 
 export interface CarGeometry {
   parts: Map<Part, THREE.BufferGeometry>
+  /** The wings, apart from the body so that a crash can bend them or knock them off. */
+  frontWing: Map<Part, THREE.BufferGeometry>
+  rearWing: Map<Part, THREE.BufferGeometry>
   tyreF: THREE.BufferGeometry
   tyreR: THREE.BufferGeometry
   rim: THREE.BufferGeometry
@@ -193,9 +196,14 @@ function rimGeometry(): THREE.BufferGeometry {
 
 export function buildCarGeometry(): CarGeometry {
   const P = new Map<Part, THREE.BufferGeometry[]>()
+  const FW = new Map<Part, THREE.BufferGeometry[]>()
+  const RW = new Map<Part, THREE.BufferGeometry[]>()
+  /** Which piece the shapes go to: the body, or one of the wings. */
+  let zone: 'body' | 'fw' | 'rw' = 'body'
   const add = (k: Part, g: THREE.BufferGeometry) => {
-    let l = P.get(k)
-    if (!l) P.set(k, (l = []))
+    const M = zone === 'fw' ? FW : zone === 'rw' ? RW : P
+    let l = M.get(k)
+    if (!l) M.set(k, (l = []))
     l.push(g)
   }
   // monocoque, nose and engine cover
@@ -286,6 +294,7 @@ export function buildCarGeometry(): CarGeometry {
     add('carbon', box(0.35, 0.22, 0.012, 1.25, 0.2, 0.36 * sd, 0, 0.25 * sd, 0))
   }
   // front wing: main plane, flaps stacked outboard, endplates, the pylons to the nose
+  zone = 'fw'
   add('carbon', box(0.36, 0.022, 1.88, 3.05, 0.085, 0, 0, 0, 0.06))
   for (let k = 0; k < 3; k++) {
     for (const sd of [1, -1]) {
@@ -297,6 +306,7 @@ export function buildCarGeometry(): CarGeometry {
     add('carbon', box(0.05, 0.08, 0.012, 2.92, 0.13, 0.08 * sd))
   }
   // rear wing: endplates, main plane (the flap is separate: DRS), beam wing, swan neck
+  zone = 'rw'
   for (const sd of [1, -1]) {
     add('paint2', (() => {
       const e = new THREE.Shape()
@@ -316,6 +326,7 @@ export function buildCarGeometry(): CarGeometry {
   }
   add('paint2', box(0.3, 0.022, 1.02, -2.33, 0.83, 0, 0, 0, 0.12))
   add('carbon', box(0.18, 0.018, 0.98, -2.36, 0.42, 0, 0, 0, 0.18))
+  zone = 'body'
   add('carbon', box(0.3, 0.14, 0.12, -2.38, 0.31, 0))
   add('light', box(0.03, 0.05, 0.1, -2.53, 0.31, 0))
   // shark fin
@@ -379,12 +390,14 @@ export function buildCarGeometry(): CarGeometry {
   }
   add('black', rod(v3(-0.55, 0.8, 0), v3(-0.62, 1.0, 0), 0.004, 4))
   // a fourth front-wing flap and the little cascade winglets on the endplates
+  zone = 'fw'
   for (const sd of [1, -1]) {
     add('paint2', box(0.1, 0.014, 0.62, 2.68, 0.3, 0.6 * sd, 0, 0, 0.75))
     add('carbon', box(0.16, 0.012, 0.1, 2.95, 0.26, 0.86 * sd, 0, 0, 0.3))
     add('carbon', box(0.12, 0.01, 0.08, 2.88, 0.3, 0.8 * sd, 0, 0, 0.45))
     add('carbon', box(0.42, 0.012, 0.06, 3.02, 0.055, 0.92 * sd))
   }
+  zone = 'body'
   // under the nose: turning vanes
   for (const z of [-0.12, -0.04, 0.04, 0.12]) add('carbon', box(0.28, 0.1, 0.008, 2.55, 0.11, z, 0, 0.12 * Math.sign(z), 0))
   // sidepod inlet lips, louvres on top of the sidepods, little vanes on their shoulders
@@ -403,7 +416,9 @@ export function buildCarGeometry(): CarGeometry {
   add('black', new THREE.CircleGeometry(0.045, 12).rotateY(-Math.PI / 2).translate(-2.501, 0.46, 0))
   for (const sd of [1, -1]) add('metal', new THREE.CylinderGeometry(0.02, 0.02, 0.12, 8).rotateZ(Math.PI / 2).translate(-2.4, 0.56, 0.06 * sd))
   // the rear wing's DRS actuator pod
+  zone = 'rw'
   add('carbon', box(0.1, 0.06, 0.05, -2.32, 0.88, 0))
+  zone = 'body'
   // in the cockpit: the steering wheel with its screen and grips, padding round the driver's head
   add('black', box(0.04, 0.12, 0.26, 1.02, 0.66, 0, 0, 0, 0.35))
   add('light', box(0.005, 0.05, 0.09, 1.0, 0.68, 0))
@@ -414,9 +429,15 @@ export function buildCarGeometry(): CarGeometry {
 
   const parts = new Map<Part, THREE.BufferGeometry>()
   for (const [k, l] of P) parts.set(k, merge(l))
+  const frontWing = new Map<Part, THREE.BufferGeometry>()
+  for (const [k, l] of FW) frontWing.set(k, merge(l))
+  const rearWing = new Map<Part, THREE.BufferGeometry>()
+  for (const [k, l] of RW) rearWing.set(k, merge(l))
   const flap = box(0.17, 0.016, 1.02, -0.085, 0, 0)
   return {
     parts,
+    frontWing,
+    rearWing,
     tyreF: tyreGeometry(0.3),
     tyreR: tyreGeometry(0.4),
     rim: rimGeometry(),
@@ -622,7 +643,25 @@ export interface CarModel {
   flap: THREE.Mesh
   light: THREE.MeshStandardMaterial
   setCompound(c: Compound): void
+  /** Show what is broken: wings that droop, hang crooked or are gone, a wheel bent by the suspension. */
+  setDamage(d: Damage): void
   dispose(): void
+}
+
+/** Shared by both kinds of car: a part sags with damage, and at 0.75 it has come off. */
+export function showDamage(piece: THREE.Object3D | null, amount: number, sag: number, tilt: number, side: number) {
+  if (!piece) return
+  piece.visible = amount < 0.75
+  const a = amount < 0.25 ? 0 : amount
+  piece.rotation.set(tilt * a * side, 0, -sag * a)
+}
+
+/** A bent wheel: camber on the damaged side. */
+export function bendWheels(wheels: CarModel['wheels'], d: Damage) {
+  for (const w of wheels) {
+    const onSide = Math.sign(w.base.z) === Math.sign(d.side)
+    w.pivot.rotation.x = onSide ? d.side * 0.22 * d.susp : 0
+  }
 }
 
 export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Team, num: number, yellowCam: boolean): CarModel {
@@ -640,6 +679,21 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
     m.receiveShadow = k === 'paint' || k === 'carbon'
     body.add(m)
   }
+  // the wings hang from pivots (where they meet the nose and the crash structure), so they can droop
+  const wingGroup = (map: Map<Part, THREE.BufferGeometry>, px: number, py: number) => {
+    const g = new THREE.Group()
+    g.position.set(px, py, 0)
+    for (const [k, geom] of map) {
+      const m = new THREE.Mesh(geom, mats[k])
+      m.position.set(-px, -py, 0)
+      m.castShadow = true
+      g.add(m)
+    }
+    body.add(g)
+    return g
+  }
+  const frontWing = wingGroup(geo.frontWing, 2.85, 0.18)
+  const rearWing = wingGroup(geo.rearWing, -2.25, 0.45)
   // numbers: on the nose, on the fin
   const numTex = numberTexture(num, team)
   const numMat = new THREE.MeshStandardMaterial({ map: numTex, transparent: true, roughness: 0.35, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
@@ -684,10 +738,10 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
     }
   }
   const flap = new THREE.Mesh(geo.drsFlap, look.paint2)
-  flap.position.set(-2.42, 0.935, 0)
+  flap.position.set(-2.42 + 2.25, 0.935 - 0.45, 0)
   flap.rotation.z = 0.5
   flap.castShadow = true
-  body.add(flap)
+  rearWing.add(flap)
 
   const wheels: CarModel['wheels'] = []
   for (const w of WHEELS) {
@@ -713,6 +767,11 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
     setCompound(c) {
       for (const w of wheels) w.tyre.material = sh.tyre[c]
     },
+    setDamage(d) {
+      showDamage(frontWing, d.fw, 0.28, 0.35, d.side)
+      showDamage(rearWing, d.rw, -0.2, 0.3, d.side)
+      bendWheels(wheels, d)
+    },
     dispose() {
       numTex.dispose()
       numMat.dispose()
@@ -720,7 +779,7 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
       nose.geometry.dispose()
       light.dispose()
       body.traverse((o) => {
-        if (o instanceof THREE.Mesh && o.geometry !== geo.drsFlap && ![...geo.parts.values()].includes(o.geometry)) o.geometry.dispose()
+        if (o instanceof THREE.Mesh && o.geometry !== geo.drsFlap && ![...geo.parts.values(), ...geo.frontWing.values(), ...geo.rearWing.values()].includes(o.geometry)) o.geometry.dispose()
       })
     },
   }

@@ -10,11 +10,12 @@
 // names or badges.
 
 import * as THREE from 'three'
-import { loft, merge, type CarModel, type Shared } from './f1Models.ts'
+import { bendWheels, loft, merge, showDamage, type CarModel, type Shared } from './f1Models.ts'
 import type { ClassicModel, Team } from './f1Race.ts'
-import type { Compound } from './f1Physics.ts'
+import type { Compound, Damage } from './f1Physics.ts'
 
 type Sec = { x: number; hw: number; yb: number; yt: number; p: number; zc?: number }
+type Zone = 'body' | 'fw' | 'rw'
 type Part = 'paint' | 'plain' | 'decal' | 'stripe' | 'glass' | 'chrome' | 'black' | 'lamp' | 'tail' | 'helmet' | 'interior'
 
 interface Shape {
@@ -29,7 +30,8 @@ interface Shape {
   /** Where the driver's eyes are (cockpit camera) and the roof (T-cam). */
   eye: [number, number, number]
   roof: [number, number, number]
-  build(add: (k: Part, g: THREE.BufferGeometry) => void): void
+  /** `zone` sends the next shapes to the body or to a piece that a crash can knock off (bumpers, the wing). */
+  build(add: (k: Part, g: THREE.BufferGeometry) => void, zone: (z: Zone) => void): void
 }
 
 const v3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
@@ -67,7 +69,7 @@ const SHAPES: Record<ClassicModel, Shape> = {
   stoccarda: {
     front: 1.08, rear: -1.2, trackF: 0.69, trackR: 0.71, r: 0.31, wF: 0.2, wR: 0.25,
     eye: [-0.28, 1.04, -0.3], roof: [-0.25, 1.36, 0],
-    build(add) {
+    build(add, zone) {
       add('paint', loft([
         { x: 2.05, hw: 0.48, yb: 0.24, yt: 0.44, p: 2.4 },
         { x: 1.85, hw: 0.64, yb: 0.21, yt: 0.56, p: 3 },
@@ -101,8 +103,11 @@ const SHAPES: Record<ClassicModel, Shape> = {
         add('chrome', new THREE.CylinderGeometry(0.012, 0.012, 0.14, 5).rotateX(Math.PI / 2).translate(0.46, 0.77, 0.72 * sd))
       }
       // bumpers, ducktail, engine-lid grille
+      zone('fw')
       add('chrome', box(0.07, 0.06, 1.05, 2.06, 0.3, 0))
+      zone('rw')
       add('chrome', box(0.08, 0.06, 1.3, -2.18, 0.34, 0))
+      zone('body')
       add('paint', (() => {
         const s = new THREE.Shape()
         s.moveTo(-1.6, 0.74)
@@ -126,7 +131,7 @@ const SHAPES: Record<ClassicModel, Shape> = {
   dieppe: {
     front: 1.02, rear: -1.08, trackF: 0.64, trackR: 0.65, r: 0.29, wF: 0.18, wR: 0.21,
     eye: [-0.3, 0.92, -0.28], roof: [-0.3, 1.2, 0],
-    build(add) {
+    build(add, zone) {
       add('paint', loft([
         { x: 1.98, hw: 0.36, yb: 0.24, yt: 0.4, p: 2.2 },
         { x: 1.8, hw: 0.56, yb: 0.2, yt: 0.52, p: 2.8 },
@@ -158,9 +163,12 @@ const SHAPES: Record<ClassicModel, Shape> = {
         add('tail', new THREE.CircleGeometry(0.04, 12).rotateY(-Math.PI / 2).translate(-1.93, 0.5, 0.3 * sd))
         add('chrome', box(0.08, 0.05, 0.08, 0.35, 0.72, 0.73 * sd))
       }
+      zone('fw')
       add('chrome', box(0.06, 0.05, 0.5, 2.0, 0.27, 0.42))
       add('chrome', box(0.06, 0.05, 0.5, 2.0, 0.27, -0.42))
+      zone('rw')
       add('chrome', box(0.06, 0.05, 1.1, -1.96, 0.3, 0))
+      zone('body')
       // the louvred rear window frame and a fuel filler on the nose
       add('chrome', new THREE.CylinderGeometry(0.05, 0.05, 0.02, 12).translate(1.45, 0.58, 0.2))
       cabin(add, [
@@ -176,7 +184,7 @@ const SHAPES: Record<ClassicModel, Shape> = {
   bavaria: {
     front: 1.3, rear: -1.33, trackF: 0.72, trackR: 0.74, r: 0.31, wF: 0.22, wR: 0.27,
     eye: [-0.12, 1.08, -0.32], roof: [-0.25, 1.42, 0],
-    build(add) {
+    build(add, zone) {
       add('paint', loft([
         { x: 2.32, hw: 0.7, yb: 0.36, yt: 0.66, p: 4.5 },
         { x: 2.22, hw: 0.77, yb: 0.2, yt: 0.7, p: 4.5 },
@@ -205,9 +213,12 @@ const SHAPES: Record<ClassicModel, Shape> = {
         add('black', box(0.12, 0.26, 0.03, -2.12, 0.92, 0.55 * sd))
       }
       add('black', box(0.03, 0.16, 0.42, 2.33, 0.53, 0))
+      zone('fw')
       add('black', box(0.25, 0.08, 1.56, 2.28, 0.18, 0))
+      zone('rw')
       add('chrome', box(0.06, 0.05, 1.6, -2.34, 0.4, 0))
       add('stripe', box(0.42, 0.03, 1.5, -2.16, 1.06, 0, 0, 0, -0.08))
+      zone('body')
       add('black', box(0.5, 0.03, 0.08, 1.2, 0.8, 0.45, 0, 0, 0.1))
       cabin(add, [
         { x: 0.75, hw: 0.68, yb: 0.76, yt: 0.82, p: 3 },
@@ -384,12 +395,16 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   const body = new THREE.Group()
   root.add(body)
   const parts = new Map<Part, THREE.BufferGeometry[]>()
+  const pieces: Record<Zone, Map<Part, THREE.BufferGeometry[]>> = { body: parts, fw: new Map(), rw: new Map() }
+  let zone: Zone = 'body'
   const addPart = (k: Part, g: THREE.BufferGeometry) => {
-    let l = parts.get(k)
-    if (!l) parts.set(k, (l = []))
+    const M = pieces[zone]
+    let l = M.get(k)
+    if (!l) M.set(k, (l = []))
     l.push(g)
   }
-  S.build(addPart)
+  S.build(addPart, (z) => (zone = z))
+  zone = 'body'
   details(addPart, model, S)
   const livery = classicLivery(team, model)
   const light = new THREE.MeshStandardMaterial({ color: 0x400000, emissive: 0xff2020, emissiveIntensity: 0.4 })
@@ -416,6 +431,24 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
     if (k === 'glass') m.renderOrder = 2
     body.add(m)
   }
+  // the bumpers (and the Bavaria's wing) hang from pivots at their ends, so a crash can bend them or knock them off
+  const B = BODY[model]
+  const piece = (z: 'fw' | 'rw', px: number, py: number) => {
+    const g = new THREE.Group()
+    g.position.set(px, py, 0)
+    for (const [k, list] of pieces[z]) {
+      const geom = merge(list)
+      owned.push(geom)
+      const m = new THREE.Mesh(geom, mats[k])
+      m.position.set(-px, -py, 0)
+      m.castShadow = true
+      g.add(m)
+    }
+    body.add(g)
+    return g
+  }
+  const front = piece('fw', B.nose - 0.1, 0.3)
+  const rear = piece('rw', B.tail + 0.15, 0.4)
   // racing roundels on the doors and the bonnet
   const rt = roundelTexture(num)
   const rm = new THREE.MeshStandardMaterial({ map: rt, transparent: true, roughness: 0.4, polygonOffset: true, polygonOffsetFactor: -2, depthWrite: false })
@@ -466,6 +499,11 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
     root, body, wheels, flap, light,
     setCompound(c: Compound) {
       for (const w of wheels) w.tyre.material = sh.tyre[c]
+    },
+    setDamage(d: Damage) {
+      showDamage(front, d.fw, 0.35, 0.4, d.side)
+      showDamage(rear, d.rw, -0.3, 0.35, d.side)
+      bendWheels(wheels, d)
     },
     dispose() {
       for (const o of owned) o.dispose()

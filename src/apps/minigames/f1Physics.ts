@@ -195,7 +195,21 @@ export interface CarEnv {
   analog?: boolean
   /** DRS open: less drag. */
   drs?: boolean
+  /** What is broken (none: a new car). */
+  damage?: Damage
 }
+
+/** Damage, 0 (fine) to 1 (broken): front wing (the nose on a classic), rear wing (the tail), suspension and which side (+1 right). */
+export interface Damage {
+  fw: number
+  rw: number
+  susp: number
+  side: number
+}
+export const noDamage = (): Damage => ({ fw: 0, rw: 0, susp: 0, side: 1 })
+
+/** How much slower a damaged car is round a lap (AI pace, 1 = undamaged). */
+export const damagePace = (d: Damage) => 1 - 0.06 * d.fw - 0.04 * d.rw - 0.05 * d.susp
 
 export class CarBody {
   x = 0
@@ -291,11 +305,16 @@ export class CarBody {
     const aero = 0.5 * rho * cla * vx * vx
     // weight on each axle: static, downforce, and the weight transfer of braking and accelerating
     const transfer = (m * this.ax * 0.32) / L
-    const fzF = Math.max(500, (m * G * b) / L + aero * CAR.aeroFront - transfer)
-    const fzR = Math.max(500, (m * G * a) / L + aero * (1 - CAR.aeroFront) + transfer)
-    const capF = mu * env.grip * fzF
-    const capR = mu * env.grip * fzR
-    const delta = this.steer
+    // a broken wing loses its downforce (and a broken front, its bite); bent suspension pulls to one side
+    const dmg = env.damage
+    const fwLoss = dmg ? 1 - 0.55 * dmg.fw : 1
+    const rwLoss = dmg ? 1 - 0.5 * dmg.rw : 1
+    const bent = dmg ? 1 - 0.12 * dmg.susp : 1
+    const fzF = Math.max(500, (m * G * b) / L + aero * CAR.aeroFront * fwLoss - transfer)
+    const fzR = Math.max(500, (m * G * a) / L + aero * (1 - CAR.aeroFront) * rwLoss + transfer)
+    const capF = mu * env.grip * fzF * bent * (dmg ? 1 - 0.18 * dmg.fw : 1)
+    const capR = mu * env.grip * fzR * bent
+    const delta = this.steer + (dmg ? dmg.side * 0.018 * dmg.susp : 0)
 
     // slip angles, with a little lag (the tyre's relaxation length)
     const u = Math.max(Math.abs(vx), 4)
@@ -370,7 +389,7 @@ export class CarBody {
       fyR *= sp / 1.2
     }
 
-    const cd = env.drs ? CAR.cda * 0.82 : CAR.cda
+    const cd = (env.drs ? CAR.cda * 0.82 : CAR.cda) * (dmg ? 1 + 0.06 * (dmg.fw + dmg.rw) : 1)
     const drag = 0.5 * rho * cd * vx * Math.abs(vx)
     const rollF = (CAR.roll + env.drag) * m * G * Math.tanh(vx * 2)
     const cosD = Math.cos(delta)

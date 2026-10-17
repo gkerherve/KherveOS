@@ -7,7 +7,7 @@
 // laps, gaps from twenty timing points a lap. No three.js here.
 
 import { ahead, barrierAt, inRange, locate, pitOffset, pointAt, sampleAt, surfaceAt, wrap, type Surface, type Track } from './f1Track.ts'
-import { accelLimit, brakeLimit, CAR, CarBody, COMPOUNDS, gearRpm, newTyres, SERIES, setSeries, TOP_SPEED, tyreGrip, wearTyres, type CarInput, type Compound, type Series, type Tyres } from './f1Physics.ts'
+import { accelLimit, brakeLimit, CAR, CarBody, COMPOUNDS, damagePace, gearRpm, newTyres, noDamage, SERIES, setSeries, TOP_SPEED, tyreGrip, wearTyres, type CarInput, type Compound, type Damage, type Series, type Tyres } from './f1Physics.ts'
 
 export interface Team {
   name: string
@@ -153,6 +153,8 @@ export interface RaceCar {
   drsZone: number
   /** Something the player hit (0..1), for the sound and the camera. */
   hit: number
+  /** What is broken, and when it last got worse (for the debris). */
+  damage: Damage
   surface: Surface
 }
 
@@ -174,6 +176,21 @@ export interface SessionOpts {
   seed?: number
   /** A demo race behind the menu: every car (the player's too) drives itself, no lights. */
   demo?: boolean
+  /** Crashes break wings and suspension (on by default). */
+  damage?: boolean
+}
+
+/** A blow the engine shows: debris, sparks, a bang. */
+export interface Impact {
+  x: number
+  y: number
+  z: number
+  /** 0..1 */
+  strength: number
+  /** What broke ('' a knock that broke nothing), and whether it was a wall scrape. */
+  part: '' | 'fw' | 'rw' | 'susp'
+  car: number
+  scrape: boolean
 }
 
 export interface SessionEvent {
@@ -281,7 +298,7 @@ export class Session {
       sector: 0, sectorStart: 0, sectors: [0, 0, 0], bestSectors: [Infinity, Infinity, Infinity], marks: [],
       tyres: newTyres('soft', true), used: [], pit: 'none', pitT: 0, pitLen: 2.5, pitPlan: -1, nextCompound: 'medium', stops: 0,
       leaveAt: 0, runLaps: 0, runs: 0,
-      finished: false, finishTime: 0, penalty: 0, drs: false, drsZone: -1, hit: 0, surface: 'asphalt',
+      finished: false, finishTime: 0, penalty: 0, drs: false, drsZone: -1, hit: 0, damage: noDamage(), surface: 'asphalt',
     }
   }
 
@@ -374,6 +391,7 @@ export class Session {
 
   step(dt: number) {
     dt = Math.min(dt, 1 / 20)
+    if (this.impacts.length > 60) this.impacts.splice(0, this.impacts.length - 60)
     if (this.phase === 'done') {
       this.time += dt
       this.moveAll(dt)
@@ -505,7 +523,7 @@ export class Session {
     }
     const drsOk = this.drsOpen && p.drs && inRange(near.s, zone[0], zone[1], t.len)
     if (this.drsOpen && (inp.brake > 0.1 || !drsOk)) this.drsOpen = false
-    if (!parked) b.step(dt, inp, { grip: tyreGrip(p.tyres) * gripSurf, drag, assists: this.opts.assists, analog: this.input.analog, drs: this.drsOpen })
+    if (!parked) b.step(dt, inp, { grip: tyreGrip(p.tyres) * gripSurf, drag, assists: this.opts.assists, analog: this.input.analog, drs: this.drsOpen, damage: p.damage })
     // the barriers
     const after = locate(t, b.x, b.z, near.i)
     const lim = barrierAt(t, after.s)
@@ -524,8 +542,15 @@ export class Session {
       let wx = b.vx * ch - b.vy * sh
       let wz = b.vx * sh + b.vy * ch
       const vn = wx * nx + wz * nz
+      // sliding along the wall throws sparks
+      if (b.speed > 12 && Math.random() < 0.5) this.impacts.push({ x: b.x + nx * 0.9, y: b.y + 0.2, z: b.z + nz * 0.9, strength: 0.2, part: '', car: 0, scrape: true })
       if (vn > 0) {
         hit = Math.min(1, vn / 25)
+        // which end met the wall: the nose, the tail, or a wheel (the suspension)
+        const fwd = nx * ch + nz * sh
+        const right = -nx * sh + nz * ch
+        const part = fwd > 0.55 ? 'fw' : fwd < -0.55 ? 'rw' : 'susp'
+        this.hurt(p, part, (vn - (part === 'susp' ? 9 : 7)) / (part === 'susp' ? 26 : 20), Math.sign(right) || 1, b.x + nx, b.y + 0.4, b.z + nz)
         wx -= vn * nx * 1.35
         wz -= vn * nz * 1.35
         const keep = 1 - Math.min(0.6, vn / 40)
@@ -595,7 +620,7 @@ export class Session {
       return
     }
     const look = c.s + Math.max(2, c.v * 0.12)
-    let vt = sampleAt(t, this.profile, look) * c.lapPace * Math.sqrt(tyreGrip(c.tyres))
+    let vt = sampleAt(t, this.profile, look) * c.lapPace * Math.sqrt(tyreGrip(c.tyres)) * damagePace(c.damage)
     // quali out laps and in laps are slower
     if (this.kind === 'qualifying' && (!c.lapTimed || c.runLaps >= 3)) vt *= 0.8
     if (c.finished || (this.kind === 'qualifying' && this.overtime && !c.lapTimed)) vt *= 0.72
@@ -670,6 +695,8 @@ export class Session {
     if (c.finished || this.phase === 'done') return false
     if (this.kind === 'qualifying') return c.runLaps >= 3 || (this.overtime && !c.lapTimed)
     if (this.phase === 'chequered') return false
+    // a broken car comes in for repairs
+    if ((c.damage.fw > 0.35 || c.damage.rw > 0.35 || c.damage.susp > 0.5) && c.laps < this.laps - 1) return true
     return (c.laps === c.pitPlan && c.stops === 0) || (c.tyres.wear > 1.25 && c.laps < this.laps - 1)
   }
 
@@ -727,6 +754,8 @@ export class Session {
       if (f >= 1) {
         if (c.pit === 'toGarage') {
           c.pit = 'garage'
+          // the mechanics mend whatever was broken
+          c.damage = noDamage()
           c.tyres = newTyres(c.player ? this.compound : 'soft', true)
           if (!c.player) {
             c.runs++
@@ -747,6 +776,9 @@ export class Session {
       c.speed = 0
       c.lat = p.side * p.boxOff
       if (c.pitT >= c.pitLen) {
+        const d = c.damage
+        if (c.player && (d.fw > 0.05 || d.rw > 0.05 || d.susp > 0.1)) this.event(`Repaired: ${[d.fw > 0.05 ? 'new front wing' : '', d.rw > 0.05 ? 'new rear wing' : '', d.susp > 0.1 ? 'suspension' : ''].filter(Boolean).join(', ')}`, 'good')
+        c.damage = noDamage()
         const old = c.tyres.compound
         c.tyres = newTyres(c.player ? this.compound : c.nextCompound, true)
         if (!c.used.includes(c.tyres.compound)) c.used.push(c.tyres.compound)
@@ -790,7 +822,7 @@ export class Session {
       if (this.kind === 'qualifying') c.pit = 'toGarage'
       else {
         c.pit = 'stop'
-        c.pitLen = c.player ? 2.3 + this.rand() * 0.5 : c.pitLen
+        c.pitLen = (c.player ? 2.3 + this.rand() * 0.5 : c.pitLen) + this.repairTime(c)
       }
       // a quali lap ends in the pits
       c.lapTimed = false
@@ -877,13 +909,19 @@ export class Session {
       let best = Infinity
       let nx = 0
       let nz = 0
-      for (const a of pc) {
-        for (const q of oc) {
+      let mine = 0
+      let theirs = 0
+      for (let ia = 0; ia < 2; ia++) {
+        const a = pc[ia]
+        for (let ib = 0; ib < 2; ib++) {
+          const q = oc[ib]
           const dx = a[0] - q[0]
           const dz = a[1] - q[1]
           const d = Math.hypot(dx, dz)
           if (d < best) {
             best = d
+            mine = ia
+            theirs = ib
             nx = d > 1e-4 ? dx / d : 1
             nz = d > 1e-4 ? dz / d : 0
           }
@@ -913,6 +951,12 @@ export class Session {
         b.r += (Math.random() - 0.5) * Math.min(1.5, -rel * 0.08)
         o.v = Math.max(0, o.v + rel * 0.35 * Math.sign(ahead(p.s, o.s, this.t.len) < this.t.len / 2 ? -1 : 1))
         p.hit = Math.max(p.hit, Math.min(1, -rel / 15))
+        // the ends that touched take the blow: front wing (front circle) or rear wing (rear circle), on both cars
+        const amount = (-rel - 4) / 14
+        const cx = (b.x + o.x) / 2
+        const cz = (b.z + o.z) / 2
+        this.hurt(p, mine === 0 ? 'fw' : 'rw', amount, 1, cx, b.y + 0.4, cz)
+        this.hurt(o, theirs === 0 ? 'fw' : 'rw', amount * 0.9, 1, cx, b.y + 0.4, cz)
       }
     }
     // AI cars side by side nudge apart
@@ -1003,6 +1047,32 @@ export class Session {
       c.sector = sector
       c.sectorStart = now
     }
+  }
+
+  /** Blows since the engine last looked (it shows debris and sparks, then empties this). */
+  impacts: Impact[] = []
+
+  /** Damage `part` of car c by `amount` (nothing below 0). */
+  private hurt(c: RaceCar, part: 'fw' | 'rw' | 'susp', amount: number, side: number, x: number, y: number, z: number) {
+    if (amount <= 0 || this.opts.damage === false) {
+      if (amount > -0.3) this.impacts.push({ x, y, z, strength: 0.25, part: '', car: c.i, scrape: false })
+      return
+    }
+    const d = c.damage
+    const before = d[part]
+    d[part] = Math.min(1, before + amount)
+    if (part === 'susp') d.side = side
+    this.impacts.push({ x, y, z, strength: Math.min(1, 0.3 + amount), part, car: c.i, scrape: false })
+    if (!c.player) return
+    const name = part === 'fw' ? (SERIES === 'classic' ? 'Nose' : 'Front wing') : part === 'rw' ? (SERIES === 'classic' ? 'Tail' : 'Rear wing') : 'Suspension'
+    if (before < 0.75 && d[part] >= 0.75) this.event(`${name} broken! Box (P) to repair it`, 'bad')
+    else if (before < 0.25 && d[part] >= 0.25) this.event(`${name} damaged`, 'bad')
+  }
+
+  /** Seconds a pit stop takes to mend the car. */
+  private repairTime(c: RaceCar) {
+    const d = c.damage
+    return (d.fw > 0.05 ? 4.5 : 0) + (d.rw > 0.05 ? 5.5 : 0) + (d.susp > 0.1 ? 3 + 6 * d.susp : 0)
   }
 
   /** Last sector colours for the player: purple, green or yellow. */

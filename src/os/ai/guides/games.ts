@@ -65,6 +65,7 @@ export const GAME_GUIDES: AppGuide[] = [
     'Twelve cars in six teams; the player drives car 7 for Kherve Racing (black and green), the team with the two transporter trucks in the paddock.',
     'The Classics (fictional makes, balanced to the same pace): the Stoccarda 901 RS fastback, the little Dieppe A110 berlinette, the Bavaria 30 CS touring coupé; the player picks one.',
     'Controls: X throttle, Z brake (the arrows work too), Space the handbrake to start a drift (then throttle and countersteer; the assists let it slide but stop a spin), E DRS, P box, C camera. Braking hard while turning in also swings the tail out into a drift.',
+    'Damage (menu, on by default): hitting a wall or a car breaks the front wing (nose on a classic), the rear wing (tail) or the suspension, costing grip and downforce; a pit stop (P) repairs it, adding a few seconds. The state reports it.',
     'Light (menu): the circuit\'s own (midday at Kherve Park, golden afternoon at Lac Bleu) or Sunset: the sun on the horizon, lit windows and lamp posts.',
     'The Classics are slower (no downforce, about 240 km/h flat out), slide more and have no DRS; with the assists off the rear-engined Stoccarda is tail-happy.',
     'In races of 3 laps or more both a second compound and so a pit stop are required, or 10 s is added. A jump start costs 5 s. In qualifying, leaving the track deletes the lap.',

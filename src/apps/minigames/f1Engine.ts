@@ -30,6 +30,8 @@ export interface GPSettings {
   classic: ClassicModel
   /** The circuit's own light (noon at Kherve Park, golden afternoon at Lac Bleu) or sunset. */
   time: TimeOfDay
+  /** Crashes break wings and suspension. */
+  damage: boolean
 }
 
 export type Stage = 'menu' | 'qualifying' | 'qualiResults' | 'race' | 'raceResults'
@@ -87,6 +89,8 @@ export interface GPHud {
   wrongWay: boolean
   /** Sliding sideways in a drift. */
   drift: boolean
+  /** The player's damage (0 fine .. 1 broken) and whether damage is on. */
+  damage: { fw: number; rw: number; susp: number; on: boolean }
   offTrack: boolean
   mustChange: boolean
   changed: boolean
@@ -119,7 +123,7 @@ export class GrandPrixEngine {
   readonly scene = new THREE.Scene()
   readonly camera = new THREE.PerspectiveCamera(62, 1, 0.1, 14000)
   stage: Stage = 'menu'
-  settings: GPSettings = { track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: 'Player', series: 'modern', classic: 'stoccarda', time: 'day' }
+  settings: GPSettings = { track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: 'Player', series: 'modern', classic: 'stoccarda', time: 'day', damage: true }
   track!: Track
   profile!: { v: Float32Array; lapTime: number }
   world: World | null = null
@@ -152,6 +156,12 @@ export class GrandPrixEngine {
   private smoke: { s: THREE.Sprite; life: number; v: THREE.Vector3; max: number }[] = []
   private smokeMats: Record<'smoke' | 'dust' | 'grass', THREE.SpriteMaterial>
   private smokeTex: THREE.Texture
+  /** Bits of wing flying off in a crash, and sparks off the walls. */
+  private debris: { m: THREE.Mesh; life: number; v: THREE.Vector3; spin: THREE.Vector3; floor: number }[] = []
+  private debrisGeo = new THREE.BoxGeometry(0.28, 0.03, 0.16)
+  private debrisMats = [new THREE.MeshStandardMaterial({ color: 0x1d1f22, roughness: 0.4, metalness: 0.3 }), new THREE.MeshStandardMaterial({ color: 0xc8ccd2, roughness: 0.2, metalness: 0.9 })]
+  private sparks: { s: THREE.Sprite; life: number; v: THREE.Vector3 }[] = []
+  private sparkMat: THREE.SpriteMaterial
   private lastLights = 0
   private audio: EngineAudio | null = null
   private prevGear = 1
@@ -193,6 +203,21 @@ export class GrandPrixEngine {
       s.visible = false
       this.scene.add(s)
       this.smoke.push({ s, life: 0, v: new THREE.Vector3(), max: 1 })
+    }
+    for (let k = 0; k < 48; k++) {
+      const m = new THREE.Mesh(this.debrisGeo, this.debrisMats[0])
+      m.visible = false
+      m.castShadow = true
+      this.scene.add(m)
+      this.debris.push({ m, life: 0, v: new THREE.Vector3(), spin: new THREE.Vector3(), floor: 0 })
+    }
+    this.sparkMat = new THREE.SpriteMaterial({ map: this.smokeTex, color: 0xffb040, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })
+    for (let k = 0; k < 80; k++) {
+      const sp = new THREE.Sprite(this.sparkMat)
+      sp.visible = false
+      sp.scale.set(0.18, 0.18, 1)
+      this.scene.add(sp)
+      this.sparks.push({ s: sp, life: 0, v: new THREE.Vector3() })
     }
     this.setTrack('park')
   }
@@ -278,7 +303,7 @@ export class GrandPrixEngine {
     this.setTrack(s.track)
     this.session = new Session({
       track: this.track, profile: this.profile.v, profileLap: this.profile.lapTime, kind: 'qualifying', laps: s.laps, minutes: s.quali,
-      difficulty: s.difficulty, assists: s.assists, playerName: s.name,
+      difficulty: s.difficulty, assists: s.assists, playerName: s.name, damage: s.damage !== false,
     })
     this.session.compound = 'soft'
     this.stage = 'qualifying'
@@ -295,7 +320,7 @@ export class GrandPrixEngine {
     this.setTrack(s.track)
     const q = new Session({
       track: this.track, profile: this.profile.v, profileLap: this.profile.lapTime, kind: 'qualifying', laps: s.laps, minutes: s.quali,
-      difficulty: s.difficulty, assists: s.assists, playerName: s.name,
+      difficulty: s.difficulty, assists: s.assists, playerName: s.name, damage: s.damage !== false,
     })
     q.finishQuali()
     this.qualiResults = q.results()
@@ -313,7 +338,7 @@ export class GrandPrixEngine {
     const grid = this.qualiResults.length ? this.qualiResults.map((r) => r.car) : [...Array(12).keys()].slice(1).concat(0)
     this.session = new Session({
       track: this.track, profile: this.profile.v, profileLap: this.profile.lapTime, kind: 'race', laps: s.laps, minutes: 0,
-      difficulty: s.difficulty, assists: s.assists, playerName: s.name, grid, compound,
+      difficulty: s.difficulty, assists: s.assists, playerName: s.name, damage: s.damage !== false, grid, compound,
     })
     this.stage = 'race'
     this.lastLights = 0
@@ -438,6 +463,7 @@ export class GrandPrixEngine {
     this.drawCars(s, dt)
     this.drawCrews(s, dt)
     this.particles(s, dt)
+    this.crashes(s, dt)
     if (live) this.followCamera(s, dt)
     else this.attractCamera(s, dt)
     this.world!.update(dt, this.camLook, this.time)
@@ -503,6 +529,7 @@ export class GrandPrixEngine {
         w.pivot.position.set(w.base.x, w.base.y + jack, w.base.z + Math.sign(w.base.z) * off * 0.55)
       }
       m.setCompound(c.tyres.compound)
+      m.setDamage(c.damage)
       // DRS flap, the rear light (it flashes on the limiter)
       const zone = s.t.drs.some((z) => inRange(c.s, z[0], z[1], s.t.len))
       const open = c.player && live ? s.drsOpen : c.drs && zone && c.pit === 'none'
@@ -568,6 +595,65 @@ export class GrandPrixEngine {
     })
     w.crewBodies.instanceMatrix.needsUpdate = true
     w.crewHeads.instanceMatrix.needsUpdate = true
+  }
+
+  /** Crashes: debris for what broke, sparks for scrapes and knocks, a crunch. */
+  private crashes(s: Session, dt: number) {
+    const cam = this.camera.position
+    for (const im of s.impacts) {
+      const near = Math.hypot(im.x - cam.x, im.z - cam.z) < 260
+      if (!near) continue
+      if (im.part) {
+        const n = 4 + Math.round(im.strength * 8)
+        for (let k = 0; k < n; k++) {
+          const d = this.debris.find((q) => q.life <= 0) ?? this.debris[k % this.debris.length]
+          d.m.material = SERIES === 'classic' && Math.random() < 0.5 ? this.debrisMats[1] : this.debrisMats[0]
+          d.m.position.set(im.x + (Math.random() - 0.5), im.y + 0.2, im.z + (Math.random() - 0.5))
+          d.v.set((Math.random() - 0.5) * 9, 2 + Math.random() * 5, (Math.random() - 0.5) * 9)
+          d.spin.set(Math.random() * 14 - 7, Math.random() * 14 - 7, Math.random() * 14 - 7)
+          d.floor = im.y - 0.38
+          d.life = 9
+          d.m.visible = true
+          const sc = 0.5 + Math.random() * 1.2
+          d.m.scale.set(sc, 1, sc)
+        }
+        if (im.car === 0 || Math.hypot(im.x - cam.x, im.z - cam.z) < 60) sfx('f1crunch', () => noise({ dur: 0.45, freq: 900, to: 120, vol: 0.25 + 0.3 * im.strength, filter: 'bandpass', q: 0.8 }), 0.15)
+      }
+      const nSparks = im.scrape ? 3 : 10
+      for (let k = 0; k < nSparks; k++) {
+        const sp = this.sparks.find((q) => q.life <= 0)
+        if (!sp) break
+        sp.s.position.set(im.x, im.y, im.z)
+        sp.v.set((Math.random() - 0.5) * 12, 1 + Math.random() * 4, (Math.random() - 0.5) * 12)
+        sp.life = 0.3 + Math.random() * 0.4
+        sp.s.visible = true
+      }
+      if (im.scrape) sfx('f1scrape', () => noise({ dur: 0.12, freq: 3500, vol: 0.06, filter: 'highpass' }), 0.08)
+    }
+    s.impacts.length = 0
+    for (const d of this.debris) {
+      if (d.life <= 0) continue
+      d.life -= dt
+      d.v.y -= 9.8 * dt
+      d.m.position.addScaledVector(d.v, dt)
+      if (d.m.position.y < d.floor) {
+        d.m.position.y = d.floor
+        d.v.multiplyScalar(0.4)
+        d.v.y = Math.abs(d.v.y) * 0.3
+        d.spin.multiplyScalar(0.5)
+      }
+      d.m.rotation.x += d.spin.x * dt
+      d.m.rotation.y += d.spin.y * dt
+      d.m.rotation.z += d.spin.z * dt
+      if (d.life <= 0) d.m.visible = false
+    }
+    for (const sp of this.sparks) {
+      if (sp.life <= 0) continue
+      sp.life -= dt
+      sp.v.y -= 12 * dt
+      sp.s.position.addScaledVector(sp.v, dt)
+      if (sp.life <= 0) sp.s.visible = false
+    }
   }
 
   private particles(s: Session, dt: number) {
@@ -832,6 +918,7 @@ export class GrandPrixEngine {
       message: last && s.time - last.t < 4 && s.events.length > 0 ? last : null,
       camera: this.cam,
       wrongWay: p.pit === 'none' && p.speed > 4 && fwd < -0.3,
+      damage: { fw: p.damage.fw, rw: p.damage.rw, susp: p.damage.susp, on: this.settings.damage !== false },
       drift: p.pit === 'none' && s.body.drift > 0.2 && Math.abs(Math.atan2(s.body.vy, Math.max(1, s.body.vx))) > 0.15,
       offTrack: p.surface === 'grass' || p.surface === 'gravel',
       mustChange: s.mustChange,
@@ -864,7 +951,7 @@ export class GrandPrixEngine {
       this.world.dispose()
     }
     for (const m of this.models) m.dispose()
-    for (const g of this.geo.parts.values()) g.dispose()
+    for (const g of [...this.geo.parts.values(), ...this.geo.frontWing.values(), ...this.geo.rearWing.values()]) g.dispose()
     this.geo.tyreF.dispose()
     this.geo.tyreR.dispose()
     this.geo.rim.dispose()
@@ -882,6 +969,9 @@ export class GrandPrixEngine {
       m.dispose()
     }
     this.smokeTex.dispose()
+    this.debrisGeo.dispose()
+    for (const m of this.debrisMats) m.dispose()
+    this.sparkMat.dispose()
     for (const m of Object.values(this.smokeMats)) m.dispose()
     this.renderer.dispose()
   }

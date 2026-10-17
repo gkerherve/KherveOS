@@ -71,7 +71,7 @@ test('tyres: softs are fastest new, wear costs grip, cold ones grip less', () =>
 
 test('qualifying sets the grid from the best laps, then a race runs to the flag with one stop each', () => {
   for (const { t, prof } of built) {
-    const q = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'qualifying', laps: 5, minutes: 4, difficulty: 'medium', assists: true, playerName: 'Test', seed: 5 })
+    const q = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'qualifying', laps: 5, minutes: 4, difficulty: 'medium', assists: true, playerName: 'Test', seed: 5, damage: false })
     q.leaveGarage(q.player)
     for (let n = 0; n < 60 * 60 * 8 && q.phase !== 'done'; n++) {
       if (q.player.pit === 'none') drive(q, t, prof.v, 0.93)
@@ -83,7 +83,7 @@ test('qualifying sets the grid from the best laps, then a race runs to the flag 
     for (let k = 1; k < grid.length; k++) assert.ok(grid[k].best >= grid[k - 1].best, 'the grid is in lap-time order')
     assert.ok(Number.isFinite(grid.find((r) => r.player)!.best), `${t.def.name}: the player set a time (${q.events.map((e) => `${e.t.toFixed(0)} ${e.text}`).join(' | ')})`)
 
-    const r = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'race', laps: 3, minutes: 0, difficulty: 'medium', assists: true, playerName: 'Test', grid: grid.map((g) => g.car), compound: 'soft', seed: 9 })
+    const r = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'race', laps: 3, minutes: 0, difficulty: 'medium', assists: true, playerName: 'Test', grid: grid.map((g) => g.car), compound: 'soft', seed: 9, damage: false })
     let boxed = false
     for (let n = 0; n < 60 * 60 * 10 && r.phase !== 'done'; n++) {
       if (r.player.pit === 'none') drive(r, t, prof.v, 0.93)
@@ -141,4 +141,37 @@ test('the classics: slower coupés, no DRS, the player\'s chosen car, a race to 
   } finally {
     setRaceSeries('modern')
   }
+})
+
+test('damage: a crash into the wall breaks the front wing and costs grip; with damage off nothing breaks', () => {
+  const { t, prof } = built[0]
+  const r = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'race', laps: 5, minutes: 0, difficulty: 'easy', assists: true, playerName: 'Test', compound: 'soft', seed: 2 })
+  // through the lights, then straight on at the first corner into the barrier
+  let n = 0
+  while (r.phase === 'lights' && n++ < 60 * 20) r.step(1 / 60)
+  for (let k = 0; k < 60 * 25 && r.player.damage.fw < 0.25; k++) {
+    r.input = { throttle: 1, brake: 0, steer: 0, analog: true }
+    r.step(1 / 60)
+  }
+  const d = r.player.damage
+  assert.ok(d.fw >= 0.25, `the nose took the blow (front wing ${d.fw.toFixed(2)}, rear ${d.rw.toFixed(2)}, suspension ${d.susp.toFixed(2)})`)
+  assert.ok(r.events.some((e) => /Front wing/.test(e.text)), 'the player is told')
+  assert.ok(r.impacts.some((i) => i.part === 'fw'), 'the engine is given the blow to show')
+  // a damaged car is slower in a corner: less grip at the front
+  const corner = (damage: typeof d) => {
+    const b = new CarBody()
+    b.place(0, 0, 0, 55)
+    for (let k = 0; k < 120; k++) b.step(1 / 60, { throttle: 0.5, brake: 0, steer: 0.5 }, { grip: 1, drag: 0, assists: true, damage })
+    return Math.abs(b.h)
+  }
+  assert.ok(corner({ ...d }) < corner({ fw: 0, rw: 0, susp: 0, side: 1 }), 'a broken front wing turns less')
+  // with damage off nothing breaks
+  const safe = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'race', laps: 5, minutes: 0, difficulty: 'easy', assists: true, playerName: 'Test', seed: 2, damage: false })
+  n = 0
+  while (safe.phase === 'lights' && n++ < 60 * 20) safe.step(1 / 60)
+  for (let k = 0; k < 60 * 25; k++) {
+    safe.input = { throttle: 1, brake: 0, steer: 0, analog: true }
+    safe.step(1 / 60)
+  }
+  assert.equal(safe.player.damage.fw + safe.player.damage.rw + safe.player.damage.susp, 0)
 })
