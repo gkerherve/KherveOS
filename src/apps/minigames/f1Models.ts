@@ -10,6 +10,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { Team } from './f1Race.ts'
+import { buildDriver } from './f1Driver.ts'
 import { COMPOUNDS, type Compound, type Damage } from './f1Physics.ts'
 
 // ---------------------------------------------------------------- helpers
@@ -362,19 +363,7 @@ export function buildCarGeometry(): CarGeometry {
     // the steering track rod / brake ducts
     add('black', box(0.2, 0.26, 0.08, w.x, 0.33, (Math.abs(w.z) - 0.2) * sd))
   }
-  // driver: helmet and visor
-  add('helmet', (() => {
-    const g = new THREE.SphereGeometry(0.128, 20, 14)
-    g.scale(1.08, 1, 0.95)
-    g.translate(0.74, 0.715, 0)
-    return g
-  })())
-  add('visor', (() => {
-    const g = new THREE.SphereGeometry(0.131, 20, 6, Math.PI - 0.95, 1.9, 1.2, 0.42)
-    g.scale(1.08, 1, 0.95)
-    g.translate(0.74, 0.715, 0)
-    return g
-  })())
+  // (the driver is built per car: f1Driver.ts)
   add('tcam', box(0.12, 0.05, 0.07, 0.18, 0.975, 0))
 
   // ---- the finer details
@@ -730,6 +719,10 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
     body.add(g)
     return g
   }
+  // the driver: helmet in the team's design, visor, the eyes behind it, HANS, the suit
+  const driver = buildDriver({ team, num, classic: false, black: sh.black, carbon: sh.carbon })
+  driver.group.position.set(0.74, 0.715, 0)
+  body.add(driver.group)
   const frontWing = wingGroup(geo.frontWing, 2.85, 0.18)
   const rearWing = wingGroup(geo.rearWing, -2.25, 0.45)
   // numbers: on the nose, on the fin
@@ -812,7 +805,12 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
       showDamage(rearWing, d.rw, -0.2, 0.3, d.side)
       bendWheels(wheels, d)
     },
+    setCockpit(on: boolean) {
+      // the cockpit camera sits in the driver's head: it draws its own hands and wheel
+      driver.group.visible = !on
+    },
     dispose() {
+      driver.dispose()
       numTex.dispose()
       numMat.dispose()
       shade.geometry.dispose()

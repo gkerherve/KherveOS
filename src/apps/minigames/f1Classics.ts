@@ -13,6 +13,7 @@ import * as THREE from 'three'
 import { bendWheels, contactShadow, groundShade, merge, showDamage, type CarModel, type Shared } from './f1Models.ts'
 import type { ClassicModel, Team } from './f1Race.ts'
 import type { Compound, Damage } from './f1Physics.ts'
+import { buildDriver } from './f1Driver.ts'
 
 type Zone = 'body' | 'fw' | 'rw'
 type Part =
@@ -431,7 +432,6 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
   // the dark cabin below the windows, the driver
   const inner = cs.map((s) => ({ x: s.x, pts: ring({ ...s, hw: s.hw * 0.93, yc: s.yb + (s.yc - s.yb) * 0.32, ys: s.yb + (s.yc - s.yb) * 0.3 }) }))
   add('interior', skin(inner, true))
-  add('helmet', new THREE.SphereGeometry(0.13, 16, 12).translate(D.eye[0], D.eye[1] - 0.02, D.eye[2]))
   // arch lips round the wheel openings
   for (const [xw, A] of [[D.front, D.archF], [D.rear, D.archR]]) {
     for (const sd of [1, -1]) {
@@ -479,7 +479,6 @@ function details(add: Add, D: Design, at: Surface) {
   // the bucket seat; the steering wheel and the shoulders (the cockpit camera draws its own)
   add('interior', box(0.12, 0.55, 0.42, eyeX - 0.3, eyeY - 0.38, eyeZ))
   add('cockpit', new THREE.TorusGeometry(0.17, 0.018, 6, 20).rotateY(Math.PI / 2).rotateZ(-0.45).translate(eyeX + 0.42, eyeY - 0.17, eyeZ))
-  add('shoulders', box(0.2, 0.18, 0.42, eyeX - 0.08, eyeY - 0.28, eyeZ))
   // windscreen wipers resting at the foot of the screen
   const C = D.cabin
   for (const z of [-0.42, 0.02]) add('black', box(0.02, 0.012, 0.42, C.x0 - 0.06, at.belt(C.x0) + 0.05, z + 0.2, 0, 0.12, 0))
@@ -722,7 +721,7 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   const owned: (THREE.Material | THREE.Texture | THREE.BufferGeometry)[] = [
     lens, tailLens, livery, mats.paint, mats.plain, mats.decal, (mats.decal as THREE.MeshStandardMaterial).map!, mats.stripe, mats.glass, mats.lamp, mats.amber, light, mats.helmet, mats.interior, mats.shoulders,
   ]
-  const hideInCockpit: THREE.Mesh[] = []
+  const hideInCockpit: THREE.Object3D[] = []
   for (const [k, list] of parts) {
     const g = merge(list)
     owned.push(g)
@@ -752,6 +751,11 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   shade.position.x = (D.nose + D.tail) / 2
   root.add(shade)
   owned.push(shade.geometry, shade.material as THREE.Material)
+  // the driver: open-face helmet, the face, suit and harness, hands on the wheel (ten to two)
+  const driver = buildDriver({ team, num, classic: true, wheel: { x: 0.44, y: -0.15, r: 0.17, tilt: 0.45 }, black: sh.black, carbon: sh.black })
+  driver.group.position.set(D.eye[0], D.eye[1] - 0.02, D.eye[2])
+  body.add(driver.group)
+  hideInCockpit.push(driver.group)
   const front = piece('fw', D.nose - 0.1, 0.3)
   const rear = piece('rw', D.tail + 0.15, 0.4)
   // racing roundels on the doors and the bonnet
@@ -851,6 +855,7 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
       for (const m of hideInCockpit) m.visible = !on
     },
     dispose() {
+      driver.dispose()
       for (const o of owned) o.dispose()
     },
   }
