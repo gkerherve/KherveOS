@@ -74,6 +74,7 @@ export const GAME_TOOL_SETS: AppToolSet[] = [
   miniGame('asteroids', 'Meteor Smash', 'the space shooter where you blast meteors (Asteroids-like).', ['asteroids', 'meteor', 'meteors'], 'wave, lives, meteors left'),
   miniGame('runekeep', 'DataCenter Assault', 'the fast first-person shooter in an overrun data centre: corridors, server halls, keycards.', ['datacenter assault', 'data center', 'rune keep', 'quake', 'fps', 'shooter', 'doom', 'arena'], 'level, stage (play, dead, intermission, finished), health, armor, weapon, ammo, weapons owned, keys, kills, secrets, time'),
   miniGame('lasttrain', 'Last Train', 'the 3D subway shooter: clear zombie waves, ride the train, escape.', ['last train', 'subway', 'metro', 'fps', 'shooter', 'zombies', 'train'], 'wave, station, stage, health, weapon, ammo, enemies left, kills'),
+  miniGame('grandprix', 'Kherve Grand Prix', 'the 3D single-seater race: qualifying, grid, pit stops.', ['grand prix', 'formula one', 'f1', 'racing', 'race', 'car', 'cars'], 'stage, track, session, position, lap, best and last lap, tyres, pit state, top five, last results'),
   miniGame('flappy', 'Flappy Khervey', 'the Flappy Bird-like game: flap through pipes, shoot birds and bees.', ['flappy', 'flappy bird', 'khervey'], 'stage, difficulty', [
     {
       action: 'set_difficulty',

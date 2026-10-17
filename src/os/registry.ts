@@ -5,7 +5,7 @@ import {
   Atom, Bird, Blocks, Box, FlaskConical, Ghost, Rocket, Spade, Presentation, BookMarked, BookOpen, BrickWall, Castle, CircleDot, Code2, FileText, Folder, Globe, Image, Mail, MessageCircle, NotebookPen, Orbit, Palette,
   Settings, Sheet, Sigma, Sparkles, SquareTerminal, StickyNote,
 } from 'lucide-react'
-import { Calculator, Hexagon, Pipette, Shapes, TrainFrontTunnel } from 'lucide-react'
+import { Calculator, CarFront, Hexagon, Pipette, Shapes, TrainFrontTunnel } from 'lucide-react'
 import { CircuitBoard, Radical, ServerCrash, Zap } from 'lucide-react'
 import { Activity, Binary, CloudSun, Cog, Droplets, NotebookTabs, Triangle } from 'lucide-react'
 import { AudioWaveform, ChartScatter, Microscope, Mountain, Rainbow, Ruler, Waves } from 'lucide-react'
@@ -888,6 +888,19 @@ export const APPS: AppManifest[] = [
     load: () => import('@/apps/minigames/LastTrain'),
     defaultSize: { w: 1000, h: 640 },
     minSize: { w: 640, h: 420 },
+  },
+  {
+    id: 'grandprix',
+    name: 'Kherve Grand Prix',
+    icon: CarFront,
+    color: '#22c55e',
+    brand: { label: 'GP', from: '#8af0b4', to: '#0b3d1c' },
+    category: 'games',
+    group: 'Games',
+    description: 'A 3D single-seater race: qualify for the grid, then race with tyre wear and pit stops on two circuits',
+    load: () => import('@/apps/minigames/GrandPrix'),
+    defaultSize: { w: 1120, h: 700 },
+    minSize: { w: 680, h: 440 },
   },
   {
     id: 'flappy',

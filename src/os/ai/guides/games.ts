@@ -61,6 +61,12 @@ export const GAME_GUIDES: AppGuide[] = [
     'It needs the mouse (pointer lock): `lasttrain_play` brings the window to the front, but only the player\'s click starts or resumes. Pausing works from the tools.',
     'The state has the wave, station, stage (fight, cleared, trainIn, board, depart, arrive, alight, exit, escaped, dying), health, weapon, ammo, enemies left and kills.',
   ]),
+  miniGame('grandprix', '3D single-seater racing game (qualifying, race, pit stops)', 'Pick a circuit (Kherve Park: woods, wind turbines; Lac Bleu: a lake under snowy mountains), race length, qualifying length, rival difficulty and assists. Qualifying: leave the garage, out lap, flying laps; the best lap sets the grid (pole for the fastest). Race: five red lights, tyres wear (Soft fastest, Hard lasts longest), P boxes this lap for new tyres (1 · 2 · 3 picks the compound), DRS on the long straights, the chequered flag.', [
+    'Twelve cars in six teams; the player drives car 7 for Kherve Racing (black and green), the team with the two transporter trucks in the paddock.',
+    'In races of 3 laps or more both a second compound and so a pit stop are required, or 10 s is added. A jump start costs 5 s. In qualifying, leaving the track deletes the lap.',
+    'The state has the stage (menu, qualifying, qualiResults, race, raceResults), the track, the session, position, lap, best and last lap, tyres and wear, the next compound, the pit state, the top five and the last results.',
+    'The score of a race: points for the finishing place (25, 18, 15… ×100, ×1.5 on Medium, ×2 on Hard), +300 for pole, +200 for the fastest lap, +50 a place gained.',
+  ], ['`grandprix_play` with start on the menu starts qualifying with the menu\'s settings; the player drives with the keyboard or a gamepad.']),
   miniGame('flappy', 'Flappy-Bird-like game with shooting', 'Flap through the pipes and shoot the birds and bees.', ['The state has the stage and difficulty.'], [
     '`flappy_set_difficulty` (easy, medium, hard) only between games: before starting or after game over.',
   ]),

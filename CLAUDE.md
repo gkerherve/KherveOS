@@ -37,7 +37,7 @@ free, open source, helping people. Avoid communist imagery (stars, hammer & sick
   `--k-muted`, `--k-accent`, `--k-accent-text`, `--k-border`, `--k-button(-hover)`, `--k-selection`,
   `--k-alt`, `--k-link`, `--k-danger/success/warning`). Every screen must work in the 24 themes.
   Shared classes `k-app`, `k-toolbar`, `k-statusbar`, `k-btn`, `k-icon-btn`, `k-input`… are in
-  `src/styles/global.css`. App CSS uses an app prefix (`fm-`, `np-`, `nb-`, `term-`, `br-`, `msg-`, `mail-`, `st-`, `vw-`, `game-`).
+  `src/styles/global.css`. App CSS uses an app prefix (`fm-`, `np-`, `nb-`, `term-`, `br-`, `msg-`, `mail-`, `st-`, `vw-`, `game-`, `gp-`).
 - `src/os/themes.data.ts` is generated from `../KherveTeX/khervedoc/themes.py` — regenerate, don't hand-edit.
 - tsconfig has `erasableSyntaxOnly` (no enums / parameter properties / namespaces) and `verbatimModuleSyntax` (`import type`).
 - `.kbook` files must stay compatible with the desktop KherveBook (`{"format": "kbook", "version": 1, "cells": [{type, source}]}`).
