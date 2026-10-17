@@ -69,10 +69,10 @@ export interface Driver {
 /** Car 0 is the player's; car 1 is their team mate. */
 export const DRIVERS: Driver[] = [
   { name: 'You', code: 'YOU', num: 7, team: 0, skill: 1 },
-  { name: 'Lena Moreau', code: 'MOR', num: 17, team: 0, skill: 0.986 },
-  { name: 'Tomás Rivera', code: 'RIV', num: 3, team: 1, skill: 0.996 },
+  { name: 'Ekin Kerherve', code: 'KER', num: 17, team: 0, skill: 0.992 },
+  { name: 'Homer Slight', code: 'SLI', num: 3, team: 1, skill: 0.996 },
   { name: 'Aiko Tanaka', code: 'TAN', num: 22, team: 1, skill: 0.989 },
-  { name: 'Erik Lindqvist', code: 'LIN', num: 11, team: 2, skill: 0.998 },
+  { name: 'Alex Perero', code: 'PER', num: 11, team: 2, skill: 0.998 },
   { name: 'Priya Nair', code: 'NAI', num: 29, team: 2, skill: 0.99 },
   { name: 'Jonas Becker', code: 'BEC', num: 5, team: 3, skill: 0.993 },
   { name: 'Sofia Russo', code: 'RUS', num: 44, team: 3, skill: 0.985 },

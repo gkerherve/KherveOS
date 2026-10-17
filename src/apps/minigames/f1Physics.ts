@@ -178,6 +178,8 @@ export interface CarInput {
   brake: number
   /** -1 full left .. 1 full right. */
   steer: number
+  /** The handbrake (0..1): locks the rear wheels to start a drift. */
+  handbrake?: number
 }
 
 export interface CarEnv {
@@ -232,6 +234,7 @@ export class CarBody {
     this.r = 0
     this.aF = 0
     this.aR = 0
+    this.drift = 0
     this.steer = 0
     this.ax = 0
     this.ay = 0
@@ -239,12 +242,13 @@ export class CarBody {
 
   step(dt: number, inp: CarInput, env: CarEnv) {
     // the steering wheel: limited at speed (a keyboard is all or nothing), turned at a finite rate
+    // quick and direct: the lock shrinks only gently with speed, and opens up in a drift to catch the slide
     const v = Math.abs(this.vx)
-    const lock = CAR.lock / (1 + v / 19)
+    const lock = (CAR.lock / (1 + v / 32)) * (1 + this.drift * 0.8)
     const target = inp.steer * lock
     if (env.analog) this.steer = target
     else {
-      const rate = (Math.abs(target) < Math.abs(this.steer) ? 3.2 : 1.9) * Math.max(0.6, lock / 0.2)
+      const rate = Math.abs(target) < Math.abs(this.steer) ? 7 : 5
       const dS = target - this.steer
       this.steer += Math.sign(dS) * Math.min(Math.abs(dS), rate * dt)
     }
@@ -300,6 +304,15 @@ export class CarBody {
     this.aR += (aRt - this.aR) * relax
     const curve = (al: number) => Math.sin(1.5 * Math.atan(13 * al))
 
+    // drifting: the handbrake (or a slide the player keeps going) frees the rear; the assists stand back
+    const hb = (inp.handbrake ?? 0) > 0.5 && vx > 3
+    if (hb && sp > 8) this.drift = 1
+    else if (this.drift > 0) {
+      // the slide lasts while the player holds it with throttle; the assists come back as it fades
+      const sliding = Math.abs(this.aR) > 0.07 && inp.throttle > 0.2 && sp > 6
+      this.drift = Math.max(0, this.drift - h * (sliding ? 0.6 : 2.2))
+    }
+    const help = env.assists && this.drift < 0.5
     // driving and braking
     let fxR = 0
     let fxF = 0
@@ -312,7 +325,7 @@ export class CarBody {
     } else if (inp.throttle > 0) {
       let drive = inp.throttle * Math.min(CAR.power / Math.max(vx, 4), CAR.mass * 37)
       // traction control: never more than the grip the rear tyres have left after cornering
-      if (env.assists) drive = Math.min(drive, Math.max(capR * 0.3, Math.sqrt(Math.max(0, (capR * 0.9) ** 2 - this.fyR * this.fyR))))
+      if (help) drive = Math.min(drive, Math.max(capR * 0.3, Math.sqrt(Math.max(0, (capR * 0.9) ** 2 - this.fyR * this.fyR))))
       if (drive > capR) {
         spin = Math.min(1, (drive - capR) / capR)
         drive = capR * 0.92
@@ -335,9 +348,13 @@ export class CarBody {
       fxF -= bf
       fxR -= br
     }
+    if (hb) fxR -= capR * 0.45
     // the friction circle: what is left for cornering
     const latF = lockF ? capF * 0.25 : Math.sqrt(Math.max(0, capF * capF - fxF * fxF))
-    const latR = spin > 0 ? capR * (0.5 - 0.25 * spin) : Math.sqrt(Math.max(0, capR * capR - fxR * fxR))
+    let latR = spin > 0 ? capR * (0.5 - 0.25 * spin) : Math.sqrt(Math.max(0, capR * capR - fxR * fxR))
+    // a locked rear lets go; in a held drift it keeps sliding a little more easily
+    if (hb) latR *= 0.55
+    else latR *= 1 - 0.12 * this.drift
     let fyF = -latF * curve(this.aF)
     let fyR = -latR * curve(this.aR)
     if (sp < 1.2 && inp.throttle < 0.05) {
@@ -356,12 +373,21 @@ export class CarBody {
     let mz = a * (fyF * cosD + fxF * sinD) - b * fyR
 
     // stability help (on with the assists): damps a slide before it becomes a spin
+    // (in a drift it only stops a spin: a softer hand and a wider margin)
     if (env.assists && sp > 6) {
       const rWant = (vx * Math.tan(delta)) / L
       const rMax = latLimit(sp, env.grip) / Math.max(sp, 1)
       const rDes = Math.max(-rMax, Math.min(rMax, rWant))
       const err = r - rDes
-      if (Math.abs(err) > 0.06) mz -= (err - Math.sign(err) * 0.06) * iz * 9
+      const band = 0.06 + 0.3 * this.drift
+      const gain = 9 - 6.5 * this.drift
+      if (Math.abs(err) > band) mz -= (err - Math.sign(err) * band) * iz * gain
+    }
+    // the spin catcher (assists): past ~35° of slide, the nose is turned back towards where the car is going
+    if (env.assists && sp > 3) {
+      const beta = Math.atan2(vy, Math.max(Math.abs(vx), 1))
+      const over = Math.abs(beta) - 0.6
+      if (over > 0) mz += (beta * 2.5 - r) * iz * 5 * Math.min(1, over * 3)
     }
 
     this.fyR = fyR
@@ -386,6 +412,8 @@ export class CarBody {
   }
 
   private reverseHold = 0
+  /** 1 while drifting (handbrake, then the slide kept going with throttle and countersteer), fading to 0 after. */
+  drift = 0
   /** The rear tyres' cornering force last step (traction control). */
   private fyR = 0
 }

@@ -29,12 +29,13 @@ const POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1, 0, 0]
 const CAM_NAMES: Record<CamMode, string> = { chase: 'Chase', tcam: 'T-cam', cockpit: 'Cockpit', tv: 'TV' }
 
 const CONTROLS: [string, string][] = [
-  ['↑ / W', 'Throttle'],
-  ['↓ / S', 'Brake (hold when stopped: reverse)'],
+  ['X  (or ↑ / W)', 'Throttle'],
+  ['Z  (or ↓ / S)', 'Brake (hold when stopped: reverse)'],
   ['← → / A D', 'Steer'],
+  ['Space', 'Handbrake: kick the tail out, then throttle and countersteer to drift'],
   ['P', 'Box this lap (pit stop: new tyres)'],
   ['1 · 2 · 3', 'Tyres for the stop: Soft · Medium · Hard'],
-  ['Space', 'DRS (in the zone, when allowed)'],
+  ['E', 'DRS (in the zone, when allowed)'],
   ['C', 'Camera: chase, T-cam, cockpit, TV'],
   ['R', 'Back onto the track'],
   ['Esc · F', 'Pause · full screen'],
@@ -464,7 +465,7 @@ export default function GrandPrix({ win }: AppProps) {
             <details className="gp-help">
               <summary>Controls</summary>
               <Keys />
-              <p>A gamepad works too: stick to steer, triggers for throttle and brake, A to leave the garage, X to box, Y camera, RB DRS.</p>
+              <p>A gamepad works too: stick to steer, triggers for throttle and brake, A to leave the garage, X to box, Y camera, LB handbrake, RB DRS.</p>
             </details>
             {best > 0 && (
               <ol className="gp-scores">
@@ -709,6 +710,7 @@ function Hud({ hud, classic, mapPath, box }: { hud: GPHud; classic: boolean; map
           </div>
         )}
         {hud.wrongWay && <div className="gp-msg gp-bad">WRONG WAY</div>}
+        {hud.drift && !hud.wrongWay && <div className="gp-drift">DRIFT</div>}
         {inGarage && (
           <div className="gp-garage">
             <b>In the garage</b>

@@ -827,3 +827,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+.gp-drift {
+  padding: 4px 16px;
+  border-radius: 6px;
+  font: 900 italic 22px system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  color: #fff;
+  background: linear-gradient(90deg, rgba(255, 90, 40, 0.85), rgba(255, 190, 40, 0.85));
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  animation: gp-pop 0.2s ease-out;
+}

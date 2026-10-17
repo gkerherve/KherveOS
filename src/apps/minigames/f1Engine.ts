@@ -81,6 +81,8 @@ export interface GPHud {
   message: SessionEvent | null
   camera: CamMode
   wrongWay: boolean
+  /** Sliding sideways in a drift. */
+  drift: boolean
   offTrack: boolean
   mustChange: boolean
   changed: boolean
@@ -330,9 +332,9 @@ export class GrandPrixEngine {
       s.compound = (['soft', 'medium', 'hard'] as Compound[])[Number(code.slice(5)) - 1]
       if (s.player.pit === 'garage') s.player.tyres = newTyres(s.compound, true)
     }
-    if (code === 'Space') this.toggleDrs()
+    if (code === 'KeyE') this.toggleDrs()
     if (code === 'KeyR') this.resetCar()
-    if ((code === 'Enter' || code === 'ArrowUp' || code === 'KeyW') && s.player.pit === 'garage') s.leaveGarage(s.player)
+    if ((code === 'Enter' || code === 'ArrowUp' || code === 'KeyW' || code === 'KeyX') && s.player.pit === 'garage') s.leaveGarage(s.player)
   }
 
   keyUp(code: string) {
@@ -371,8 +373,10 @@ export class GrandPrixEngine {
     if (!s) return
     const k = this.keys
     let steer = (k.has('ArrowRight') || k.has('KeyD') ? 1 : 0) - (k.has('ArrowLeft') || k.has('KeyA') ? 1 : 0)
-    const wantT = k.has('ArrowUp') || k.has('KeyW') ? 1 : 0
-    const wantB = k.has('ArrowDown') || k.has('KeyS') ? 1 : 0
+    // X accelerates and Z brakes, like two pedals under the left hand (the arrows and W / S work too)
+    const wantT = k.has('KeyX') || k.has('ArrowUp') || k.has('KeyW') ? 1 : 0
+    const wantB = k.has('KeyZ') || k.has('ArrowDown') || k.has('KeyS') ? 1 : 0
+    let hand = k.has('Space') ? 1 : 0
     this.thr += clamp(wantT - this.thr, -dt * 10, dt * 7)
     this.brk += clamp(wantB - this.brk, -dt * 10, dt * 9)
     let thr = this.thr
@@ -399,8 +403,9 @@ export class GrandPrixEngine {
       if (edge(1)) this.resetCar()
       this.padPrev = pad.buttons.map((b) => b.pressed)
       if (thr > 0.3 && s.player.pit === 'garage') s.leaveGarage(s.player)
+      if (pressed(4)) hand = 1
     }
-    s.input = { throttle: thr, brake: brk, steer, analog }
+    s.input = { throttle: thr, brake: brk, steer, analog, handbrake: hand }
   }
 
   // ---------------------------------------------------------------- the frame
@@ -814,6 +819,7 @@ export class GrandPrixEngine {
       message: last && s.time - last.t < 4 && s.events.length > 0 ? last : null,
       camera: this.cam,
       wrongWay: p.pit === 'none' && p.speed > 4 && fwd < -0.3,
+      drift: p.pit === 'none' && s.body.drift > 0.2 && Math.abs(Math.atan2(s.body.vy, Math.max(1, s.body.vx))) > 0.15,
       offTrack: p.surface === 'grass' || p.surface === 'gravel',
       mustChange: s.mustChange,
       changed: p.used.length >= 2,
