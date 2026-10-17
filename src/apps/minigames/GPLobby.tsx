@@ -19,6 +19,10 @@ export interface LobbyProps {
   track: string
   laps: number
   ai: boolean
+  /** The picture's resolution on this device (lower for a tablet). */
+  res: number
+  resOptions: number[]
+  onRes(v: number): void
   onName(v: string): void
   onSeries(v: Series): void
   onTeam(v: number): void
@@ -79,6 +83,19 @@ export function Lobby(p: LobbyProps) {
               joins the room.
             </p>
             <TellFriend lan={lan} code={null} />
+            <div className="gp-options">
+              <label>
+                <span>Resolution</span>
+                <div className="gp-seg">
+                  {p.resOptions.map((v) => (
+                    <button key={v} className={p.res === v ? 'gp-on' : ''} onClick={() => p.onRes(v)}>
+                      {v >= 1 ? 'Full' : `${Math.round(v * 100)} %`}
+                    </button>
+                  ))}
+                </div>
+              </label>
+              <p className="gp-note">On a tablet or phone, a lower resolution keeps the race smooth.</p>
+            </div>
             <label className="gp-lobby-name">
               <span>Your name</span>
               <input className="k-input" value={p.name} maxLength={24} onChange={(e) => p.onName(e.target.value)} />

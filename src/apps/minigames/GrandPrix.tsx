@@ -45,6 +45,10 @@ const CONTROLS: [string, string][] = [
   ['Esc · F', 'Pause · full screen'],
 ]
 
+/** Picture resolution: full, or fewer pixels for a tablet or phone (smoother). */
+const RES_OPTIONS = [1, 0.75, 0.6, 0.45, 0.35]
+const resLabel = (v: number) => (v >= 1 ? 'Full' : `${Math.round(v * 100)} %`)
+
 const fmt = (n: number) => n.toLocaleString('en-US')
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
@@ -94,7 +98,7 @@ export default function GrandPrix({ win }: AppProps) {
   const [hud, setHud] = useState<GPHud | null>(null)
   const [error, setError] = useState('')
   const [settings, setSettings] = useState<GPSettings>(() => ({
-    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true, music: true, ...loadSettings(),
+    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true, music: true, res: isTouchDevice() ? 0.6 : 1, ...loadSettings(),
   }))
   useEffect(() => {
     settingsRef.current = settings
@@ -399,6 +403,13 @@ export default function GrandPrix({ win }: AppProps) {
     }
   }, [pause, resume, win.id])
 
+  // the resolution applies at once (and is remembered on this device)
+  useEffect(() => {
+    engineRef.current?.setRenderScale(settings.res ?? 1)
+    saveSettings(settings)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase === 'loading', settings.res])
+
   // the music switch works at once, in the menus and while driving
   useEffect(() => {
     const e = engineRef.current
@@ -559,6 +570,9 @@ export default function GrandPrix({ win }: AppProps) {
           track={settings.track}
           laps={settings.laps}
           ai={multiAi}
+          res={settings.res ?? 1}
+          resOptions={RES_OPTIONS}
+          onRes={(v) => set('res', v)}
           onName={(v) => set('name', v)}
           onSeries={(v) => setSettings((s) => ({ ...s, series: v }))}
           onTeam={(k) => setSettings((s) => ({ ...s, team: k, classic: teamsOf(s.series)[k]?.model ?? s.classic }))}
@@ -641,6 +655,10 @@ export default function GrandPrix({ win }: AppProps) {
               <label>
                 <span>Damage</span>
                 <Seg value={settings.damage !== false} options={[true, false]} label={(v) => (v ? 'On: crashes break wings' : 'Off')} onChange={(v) => set('damage', v)} />
+              </label>
+              <label>
+                <span>Resolution</span>
+                <Seg value={settings.res ?? 1} options={RES_OPTIONS} label={resLabel} onChange={(v) => set('res', v)} />
               </label>
               <label>
                 <span>Music</span>

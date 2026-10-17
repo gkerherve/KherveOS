@@ -40,6 +40,8 @@ export interface GPSettings {
   damage: boolean
   /** The soundtrack plays (quieter while driving). */
   music: boolean
+  /** Resolution (1 = full, 0.75, 0.5, 0.35): lower is faster, for tablets and phones. */
+  res?: number
 }
 
 export type Stage = 'menu' | 'qualifying' | 'qualiResults' | 'race' | 'raceResults'
@@ -667,6 +669,16 @@ export class GrandPrixEngine {
     this.inside = inside
     if (this.cockpit) {
       if (inside) {
+        // the mirror looks back from above the tail (so the car's own roof is not in the way)
+        const mc = this.cockpit.mirror?.camera
+        if (mc) {
+          const c = s.player
+          const fx = Math.cos(c.h)
+          const fz = Math.sin(c.h)
+          mc.position.set(c.x - fx * 2.3, c.y + 1.12, c.z - fz * 2.3)
+          mc.lookAt(c.x - fx * 30, c.y + 0.4, c.z - fz * 30)
+          mc.updateMatrixWorld()
+        }
         const b = s.body
         this.cockpit.update(dt, {
           steer: Math.max(-1.3, Math.min(1.3, b.steer / Math.max(0.01, steerLock(b.vx)))),
@@ -696,6 +708,13 @@ export class GrandPrixEngine {
     }
     // the world, then (depth cleared) the cockpit, lit by the same sun and sky
     const r = this.renderer
+    // the rear-view mirror first (skipped at the lowest resolution, for small tablets)
+    const mirror = this.cockpit.mirror
+    if (mirror && this.renderScale > 0.4) {
+      r.setRenderTarget(mirror.target)
+      r.render(this.scene, mirror.camera)
+      r.setRenderTarget(null)
+    }
     r.autoClear = false
     r.clear()
     r.render(this.scene, this.camera)
@@ -1179,8 +1198,18 @@ export class GrandPrixEngine {
 
   // ---------------------------------------------------------------- window
 
+  /** How sharp the picture is (1 = full; lower draws fewer pixels: faster on a tablet or phone). */
+  private renderScale = 1
+  private size = { w: 1, h: 1, dpr: 1 }
+
+  setRenderScale(scale: number) {
+    this.renderScale = Math.max(0.25, Math.min(1, scale))
+    this.resize(this.size.w, this.size.h, this.size.dpr)
+  }
+
   resize(w: number, h: number, dpr: number) {
-    this.renderer.setPixelRatio(Math.min(dpr, 1.75))
+    this.size = { w, h, dpr }
+    this.renderer.setPixelRatio(Math.min(dpr, 1.75) * this.renderScale)
     this.renderer.setSize(w, h, false)
     this.camera.aspect = w / Math.max(1, h)
     this.camera.updateProjectionMatrix()

@@ -235,6 +235,33 @@ function f1FaceTexture() {
   return t
 }
 
+/** A clock face: black, sixty marks, the hours in white. */
+function clockTexture() {
+  const [c, g] = canvas(256, 256)
+  g.fillStyle = '#0b0b0c'
+  g.fillRect(0, 0, 256, 256)
+  g.translate(128, 128)
+  for (let k = 0; k < 60; k++) {
+    g.save()
+    g.rotate((k / 60) * Math.PI * 2)
+    g.fillStyle = '#f2f2ea'
+    if (k % 5 === 0) g.fillRect(-3, -118, 6, 22)
+    else g.fillRect(-1.2, -118, 2.4, 10)
+    g.restore()
+  }
+  g.fillStyle = '#f2f2ea'
+  g.font = '700 34px system-ui, sans-serif'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  for (const [n, a] of [[12, 0], [3, 0.5], [6, 1], [9, 1.5]] as [number, number][]) g.fillText(String(n), Math.sin(a * Math.PI) * 76, -Math.cos(a * Math.PI) * 76)
+  g.font = '600 15px system-ui, sans-serif'
+  g.fillStyle = '#c9c9c0'
+  g.fillText('ZEIT', 0, 40)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
 function matTexture() {
   const [c, g] = canvas(256, 256)
   g.fillStyle = '#121213'
@@ -255,6 +282,22 @@ function between(mesh: THREE.Object3D, a: THREE.Vector3, b: THREE.Vector3) {
   mesh.position.copy(a).addScaledVector(d, 0.5)
   mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize())
   mesh.scale.set(1, d.length(), 1)
+}
+
+// the right hand's trip to the gear lever (seconds): there, the change, back on the wheel
+const HAND_AT = 0.16
+const HAND_BACK = 0.42
+const HAND_DONE = 0.6
+
+/** Where the elbow (or knee) goes for a limb from a to b of lengths l1, l2, bending towards `bend`. */
+function bendAt(a: THREE.Vector3, b: THREE.Vector3, l1: number, l2: number, bend: THREE.Vector3): THREE.Vector3 {
+  const ab = b.clone().sub(a)
+  const d = Math.min(ab.length(), l1 + l2 - 1e-3)
+  const dir = ab.normalize()
+  const x = (l1 * l1 - l2 * l2 + d * d) / (2 * d)
+  const h = Math.sqrt(Math.max(0, l1 * l1 - x * x))
+  const perp = bend.clone().addScaledVector(dir, -bend.dot(dir)).normalize()
+  return a.clone().addScaledVector(dir, x).addScaledVector(perp, h)
 }
 
 export class Cockpit {
@@ -281,6 +324,16 @@ export class Cockpit {
   private leverPos = new THREE.Vector2()
   private oilT = 0.2
   private rightOn: 'brake' | 'throttle' = 'throttle'
+  /** Classic: arms and legs in two parts, bent at the elbow and the knee (set each frame). */
+  private limbs: { upper: THREE.Mesh; fore: THREE.Mesh; joint: THREE.Mesh; end: THREE.Mesh; root: THREE.Vector3; target: () => THREE.Vector3; l1: number; l2: number; bend: THREE.Vector3 }[] = []
+  /** Classic: the right hand leaves the wheel for the gear lever on a change, and comes back. */
+  private wheelHand: THREE.Object3D | null = null
+  private leverHand: THREE.Object3D | null = null
+  private handT = 1
+  private fromGear = 1
+  /** Classic: the rear-view mirror shows the road behind (the engine draws it into this target). */
+  readonly mirror: { target: THREE.WebGLRenderTarget; camera: THREE.PerspectiveCamera } | null = null
+  private clock: { hour: THREE.Object3D; minute: THREE.Object3D } | null = null
 
   constructor(series: Series, teamColor: string, accent: string) {
     this.series = series
@@ -303,7 +356,8 @@ export class Cockpit {
     const alu = std({ color: 0xb9bdc2, roughness: 0.35, metalness: 0.9 })
     const black = std({ color: 0x0e0f10, roughness: 0.6 })
     const rubber = std({ color: 0x1b1b1c, roughness: 0.95 })
-    const suit = std({ color: teamColor, roughness: 0.85 })
+    // (a 1970s driver's overalls in the team's bright colour: they show against the dark cabin)
+    const suit = std({ color: series === 'classic' ? accent : teamColor, roughness: 0.85 })
     const glove = std({ color: accent, roughness: 0.75 })
     const gloveDark = std({ color: 0x1a1a1a, roughness: 0.8 })
     const glass = phys({ color: 0xffffff, roughness: 0.02, transparent: true, opacity: 0.18, metalness: 0, clearcoat: 1, depthWrite: false })
@@ -327,6 +381,51 @@ export class Cockpit {
       const m = add(this.group, new THREE.CylinderGeometry(0.034, 0.046, 1, 12), suit)
       this.arms.push({ mesh: m, shoulder, hand: handObj })
     }
+    /** An arm or a leg in two parts (radius r0 at the root, r1 at the far end), bent towards `bend`. */
+    const limb = (root: THREE.Vector3, target: () => THREE.Vector3, l1: number, l2: number, bend: THREE.Vector3, r0: number, r1: number, m: THREE.Material, endM: THREE.Material) => {
+      const upper = add(this.group, new THREE.CylinderGeometry(r0 * 0.92, r0, 1, 16), m)
+      const fore = add(this.group, new THREE.CylinderGeometry(r1 * 0.85, r1, 1, 16), m)
+      const joint = add(this.group, new THREE.SphereGeometry(r0 * 0.95, 16, 12), m)
+      const end = add(this.group, new THREE.CylinderGeometry(r1 * 0.95, r1 * 0.95, 0.03, 16), endM)
+      add(this.group, new THREE.SphereGeometry(r0 * 1.05, 16, 12), m, root.x, root.y, root.z)
+      this.limbs.push({ upper, fore, joint, end, root, target, l1, l2, bend: bend.normalize() })
+    }
+    /** A leather glove round the rim: the back of the hand, four fingers in two joints, the thumb along the spoke. */
+    const gripGlove = std({ map: keep(leatherTexture('#4a2c17')), roughness: 0.62 })
+    const knuckleM = std({ color: 0x2d1a0d, roughness: 0.55 })
+    const gripHand = (parent: THREE.Object3D, x: number, y: number, side: number) => {
+      const h = new THREE.Group()
+      h.position.set(x, y, 0)
+      h.rotation.z = Math.atan2(y, x) + Math.PI / 2
+      // the back of the hand over the rim, the palm under it
+      add(h, new THREE.CapsuleGeometry(0.028, 0.045, 6, 12).rotateZ(Math.PI / 2).scale(1, 0.75, 0.8), gripGlove, 0, 0.012, 0.03)
+      for (let k = 0; k < 4; k++) {
+        const fx = -0.03 + k * 0.019
+        const lenK = k === 0 || k === 3 ? 0.85 : 1
+        const f = add(h, new THREE.TorusGeometry(0.03, 0.0105 * lenK, 8, 12, Math.PI * 1.25), gripGlove, fx, 0, 0)
+        f.rotation.y = Math.PI / 2
+        f.rotation.z = -0.35
+        add(h, new THREE.SphereGeometry(0.0115, 8, 6), knuckleM, fx, 0.026, 0.022)
+      }
+      const thumb = add(h, new THREE.CapsuleGeometry(0.011, 0.04, 4, 8), gripGlove, 0.04 * side, -0.024, 0.032)
+      thumb.rotation.z = Math.PI / 2 - 0.55 * side
+      // the wrist: the glove's cuff with its strap
+      add(h, new THREE.CylinderGeometry(0.03, 0.032, 0.035, 14).rotateX(Math.PI / 2), gripGlove, 0, 0.01, 0.06)
+      add(h, new THREE.BoxGeometry(0.066, 0.012, 0.012), std({ color: accent, roughness: 0.6 }), 0, 0.01, 0.062)
+      parent.add(h)
+      return h
+    }
+    /** The right hand cupped over the gear knob. */
+    const gripKnob = (h: THREE.Group) => {
+      add(h, new THREE.CapsuleGeometry(0.03, 0.04, 6, 12).rotateZ(Math.PI / 2).scale(1, 0.7, 1), gripGlove, 0, 0.03, 0)
+      for (let k = 0; k < 4; k++) {
+        const f = add(h, new THREE.TorusGeometry(0.034, 0.0105, 8, 12, Math.PI * 0.9), gripGlove, -0.028 + k * 0.019, 0.0, -0.005)
+        f.rotation.y = Math.PI / 2
+        f.rotation.z = Math.PI * 0.55
+      }
+      add(h, new THREE.CapsuleGeometry(0.011, 0.04, 4, 8).rotateX(Math.PI / 2), gripGlove, -0.035, 0.0, 0.03)
+      add(h, new THREE.CylinderGeometry(0.03, 0.032, 0.035, 14).rotateX(Math.PI / 2), gripGlove, 0.0, 0.035, 0.045)
+    }
 
     if (series === 'classic') {
       // the car's middle is to the driver's right (they sit on the left)
@@ -349,18 +448,19 @@ export class Cockpit {
       brow.rotateZ(Math.PI * 0.225)
       brow.scale(1, 0.35, 1)
       add(this.group, brow, std({ map: leatherT, roughness: 0.85 }), 0, -0.338, -0.515)
-      // five round gauges: oil temperature, speedometer, the big rev counter, oil pressure, fuel
-      const dials: { x: number; r: number; o: Parameters<typeof dialTexture>[0]; value: (s: CockpitState) => number }[] = [
-        { x: -0.205, r: 0.04, o: { max: 150, step: 50, minor: 10, label: 'OIL °C' }, value: () => this.oilT * 130 },
-        { x: -0.105, r: 0.05, o: { max: 280, step: 40, minor: 10, label: 'km/h' }, value: (s) => s.speed },
+      // five round gauges in a row, as in the early-70s rear-engined coupé, left to right: fuel, oil
+      // pressure, the big rev counter in the middle, the speedometer, the clock
+      const dials: { x: number; r: number; o: Parameters<typeof dialTexture>[0] | null; value: (s: CockpitState) => number }[] = [
+        { x: -0.205, r: 0.04, o: { max: 100, step: 25, minor: 5, label: 'FUEL %' }, value: () => 72 },
+        { x: -0.105, r: 0.05, o: { max: 10, step: 2, minor: 0.5, label: 'OIL bar', sub: `${Math.round(this.oilT * 130)}°C` }, value: (s) => 1.5 + 5 * (s.rpm / s.redline) },
         { x: 0.0, r: 0.064, o: { max: 9000, step: 1000, minor: 200, label: '1/min ×1000', red: 7200, scale: 1000, sub: 'flat-six' }, value: (s) => s.rpm },
-        { x: 0.105, r: 0.05, o: { max: 10, step: 2, minor: 0.5, label: 'OIL bar' }, value: (s) => 1.5 + 5 * (s.rpm / s.redline) },
-        { x: 0.205, r: 0.04, o: { max: 100, step: 25, minor: 5, label: 'FUEL %' }, value: () => 72 },
+        { x: 0.105, r: 0.05, o: { max: 280, step: 40, minor: 10, label: 'km/h' }, value: (s) => s.speed },
+        { x: 0.205, r: 0.04, o: null, value: () => 0 },
       ]
       for (const d of dials) {
         const y = -0.3 + (d.x === 0 ? 0.008 : 0)
         const z = -0.52
-        const face = std({ map: keep(dialTexture(d.o)), roughness: 0.6, emissive: 0x332a1a, emissiveIntensity: 0.25 })
+        const face = std({ map: keep(d.o ? dialTexture(d.o) : clockTexture()), roughness: 0.6, emissive: 0x332a1a, emissiveIntensity: 0.25 })
         const tilt = new THREE.Group()
         tilt.position.set(d.x, y, z)
         tilt.rotation.x = -0.18
@@ -369,6 +469,19 @@ export class Cockpit {
         add(tilt, new THREE.TorusGeometry(d.r + 0.004, 0.0055, 8, 40), chrome, 0, 0, 0.003)
         add(tilt, new THREE.CylinderGeometry(d.r + 0.002, d.r + 0.002, 0.012, 32, 1, true).rotateX(Math.PI / 2), black, 0, 0, -0.004)
         add(tilt, new THREE.SphereGeometry(d.r * 1.6, 24, 8, 0, Math.PI * 2, 0, 0.62).rotateX(Math.PI / 2).translate(0, 0, -d.r * 1.6 * Math.cos(0.62) + 0.007), glass)
+        if (!d.o) {
+          // the clock keeps the real time: hour and minute hands
+          const hand = (len: number, w: number) => {
+            const h = new THREE.Group()
+            h.position.z = 0.004
+            add(h, new THREE.BoxGeometry(w, len, 0.0015).translate(0, len / 2 - 0.004, 0), std({ color: 0xf2f2ea, emissive: 0x333322, roughness: 0.4 }))
+            tilt.add(h)
+            return h
+          }
+          this.clock = { hour: hand(d.r * 0.5, 0.0035), minute: hand(d.r * 0.78, 0.0025) }
+          add(tilt, new THREE.CylinderGeometry(d.r * 0.1, d.r * 0.1, 0.005, 12).rotateX(Math.PI / 2), black, 0, 0, 0.005)
+          continue
+        }
         const needle = new THREE.Group()
         needle.position.z = 0.004
         add(needle, new THREE.BoxGeometry(0.0025, d.r * 0.85, 0.0015).translate(0, d.r * 0.36, 0), std({ color: 0xff6a10, emissive: 0x662200, roughness: 0.4 }))
@@ -389,31 +502,62 @@ export class Cockpit {
       const column = add(this.group, new THREE.CylinderGeometry(0.035, 0.045, 1, 16), black)
       between(column, new THREE.Vector3(0, -0.315, -0.43), new THREE.Vector3(0, -0.4, -0.6))
       for (const sd of [1, -1]) add(this.group, new THREE.CylinderGeometry(0.005, 0.006, 0.14, 8).rotateZ((Math.PI / 2) * sd + 0.15 * sd), black, 0.09 * sd, -0.37, -0.5)
-      // ---- the steering wheel: a leather rim with stitching, drilled aluminium spokes, the horn push with the K
+      // ---- the steering wheel: a 380 mm sport wheel. A thick leather rim with its stitching and a yellow
+      // marker at the top, three tapered aluminium spokes drilled with holes, the hub with its six bolts,
+      // the horn push with the crest
       this.wheel.position.set(0, -0.31, -0.415)
       this.wheel.rotation.x = 0.36
       const rimT = keep(leatherTexture('#2a1d14', true))
-      rimT.repeat.set(10, 1)
-      add(this.wheel, new THREE.TorusGeometry(0.19, 0.017, 14, 72), std({ map: rimT, roughness: 0.7 }))
-      const spokeAlpha = keep(drilledAlpha(4, 1))
-      const spokeM = std({ color: 0xc4c8cc, roughness: 0.3, metalness: 0.9, alphaMap: spokeAlpha, alphaTest: 0.5, side: THREE.DoubleSide })
-      // two spokes a little below the horizontal: the wheel is open at the bottom, the pedals show through
-      for (const d of [Math.PI + 0.25, -0.25]) {
-        const sp = add(this.wheel, new THREE.BoxGeometry(0.15, 0.032, 0.004), spokeM, Math.cos(d) * 0.1, Math.sin(d) * 0.1, -0.006)
+      rimT.repeat.set(12, 1)
+      const rimM = std({ map: rimT, roughness: 0.68 })
+      add(this.wheel, new THREE.TorusGeometry(0.19, 0.0185, 18, 96), rimM)
+      // finger grips moulded on the back of the rim
+      for (let k = 0; k < 24; k++) {
+        const a = (k / 24) * Math.PI * 2
+        add(this.wheel, new THREE.SphereGeometry(0.009, 8, 6).scale(1, 1, 0.8), rimM, Math.cos(a) * 0.19, Math.sin(a) * 0.19, -0.014)
+      }
+      const marker = add(this.wheel, new THREE.TorusGeometry(0.19, 0.0195, 10, 12, 0.12), std({ color: 0xf2c418, roughness: 0.6 }))
+      marker.rotation.z = Math.PI / 2 - 0.06
+      // a spoke: wide at the hub, narrow at the rim, three holes, a little dished towards the column
+      const spokeShape = new THREE.Shape()
+      spokeShape.moveTo(0.035, -0.024)
+      spokeShape.lineTo(0.178, -0.014)
+      spokeShape.quadraticCurveTo(0.184, 0, 0.178, 0.014)
+      spokeShape.lineTo(0.035, 0.024)
+      spokeShape.closePath()
+      for (const [hx, hr] of [[0.07, 0.0085], [0.105, 0.0075], [0.14, 0.0065]]) {
+        const hole = new THREE.Path()
+        hole.absarc(hx, 0, hr, 0, Math.PI * 2, true)
+        spokeShape.holes.push(hole)
+      }
+      const spokeGeo = new THREE.ExtrudeGeometry(spokeShape, { depth: 0.004, bevelEnabled: true, bevelSize: 0.0015, bevelThickness: 0.0015, bevelSegments: 2, curveSegments: 14 })
+      spokeGeo.translate(0, 0, -0.01)
+      const spokeM = std({ color: 0xc4c8cc, roughness: 0.28, metalness: 0.92 })
+      for (const d of [Math.PI + 0.12, -0.12, -Math.PI / 2]) {
+        const sp = add(this.wheel, spokeGeo, spokeM)
         sp.rotation.z = d
       }
-      add(this.wheel, new THREE.CylinderGeometry(0.048, 0.052, 0.03, 28).rotateX(Math.PI / 2), black, 0, 0, -0.008)
+      add(this.wheel, new THREE.CylinderGeometry(0.05, 0.056, 0.032, 32).rotateX(Math.PI / 2), black, 0, 0, -0.01)
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * Math.PI * 2 + 0.26
+        add(this.wheel, new THREE.CylinderGeometry(0.0045, 0.0045, 0.006, 8).rotateX(Math.PI / 2), chrome, Math.cos(a) * 0.043, Math.sin(a) * 0.043, 0.008)
+      }
       const hornT = (() => {
         const [c, g] = canvas(128, 128)
         g.fillStyle = '#0c0c0c'
         g.fillRect(0, 0, 128, 128)
-        g.strokeStyle = '#22c55e'
-        g.lineWidth = 7
+        g.strokeStyle = '#c9a54a'
+        g.lineWidth = 6
         g.beginPath()
-        g.arc(64, 64, 44, 0, Math.PI * 2)
+        g.arc(64, 64, 46, 0, Math.PI * 2)
+        g.stroke()
+        g.strokeStyle = '#22c55e'
+        g.lineWidth = 5
+        g.beginPath()
+        g.arc(64, 64, 36, 0, Math.PI * 2)
         g.stroke()
         g.fillStyle = '#eafff1'
-        g.font = '900 56px system-ui'
+        g.font = '900 52px system-ui'
         g.textAlign = 'center'
         g.textBaseline = 'middle'
         g.fillText('K', 64, 67)
@@ -421,12 +565,30 @@ export class Cockpit {
         t.colorSpace = THREE.SRGBColorSpace
         return keep(t)
       })()
-      add(this.wheel, new THREE.CircleGeometry(0.042, 28), std({ map: hornT, roughness: 0.4 }), 0, 0, 0.008)
-      const lh = hand(this.wheel, -0.19 * Math.cos(0.32), 0.19 * Math.sin(0.32), -1)
-      const rh = hand(this.wheel, 0.19 * Math.cos(0.32), 0.19 * Math.sin(0.32), 1)
+      add(this.wheel, new THREE.CylinderGeometry(0.036, 0.038, 0.012, 28).rotateX(Math.PI / 2), black, 0, 0, 0.006)
+      add(this.wheel, new THREE.CircleGeometry(0.034, 28), std({ map: hornT, roughness: 0.35, metalness: 0.2 }), 0, 0, 0.0125)
+      // leather gloves, a two-part hand at ten to two
+      const gloveM = std({ map: keep(leatherTexture('#3b2414')), roughness: 0.7 })
+      const cuffM = std({ color: teamColor, roughness: 0.8 })
+      this.hemi.intensity = 1.25
+      const lh = gripHand(this.wheel, -0.19 * Math.cos(0.32), 0.19 * Math.sin(0.32), -1)
+      const rh = gripHand(this.wheel, 0.19 * Math.cos(0.32), 0.19 * Math.sin(0.32), 1)
+      this.wheelHand = rh
       this.group.add(this.wheel)
-      arm(new THREE.Vector3(-0.34, -0.8, 0.15), lh)
-      arm(new THREE.Vector3(0.34, -0.8, 0.15), rh)
+      // the right hand on the gear knob during a change (shown only then)
+      const lev = new THREE.Group()
+      gripKnob(lev)
+      lev.visible = false
+      this.group.add(lev)
+      this.leverHand = lev
+      // arms: shoulder, upper arm, elbow, forearm in the overalls, the cuff at the wrist
+      const wristOf = (h: THREE.Object3D) => () => {
+        this.scene.updateMatrixWorld()
+        return new THREE.Vector3(0, 0, 0.045).applyMatrix4(h.matrixWorld).applyMatrix4(new THREE.Matrix4().copy(this.group.matrixWorld).invert())
+      }
+      limb(new THREE.Vector3(-0.21, -0.62, 0.2), wristOf(lh), 0.33, 0.33, new THREE.Vector3(-0.8, -0.6, 0.1), 0.05, 0.04, suit, cuffM)
+      limb(new THREE.Vector3(0.21, -0.62, 0.2), () => (lev.visible ? wristOf(lev)() : wristOf(rh)()), 0.33, 0.33, new THREE.Vector3(0.8, -0.6, 0.1), 0.05, 0.04, suit, cuffM)
+      void gloveM
       // ---- the tunnel and the gear lever: a pleated leather boot, a chrome stick, the knob with the pattern
       add(this.group, new THREE.BoxGeometry(0.2, 0.22, 0.75), std({ map: leatherT, roughness: 0.85 }), mid, -0.78, -0.42)
       const bootPts: THREE.Vector2[] = []
@@ -434,13 +596,13 @@ export class Cockpit {
         const t = i / 16
         bootPts.push(new THREE.Vector2(0.075 * (1 - t) + 0.012 + Math.sin(t * Math.PI * 7) * 0.006 * (1 - t), t * 0.13))
       }
-      add(this.group, new THREE.LatheGeometry(bootPts, 24), std({ map: leatherT, roughness: 0.75 }), mid, -0.67, -0.52)
-      add(this.group, new THREE.TorusGeometry(0.085, 0.008, 6, 28).rotateX(Math.PI / 2), chrome, mid, -0.668, -0.52)
+      add(this.group, new THREE.LatheGeometry(bootPts, 24), std({ map: leatherT, roughness: 0.75 }), mid - 0.02, -0.63, -0.44)
+      add(this.group, new THREE.TorusGeometry(0.085, 0.008, 6, 28).rotateX(Math.PI / 2), chrome, mid - 0.02, -0.628, -0.44)
       const lever = new THREE.Group()
-      lever.position.set(mid, -0.6, -0.52)
-      add(lever, new THREE.CylinderGeometry(0.008, 0.011, 0.26, 10), chrome, 0, 0.1, 0)
-      add(lever, new THREE.SphereGeometry(0.032, 24, 16).scale(1, 0.85, 1), std({ color: 0x111111, roughness: 0.3 }), 0, 0.235, 0)
-      add(lever, new THREE.CircleGeometry(0.024, 24).rotateX(-Math.PI / 2), std({ map: keep(knobTexture()), roughness: 0.35 }), 0, 0.262, 0)
+      lever.position.set(mid - 0.02, -0.56, -0.44)
+      add(lever, new THREE.CylinderGeometry(0.009, 0.012, 0.26, 12), chrome, 0, 0.1, 0)
+      add(lever, new THREE.SphereGeometry(0.038, 24, 16).scale(1, 0.85, 1), std({ color: 0x141414, roughness: 0.25, metalness: 0.1 }), 0, 0.24, 0)
+      add(lever, new THREE.CircleGeometry(0.029, 24).rotateX(-Math.PI / 2), std({ map: keep(knobTexture()), roughness: 0.35 }), 0, 0.271, 0)
       this.group.add(lever)
       this.lever = lever
       // a fire extinguisher strapped to the tunnel
@@ -452,24 +614,39 @@ export class Cockpit {
       add(this.group, new THREE.BoxGeometry(0.06, 0.18, 0.14), alu, -0.32, -1.12, -1.0)
       const padAlpha = keep(drilledAlpha(4, 3))
       const padM = std({ color: 0xc9cdd2, roughness: 0.35, metalness: 0.85, alphaMap: padAlpha, alphaTest: 0.5, side: THREE.DoubleSide })
+      // pedals hinged at the floor (the coupé's 'organ' pedals): an arm up from the hinge, the drilled pad
       for (const [kind, x, w] of [['clutch', -0.17, 0.08], ['brake', -0.02, 0.09], ['throttle', 0.13, 0.06]] as ['clutch' | 'brake' | 'throttle', number, number][]) {
         const a = new THREE.Group()
-        a.position.set(x, -0.88, -1.06)
-        const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.1, 0.04), new THREE.Vector3(0, -0.2, 0.06)])
+        a.position.set(x, -1.2, -1.14)
+        add(a, new THREE.CylinderGeometry(0.012, 0.012, 0.04, 10).rotateZ(Math.PI / 2), alu)
+        const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.1, 0.03), new THREE.Vector3(0, 0.19, 0.07)])
         add(a, new THREE.TubeGeometry(curve, 12, 0.008, 8), alu)
-        add(a, new THREE.BoxGeometry(w + 0.01, kind === 'throttle' ? 0.13 : 0.08, 0.006), rubber, 0, -0.22, 0.058)
-        add(a, new THREE.BoxGeometry(w, kind === 'throttle' ? 0.12 : 0.07, 0.004), padM, 0, -0.22, 0.064)
+        const h = kind === 'throttle' ? 0.14 : 0.08
+        add(a, new THREE.BoxGeometry(w + 0.01, h, 0.006), rubber, 0, 0.2, 0.078)
+        add(a, new THREE.BoxGeometry(w, h - 0.01, 0.004), padM, 0, 0.2, 0.083)
         this.group.add(a)
-        this.pedals.push({ arm: a, kind, pad: new THREE.Vector3(x, -1.1, -1.0) })
+        this.pedals.push({ arm: a, kind, pad: new THREE.Vector3(x, -1.0, -1.06) })
       }
+      // racing boots: sole and heel, a suede upper, the laces; the legs from the seat, bent at the knee
+      const bootM = std({ color: 0x15161a, roughness: 0.55 })
+      const soleM = std({ color: 0x050505, roughness: 0.9 })
       const boot = () => {
         const b = new THREE.Group()
-        add(b, new THREE.CapsuleGeometry(0.045, 0.16, 4, 10).rotateX(Math.PI / 2 - 0.5), std({ color: 0x0d0d0d, roughness: 0.5 }), 0, 0, 0.05)
-        add(b, new THREE.CylinderGeometry(0.05, 0.05, 0.25, 10).rotateX(-0.9), suit, 0, 0.1, 0.18)
+        add(b, new THREE.BoxGeometry(0.095, 0.022, 0.25), soleM, 0, -0.02, 0.07)
+        add(b, new THREE.CapsuleGeometry(0.042, 0.15, 6, 12).rotateX(Math.PI / 2).scale(1.05, 0.85, 1), bootM, 0, 0.018, 0.07)
+        add(b, new THREE.CylinderGeometry(0.048, 0.05, 0.1, 14), bootM, 0, 0.06, 0.16)
+        for (let k = 0; k < 4; k++) add(b, new THREE.BoxGeometry(0.04, 0.004, 0.006), std({ color: accent, roughness: 0.6 }), 0, 0.052 - k * 0.006, 0.04 + k * 0.03)
         this.group.add(b)
         return b
       }
       this.feet = { right: boot(), left: boot() }
+      const ankleOf = (b: THREE.Object3D) => () => b.position.clone().add(new THREE.Vector3(0, 0.1, 0.17))
+      limb(new THREE.Vector3(0.12, -0.86, 0.1), ankleOf(this.feet.right), 0.47, 0.44, new THREE.Vector3(0.2, 1, 0.1), 0.075, 0.052, suit, bootM)
+      limb(new THREE.Vector3(-0.12, -0.86, 0.1), ankleOf(this.feet.left), 0.47, 0.44, new THREE.Vector3(-0.2, 1, 0.1), 0.075, 0.052, suit, bootM)
+      // the ignition key, left of the wheel, its leather fob hanging
+      add(this.group, new THREE.CylinderGeometry(0.018, 0.02, 0.02, 18).rotateX(Math.PI / 2 - 0.18), chrome, -0.29, -0.42, -0.52)
+      add(this.group, new THREE.BoxGeometry(0.008, 0.03, 0.006), std({ color: 0x1a1a1a, roughness: 0.4 }), -0.29, -0.42, -0.505)
+      add(this.group, new THREE.BoxGeometry(0.022, 0.05, 0.004), std({ map: leatherT, color: 0x6a4428, roughness: 0.7 }), -0.29, -0.46, -0.503)
       // ---- the door panel: trim, the pull strap, the window winder, the inner handle
       add(this.group, new THREE.BoxGeometry(0.02, 0.5, 0.8), std({ map: leatherT, roughness: 0.85 }), -0.5, -0.45, -0.5)
       add(this.group, new THREE.BoxGeometry(0.03, 0.02, 0.22), std({ color: 0x3a2412, roughness: 0.7 }), -0.48, -0.42, -0.45)
@@ -486,9 +663,30 @@ export class Cockpit {
         const bar = add(this.group, new THREE.CylinderGeometry(0.02, 0.02, 1, 10), cageM)
         between(bar, new THREE.Vector3(x0, -0.2, -0.85), new THREE.Vector3(x1, 0.32, -0.25))
       }
-      add(this.group, new THREE.BoxGeometry(0.2, 0.06, 0.02), black, mid, 0.17, -0.6)
-      add(this.group, new THREE.PlaneGeometry(0.18, 0.045), std({ color: 0xffffff, roughness: 0.02, metalness: 1 }), mid, 0.17, -0.589)
-      add(this.group, new THREE.CylinderGeometry(0.006, 0.006, 0.08, 6), black, mid, 0.22, -0.6)
+      // the rear-view mirror: what is behind, drawn into it every frame (mirrored left to right)
+      const target = keep(new THREE.WebGLRenderTarget(512, 128, { colorSpace: THREE.SRGBColorSpace }))
+      target.texture.wrapS = THREE.RepeatWrapping
+      target.texture.repeat.set(-1, 1)
+      target.texture.offset.set(1, 0)
+      const rearCam = new THREE.PerspectiveCamera(32, 4, 0.4, 600)
+      ;(this as { mirror: Cockpit['mirror'] }).mirror = { target, camera: rearCam }
+      const frameShape = new THREE.Shape()
+      frameShape.absellipse(0, 0, 0.115, 0.036, 0, Math.PI * 2, false, 0)
+      const frameGeo = new THREE.ExtrudeGeometry(frameShape, { depth: 0.014, bevelEnabled: true, bevelSize: 0.004, bevelThickness: 0.004, bevelSegments: 3, curveSegments: 32 })
+      const mir = new THREE.Group()
+      mir.position.set(mid - 0.05, 0.16, -0.6)
+      mir.rotation.set(0.12, -0.28, 0)
+      add(mir, frameGeo, black, 0, 0, -0.016)
+      const glassShape = new THREE.Shape()
+      glassShape.absellipse(0, 0, 0.108, 0.03, 0, Math.PI * 2, false, 0)
+      const glassGeo = new THREE.ShapeGeometry(glassShape, 32)
+      // map the ellipse to the whole picture
+      const uv = glassGeo.attributes.uv
+      const pos = glassGeo.attributes.position
+      for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + 0.108) / 0.216, (pos.getY(i) + 0.03) / 0.06)
+      add(mir, glassGeo, keep(new THREE.MeshBasicMaterial({ map: target.texture, color: 0xd8dde2 })), 0, 0, 0.003)
+      this.group.add(mir)
+      add(this.group, new THREE.CylinderGeometry(0.006, 0.008, 0.08, 8), black, mid - 0.05, 0.215, -0.615)
       const strap = std({ color: 0x1f5fd0, roughness: 0.8 })
       for (const sd of [1, -1]) {
         const s = add(this.group, new THREE.BoxGeometry(0.05, 1, 0.006), strap)
@@ -596,6 +794,11 @@ export class Cockpit {
     // gear changes: the paddles flick, the clutch dips, the lever moves through the gate
     if (s.gear !== this.gear) {
       const up = s.gear > this.gear
+      // the right hand goes to the lever (or, mid-change, stays on it for the next one)
+      if (this.handT >= HAND_DONE) {
+        this.fromGear = this.gear
+        this.handT = 0
+      } else if (this.handT > HAND_AT) this.handT = HAND_AT
       this.gear = s.gear
       this.shiftT = 0
       if (this.paddles.length) this.paddles[up ? 0 : 1].userData.kick = 1
@@ -623,13 +826,47 @@ export class Cockpit {
       this.feet.left.position.lerp(left, Math.min(1, dt * 14))
     }
     if (this.lever) {
-      // an H gate: 1 2 / 3 4 / 5 across the planes, odd gears forward, even back; through neutral on a change
-      const g = Math.max(1, Math.min(5, s.gear))
+      // an H gate: 1 2 / 3 4 / 5 across the planes, odd gears forward, even back. The hand reaches the
+      // knob, pulls it out of the old gear, across neutral, into the new one, and goes back to the wheel.
+      this.handT = Math.min(HAND_DONE, this.handT + dt)
+      const t = this.handT
+      const neutral = t >= HAND_AT && t < HAND_AT + 0.1
+      const g = Math.max(1, Math.min(5, t < HAND_AT ? this.fromGear : s.gear))
       const plane = g <= 2 ? -1 : g <= 4 ? 0 : 1
       const fore = g % 2 === 1 ? 1 : -1
-      const neutral = this.shiftT < 0.45
-      this.leverPos.lerp(new THREE.Vector2(plane * 0.2, neutral ? 0 : fore * 0.3), Math.min(1, dt * 16))
+      this.leverPos.lerp(new THREE.Vector2(neutral ? this.leverPos.x : plane * 0.2, neutral ? 0 : fore * 0.3), Math.min(1, dt * 22))
       this.lever.rotation.set(-this.leverPos.y, 0, -this.leverPos.x)
+      if (this.leverHand && this.wheelHand) {
+        const ease = (x: number) => x * x * (3 - 2 * x)
+        const k = t < HAND_AT ? ease(t / HAND_AT) : t < HAND_BACK ? 1 : t < HAND_DONE ? ease(1 - (t - HAND_BACK) / (HAND_DONE - HAND_BACK)) : 0
+        const moving = t < HAND_DONE
+        this.leverHand.visible = moving
+        this.wheelHand.visible = !moving
+        if (moving) {
+          this.scene.updateMatrixWorld()
+          const toGroup = new THREE.Matrix4().copy(this.group.matrixWorld).invert()
+          const onWheel = new THREE.Vector3().setFromMatrixPosition(this.wheelHand.matrixWorld).applyMatrix4(toGroup)
+          const onKnob = new THREE.Vector3(0, 0.25, 0).applyMatrix4(this.lever.matrixWorld).applyMatrix4(toGroup)
+          this.leverHand.position.copy(onWheel.lerp(onKnob, k))
+          this.leverHand.rotation.set(-0.3 * k, 0.4 * (1 - k), 0)
+        }
+      }
+    }
+    // arms and legs: from the shoulder or hip to the hand or ankle, bent at the elbow or knee
+    for (const l of this.limbs) {
+      const b = l.target()
+      const elbow = bendAt(l.root, b, l.l1, l.l2, l.bend)
+      between(l.upper, l.root, elbow)
+      between(l.fore, elbow, b)
+      l.joint.position.copy(elbow)
+      l.end.position.copy(b)
+      l.end.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(elbow).normalize())
+    }
+    if (this.clock) {
+      const now = new Date()
+      const m = now.getMinutes() + now.getSeconds() / 60
+      this.clock.minute.rotation.z = -(m / 60) * Math.PI * 2
+      this.clock.hour.rotation.z = -(((now.getHours() % 12) + m / 60) / 12) * Math.PI * 2
     }
     this.oilT = Math.min(0.85, this.oilT + dt * 0.004 * (0.3 + s.rpm / s.redline))
     for (const n of this.needles) {
