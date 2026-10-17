@@ -9,23 +9,70 @@ import type { Track } from './f1Track.ts'
 
 export const G = 9.81
 
-export const CAR = {
-  mass: 800,
+export type Series = 'modern' | 'classic'
+
+export interface CarSpec {
+  mass: number
   /** Yaw inertia (kg m²). */
-  iz: 1150,
+  iz: number
   /** Centre of gravity to front and rear axle (m). */
-  a: 1.72,
-  b: 1.88,
-  power: 760e3,
-  cda: 1.25,
-  cla: 3.6,
-  rho: 1.2,
+  a: number
+  b: number
+  power: number
+  cda: number
+  cla: number
+  rho: number
   /** Peak tyre friction of a new soft on dry asphalt. */
-  mu: 1.75,
+  mu: number
   /** Share of the downforce on the front axle. */
-  aeroFront: 0.44,
-  wheelR: 0.36,
-  roll: 0.014,
+  aeroFront: number
+  wheelR: number
+  roll: number
+  /** Top speed of each gear (km/h), the revs at idle and at the limiter. */
+  gears: number[]
+  idle: number
+  redline: number
+  /** The profile's top speed (m/s). */
+  top: number
+  /** The steering lock at walking pace (rad). */
+  lock: number
+}
+
+const SPECS: Record<Series, CarSpec> = {
+  // a modern single-seater: light, huge downforce, a hybrid V6
+  modern: {
+    mass: 800, iz: 1150, a: 1.72, b: 1.88, power: 760e3, cda: 1.25, cla: 3.6, rho: 1.2, mu: 1.75, aeroFront: 0.44, wheelR: 0.36, roll: 0.014,
+    gears: [86, 128, 164, 199, 234, 268, 302, 340], idle: 4200, redline: 12400, top: 96, lock: 0.36,
+  },
+  // a late-1960s / early-70s sports coupé: heavier, almost no downforce, skinny tyres, a five-speed box
+  classic: {
+    mass: 1020, iz: 1450, a: 1.32, b: 1.0, power: 235e3, cda: 0.72, cla: 0.12, rho: 1.2, mu: 1.12, aeroFront: 0.45, wheelR: 0.31, roll: 0.015,
+    gears: [72, 118, 165, 212, 262], idle: 2600, redline: 7900, top: 76, lock: 0.42,
+  },
+}
+
+/** The car the physics drives now (the Grand Prix window is single-instance: it switches this with the series). */
+export const CAR: CarSpec = { ...SPECS.modern }
+export let TOP_SPEED = SPECS.modern.top
+export let SERIES: Series = 'modern'
+
+export function setSeries(s: Series) {
+  Object.assign(CAR, SPECS[s])
+  TOP_SPEED = SPECS[s].top
+  SERIES = s
+}
+
+/** Gear and revs at a speed (m/s), for the sound and the dials. */
+export function gearRpm(speed: number, gear: number): { gear: number; rpm: number } {
+  const G = CAR.gears.map((k) => k / 3.6)
+  const n = G.length
+  const sp = Math.max(0, speed)
+  if (gear < n && sp > G[gear - 1] * 0.97) gear++
+  else if (gear > 1 && sp < G[gear - 2] * 0.8) gear--
+  gear = Math.max(1, Math.min(n, gear))
+  const lo = gear > 1 ? G[gear - 2] * 0.8 : 0
+  const frac = Math.min(1, Math.max(0, (sp - lo) / (G[gear - 1] - lo)))
+  return { gear, rpm: CAR.idle + frac * (CAR.redline - CAR.idle) }
 }
 
 export type Compound = 'soft' | 'medium' | 'hard'
@@ -83,8 +130,6 @@ export function brakeLimit(v: number, grip: number): number {
   const drag = 0.5 * CAR.rho * CAR.cda * v * v
   return latLimit(v, grip) * 0.97 + drag / CAR.mass
 }
-
-export const TOP_SPEED = 96
 
 /**
  * The speed profile of the racing line (m/s per sample) for a car with grip `grip`,
@@ -147,8 +192,6 @@ export interface CarEnv {
   drs?: boolean
 }
 
-const GEARS = [86, 128, 164, 199, 234, 268, 302, 340].map((k) => k / 3.6)
-
 export class CarBody {
   x = 0
   z = 0
@@ -197,7 +240,7 @@ export class CarBody {
   step(dt: number, inp: CarInput, env: CarEnv) {
     // the steering wheel: limited at speed (a keyboard is all or nothing), turned at a finite rate
     const v = Math.abs(this.vx)
-    const lock = 0.36 / (1 + v / 19)
+    const lock = CAR.lock / (1 + v / 19)
     const target = inp.steer * lock
     if (env.analog) this.steer = target
     else {
@@ -224,11 +267,9 @@ export class CarBody {
     this.lock = lockup
     // the gearbox (automatic) and the revs, for the sound and the dials
     const sp = Math.max(0, this.vx)
-    if (this.gear < 8 && sp > GEARS[this.gear - 1] * 0.97) this.gear++
-    else if (this.gear > 1 && sp < GEARS[this.gear - 2] * 0.8) this.gear--
-    const lo = this.gear > 1 ? GEARS[this.gear - 2] * 0.8 : 0
-    const frac = Math.min(1, Math.max(0, (sp - lo) / (GEARS[this.gear - 1] - lo)))
-    const want = 4200 + frac * 8200 + (spin > 0.2 ? 2000 * spin : 0) + (sp < 2 ? inp.throttle * 6000 : 0)
+    const gr = gearRpm(sp, this.gear)
+    this.gear = gr.gear
+    const want = gr.rpm + (spin > 0.2 ? 2000 * spin : 0) + (sp < 2 ? inp.throttle * (CAR.redline - CAR.idle) * 0.7 : 0)
     this.rpm += (want - this.rpm) * Math.min(1, dt * 14)
     this.wheelRot += (this.vx / CAR.wheelR) * dt + spin * dt * 40
   }
@@ -269,7 +310,7 @@ export class CarBody {
     if (reverse) {
       fxR = vx > -5 ? -3200 : 0
     } else if (inp.throttle > 0) {
-      let drive = inp.throttle * Math.min(CAR.power / Math.max(vx, 4), 30000)
+      let drive = inp.throttle * Math.min(CAR.power / Math.max(vx, 4), CAR.mass * 37)
       // traction control: never more than the grip the rear tyres have left after cornering
       if (env.assists) drive = Math.min(drive, Math.max(capR * 0.3, Math.sqrt(Math.max(0, (capR * 0.9) ** 2 - this.fyR * this.fyR))))
       if (drive > capR) {

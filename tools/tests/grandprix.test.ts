@@ -6,8 +6,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { TRACKS, buildTrack, locate, pointAt, sampleAt, surfaceAt, type Track } from '../../src/apps/minigames/f1Track.ts'
-import { CarBody, speedProfile, tyreGrip, newTyres } from '../../src/apps/minigames/f1Physics.ts'
-import { Session } from '../../src/apps/minigames/f1Race.ts'
+import { CAR, CarBody, speedProfile, tyreGrip, newTyres } from '../../src/apps/minigames/f1Physics.ts'
+import { Session, TEAMS, setRaceSeries } from '../../src/apps/minigames/f1Race.ts'
 
 const built = TRACKS.map((d) => {
   const t = buildTrack(d)
@@ -22,7 +22,7 @@ function drive(s: Session, t: Track, v: Float32Array, pace: number) {
   const tgt = pointAt(t, q.s + look, sampleAt(t, t.line, q.s + look))
   const ang = Math.atan2(tgt.z - b.z, tgt.x - b.x) - b.h
   const a = Math.atan2(Math.sin(ang), Math.cos(ang))
-  const lock = 0.36 / (1 + Math.abs(b.vx) / 19)
+  const lock = CAR.lock / (1 + Math.abs(b.vx) / 19)
   const err = sampleAt(t, v, q.s + b.speed * 0.15) * pace - b.speed
   s.input = {
     throttle: s.phase === 'lights' ? 0 : err > 0 ? Math.min(1, err * 0.5) : 0,
@@ -110,4 +110,32 @@ test('a jump start costs five seconds', () => {
     r.step(1 / 60)
   }
   assert.equal(r.player.penalty, 5)
+})
+
+test('the classics: slower coupés, no DRS, the player\'s chosen car, a race to the flag', () => {
+  setRaceSeries('classic', 'bavaria')
+  try {
+    assert.equal(TEAMS[0].model, 'bavaria', 'the player races the coupé they chose')
+    assert.ok(TEAMS.every((t) => t.model), 'every classic team has a coupé')
+    const t = built[0].t
+    const prof = speedProfile(t)
+    assert.ok(prof.lapTime > built[0].prof.lapTime * 1.3, `slower than the single-seaters (${prof.lapTime.toFixed(1)} s)`)
+    const r = new Session({ track: t, profile: prof.v, profileLap: prof.lapTime, kind: 'race', laps: 3, minutes: 0, difficulty: 'medium', assists: true, playerName: 'Test', compound: 'soft', seed: 4 })
+    let boxed = false
+    let drs = false
+    for (let n = 0; n < 60 * 60 * 12 && r.phase !== 'done'; n++) {
+      if (r.player.pit === 'none') drive(r, t, prof.v, 0.95)
+      if (!boxed && r.player.laps === 1) {
+        r.compound = 'medium'
+        r.boxRequest = boxed = true
+      }
+      r.step(1 / 60)
+      if (r.cars.some((c) => c.drs)) drs = true
+    }
+    assert.equal(r.phase, 'done', 'the classic race ends')
+    assert.equal(drs, false, 'no DRS in the classics')
+    assert.equal(r.results().find((x) => x.player)!.laps, 3)
+  } finally {
+    setRaceSeries('modern')
+  }
 })

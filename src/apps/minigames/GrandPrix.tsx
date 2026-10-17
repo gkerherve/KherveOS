@@ -17,7 +17,8 @@ import { isGameFullscreen, toggleGameFullscreen, useGameFullscreen } from './gam
 import type { CamMode, GPHud, GPSettings, GrandPrixEngine, Stage } from './f1Engine'
 import { TRACKS, type TrackId } from './f1Track'
 import { COMPOUNDS, COMPOUND_LIST, type Compound } from './f1Physics'
-import { DIFFICULTY, TEAMS, fmtLap, type Classified, type Difficulty } from './f1Race'
+import { CLASSIC_LIST, CLASSIC_MODELS, DIFFICULTY, TEAMS, fmtLap, type Classified, type ClassicModel, type Difficulty } from './f1Race'
+import type { Series } from './f1Physics'
 import './grandPrix.css'
 
 const ID = 'grandprix'
@@ -88,7 +89,7 @@ export default function GrandPrix({ win }: AppProps) {
   const [hud, setHud] = useState<GPHud | null>(null)
   const [error, setError] = useState('')
   const [settings, setSettings] = useState<GPSettings>(() => ({
-    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, ...loadSettings(),
+    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', ...loadSettings(),
   }))
   const [startTyre, setStartTyre] = useState<Compound>('medium')
   const [results, setResults] = useState<Classified[]>([])
@@ -134,7 +135,7 @@ export default function GrandPrix({ win }: AppProps) {
             const pts = Math.round((POINTS[me] ?? 0) * 100 * mult + (grid === 0 ? 300 : 0) + (fastest?.player ? 200 : 0) + Math.max(0, grid - me) * 50)
             const name = lastName() || s.name || DEFAULT_NAME
             const track = TRACKS.find((t) => t.id === s.track)!.name
-            const rank = addScore(ID, { name, score: pts, summary: `P${me + 1} · ${track} · ${s.laps} laps · ${DIFFICULTY[s.difficulty].name}`, date: Date.now() })
+            const rank = addScore(ID, { name, score: pts, summary: `P${me + 1} · ${track}${s.series === 'classic' ? ' · Classics' : ''} · ${s.laps} laps · ${DIFFICULTY[s.difficulty].name}`, date: Date.now() })
             setScore({ score: pts, position: me + 1, grid: grid + 1, pole: grid === 0, fastest: !!fastest?.player, rank })
             setPhase('results')
           } else if (st === 'menu') setPhase('ready')
@@ -271,6 +272,14 @@ export default function GrandPrix({ win }: AppProps) {
     }
   }, [pause, resume, win.id])
 
+  // behind the menu, the demo race shows the chosen cars on the chosen circuit
+  useEffect(() => {
+    const e = engineRef.current
+    if (!e || phase !== 'ready') return
+    e.setSeries(settings.series, settings.classic)
+    e.setTrack(settings.track)
+  }, [phase, settings.series, settings.classic, settings.track])
+
   useEffect(() => {
     if (!focused) pause()
   }, [focused, pause])
@@ -314,6 +323,7 @@ export default function GrandPrix({ win }: AppProps) {
         best: list[0]?.score ?? 0,
         stage: e?.stage ?? 'menu',
         track: TRACKS.find((t) => t.id === settings.track)?.name,
+        cars: settings.series === 'classic' ? `Classics (you drive the ${CLASSIC_MODELS[settings.classic].name})` : 'Modern single-seaters',
         settings: { laps: settings.laps, qualifying_minutes: settings.quali, difficulty: settings.difficulty, assists: settings.assists },
         ...(h && {
           session: h.kind,
@@ -374,7 +384,7 @@ export default function GrandPrix({ win }: AppProps) {
     <div ref={rootRef} className="gp-app" tabIndex={-1} onContextMenu={(ev) => ev.preventDefault()} onMouseDown={() => phase === 'playing' && focusGame()}>
       <canvas ref={canvasRef} className="gp-canvas" />
 
-      {live && hud && <Hud hud={hud} mapPath={e?.mapPath ?? ''} box={e?.mapBox ?? { x: 0, z: 0, w: 1, h: 1 }} />}
+      {live && hud && <Hud hud={hud} classic={e?.settings.series === 'classic'} mapPath={e?.mapPath ?? ''} box={e?.mapBox ?? { x: 0, z: 0, w: 1, h: 1 }} />}
 
       {phase === 'loading' && (
         <div className="gp-wrap">
@@ -389,6 +399,24 @@ export default function GrandPrix({ win }: AppProps) {
               KHERVE <span>GRAND PRIX</span>
             </div>
             <p className="gp-tag">Qualify — your best lap decides your place on the grid. Then race: five red lights, tyres that wear, a pit stop to change them, and the chequered flag.</p>
+            <div className="gp-options">
+              <label>
+                <span>Cars</span>
+                <Seg value={settings.series} options={['modern', 'classic'] as Series[]} label={(v) => (v === 'modern' ? 'Modern single-seaters' : 'Classics (1970s coupés)')} onChange={(v) => set('series', v)} />
+              </label>
+            </div>
+            {settings.series === 'classic' && (
+              <div className="gp-tracks gp-cars">
+                {CLASSIC_LIST.map((m) => (
+                  <button key={m} className={`gp-track ${settings.classic === m ? 'gp-on' : ''}`} onClick={() => set('classic', m as ClassicModel)}>
+                    <div>
+                      <b>{CLASSIC_MODELS[m].name}</b>
+                      <span>{CLASSIC_MODELS[m].blurb}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="gp-tracks">
               {TRACKS.map((t) => (
                 <button key={t.id} className={`gp-track ${settings.track === t.id ? 'gp-on' : ''}`} onClick={() => set('track', t.id)}>
@@ -618,7 +646,7 @@ function Classification({ rows, kind }: { rows: Classified[]; kind: 'qualifying'
   )
 }
 
-function Hud({ hud, mapPath, box }: { hud: GPHud; mapPath: string; box: { x: number; z: number; w: number; h: number } }) {
+function Hud({ hud, classic, mapPath, box }: { hud: GPHud; classic: boolean; mapPath: string; box: { x: number; z: number; w: number; h: number } }) {
   const shift = Math.max(0, Math.min(1, (hud.rpm - 9500) / 2700))
   const inGarage = hud.pit === 'garage'
   const delta = isFinite(hud.bestLap) && hud.lastLap > 0 ? hud.lastLap - hud.bestLap : 0
@@ -739,7 +767,7 @@ function Hud({ hud, mapPath, box }: { hud: GPHud; mapPath: string; box: { x: num
           <i className="gp-brk" style={{ height: `${hud.brake * 100}%` }} />
         </div>
         <div className="gp-flags">
-          <span className={hud.drsOpen ? 'gp-drs gp-open' : hud.drsAvailable ? 'gp-drs gp-avail' : 'gp-drs'}>DRS</span>
+          {!classic && <span className={hud.drsOpen ? 'gp-drs gp-open' : hud.drsAvailable ? 'gp-drs gp-avail' : 'gp-drs'}>DRS</span>}
           {hud.limiter && <span className="gp-lim">PIT 80</span>}
         </div>
       </div>

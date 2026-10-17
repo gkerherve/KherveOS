@@ -818,3 +818,12 @@
     grid-template-columns: 1fr;
   }
 }
+
+.gp-cars {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+@media (max-width: 600px) {
+  .gp-cars {
+    grid-template-columns: 1fr;
+  }
+}

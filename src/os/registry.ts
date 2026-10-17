@@ -897,10 +897,12 @@ export const APPS: AppManifest[] = [
     brand: { label: 'GP', from: '#8af0b4', to: '#0b3d1c' },
     category: 'games',
     group: 'Games',
-    description: 'A 3D single-seater race: qualify for the grid, then race with tyre wear and pit stops on two circuits',
+    description: 'A 3D motor race, modern single-seaters or 1970s classic coupés: qualify for the grid, then race with tyre wear and pit stops',
     load: () => import('@/apps/minigames/GrandPrix'),
     defaultSize: { w: 1120, h: 700 },
     minSize: { w: 680, h: 440 },
+    // one window at a time: the car physics and the teams are module state, switched with the series
+    singleton: true,
   },
   {
     id: 'flappy',

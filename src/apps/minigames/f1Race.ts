@@ -7,7 +7,7 @@
 // laps, gaps from twenty timing points a lap. No three.js here.
 
 import { ahead, barrierAt, inRange, locate, pitOffset, pointAt, sampleAt, surfaceAt, wrap, type Surface, type Track } from './f1Track.ts'
-import { accelLimit, brakeLimit, CarBody, COMPOUNDS, newTyres, TOP_SPEED, tyreGrip, wearTyres, type CarInput, type Compound, type Tyres } from './f1Physics.ts'
+import { accelLimit, brakeLimit, CAR, CarBody, COMPOUNDS, gearRpm, newTyres, SERIES, setSeries, TOP_SPEED, tyreGrip, wearTyres, type CarInput, type Compound, type Series, type Tyres } from './f1Physics.ts'
 
 export interface Team {
   name: string
@@ -16,9 +16,30 @@ export interface Team {
   color: string
   color2: string
   accent: string
+  /** Classics: which coupé the team races. */
+  model?: ClassicModel
 }
 
-export const TEAMS: Team[] = [
+/** The classic coupés (fictional makes, shaped after the late-1960s / early-70s sports cars). */
+export type ClassicModel = 'stoccarda' | 'dieppe' | 'bavaria'
+export const CLASSIC_MODELS: Record<ClassicModel, { name: string; blurb: string }> = {
+  stoccarda: { name: 'Stoccarda 901 RS', blurb: 'The rear-engined flat-six fastback with frog-eye headlamps and a ducktail.' },
+  dieppe: { name: 'Dieppe A110', blurb: 'The tiny French blue berlinette: low, light, four round lamps up front.' },
+  bavaria: { name: 'Bavaria 30 CS', blurb: 'The big touring coupé with a shark nose, wide arches and a tall rear wing.' },
+}
+export const CLASSIC_LIST: ClassicModel[] = ['stoccarda', 'dieppe', 'bavaria']
+
+/** Every car of a class is balanced to the same pace: the choice is about looks and feel. */
+const CLASSIC_TEAMS: Team[] = [
+  { name: 'Kherve Racing', short: 'KHV', color: '#0d120f', color2: '#22c55e', accent: '#eafff1', model: 'stoccarda' },
+  { name: 'Équipe Dieppe', short: 'DIE', color: '#1d4fc4', color2: '#f4f4f4', accent: '#ffffff', model: 'dieppe' },
+  { name: 'Scuderia Lago', short: 'LAG', color: '#8ec5e8', color2: '#f2711c', accent: '#13213f', model: 'stoccarda' },
+  { name: 'Bavaria Sport', short: 'BAV', color: '#f4f4f2', color2: '#1f5fd0', accent: '#d21f2a', model: 'bavaria' },
+  { name: 'Rallye Rouge', short: 'RRG', color: '#c8201f', color2: '#f8f6ee', accent: '#111111', model: 'dieppe' },
+  { name: 'Riviera Classic', short: 'RIV', color: '#e9e3d0', color2: '#0f3f2e', accent: '#c8a548', model: 'bavaria' },
+]
+
+const MODERN_TEAMS: Team[] = [
   { name: 'Kherve Racing', short: 'KHV', color: '#0d120f', color2: '#22c55e', accent: '#eafff1' },
   { name: 'Pyodide GP', short: 'PYO', color: '#1f4fd8', color2: '#ffd43b', accent: '#ffffff' },
   { name: 'Aurora Motorsport', short: 'AUR', color: '#f9731c', color2: '#13213f', accent: '#ffffff' },
@@ -26,6 +47,15 @@ export const TEAMS: Team[] = [
   { name: 'Rosso Veloce', short: 'RSV', color: '#d61f26', color2: '#f8fafc', accent: '#ffffff' },
   { name: 'Violet Works', short: 'VLW', color: '#6b2bd9', color2: '#f4c430', accent: '#ffffff' },
 ]
+
+/** The teams of the series being raced (switched with setRaceSeries). */
+export let TEAMS: Team[] = MODERN_TEAMS
+
+/** Switch the series: the car physics and the teams (the player's team races `playerModel` in the classics). */
+export function setRaceSeries(s: Series, playerModel: ClassicModel = 'stoccarda') {
+  setSeries(s)
+  TEAMS = s === 'classic' ? CLASSIC_TEAMS.map((t, i) => (i === 0 ? { ...t, model: playerModel } : t)) : MODERN_TEAMS
+}
 
 export interface Driver {
   name: string
@@ -467,6 +497,12 @@ export class Session {
       inp.throttle = Math.min(inp.throttle, 0.35)
     }
     const zone = this.drsZoneOf(near.s)
+    // DRS: allowed or not is decided as the car enters each zone (within a second of the car ahead in the race)
+    const zi = t.drs.findIndex((z) => inRange(near.s, z[0], z[1], t.len))
+    if (zi !== p.drsZone) {
+      p.drsZone = zi
+      p.drs = zi >= 0 && this.drsAllowed(p)
+    }
     const drsOk = this.drsOpen && p.drs && inRange(near.s, zone[0], zone[1], t.len)
     if (this.drsOpen && (inp.brake > 0.1 || !drsOk)) this.drsOpen = false
     if (!parked) b.step(dt, inp, { grip: tyreGrip(p.tyres) * gripSurf, drag, assists: this.opts.assists, analog: this.input.analog, drs: this.drsOpen })
@@ -638,6 +674,8 @@ export class Session {
   }
 
   private drsAllowed(c: RaceCar): boolean {
+    // the classics had no such thing
+    if (SERIES === 'classic') return false
     if (this.kind === 'qualifying') return true
     if (this.phase !== 'green' || c.laps < 1) return false
     const ord = this.order()
@@ -810,15 +848,11 @@ export class Session {
     while (dh < -Math.PI) dh += Math.PI * 2
     c.h = dt > 0 ? prevH + dh * Math.min(1, dt * 14) : h
     c.steer = dt > 0 ? Math.max(-0.3, Math.min(0.3, (dh / Math.max(dt, 1e-3)) * 0.06)) : 0
-    c.wheelRot += (c.speed / 0.36) * dt
+    c.wheelRot += (c.speed / CAR.wheelR) * dt
     // revs for the sound
-    const g = [86, 128, 164, 199, 234, 268, 302, 340]
-    const kmh = c.speed * 3.6
-    let gear = 1
-    while (gear < 8 && kmh > g[gear - 1] * 0.97) gear++
-    c.gear = gear
-    const lo = gear > 1 ? g[gear - 2] * 0.8 : 0
-    c.rpm = 4200 + Math.min(1, Math.max(0, (kmh - lo) / (g[gear - 1] - lo))) * 8200
+    const gr = gearRpm(c.speed, c.gear || 1)
+    c.gear = gr.gear
+    c.rpm = gr.rpm
   }
 
   // ---------------------------------------------------------------- contact
