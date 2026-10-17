@@ -65,6 +65,9 @@ export function setSeries(s: Series) {
 /** The front wheels' full lock at a speed (m/s): it shrinks gently as the car goes faster. */
 export const steerLock = (v: number) => CAR.lock / (1 + Math.abs(v) / 50)
 
+/** The cornering assist: with the assists on, the player's tyres grip a quarter more (they turn, brake and stay on the road more easily). */
+export const assistGrip = (env: { assists: boolean }) => (env.assists ? 1.25 : 1)
+
 /** Gear and revs at a speed (m/s), for the sound and the dials. */
 export function gearRpm(speed: number, gear: number): { gear: number; rpm: number } {
   const G = CAR.gears.map((k) => k / 3.6)
@@ -263,7 +266,7 @@ export class CarBody {
     const v = Math.abs(this.vx)
     // a keyboard steers all or nothing: full key gives the angle that turns hardest at this speed
     // (the turn the grip allows, plus the tyre's best slip angle), full lock at walking pace
-    const best = ((CAR.a + CAR.b) * latLimit(v, env.grip)) / Math.max(v * v, 1) + 0.12
+    const best = ((CAR.a + CAR.b) * latLimit(v, env.grip * assistGrip(env))) / Math.max(v * v, 1) + 0.12
     const lock = (env.analog ? steerLock(v) : Math.min(CAR.lock, best * 1.12)) * (1 + this.drift * 0.35)
     const target = inp.steer * lock
     if (env.analog) this.steer = target
@@ -315,8 +318,9 @@ export class CarBody {
     const bent = dmg ? 1 - 0.12 * dmg.susp : 1
     const fzF = Math.max(500, (m * G * b) / L + aero * CAR.aeroFront * fwLoss - transfer)
     const fzR = Math.max(500, (m * G * a) / L + aero * (1 - CAR.aeroFront) * rwLoss + transfer)
-    const capF = mu * env.grip * fzF * bent * (dmg ? 1 - 0.18 * dmg.fw : 1)
-    const capR = mu * env.grip * fzR * bent
+    const grip = env.grip * assistGrip(env)
+    const capF = mu * grip * fzF * bent * (dmg ? 1 - 0.18 * dmg.fw : 1)
+    const capR = mu * grip * fzR * bent
     const delta = this.steer + (dmg ? dmg.side * 0.018 * dmg.susp : 0)
 
     // slip angles, with a little lag (the tyre's relaxation length)
@@ -333,7 +337,8 @@ export class CarBody {
     const hb = (inp.handbrake ?? 0) > 0.5 && vx > 3
     if (hb && sp > 8) this.drift = 1
     // trail-braking: hard on the brakes while turning in, the tail steps out into a drift
-    const trail = inp.brake > 0.5 && Math.abs(inp.steer) > 0.6 && sp > 14 && !hb ? Math.min(1, (inp.brake - 0.5) * 2) * Math.min(1, (Math.abs(inp.steer) - 0.6) / 0.35) : 0
+    // (only without the assists: with them, a drift is the player's choice, on the handbrake)
+    const trail = !env.assists && inp.brake > 0.5 && Math.abs(inp.steer) > 0.6 && sp > 14 && !hb ? Math.min(1, (inp.brake - 0.5) * 2) * Math.min(1, (Math.abs(inp.steer) - 0.6) / 0.35) : 0
     if (trail > 0) this.drift = Math.max(this.drift, 0.8 * trail)
     else if (!hb && this.drift > 0) {
       // the slide lasts while the player holds it with throttle; the assists come back as it fades
@@ -367,7 +372,8 @@ export class CarBody {
       if (env.assists) {
         // ABS: the fronts keep some grip to steer with when the wheel is turned
         bf = Math.min(bf, capF * (0.96 - 0.3 * Math.min(1, Math.abs(inp.steer))))
-        br = Math.min(br, capR * 0.96)
+        // (stability control: the rear brakes hold back, more so when steering, so the rear keeps its grip for the turn)
+        br = Math.min(br, capR * (0.6 - 0.3 * Math.min(1, Math.abs(inp.steer))))
       }
       if (bf > capF) {
         lockF = 1
@@ -405,7 +411,7 @@ export class CarBody {
     // (in a drift it only stops a spin: a softer hand and a wider margin)
     if (env.assists && sp > 6) {
       const rWant = (vx * Math.tan(delta)) / L
-      const rMax = latLimit(sp, env.grip) / Math.max(sp, 1)
+      const rMax = latLimit(sp, grip) / Math.max(sp, 1)
       const rDes = Math.max(-rMax, Math.min(rMax, rWant))
       const err = r - rDes
       const band = 0.08 + 0.18 * this.drift
@@ -425,7 +431,8 @@ export class CarBody {
     // the spin catcher (assists): past ~20° of slide, the nose is turned back towards where the car is going
     if (env.assists && sp > 3) {
       const beta = Math.atan2(vy, Math.max(Math.abs(vx), 1))
-      const over = Math.abs(beta) - 0.34
+      // (from about 20° in a drift the player started, from about 12° otherwise)
+      const over = Math.abs(beta) - (this.drift > 0 ? 0.34 : 0.21)
       if (over > 0) mz += (beta * 3 - r) * iz * 7 * Math.min(1, over * 4)
     }
 
