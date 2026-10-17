@@ -254,7 +254,11 @@ export class GrandPrixEngine {
   private carTeam = -1
   private previewT = 0
 
-  /** Switch between the modern single-seaters and the classic coupés (the player's team races `model`). */
+  /** The camera turns slowly round the player's car for a while: the chosen car in the menu, the winner after the race. */
+  celebrate(seconds: number) {
+    this.previewT = seconds
+  }
+
   /** Switch between the modern single-seaters and the classic coupés, and which team's car the player drives. */
   setSeries(series: Series, team = this.settings.team ?? 0) {
     if (series === SERIES && team === this.carTeam) return

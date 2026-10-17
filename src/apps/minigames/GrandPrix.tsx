@@ -19,6 +19,7 @@ import { TRACKS, type TrackId } from './f1Track'
 import { COMPOUNDS, COMPOUND_LIST, type Compound } from './f1Physics'
 import { CLASSIC_MODELS, DIFFICULTY, TEAMS, fmtLap, teamsOf, type Classified, type Difficulty } from './f1Race'
 import type { Series } from './f1Physics'
+import { PoleBurst, Podium, Trophy } from './GPCelebration'
 import './grandPrix.css'
 
 const ID = 'grandprix'
@@ -95,6 +96,7 @@ export default function GrandPrix({ win }: AppProps) {
   const [startTyre, setStartTyre] = useState<Compound>('medium')
   const [results, setResults] = useState<Classified[]>([])
   const [score, setScore] = useState<RaceScore | null>(null)
+  const [podium, setPodium] = useState(false)
   const scores = useScores(ID)
   const soundOn = useSound((s) => s.on)
   const focused = useWindows((s) => s.focusedId === win.id)
@@ -138,6 +140,9 @@ export default function GrandPrix({ win }: AppProps) {
             const track = TRACKS.find((t) => t.id === s.track)!.name
             const rank = addScore(ID, { name, score: pts, summary: `P${me + 1} · ${track}${s.series === 'classic' ? ' · Classics' : ''} · ${s.laps} laps · ${DIFFICULTY[s.difficulty].name}`, date: Date.now() })
             setScore({ score: pts, position: me + 1, grid: grid + 1, pole: grid === 0, fastest: !!fastest?.player, rank })
+            // on the podium: the ceremony first, with the camera going round the car
+            setPodium(me >= 0 && me < 3)
+            if (me >= 0 && me < 3) e.celebrate(me === 0 ? 30 : 14)
             setPhase('results')
           } else if (st === 'menu') setPhase('ready')
           else setPhase('playing')
@@ -519,6 +524,7 @@ export default function GrandPrix({ win }: AppProps) {
 
       {phase === 'results' && stage === 'qualiResults' && (
         <div className="gp-wrap">
+          {results[0]?.player && <PoleBurst />}
           <div className="gp-card gp-wide">
             <div className="gp-title gp-small">{results[0]?.player ? 'Pole position!' : 'Qualifying — the grid'}</div>
             <Classification rows={results} kind="qualifying" />
@@ -544,10 +550,15 @@ export default function GrandPrix({ win }: AppProps) {
         </div>
       )}
 
-      {phase === 'results' && stage === 'raceResults' && (
+      {phase === 'results' && stage === 'raceResults' && podium && score && <Podium rows={results} place={score.position} onDone={() => setPodium(false)} />}
+
+      {phase === 'results' && stage === 'raceResults' && !podium && (
         <div className="gp-wrap">
           <div className="gp-card gp-wide">
-            <div className="gp-title gp-small">{score?.position === 1 ? 'You win the Grand Prix!' : `Finished P${score?.position ?? '?'}`}</div>
+            <div className="gp-title gp-small gp-wintitle">
+              {score && score.position <= 3 && <Trophy place={score.position} size={34} />}
+              {score?.position === 1 ? 'You win the Grand Prix!' : `Finished P${score?.position ?? '?'}`}
+            </div>
             <Classification rows={results} kind="race" />
             {score && (
               <div className="gp-stats">
