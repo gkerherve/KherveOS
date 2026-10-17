@@ -14,8 +14,13 @@ def test_lineup_gives_players_their_team_then_the_ai_the_rest():
     assert [c["car"] for c in lineup([(1, "Ann", 5)], ai=False)] == [10]
 
 
-def test_rooms_need_a_signed_in_user(client):
-    assert client.get("/api/gp/rooms").status_code == 401
+def test_guests_can_host_without_an_account(client):
+    # a friend's tablet that never signed in to this KherveOS
+    assert client.get("/api/gp/rooms").status_code == 200
+    with client.websocket_connect("/api/gp/ws") as g:
+        g.send_json({"t": "host", "name": "", "team": 0, "settings": {"track": "park"}})
+        room = g.receive_json()
+        assert room["t"] == "room" and room["players"][0]["name"] == "Guest"
 
 
 def test_host_join_start_and_relay(client):

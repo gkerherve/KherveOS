@@ -75,7 +75,7 @@ export function Lobby(p: LobbyProps) {
         {!inRoom && (
           <>
             <p className="gp-note">
-              Race against friends on other computers, tablets or phones. Everyone opens this KherveOS — the same address — signs in, opens Kherve Grand Prix and
+              Race against friends on other computers, tablets or phones. Everyone opens this KherveOS — the same address — opens Kherve Grand Prix and
               joins the room.
             </p>
             <TellFriend lan={lan} code={null} />
@@ -236,7 +236,7 @@ function TellFriend({ lan, code }: { lan: LanInfo; code: string | null }) {
           {url ? <b className="gp-tell-url">{url}</b> : <b className="gp-tell-url">…finding this computer's address…</b>}
           {lan.urls.length > 1 && <small>or {lan.urls.slice(1).join(' · ')}</small>}
         </li>
-        <li>Sign in to KherveOS, open Kherve Grand Prix, tap Multiplayer.</li>
+        <li>Open Kherve Grand Prix (no need to sign in), tap Multiplayer.</li>
         <li>{code ? <>Join room <b className="gp-tell-code">{code}</b></> : 'Join the room you host (its code shows here once you host).'}</li>
       </ol>
       {lan.reachable === false && (

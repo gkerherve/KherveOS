@@ -7,7 +7,8 @@ series and laps and starts the race; the server hands every car on the grid
 to a player or to the AI, then relays what each game sends: every player's
 own car, and the AI cars, which the host's game drives for everyone.
 
-Messages are JSON over /api/gp/ws (signed-in users only):
+Guests may play without a KherveOS account (a friend's tablet that has not signed in):
+a room only relays car positions, nothing of anyone's files. Messages are JSON over /api/gp/ws:
   client -> server: host {name, team, settings} · join {code, name, team} ·
       team {team} · settings {settings} · start {seed} · lobby · cars {c} · leave
   server -> client: room {code, you, host, players, settings, state} ·
@@ -23,9 +24,9 @@ import socket
 import time
 from dataclasses import dataclass, field
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from .auth import User, current_user, websocket_user
+from .auth import websocket_user
 
 router = APIRouter(prefix="/api/gp")
 
@@ -150,7 +151,7 @@ def _code() -> str:
 
 
 @router.get("/rooms")
-def list_rooms(_user: User = Depends(current_user)):
+def list_rooms():
     """The rooms waiting for players."""
     return {
         "rooms": [
@@ -167,7 +168,7 @@ def list_rooms(_user: User = Depends(current_user)):
 
 
 @router.get("/info")
-def info(_user: User = Depends(current_user)):
+def info():
     """This computer's network addresses, for the other players to type into their browser."""
     addrs: list[str] = []
     try:
@@ -187,11 +188,10 @@ def info(_user: User = Depends(current_user)):
 
 
 async def serve(ws: WebSocket) -> None:
-    user = websocket_user(ws)
-    if user is None:
-        await ws.close(code=4401)
-        return
+    user = websocket_user(ws)  # None for a guest: they play under the name they type
     await ws.accept()
+    uid = user.id if user else 0
+    fallback = (user.display_name or user.username) if user else "Guest"
     me: Player | None = None
     room: Room | None = None
     try:
@@ -210,12 +210,12 @@ async def serve(ws: WebSocket) -> None:
                 if room and me:
                     await _leave(room, me.id)
                     room = me = None
-                name = _clean_name(msg.get("name"), user.display_name or user.username)
+                name = _clean_name(msg.get("name"), fallback)
                 if t == "host":
                     if len(rooms) >= MAX_ROOMS:
                         await ws.send_text(json.dumps({"t": "error", "text": "Too many rooms are open on this server."}))
                         continue
-                    me = Player(_new_id(), name, _clean_team(msg.get("team")), ws, user.id)
+                    me = Player(_new_id(), name, _clean_team(msg.get("team")), ws, uid)
                     room = Room(_code(), me.id, _clean_settings(msg.get("settings")))
                     rooms[room.code] = room
                 else:
@@ -230,7 +230,7 @@ async def serve(ws: WebSocket) -> None:
                         await ws.send_text(json.dumps({"t": "error", "text": "That race has already started."}))
                         continue
                     room = r
-                    me = Player(_new_id(), name, _clean_team(msg.get("team")), ws, user.id)
+                    me = Player(_new_id(), name, _clean_team(msg.get("team")), ws, uid)
                 room.players[me.id] = me
                 await _announce(room)
                 continue

@@ -109,11 +109,12 @@ export class GPNet {
         else if (m.t === 'left') this.h.left(m.id)
         else if (m.t === 'error') this.h.error(m.text)
       }
-      ws.onclose = (e) => {
+      ws.onclose = () => {
         const was = this.open
         this.open = false
         this.ws = null
-        const why = e.code === 4401 ? 'Sign in to KherveOS to race with others.' : 'The connection to the race room closed.'
+        // closed before it opened: the server is not there (or is an old one without race rooms)
+        const why = was ? 'The connection to the race room was lost. Try again.' : 'Could not reach the race rooms: is KherveOS running (npm run dev:lan) and up to date?'
         if (!was) reject(new Error(why))
         this.h.closed(why)
       }
@@ -146,7 +147,7 @@ export async function openRooms(): Promise<OpenRoom[]> {
   const r = await fetch('/api/gp/rooms', { credentials: 'same-origin' })
   if (!r.ok)
     throw new Error(
-      r.status === 401 ? 'Sign in to KherveOS to race with others.' : r.status === 404 ? 'This KherveOS server has no race rooms yet: restart KherveOS (quit and open it again).' : 'The KherveOS server does not answer.',
+      r.status === 404 ? 'This KherveOS server has no race rooms yet: restart KherveOS (quit and open it again).' : 'The KherveOS server does not answer.',
     )
   return ((await r.json()) as { rooms: OpenRoom[] }).rooms
 }
