@@ -11,7 +11,7 @@ import { buildTrack, inRange, locate, pointAt, trackDef, wrap, type Track, type 
 import { CAR, COMPOUNDS, newTyres, SERIES, speedProfile, steerLock, tyreGrip, type Compound, type Series } from './f1Physics.ts'
 import { Cockpit } from './f1Cockpit.ts'
 import { CarAudio } from './f1Audio.ts'
-import { DIFFICULTY, Session, TEAMS, fmtLap, setRaceSeries, type Classified, type ClassicModel, type Difficulty, type RaceCar, type SessionEvent } from './f1Race.ts'
+import { DIFFICULTY, Session, TEAMS, fmtLap, setRaceSeries, teamsOf, type Classified, type ClassicModel, type Difficulty, type RaceCar, type SessionEvent } from './f1Race.ts'
 import { buildClassic, classicCams } from './f1Classics.ts'
 import { buildCar, buildCarGeometry, sharedMaterials, teamLook, type CarGeometry, type CarModel, type Shared, type TeamLook } from './f1Models.ts'
 import { buildWorld, type World } from './f1World.ts'
@@ -30,6 +30,8 @@ export interface GPSettings {
   /** Modern single-seaters or classic coupés, and the player's coupé. */
   series: Series
   classic: ClassicModel
+  /** Which team's car the player drives (an index into the series' teams). */
+  team: number
   /** The circuit's own light (noon at Kherve Park, golden afternoon at Lac Bleu) or sunset. */
   time: TimeOfDay
   /** Crashes break wings and suspension. */
@@ -125,7 +127,7 @@ export class GrandPrixEngine {
   readonly scene = new THREE.Scene()
   readonly camera = new THREE.PerspectiveCamera(62, 1, 0.1, 14000)
   stage: Stage = 'menu'
-  settings: GPSettings = { track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: 'Player', series: 'modern', classic: 'stoccarda', time: 'day', damage: true }
+  settings: GPSettings = { track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: 'Player', series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true }
   track!: Track
   profile!: { v: Float32Array; lapTime: number }
   world: World | null = null
@@ -180,7 +182,7 @@ export class GrandPrixEngine {
     setRaceSeries('modern')
     this.geo = buildCarGeometry()
     this.shared = sharedMaterials()
-    this.looks = TEAMS.map((t, i) => teamLook(t, i))
+    this.looks = teamsOf('modern').map((t, i) => teamLook(t, i))
     this.buildCars()
     // smoke and dust
     const [c, g] = (() => {
@@ -236,7 +238,9 @@ export class GrandPrixEngine {
     for (let i = 0; i < 12; i++) {
       const team = Math.floor(i / 2)
       const t = TEAMS[team]
-      const m = SERIES === 'classic' && t.model ? buildClassic(t.model, t, nums[i], this.shared) : buildCar(this.geo, this.looks[team], this.shared, t, nums[i], i % 2 === 1)
+      // (the modern liveries were made in the menu's order: find this team's)
+      const look = this.looks[Math.max(0, teamsOf('modern').findIndex((x) => x.name === t.name))]
+      const m = SERIES === 'classic' && t.model ? buildClassic(t.model, t, nums[i], this.shared) : buildCar(this.geo, look, this.shared, t, nums[i], i % 2 === 1)
       this.models.push(m)
       this.scene.add(m.root)
     }
@@ -246,13 +250,20 @@ export class GrandPrixEngine {
   }
 
   private cockpit: Cockpit | null = null
+  /** The team whose car the player has (set with setSeries); a few seconds of showing it off behind the menu. */
+  private carTeam = -1
+  private previewT = 0
 
   /** Switch between the modern single-seaters and the classic coupés (the player's team races `model`). */
-  setSeries(series: Series, model: ClassicModel = this.settings.classic) {
-    if (series === SERIES && (series === 'modern' || TEAMS[0].model === model)) return
-    setRaceSeries(series, model)
+  /** Switch between the modern single-seaters and the classic coupés, and which team's car the player drives. */
+  setSeries(series: Series, team = this.settings.team ?? 0) {
+    if (series === SERIES && team === this.carTeam) return
+    setRaceSeries(series, team)
+    this.carTeam = team
     this.settings.series = series
-    this.settings.classic = model
+    this.settings.team = team
+    this.settings.classic = TEAMS[0].model ?? 'stoccarda'
+    this.previewT = 6
     this.buildCars()
     // the profile (and the garages' colours) depend on the series
     this.setTrack(this.settings.track, true)
@@ -304,7 +315,7 @@ export class GrandPrixEngine {
 
   startQualifying(s: GPSettings) {
     this.settings = { ...s }
-    this.setSeries(s.series, s.classic)
+    this.setSeries(s.series, s.team ?? 0)
     this.setTime(s.time ?? 'day')
     this.setTrack(s.track)
     this.session = new Session({
@@ -321,7 +332,7 @@ export class GrandPrixEngine {
   /** Skip qualifying: the AI's times are made up, the player starts at the back. */
   skipQualifying(s: GPSettings) {
     this.settings = { ...s }
-    this.setSeries(s.series, s.classic)
+    this.setSeries(s.series, s.team ?? 0)
     this.setTime(s.time ?? 'day')
     this.setTrack(s.track)
     const q = new Session({
@@ -804,6 +815,21 @@ export class GrandPrixEngine {
   private attractCamera(s: Session, dt: number) {
     this.attractT += dt
     const cam = this.camera
+    // the car just chosen in the menu: a slow turn round it as it drives
+    if (this.previewT > 0) {
+      this.previewT -= dt
+      const c = s.cars[0]
+      const a = this.attractT * 0.5
+      const want = new THREE.Vector3(c.x + Math.cos(c.h + a) * 6.5, c.y + 1.7, c.z + Math.sin(c.h + a) * 6.5)
+      this.camPos.lerp(want, Math.min(1, dt * 6))
+      if (this.camPos.distanceTo(want) > 20) this.camPos.copy(want)
+      cam.position.copy(this.camPos)
+      this.camLook.set(c.x, c.y + 0.55, c.z)
+      cam.fov = 40
+      cam.lookAt(this.camLook)
+      cam.updateProjectionMatrix()
+      return
+    }
     const shot = Math.floor(this.attractT / 9) % 4
     const t = s.t
     const p = t.pit

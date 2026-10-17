@@ -650,6 +650,42 @@ export interface CarModel {
   dispose(): void
 }
 
+let shadowTex: THREE.Texture | null = null
+/** A soft dark patch under a car (a contact shadow) that grounds it whatever the sun's shadows do. */
+export function contactShadow(length: number, width: number): THREE.Mesh {
+  if (!shadowTex) {
+    const c = document.createElement('canvas')
+    c.width = 128
+    c.height = 256
+    const g = c.getContext('2d')!
+    const grd = g.createRadialGradient(64, 128, 10, 64, 128, 128)
+    grd.addColorStop(0, 'rgba(0,0,0,0.75)')
+    grd.addColorStop(0.55, 'rgba(0,0,0,0.45)')
+    grd.addColorStop(1, 'rgba(0,0,0,0)')
+    g.fillStyle = grd
+    g.fillRect(0, 0, 128, 256)
+    shadowTex = new THREE.CanvasTexture(c)
+  }
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, length).rotateX(-Math.PI / 2).rotateY(Math.PI / 2),
+    new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 }),
+  )
+  m.position.y = 0.02
+  m.renderOrder = 1
+  return m
+}
+
+/** Paint that darkens low down (towards the sills and underneath), as dirt and the shade under a car do. */
+export function groundShade(mat: THREE.Material, low: number, high: number, floor = 0.42) {
+  mat.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vShadeH;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvShadeH = position.y;')
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vShadeH;')
+      .replace('#include <color_fragment>', `#include <color_fragment>\ndiffuseColor.rgb *= mix(${floor.toFixed(2)}, 1.0, smoothstep(${low.toFixed(3)}, ${high.toFixed(3)}, vShadeH));`)
+  }
+  mat.customProgramCacheKey = () => `shade${low}-${high}-${floor}`
+}
+
 /** Shared by both kinds of car: a part sags with damage, and at 0.75 it has come off. */
 export function showDamage(piece: THREE.Object3D | null, amount: number, sag: number, tilt: number, side: number) {
   if (!piece) return
@@ -745,6 +781,8 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
   flap.castShadow = true
   rearWing.add(flap)
 
+  const shade = contactShadow(5.4, 2.3)
+  root.add(shade)
   const wheels: CarModel['wheels'] = []
   for (const w of WHEELS) {
     const pivot = new THREE.Group()
@@ -777,6 +815,8 @@ export function buildCar(geo: CarGeometry, look: TeamLook, sh: Shared, team: Tea
     dispose() {
       numTex.dispose()
       numMat.dispose()
+      shade.geometry.dispose()
+      ;(shade.material as THREE.Material).dispose()
       for (const d of decals) d.dispose()
       nose.geometry.dispose()
       light.dispose()

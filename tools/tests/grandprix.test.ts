@@ -117,9 +117,11 @@ test('a jump start costs five seconds', () => {
 })
 
 test('the classics: slower coupés, no DRS, the player\'s chosen car, a race to the flag', () => {
-  setRaceSeries('classic', 'bavaria')
+  setRaceSeries('classic', 3)
   try {
-    assert.equal(TEAMS[0].model, 'bavaria', 'the player races the coupé they chose')
+    assert.equal(TEAMS[0].name, 'Bavaria Sport', 'the player races the car they chose')
+    assert.equal(TEAMS[0].model, 'bavaria')
+    assert.equal(new Set(TEAMS.map((t) => t.name)).size, 6, 'every team still races')
     assert.ok(TEAMS.every((t) => t.model), 'every classic team has a coupé')
     const t = built[0].t
     const prof = speedProfile(t)

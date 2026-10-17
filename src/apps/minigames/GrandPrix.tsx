@@ -17,7 +17,7 @@ import { isGameFullscreen, toggleGameFullscreen, useGameFullscreen } from './gam
 import type { CamMode, GPHud, GPSettings, GrandPrixEngine, Stage, TimeOfDay } from './f1Engine'
 import { TRACKS, type TrackId } from './f1Track'
 import { COMPOUNDS, COMPOUND_LIST, type Compound } from './f1Physics'
-import { CLASSIC_LIST, CLASSIC_MODELS, DIFFICULTY, TEAMS, fmtLap, type Classified, type ClassicModel, type Difficulty } from './f1Race'
+import { CLASSIC_MODELS, DIFFICULTY, TEAMS, fmtLap, teamsOf, type Classified, type Difficulty } from './f1Race'
 import type { Series } from './f1Physics'
 import './grandPrix.css'
 
@@ -90,7 +90,7 @@ export default function GrandPrix({ win }: AppProps) {
   const [hud, setHud] = useState<GPHud | null>(null)
   const [error, setError] = useState('')
   const [settings, setSettings] = useState<GPSettings>(() => ({
-    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', time: 'day', damage: true, ...loadSettings(),
+    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true, ...loadSettings(),
   }))
   const [startTyre, setStartTyre] = useState<Compound>('medium')
   const [results, setResults] = useState<Classified[]>([])
@@ -277,10 +277,10 @@ export default function GrandPrix({ win }: AppProps) {
   useEffect(() => {
     const e = engineRef.current
     if (!e || phase !== 'ready') return
-    e.setSeries(settings.series, settings.classic)
+    e.setSeries(settings.series, settings.team ?? 0)
     e.setTime(settings.time ?? 'day')
     e.setTrack(settings.track)
-  }, [phase, settings.series, settings.classic, settings.track, settings.time])
+  }, [phase, settings.series, settings.team, settings.track, settings.time])
 
   useEffect(() => {
     if (!focused) pause()
@@ -325,7 +325,7 @@ export default function GrandPrix({ win }: AppProps) {
         best: list[0]?.score ?? 0,
         stage: e?.stage ?? 'menu',
         track: TRACKS.find((t) => t.id === settings.track)?.name,
-        cars: settings.series === 'classic' ? `Classics (you drive the ${CLASSIC_MODELS[settings.classic].name})` : 'Modern single-seaters',
+        cars: `${settings.series === 'classic' ? 'Classics' : 'Modern single-seaters'}; you drive the ${teamsOf(settings.series)[settings.team ?? 0]?.name}${settings.series === 'classic' ? ` ${CLASSIC_MODELS[teamsOf('classic')[settings.team ?? 0]?.model ?? 'stoccarda'].name}` : ''} car`,
         settings: { laps: settings.laps, qualifying_minutes: settings.quali, difficulty: settings.difficulty, assists: settings.assists },
         ...(h && {
           session: h.kind,
@@ -408,18 +408,21 @@ export default function GrandPrix({ win }: AppProps) {
                 <Seg value={settings.series} options={['modern', 'classic'] as Series[]} label={(v) => (v === 'modern' ? 'Modern single-seaters' : 'Classics (1970s coupés)')} onChange={(v) => set('series', v)} />
               </label>
             </div>
-            {settings.series === 'classic' && (
-              <div className="gp-tracks gp-cars">
-                {CLASSIC_LIST.map((m) => (
-                  <button key={m} className={`gp-track ${settings.classic === m ? 'gp-on' : ''}`} onClick={() => set('classic', m as ClassicModel)}>
-                    <div>
-                      <b>{CLASSIC_MODELS[m].name}</b>
-                      <span>{CLASSIC_MODELS[m].blurb}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="gp-carhead">Your car</div>
+            <div className="gp-cars">
+              {teamsOf(settings.series).map((t, k) => (
+                <button
+                  key={t.name}
+                  className={`gp-carpick ${(settings.team ?? 0) === k ? 'gp-on' : ''}`}
+                  title={t.model ? CLASSIC_MODELS[t.model].blurb : t.name}
+                  onClick={() => setSettings((s) => ({ ...s, team: k, classic: t.model ?? s.classic }))}
+                >
+                  <i className="gp-livery" style={{ background: `linear-gradient(135deg, ${t.color} 0 55%, ${t.color2} 55% 72%, ${t.color} 72%)` }} />
+                  <b>{t.name}</b>
+                  <span>{t.model ? CLASSIC_MODELS[t.model].name : `${t.short} single-seater`}</span>
+                </button>
+              ))}
+            </div>
             <div className="gp-tracks">
               {TRACKS.map((t) => (
                 <button key={t.id} className={`gp-track ${settings.track === t.id ? 'gp-on' : ''}`} onClick={() => set('track', t.id)}>

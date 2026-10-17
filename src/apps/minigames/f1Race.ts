@@ -52,9 +52,17 @@ const MODERN_TEAMS: Team[] = [
 export let TEAMS: Team[] = MODERN_TEAMS
 
 /** Switch the series: the car physics and the teams (the player's team races `playerModel` in the classics). */
-export function setRaceSeries(s: Series, playerModel: ClassicModel = 'stoccarda') {
+export function setRaceSeries(s: Series, playerTeam = 0) {
   setSeries(s)
-  TEAMS = s === 'classic' ? CLASSIC_TEAMS.map((t, i) => (i === 0 ? { ...t, model: playerModel } : t)) : MODERN_TEAMS
+  // the player's choice of car takes the first place (the player and their team mate drive it); the rest follow
+  const list = teamsOf(s)
+  const k = Math.max(0, Math.min(list.length - 1, playerTeam))
+  TEAMS = [list[k], ...list.filter((_, i) => i !== k)]
+}
+
+/** Every team of a series, in the menu's order (the cars the player can choose from). */
+export function teamsOf(s: Series): Team[] {
+  return s === 'classic' ? CLASSIC_TEAMS : MODERN_TEAMS
 }
 
 export interface Driver {

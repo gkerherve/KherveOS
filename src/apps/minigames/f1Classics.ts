@@ -10,7 +10,7 @@
 // (after the big touring coupé with the shark nose, box flares and wing).
 
 import * as THREE from 'three'
-import { bendWheels, merge, showDamage, type CarModel, type Shared } from './f1Models.ts'
+import { bendWheels, contactShadow, groundShade, merge, showDamage, type CarModel, type Shared } from './f1Models.ts'
 import type { ClassicModel, Team } from './f1Race.ts'
 import type { Compound, Damage } from './f1Physics.ts'
 
@@ -197,6 +197,8 @@ interface Design {
   /** Doors (front and rear edges), exhaust pipes (z). */
   door: [number, number]
   pipes: number[]
+  /** The lids' shut-lines on top: [from x, to x, half-width] (bonnet, boot, engine lid). */
+  lids: [number, number, number][]
   extras(add: Add, zone: (z: Zone) => void, at: Surface): void
 }
 
@@ -211,6 +213,8 @@ interface Surface {
   belt(x: number): number
   roof(x: number): number
   cabinHw(x: number): number
+  /** Height of the body's top at (x, z): the bonnet or deck, rising to the wings at the sides. */
+  top(x: number, z: number): number
 }
 
 /** The body's shapes and the functions to place things on it. */
@@ -240,6 +244,11 @@ function surface(D: Design): Surface {
     belt: (x) => Math.min(ys(x), yc(x)) - 0.03,
     roof,
     cabinHw: cabHw,
+    top(x, z) {
+      const zs = hw(x) * (1 - D.tumble) - 0.014
+      const t = Math.min(1, Math.abs(z) / Math.max(0.05, zs))
+      return yc(x) + (ys(x) - yc(x)) * Math.pow(t, ys(x) > yc(x) ? 3.5 : 2.2)
+    },
   }
 }
 
@@ -258,7 +267,7 @@ const DESIGNS: Record<ClassicModel, Design> = {
       roof: [[0.7, 0.8], [0.45, 1.06], [0.15, 1.27], [-0.2, 1.315], [-0.6, 1.3], [-1.0, 1.21], [-1.4, 1.06], [-1.75, 0.9], [-1.95, 0.81]],
       hw: [[0.7, 0.7], [0, 0.72], [-1.0, 0.72], [-1.95, 0.62]],
     },
-    eye: [-0.25, 1.06, -0.32], roofCam: [-0.3, 1.43, 0], door: [0.62, -0.62], pipes: [-0.32],
+    eye: [-0.25, 1.06, -0.32], roofCam: [-0.3, 1.43, 0], door: [0.62, -0.62], pipes: [-0.32], lids: [[0.76, 1.86, 0.42], [-1.6, -2.04, 0.4]],
     extras(add, zone, at) {
       for (const sd of [1, -1]) {
         // upright headlamps at the front of the wings, chrome rims, the indicators below
@@ -309,7 +318,7 @@ const DESIGNS: Record<ClassicModel, Design> = {
       roof: [[0.52, 0.66], [0.3, 0.92], [0.05, 1.1], [-0.3, 1.125], [-0.7, 1.09], [-1.1, 0.97], [-1.45, 0.82], [-1.78, 0.68]],
       hw: [[0.52, 0.64], [0, 0.655], [-1.0, 0.65], [-1.78, 0.56]],
     },
-    eye: [-0.3, 0.94, -0.3], roofCam: [-0.3, 1.26, 0], door: [0.48, -0.55], pipes: [0.3, 0.38],
+    eye: [-0.3, 0.94, -0.3], roofCam: [-0.3, 1.26, 0], door: [0.48, -0.55], pipes: [0.3, 0.38], lids: [[0.58, 1.74, 0.36], [-1.82, -1.95, 0.4]],
     extras(add, zone, at) {
       for (const sd of [1, -1]) {
         // the main lamps faired into the wings, the driving lamps low in the nose
@@ -349,7 +358,7 @@ const DESIGNS: Record<ClassicModel, Design> = {
       roof: [[0.82, 0.8], [0.55, 1.1], [0.2, 1.34], [-0.2, 1.365], [-0.9, 1.36], [-1.15, 1.3], [-1.4, 1.04], [-1.6, 0.84]],
       hw: [[0.82, 0.78], [0, 0.8], [-1.6, 0.76]],
     },
-    eye: [-0.12, 1.1, -0.34], roofCam: [-0.3, 1.48, 0], door: [0.78, -0.7], pipes: [-0.4, -0.3],
+    eye: [-0.12, 1.1, -0.34], roofCam: [-0.3, 1.48, 0], door: [0.78, -0.7], pipes: [-0.4, -0.3], lids: [[0.86, 2.16, 0.62], [-1.62, -2.3, 0.62]],
     extras(add, zone, at) {
       // the shark nose: a black grille set back under the leaning front, four round lamps in it
       add('black', box(0.03, 0.3, 1.5, 2.2, 0.46, 0))
@@ -480,6 +489,29 @@ function details(add: Add, D: Design, at: Surface) {
     add('black', new THREE.CircleGeometry(0.026, 10).rotateY(-Math.PI / 2).translate(D.tail - 0.081, sill + 0.02, z))
   }
   add('tail', box(0.1, 0.03, 0.05, D.nose, 0.22, -0.3))
+  // the lids' shut-lines: along each side and across both ends, following the curve of the body
+  for (const [x0, x1, z] of D.lids) {
+    const n = Math.max(2, Math.round(Math.abs(x1 - x0) / 0.06))
+    const at3 = (x: number, zz: number) => v3(x, at.top(x, zz) + 0.004, zz)
+    for (const sd of [1, -1]) {
+      for (let i = 0; i < n; i++) {
+        const xa = x0 + ((x1 - x0) * i) / n
+        const xb = x0 + ((x1 - x0) * (i + 1)) / n
+        add('black', rod(at3(xa, z * sd), at3(xb, z * sd), 0.0035, 4))
+      }
+    }
+    for (const x of [x0, x1]) {
+      for (let i = 0; i < 8; i++) add('black', rod(at3(x, -z + (2 * z * i) / 8), at3(x, -z + (2 * z * (i + 1)) / 8), 0.0035, 4))
+    }
+  }
+  // side repeaters on the front wings, rubber guards on the bumpers
+  for (const sd of [1, -1]) {
+    const ix = D.front + 0.38
+    const iy = at.belt(ix) - 0.12
+    add('amber', new THREE.SphereGeometry(0.022, 10, 8).scale(1.6, 0.8, 0.5).translate(ix, iy, (at.side(ix, iy) + 0.004) * sd))
+    add('black', box(0.05, 0.11, 0.07, D.nose - 0.02, 0.31, 0.32 * sd))
+    add('black', box(0.05, 0.11, 0.07, D.tail + 0.02, 0.34, 0.34 * sd))
+  }
 }
 
 /** Where a classic's cameras sit (in the car's own frame). */
@@ -545,6 +577,50 @@ function stickerTexture(team: Team) {
   return tex(c)
 }
 
+/** A lamp's glass: a headlamp's reflector and fluted lens, or a tail lamp's red honeycomb. */
+function lensTexture(tail: boolean) {
+  const [c, g] = canvas(128, 128)
+  if (tail) {
+    g.fillStyle = '#7a0a0a'
+    g.fillRect(0, 0, 128, 128)
+    g.strokeStyle = '#ff5a4a'
+    g.lineWidth = 2
+    for (let y = 0; y < 128; y += 11) {
+      for (let x = (y / 11) % 2 ? 6 : 0; x < 128; x += 12) {
+        g.beginPath()
+        for (let k = 0; k < 6; k++) g.lineTo(x + Math.cos((k * Math.PI) / 3) * 5, y + Math.sin((k * Math.PI) / 3) * 5)
+        g.closePath()
+        g.stroke()
+      }
+    }
+  } else {
+    const grd = g.createRadialGradient(64, 64, 4, 64, 64, 64)
+    grd.addColorStop(0, '#ffffff')
+    grd.addColorStop(0.25, '#e9ecef')
+    grd.addColorStop(0.7, '#9ea6ae')
+    grd.addColorStop(1, '#d8dde2')
+    g.fillStyle = grd
+    g.fillRect(0, 0, 128, 128)
+    g.strokeStyle = 'rgba(255,255,255,0.55)'
+    g.lineWidth = 1.5
+    for (let r = 10; r < 64; r += 9) {
+      g.beginPath()
+      g.arc(64, 64, r, 0, Math.PI * 2)
+      g.stroke()
+    }
+    g.strokeStyle = 'rgba(80,90,100,0.35)'
+    for (let x = 0; x < 128; x += 6) {
+      g.beginPath()
+      g.moveTo(x, 0)
+      g.lineTo(x, 128)
+      g.stroke()
+    }
+  }
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
 function roundelTexture(num: number) {
   const [c, g] = canvas(128, 128)
   g.fillStyle = '#f7f5ee'
@@ -562,32 +638,39 @@ function roundelTexture(num: number) {
   return tex(c)
 }
 
-/** Period wheels: five-spoke, eight-spoke or cross-spoke alloys. */
-function wheelTexture(model: ClassicModel) {
-  const [c, g] = canvas(128, 128)
-  g.fillStyle = '#1b1c1e'
-  g.fillRect(0, 0, 128, 128)
-  const metal = model === 'dieppe' ? '#c8ccd2' : model === 'stoccarda' ? '#d9dcdf' : '#b9bcc0'
-  g.fillStyle = metal
-  g.beginPath()
-  g.arc(64, 64, 62, 0, Math.PI * 2)
-  g.fill()
-  g.fillStyle = '#1b1c1e'
-  const holes = model === 'stoccarda' ? 5 : model === 'dieppe' ? 8 : 10
-  for (let k = 0; k < holes; k++) {
-    const a = (k / holes) * Math.PI * 2
-    g.beginPath()
-    g.ellipse(64 + Math.cos(a) * 36, 64 + Math.sin(a) * 36, model === 'stoccarda' ? 16 : 9, model === 'stoccarda' ? 11 : 15, a, 0, Math.PI * 2)
-    g.fill()
-  }
-  g.fillStyle = '#8d9196'
-  g.beginPath()
-  g.arc(64, 64, 13, 0, Math.PI * 2)
-  g.fill()
-  return tex(c)
-}
-
 // ---------------------------------------------------------------- the car
+
+/** The wheel's face: a disc with windows cut between the spokes, in the pattern of each make. */
+function rimFace(model: ClassicModel, r: number): THREE.BufferGeometry {
+  const sh = new THREE.Shape()
+  sh.absarc(0, 0, r, 0, Math.PI * 2, false)
+  const hole = (cx: number, cy: number, rx: number, ry: number, rot: number) => {
+    const p = new THREE.Path()
+    p.absellipse(cx, cy, rx, ry, 0, Math.PI * 2, true, rot)
+    sh.holes.push(p)
+  }
+  if (model === 'stoccarda') {
+    // five wide windows between five forged spokes
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * Math.PI * 2 + Math.PI / 5
+      hole(Math.cos(a) * r * 0.6, Math.sin(a) * r * 0.6, r * 0.25, r * 0.17, a + Math.PI / 2)
+    }
+  } else if (model === 'dieppe') {
+    // eight round windows
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2
+      hole(Math.cos(a) * r * 0.62, Math.sin(a) * r * 0.62, r * 0.15, r * 0.15, 0)
+    }
+  } else {
+    // cross-spoke: twenty narrow slots in two rings
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * Math.PI * 2
+      hole(Math.cos(a) * r * 0.7, Math.sin(a) * r * 0.7, r * 0.16, r * 0.045, a + 0.5)
+      hole(Math.cos(a + Math.PI / 10) * r * 0.45, Math.sin(a + Math.PI / 10) * r * 0.45, r * 0.1, r * 0.04, a - 0.5)
+    }
+  }
+  return new THREE.ExtrudeGeometry(sh, { depth: 0.018, bevelEnabled: true, bevelSize: 0.006, bevelThickness: 0.006, bevelSegments: 2, curveSegments: 32 })
+}
 
 function tyreGeometry(r: number, w: number): THREE.BufferGeometry {
   const h = w / 2
@@ -613,17 +696,19 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   zone = 'body'
   details(addPart, D, at)
   const livery = classicLivery(team, model)
-  const light = new THREE.MeshStandardMaterial({ color: 0x400000, emissive: 0xff2020, emissiveIntensity: 0.4 })
+  const lens = lensTexture(false)
+  const tailLens = lensTexture(true)
+  const light = new THREE.MeshStandardMaterial({ map: tailLens, color: 0xffffff, emissive: 0xff2020, emissiveMap: tailLens, emissiveIntensity: 0.4, roughness: 0.15 })
   const paintOpts = { roughness: 0.26, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.04 }
   const mats: Record<Part, THREE.Material> = {
     paint: new THREE.MeshPhysicalMaterial({ map: livery, ...paintOpts }),
     plain: new THREE.MeshPhysicalMaterial({ color: team.color, ...paintOpts }),
     stripe: new THREE.MeshPhysicalMaterial({ color: team.color2, roughness: 0.3, clearcoat: 1 }),
     decal: new THREE.MeshStandardMaterial({ map: stickerTexture(team), transparent: true, roughness: 0.4, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }),
-    glass: new THREE.MeshPhysicalMaterial({ color: 0x1a2630, roughness: 0.03, metalness: 0.2, transparent: true, opacity: 0.5, depthWrite: false, clearcoat: 1, envMapIntensity: 1.4 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: 0x0c1218, roughness: 0.02, metalness: 0.45, transparent: true, opacity: 0.62, depthWrite: false, clearcoat: 1, envMapIntensity: 2.2 }),
     chrome: sh.metal,
     black: sh.black,
-    lamp: new THREE.MeshStandardMaterial({ color: 0xfff6e0, emissive: 0xfff1cc, emissiveIntensity: 0.35, roughness: 0.1 }),
+    lamp: new THREE.MeshPhysicalMaterial({ map: lens, color: 0xffffff, emissive: 0xfff1cc, emissiveMap: lens, emissiveIntensity: 0.35, roughness: 0.05, clearcoat: 1 }),
     amber: new THREE.MeshStandardMaterial({ color: 0xffa020, emissive: 0x6a3a00, roughness: 0.2 }),
     tail: light,
     helmet: new THREE.MeshPhysicalMaterial({ color: team.color2, roughness: 0.25, clearcoat: 1 }),
@@ -631,8 +716,11 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
     cockpit: sh.black,
     shoulders: new THREE.MeshStandardMaterial({ color: team.color2, roughness: 0.7 }),
   }
+  // the paint darkens low down, towards the sills and underneath
+  groundShade(mats.paint, D.sill - 0.02, D.sill + 0.32)
+  groundShade(mats.plain, D.sill - 0.02, D.sill + 0.32)
   const owned: (THREE.Material | THREE.Texture | THREE.BufferGeometry)[] = [
-    livery, mats.paint, mats.plain, mats.decal, (mats.decal as THREE.MeshStandardMaterial).map!, mats.stripe, mats.glass, mats.lamp, mats.amber, light, mats.helmet, mats.interior, mats.shoulders,
+    lens, tailLens, livery, mats.paint, mats.plain, mats.decal, (mats.decal as THREE.MeshStandardMaterial).map!, mats.stripe, mats.glass, mats.lamp, mats.amber, light, mats.helmet, mats.interior, mats.shoulders,
   ]
   const hideInCockpit: THREE.Mesh[] = []
   for (const [k, list] of parts) {
@@ -660,6 +748,10 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
     body.add(g)
     return g
   }
+  const shade = contactShadow(D.nose - D.tail + 0.5, D.trackF * 2 + 0.6)
+  shade.position.x = (D.nose + D.tail) / 2
+  root.add(shade)
+  owned.push(shade.geometry, shade.material as THREE.Material)
   const front = piece('fw', D.nose - 0.1, 0.3)
   const rear = piece('rw', D.tail + 0.15, 0.4)
   // racing roundels on the doors and the bonnet
@@ -683,14 +775,27 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   hood.scale.setScalar(0.75)
   body.add(hood)
 
-  // wheels: period alloys, a tyre with a rounded sidewall
-  const wt = wheelTexture(model)
-  const wm = new THREE.MeshStandardMaterial({ map: wt, roughness: 0.3, metalness: 0.7 })
+  // wheels: period alloys in 3D (spokes and windows, a polished lip, the centre cap), a dark barrel,
+  // the brake disc and its caliper behind (the caliper stays put as the wheel turns), a tyre with a rounded sidewall
+  const rimR = D.r * 0.6
+  const face = rimFace(model, rimR)
+  const finish = model === 'stoccarda'
+    ? new THREE.MeshStandardMaterial({ color: 0xd9dde1, roughness: 0.18, metalness: 0.95 })
+    : model === 'dieppe'
+      ? new THREE.MeshStandardMaterial({ color: 0xb7bcc2, roughness: 0.4, metalness: 0.8 })
+      : new THREE.MeshStandardMaterial({ color: 0xc9c2a8, roughness: 0.3, metalness: 0.9 })
+  const barrelM = new THREE.MeshStandardMaterial({ color: 0x18191b, roughness: 0.7, metalness: 0.3, side: THREE.DoubleSide })
+  const discM = new THREE.MeshStandardMaterial({ color: 0x5a5c60, roughness: 0.45, metalness: 0.85 })
+  const caliperM = new THREE.MeshStandardMaterial({ color: model === 'bavaria' ? 0x1f5fd0 : 0xc8161d, roughness: 0.4, metalness: 0.3 })
   const tF = tyreGeometry(D.r, D.wF)
   const tR = tyreGeometry(D.r, D.wR)
-  const disc = new THREE.CircleGeometry(D.r * 0.6, 28)
-  const lip = new THREE.TorusGeometry(D.r * 0.6, 0.012, 6, 28)
-  owned.push(wt, wm, tF, tR, disc, lip)
+  const lip = new THREE.TorusGeometry(rimR, 0.011, 8, 40)
+  const cap = new THREE.CylinderGeometry(rimR * 0.2, rimR * 0.22, 0.03, 20).rotateX(Math.PI / 2)
+  const nuts = new THREE.CylinderGeometry(0.008, 0.008, 0.02, 6).rotateX(Math.PI / 2)
+  const barrel = new THREE.CylinderGeometry(rimR - 0.004, rimR - 0.004, 1, 28, 1, true).rotateX(Math.PI / 2)
+  const disc = new THREE.CylinderGeometry(rimR * 0.82, rimR * 0.82, 0.022, 32).rotateX(Math.PI / 2)
+  const caliper = new THREE.BoxGeometry(0.09, 0.07, 0.06)
+  owned.push(face, finish, barrelM, discM, caliperM, tF, tR, lip, cap, nuts, barrel, disc, caliper)
   const wheels: CarModel['wheels'] = []
   for (const [x, z, isFront] of [[D.front, D.trackF, true], [D.front, -D.trackF, true], [D.rear, D.trackR, false], [D.rear, -D.trackR, false]] as [number, number, boolean][]) {
     const pivot = new THREE.Group()
@@ -701,15 +806,33 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
     tyre.castShadow = true
     spin.add(tyre)
     const w = isFront ? D.wF : D.wR
-    for (const side of [1, -1]) {
-      const face = new THREE.Mesh(disc, wm)
-      face.position.z = (w / 2 - 0.025) * side
-      if (side < 0) face.rotation.y = Math.PI
-      spin.add(face)
-      const rim = new THREE.Mesh(lip, sh.metal)
-      rim.position.z = (w / 2 - 0.02) * side
-      spin.add(rim)
+    const out = Math.sign(z)
+    const f = new THREE.Mesh(face, finish)
+    f.position.z = (w / 2 - 0.045) * out
+    if (out < 0) f.rotation.y = Math.PI
+    spin.add(f)
+    const l = new THREE.Mesh(lip, finish)
+    l.position.z = (w / 2 - 0.012) * out
+    spin.add(l)
+    const c = new THREE.Mesh(cap, finish)
+    c.position.z = (w / 2 - 0.02) * out
+    spin.add(c)
+    for (let k = 0; k < 5; k++) {
+      const a2 = (k / 5) * Math.PI * 2
+      const n = new THREE.Mesh(nuts, sh.metal)
+      n.position.set(Math.cos(a2) * rimR * 0.3, Math.sin(a2) * rimR * 0.3, (w / 2 - 0.022) * out)
+      spin.add(n)
     }
+    const b = new THREE.Mesh(barrel, barrelM)
+    b.scale.z = w * 0.9
+    spin.add(b)
+    const d = new THREE.Mesh(disc, discM)
+    d.position.z = (w / 2 - 0.1) * out
+    spin.add(d)
+    // the caliper grips the disc at the back of the wheel and does not turn with it
+    const cl = new THREE.Mesh(caliper, caliperM)
+    cl.position.set(-rimR * 0.62 * Math.sign(x), rimR * 0.35, (w / 2 - 0.1) * out)
+    pivot.add(cl)
     root.add(pivot)
     wheels.push({ pivot, spin, tyre, front: isFront, base: pivot.position.clone() })
   }
