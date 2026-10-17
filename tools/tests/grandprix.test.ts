@@ -8,6 +8,8 @@ import assert from 'node:assert/strict'
 import { TRACKS, buildTrack, locate, pointAt, sampleAt, surfaceAt, type Track } from '../../src/apps/minigames/f1Track.ts'
 import { CarBody, speedProfile, steerLock, tyreGrip, newTyres } from '../../src/apps/minigames/f1Physics.ts'
 import { Session, TEAMS, setRaceSeries } from '../../src/apps/minigames/f1Race.ts'
+import { EngineDSP, ENGINES, type EngineKind } from '../../src/apps/minigames/f1EngineDSP.ts'
+import { engineOf, workletSource } from '../../src/apps/minigames/f1Audio.ts'
 
 const built = TRACKS.map((d) => {
   const t = buildTrack(d)
@@ -177,4 +179,46 @@ test('damage: a crash into the wall breaks the front wing and costs grip; with d
     safe.step(1 / 60)
   }
   assert.equal(safe.player.damage.fw + safe.player.damage.rw + safe.player.damage.susp, 0)
+})
+
+test('engine sound: every engine fires, gets louder with the throttle, rises in pitch with the revs, and ships to the worklet', () => {
+  const sr = 48000
+  const render = (kind: EngineKind, rpm: number, throttle: number) => {
+    const d = new EngineDSP(sr)
+    d.configure(ENGINES[kind])
+    d.idle = kind === 'v10' ? 4200 : 2600
+    d.redline = kind === 'v10' ? 12400 : 7900
+    const out = new Float32Array(128 * 188)
+    const blk = new Float32Array(128)
+    for (let i = 0; i < out.length; i += 128) {
+      d.process(blk, rpm, rpm, throttle)
+      out.set(blk, i)
+    }
+    return out.subarray(128 * 94)
+  }
+  const rms = (x: Float32Array) => Math.sqrt(x.reduce((a, v) => a + v * v, 0) / x.length)
+  // zero crossings of the low-passed signal: a rough measure of the pitch
+  const pitch = (x: Float32Array) => {
+    let lp = 0
+    let prev = 0
+    let n = 0
+    for (const v of x) {
+      lp += (v - lp) * 0.08
+      if ((lp > 0) !== (prev > 0)) n++
+      prev = lp
+    }
+    return n
+  }
+  for (const kind of Object.keys(ENGINES) as EngineKind[]) {
+    const idle = render(kind, kind === 'v10' ? 4200 : 2600, 0)
+    const full = render(kind, kind === 'v10' ? 11000 : 7000, 1)
+    assert.ok(full.every((v) => Number.isFinite(v) && Math.abs(v) < 1), `${kind}: finite, no clipping`)
+    assert.ok(rms(idle) > 0.005, `${kind}: idles`)
+    assert.ok(rms(full) > rms(idle) * 2, `${kind}: louder on full throttle`)
+    assert.ok(pitch(full) > pitch(idle), `${kind}: higher with the revs`)
+  }
+  assert.equal(engineOf('modern'), 'v10')
+  assert.deepEqual(['stoccarda', 'dieppe', 'bavaria'].map((m) => engineOf('classic', m)), ['flat6', 'inline4', 'inline6'])
+  // the worklet module is valid JavaScript (compiled, not run: there is no AudioWorkletGlobalScope here)
+  assert.doesNotThrow(() => new Function(workletSource()))
 })

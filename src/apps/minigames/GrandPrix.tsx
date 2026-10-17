@@ -5,7 +5,7 @@
 // canvas, the HUD, the menu and result cards, scores and the AI tools.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CircleHelp, Flag, Maximize, Pause, Play, RotateCcw, VolumeX } from 'lucide-react'
+import { CircleHelp, Flag, Maximize, Music, Pause, Play, RotateCcw, VolumeX } from 'lucide-react'
 import type { AppProps } from '@/os'
 import { useWindows } from '@/os/windows'
 import { useAppTools } from '@/os/ai/appTools'
@@ -91,8 +91,17 @@ export default function GrandPrix({ win }: AppProps) {
   const [hud, setHud] = useState<GPHud | null>(null)
   const [error, setError] = useState('')
   const [settings, setSettings] = useState<GPSettings>(() => ({
-    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true, ...loadSettings(),
+    track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: lastName() || DEFAULT_NAME, series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true, music: true, ...loadSettings(),
   }))
+  /** Music on or off: remembered at once, and it needs the sound on to be heard. */
+  const setMusic = useCallback((on: boolean) => {
+    setSettings((s) => {
+      const next = { ...s, music: on }
+      saveSettings(next)
+      return next
+    })
+    if (on && !useSound.getState().on) setSoundOn(true)
+  }, [])
   const [startTyre, setStartTyre] = useState<Compound>('medium')
   const [results, setResults] = useState<Classified[]>([])
   const [score, setScore] = useState<RaceScore | null>(null)
@@ -278,6 +287,12 @@ export default function GrandPrix({ win }: AppProps) {
     }
   }, [pause, resume, win.id])
 
+  // the music switch works at once, in the menus and while driving
+  useEffect(() => {
+    const e = engineRef.current
+    if (e) e.settings.music = settings.music !== false
+  }, [phase, settings.music])
+
   // behind the menu, the demo race shows the chosen cars on the chosen circuit
   useEffect(() => {
     const e = engineRef.current
@@ -309,12 +324,13 @@ export default function GrandPrix({ win }: AppProps) {
           '-',
           { label: 'Change Camera (C)', disabled: phase !== 'playing' && phase !== 'paused', onClick: () => engineRef.current?.cycleCamera() },
           { label: 'Sound', icon: VolumeX, checked: soundOn, onClick: () => setSoundOn(!useSound.getState().on) },
+          { label: 'Music', icon: Music, checked: settings.music !== false, onClick: () => setMusic(settings.music === false) },
           { label: 'Full Screen', icon: Maximize, checked: fullscreen, onClick: () => toggleGameFullscreen(rootRef.current) },
         ],
       },
       { label: 'Help', items: [{ label: `How to Play ${NAME}`, icon: CircleHelp, onClick: () => pause() }] },
     ])
-  }, [win, phase, stage, soundOn, fullscreen, toMenu, pause, resume])
+  }, [win, phase, stage, soundOn, fullscreen, toMenu, pause, resume, settings.music, setMusic])
 
   // ---- AI tools (specs in src/os/ai/manifests/games.ts)
 
@@ -389,7 +405,11 @@ export default function GrandPrix({ win }: AppProps) {
   const e = engineRef.current
 
   return (
-    <div ref={rootRef} className="gp-app" tabIndex={-1} onContextMenu={(ev) => ev.preventDefault()} onMouseDown={() => phase === 'playing' && focusGame()}>
+    <div ref={rootRef} className="gp-app" tabIndex={-1} onContextMenu={(ev) => ev.preventDefault()} onMouseDown={() => {
+        // the first click starts the sound (browsers wait for a gesture), so the menu has its music
+        unlockAudio()
+        if (phase === 'playing') focusGame()
+      }}>
       <canvas ref={canvasRef} className="gp-canvas" />
 
       {live && hud && <Hud hud={hud} classic={e?.settings.series === 'classic'} mapPath={e?.mapPath ?? ''} box={e?.mapBox ?? { x: 0, z: 0, w: 1, h: 1 }} />}
@@ -465,6 +485,10 @@ export default function GrandPrix({ win }: AppProps) {
               <label>
                 <span>Damage</span>
                 <Seg value={settings.damage !== false} options={[true, false]} label={(v) => (v ? 'On: crashes break wings' : 'Off')} onChange={(v) => set('damage', v)} />
+              </label>
+              <label>
+                <span>Music</span>
+                <Seg value={settings.music !== false} options={[true, false]} label={(v) => (v ? 'On' : 'Off')} onChange={(v) => setMusic(v)} />
               </label>
             </div>
             <div className="gp-buttons">

@@ -12,6 +12,79 @@
 // wind, kerbs and the crowd come on top.
 
 import type { Series } from './f1Physics.ts'
+import { EngineDSP, ENGINES, type EngineKind } from './f1EngineDSP.ts'
+
+export type { EngineKind }
+
+/** Which engine a car has: the single-seaters a V10, each coupé its own. */
+export function engineOf(series: Series, model?: string): EngineKind {
+  if (series === 'modern') return 'v10'
+  return model === 'dieppe' ? 'inline4' : model === 'bavaria' ? 'inline6' : 'flat6'
+}
+
+// The engines run in an AudioWorklet (the source of EngineDSP, shipped as a module), loaded once per audio context.
+const worklets = new WeakMap<BaseAudioContext, Promise<boolean>>()
+
+/** The worklet module's source: EngineDSP's own code, the engine table and the processor. */
+export function workletSource(): string {
+  return `const EngineDSP = (${EngineDSP.toString()});
+const ENGINES = ${JSON.stringify(ENGINES)};
+class KherveEngine extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [{ name: 'rpm', defaultValue: 1000, minValue: 0, maxValue: 30000, automationRate: 'k-rate' }, { name: 'throttle', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'k-rate' }]
+  }
+  constructor() {
+    super()
+    this.d = new EngineDSP(sampleRate)
+    this.d.seed = (Math.random() * 4294967295) >>> 0 || 1
+    this.d.configure(ENGINES.v10)
+    this.last = 1000
+    this.alive = true
+    this.port.onmessage = (e) => {
+      const m = e.data
+      if (m.engine) this.d.configure(ENGINES[m.engine])
+      if (m.idle) this.d.idle = m.idle
+      if (m.redline) this.d.redline = m.redline
+      if (m.cut) this.d.cut(m.cut)
+      if (m.crackle) this.d.crackle = m.crackle
+      if (m.stop) this.alive = false
+    }
+  }
+  process(inputs, outputs, params) {
+    const out = outputs[0][0]
+    const rpm = params.rpm[0]
+    this.d.process(out, this.last, rpm, params.throttle[0])
+    this.last = rpm
+    return this.alive
+  }
+}
+registerProcessor('kherve-engine', KherveEngine)
+`
+}
+
+function loadWorklet(ac: AudioContext): Promise<boolean> {
+  let p = worklets.get(ac)
+  if (!p) {
+    const src = workletSource()
+    const url = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }))
+    p = (ac.audioWorklet ? ac.audioWorklet.addModule(url) : Promise.reject(new Error('no AudioWorklet')))
+      .then(() => true)
+      .catch(() => false)
+      .finally(() => URL.revokeObjectURL(url))
+    worklets.set(ac, p)
+  }
+  return p
+}
+
+interface Voice {
+  readonly out: GainNode
+  drive(rpm: number, throttle: number, vol: number, open: number, bass: number): void
+  cut(depth: number, ms: number): void
+  setWave(series: Series): void
+  setEngine(kind: EngineKind, idle: number, redline: number): void
+  crackle(seconds: number): void
+  stop(): void
+}
 
 export type Listener = 'cockpit' | 'chase' | 'far'
 
@@ -28,6 +101,7 @@ export interface PlayerSound {
   listener: Listener
   /** The engine runs (not parked in the garage). */
   on: boolean
+  engine: EngineKind
 }
 
 /** Harmonic weights of the engine note: which orders of the firing frequency are loud. */
@@ -63,7 +137,7 @@ function distortion(ac: AudioContext, k: number): WaveShaperNode {
 }
 
 /** One engine: note, half-order, rasp, exhaust roar, through a tone filter. */
-class EngineVoice {
+class EngineVoice implements Voice {
   private ac: AudioContext
   private note: OscillatorNode
   private half: OscillatorNode
@@ -135,6 +209,10 @@ class EngineVoice {
     this.note.setPeriodicWave(this.ac.createPeriodicWave(h.real, h.imag))
   }
 
+  setEngine() {}
+
+  crackle() {}
+
   private set(p: AudioParam, v: number, tc = 0.03) {
     p.setTargetAtTime(v, this.ac.currentTime, tc)
   }
@@ -182,13 +260,86 @@ class EngineVoice {
   }
 }
 
+/** The real engine: cylinders firing into the exhausts (f1EngineDSP), then the listener's filter. */
+class WorkletVoice implements Voice {
+  private ac: AudioContext
+  private node: AudioWorkletNode
+  private rpm: AudioParam
+  private thr: AudioParam
+  private tone: BiquadFilterNode
+  private boom: BiquadFilterNode
+  readonly out: GainNode
+  private kind: EngineKind | null = null
+
+  constructor(ac: AudioContext, dest: AudioNode) {
+    this.ac = ac
+    this.node = new AudioWorkletNode(ac, 'kherve-engine', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1] })
+    this.rpm = this.node.parameters.get('rpm')!
+    this.thr = this.node.parameters.get('throttle')!
+    this.tone = ac.createBiquadFilter()
+    this.tone.type = 'lowpass'
+    this.tone.Q.value = 0.7
+    this.boom = ac.createBiquadFilter()
+    this.boom.type = 'lowshelf'
+    this.boom.frequency.value = 200
+    this.out = ac.createGain()
+    this.out.gain.value = 0
+    this.node.connect(this.tone).connect(this.boom).connect(this.out).connect(dest)
+  }
+
+  setWave() {}
+
+  setEngine(kind: EngineKind, idle: number, redline: number) {
+    if (kind === this.kind) return
+    this.kind = kind
+    this.node.port.postMessage({ engine: kind, idle, redline })
+  }
+
+  private set(p: AudioParam, v: number, tc = 0.03) {
+    p.setTargetAtTime(v, this.ac.currentTime, tc)
+  }
+
+  drive(rpm: number, throttle: number, vol: number, open: number, bass: number) {
+    this.set(this.rpm, Math.max(300, rpm), 0.012)
+    this.set(this.thr, throttle, 0.02)
+    this.set(this.tone.frequency, 500 + open * open * 15000, 0.05)
+    this.set(this.boom.gain, bass)
+    this.set(this.out.gain, vol * 1.6, 0.05)
+  }
+
+  /** A gear change: the ignition cut for a moment (and a small dip in the sound). */
+  cut(depth: number, ms: number) {
+    this.node.port.postMessage({ cut: ms })
+    const t = this.ac.currentTime
+    const g = this.out.gain
+    const v = g.value
+    g.cancelScheduledValues(t)
+    g.setValueAtTime(v, t)
+    g.linearRampToValueAtTime(v * (1 - depth * 0.4), t + 0.01)
+    g.linearRampToValueAtTime(v, t + ms / 1000)
+  }
+
+  crackle(seconds: number) {
+    this.node.port.postMessage({ crackle: seconds })
+  }
+
+  stop() {
+    this.node.port.postMessage({ stop: true })
+    this.node.disconnect()
+    this.out.disconnect()
+  }
+}
+
 export class CarAudio {
   readonly ac: AudioContext
   private dest: AudioNode
   private noise: AudioBuffer
   private series: Series
-  private me: EngineVoice
-  private rivals: EngineVoice[]
+  private me: Voice
+  private rivals: Voice[]
+  /** The cylinder-by-cylinder engines are running (else the simple oscillator voices while the worklet loads, or when there is none). */
+  private real = false
+  private stopped = false
   private extras: { osc: OscillatorNode; g: GainNode }[] = []
   private turbo: { osc: OscillatorNode; g: GainNode }
   private whine: { osc: OscillatorNode; g: GainNode }
@@ -219,6 +370,20 @@ export class CarAudio {
     }
     this.me = new EngineVoice(ac, dest, this.noise, series)
     this.rivals = [new EngineVoice(ac, dest, this.noise, series), new EngineVoice(ac, dest, this.noise, series)]
+    void loadWorklet(ac).then((ok) => {
+      if (!ok || this.stopped) return
+      try {
+        const me = new WorkletVoice(ac, dest)
+        const rivals = [new WorkletVoice(ac, dest), new WorkletVoice(ac, dest)]
+        this.me.stop()
+        for (const r of this.rivals) r.stop()
+        this.me = me
+        this.rivals = rivals
+        this.real = true
+      } catch {
+        // keep the simple voices
+      }
+    })
     const tonal = (type: OscillatorType) => {
       const o = ac.createOscillator()
       o.type = type
@@ -272,30 +437,32 @@ export class CarAudio {
     const open = s.listener === 'chase' ? 1 : s.listener === 'cockpit' ? 0.4 : 0.12
     const vol = !s.on ? 0 : s.listener === 'far' ? 0.05 : s.listener === 'cockpit' ? 0.19 : 0.15
     const revs = (s.rpm - s.idle) / Math.max(1, s.redline - s.idle)
+    this.me.setEngine(s.engine, s.idle, s.redline)
     this.me.drive(s.rpm, s.throttle, vol, open, s.listener === 'cockpit' ? 7 : 2)
     // gear changes: a cut in the note, and a clack from a coupé's dog box
     if (s.gear !== this.gear) {
       if (s.gear > this.gear && s.on) {
-        this.me.cut(modern ? 0.6 : 0.85, modern ? 45 : 110)
-        this.pop(modern ? 0.04 : 0.09, modern ? 3000 : 900, 0.025)
+        this.me.cut(modern ? 0.6 : 0.85, modern ? 40 : 110)
+        if (!this.real) this.pop(modern ? 0.04 : 0.09, modern ? 3000 : 900, 0.025)
       }
       this.gear = s.gear
     }
     // lifting at high revs: the exhaust pops and crackles for a moment (and the turbo blows off)
     if (s.on && this.lastThrottle > 0.6 && s.throttle < 0.15 && revs > 0.45) {
       this.crackle = modern ? 0.5 : 1.1
-      if (modern) this.pop(0.06, 5000, 0.12, 'highpass')
+      this.me.crackle(modern ? 0.7 : 1.6)
+      if (modern && !this.real) this.pop(0.06, 5000, 0.12, 'highpass')
     }
     this.lastThrottle = s.throttle
     if (this.crackle > 0) {
       this.crackle -= 1 / 60
-      if (s.throttle > 0.3) this.crackle = 0
+      if (s.throttle > 0.3 || this.real) this.crackle = 0
       else if (Math.random() < (modern ? 0.1 : 0.16)) this.pop((0.005 + Math.random() * 0.009) * (s.listener === 'far' ? 0.3 : 1), 600 + Math.random() * 1600, 0.04 + Math.random() * 0.05)
     }
     // the turbo's whistle and the hybrid's whine (modern), the gearbox's whine (classic)
     if (modern) {
       this.set(this.turbo.osc.frequency, 2400 + revs * 3600, 0.08)
-      this.set(this.turbo.g.gain, s.on ? 0.012 * s.throttle * revs * revs * (s.listener === 'far' ? 0.2 : 1) : 0, 0.1)
+      this.set(this.turbo.g.gain, s.on ? (this.real ? 0.003 : 0.012) * s.throttle * revs * revs * (s.listener === 'far' ? 0.2 : 1) : 0, 0.1)
       this.set(this.whine.osc.frequency, 280 + s.speed * 16, 0.05)
       this.set(this.whine.g.gain, s.on ? 0.006 * Math.min(1, s.speed / 30) : 0, 0.1)
     } else {
@@ -310,7 +477,7 @@ export class CarAudio {
   }
 
   /** The two nearest other cars: revs, distance (m), speed towards the listener (m/s). */
-  others(cars: { rpm: number; dist: number; closing: number }[]) {
+  others(cars: { rpm: number; dist: number; closing: number; engine: EngineKind }[]) {
     this.rivals.forEach((v, k) => {
       const c = cars[k]
       if (!c) {
@@ -318,6 +485,7 @@ export class CarAudio {
         return
       }
       const doppler = 1 / (1 - Math.max(-0.3, Math.min(0.3, c.closing / 343)))
+      v.setEngine(c.engine, this.series === 'modern' ? 4200 : 2600, this.series === 'modern' ? 12400 : 7900)
       const vol = Math.min(0.22, 0.32 / Math.pow(1 + c.dist / 9, 1.35))
       v.drive(c.rpm * doppler, 0.8, vol, Math.max(0.05, 1 / (1 + c.dist / 35)), 0)
     })
@@ -360,6 +528,7 @@ export class CarAudio {
   }
 
   stop() {
+    this.stopped = true
     this.me.stop()
     for (const r of this.rivals) r.stop()
     for (const s of this.srcs) {

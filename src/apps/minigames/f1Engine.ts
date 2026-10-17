@@ -10,7 +10,8 @@ import * as THREE from 'three'
 import { buildTrack, inRange, locate, pointAt, trackDef, wrap, type Track, type TrackId } from './f1Track.ts'
 import { CAR, COMPOUNDS, newTyres, SERIES, speedProfile, steerLock, tyreGrip, type Compound, type Series } from './f1Physics.ts'
 import { Cockpit } from './f1Cockpit.ts'
-import { CarAudio } from './f1Audio.ts'
+import { CarAudio, engineOf } from './f1Audio.ts'
+import { RaceMusic } from './f1Music.ts'
 import { DIFFICULTY, Session, TEAMS, fmtLap, setRaceSeries, teamsOf, type Classified, type ClassicModel, type Difficulty, type RaceCar, type SessionEvent } from './f1Race.ts'
 import { buildClassic, classicCams } from './f1Classics.ts'
 import { buildCar, buildCarGeometry, sharedMaterials, teamLook, type CarGeometry, type CarModel, type Shared, type TeamLook } from './f1Models.ts'
@@ -36,6 +37,8 @@ export interface GPSettings {
   time: TimeOfDay
   /** Crashes break wings and suspension. */
   damage: boolean
+  /** The soundtrack plays (quieter while driving). */
+  music: boolean
 }
 
 export type Stage = 'menu' | 'qualifying' | 'qualiResults' | 'race' | 'raceResults'
@@ -127,7 +130,7 @@ export class GrandPrixEngine {
   readonly scene = new THREE.Scene()
   readonly camera = new THREE.PerspectiveCamera(62, 1, 0.1, 14000)
   stage: Stage = 'menu'
-  settings: GPSettings = { track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: 'Player', series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true }
+  settings: GPSettings = { track: 'park', laps: 5, quali: 6, difficulty: 'medium', assists: true, name: 'Player', series: 'modern', classic: 'stoccarda', team: 0, time: 'day', damage: true, music: true }
   track!: Track
   profile!: { v: Float32Array; lapTime: number }
   world: World | null = null
@@ -168,6 +171,9 @@ export class GrandPrixEngine {
   private sparkMat: THREE.SpriteMaterial
   private lastLights = 0
   private audio: CarAudio | null = null
+  private music: RaceMusic | null = null
+  /** Seconds the music stays down (the podium's fanfare). */
+  private musicDuck = 0
   private lastHit = 0
   private bodyPitch = new Map<number, { p: number; r: number; v: number }>()
 
@@ -257,6 +263,7 @@ export class GrandPrixEngine {
   /** The camera turns slowly round the player's car for a while: the chosen car in the menu, the winner after the race. */
   celebrate(seconds: number) {
     this.previewT = seconds
+    this.musicDuck = 9
   }
 
   /** Switch between the modern single-seaters and the classic coupés, and which team's car the player drives. */
@@ -474,6 +481,7 @@ export class GrandPrixEngine {
     if (mode === 'still') {
       this.render()
       this.audio?.quiet()
+      this.soundtrack('still', 0)
       return
     }
     this.time += dt
@@ -523,6 +531,7 @@ export class GrandPrixEngine {
     }
     this.models[0]?.setCockpit?.(inside)
     this.sound(s, !!live, dt)
+    this.soundtrack(live ? 'live' : 'attract', dt)
     this.render()
   }
 
@@ -898,7 +907,7 @@ export class GrandPrixEngine {
         const dist = Math.max(1, Math.hypot(dx, c.y - cam.y, dz))
         // speed towards the listener (positive: coming closer)
         const closing = -(Math.cos(c.h) * c.speed * dx + Math.sin(c.h) * c.speed * dz) / dist
-        return { rpm: c.rpm, dist, closing }
+        return { rpm: c.rpm, dist, closing, engine: engineOf(SERIES, TEAMS[c.team]?.model) }
       })
       .sort((p, q) => p.dist - q.dist)
       .slice(0, 2)
@@ -914,6 +923,7 @@ export class GrandPrixEngine {
         kerb: p.surface === 'kerb' && p.speed > 8 ? 1 : p.surface === 'gravel' && p.speed > 3 ? 0.8 : 0,
         listener: this.cam === 'cockpit' || this.cam === 'tcam' ? 'cockpit' : this.cam === 'tv' ? 'far' : 'chase',
         on: p.pit !== 'garage' && p.pit !== 'toGarage',
+        engine: engineOf(SERIES, TEAMS[0].model),
       })
       if (p.hit > 0.15 && this.time - this.lastHit > 0.4) {
         this.lastHit = this.time
@@ -924,6 +934,26 @@ export class GrandPrixEngine {
     void dt
   }
 
+
+  /** The music: full in the menus and on the results, down under the engines while driving, off when switched off. */
+  private soundtrack(mode: 'live' | 'attract' | 'still', dt: number) {
+    const out = audioOut()
+    if (!out) {
+      this.music?.stop()
+      this.music = null
+      return
+    }
+    if (!this.music || this.music.ac !== out.ac) {
+      this.music?.stop()
+      this.music = new RaceMusic(out.ac, out.dest)
+    }
+    this.musicDuck = Math.max(0, this.musicDuck - dt)
+    const m = this.music
+    m.setStyle(SERIES === 'classic' ? 'classic' : 'modern')
+    const level = this.settings.music === false || this.musicDuck > 0 ? 0 : mode === 'live' ? 0.42 : mode === 'still' ? 0.5 : 1
+    m.setLevel(level, this.musicDuck > 0 ? 0.25 : 0.8)
+    m.update()
+  }
 
   // ---------------------------------------------------------------- the HUD
 
@@ -1012,6 +1042,8 @@ export class GrandPrixEngine {
 
   dispose() {
     this.audio?.stop()
+    this.music?.stop()
+    this.music = null
     this.cockpit?.dispose()
     this.audio = null
     if (this.world) {
