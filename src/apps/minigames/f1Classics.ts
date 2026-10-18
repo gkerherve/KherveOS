@@ -478,7 +478,8 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
       for (let i = 1; i < aStations.length; i++) {
         const a = aStations[i - 1].pts
         const b = aStations[i].pts
-        const ia = a.length - 1
+        // on the outer corner, where the windscreen meets the side (not out on the glass)
+        const ia = 1
         add('chrome', rod(v3(aStations[i - 1].x, a[ia][1] + 0.003, a[ia][0]), v3(aStations[i].x, b[ia][1] + 0.003, b[ia][0]), 0.007, 5))
         const ja = 0
         add('black', rod(v3(aStations[i - 1].x, a[ja][1], a[ja][0]), v3(aStations[i].x, b[ja][1], b[ja][0]), 0.006, 5))
