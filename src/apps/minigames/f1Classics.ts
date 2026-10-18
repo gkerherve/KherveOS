@@ -70,6 +70,8 @@ interface Station {
   ys: number
   yc: number
   tumble: number
+  /** The side runs straight up to the shoulder (flat glass) instead of curving in. */
+  flat?: boolean
   k: number
 }
 
@@ -83,7 +85,7 @@ function halfSection(s: Station, nSide = 9, nTop = 11): { pts: [number, number][
   const top = s.ys - 0.035
   for (let i = 0; i <= nSide; i++) {
     const t = i / nSide
-    pts.push([s.hw * (1 - s.tumble * t * t), yb + CORNER + t * Math.max(0.01, top - yb - CORNER)])
+    pts.push([s.hw * (1 - s.tumble * (s.flat ? t : t * t)), yb + CORNER + t * Math.max(0.01, top - yb - CORNER)])
   }
   const zs = s.hw * (1 - s.tumble) - 0.014
   pts.push([zs, s.ys - 0.006])
@@ -192,7 +194,7 @@ interface Design {
   archF: number
   archR: number
   /** The glasshouse: from the windscreen's foot (x0) to where the rear glass meets the deck (x3). */
-  cabin: { x0: number; x3: number; roof: KF; hw: KF; hwRoof: number; roofFrom: number; roofTo: number; b?: number; c: number; /** Where the rear window ends: behind it the slope is the painted engine lid (a rear-engined fastback). */ glassTo?: number }
+  cabin: { x0: number; x3: number; roof: KF; hw: KF; hwRoof: number; roofFrom: number; roofTo: number; b?: number; c: number; /** Where the rear window ends: behind it the slope is the painted engine lid (a rear-engined fastback). */ glassTo?: number; /** Flat side glass in frames, as in the early 1970s (not a bulging canopy). */ flatGlass?: boolean }
   eye: [number, number, number]
   roofCam: [number, number, number]
   /** Doors (front and rear edges), exhaust pipes (z). */
@@ -258,13 +260,13 @@ const DESIGNS: Record<ClassicModel, Design> = {
   // the bonnet low between upright wings and headlamps, wide rear hips, a ducktail
   stoccarda: {
     nose: 1.97, tail: -2.18, front: 1.135, rear: -1.135, r: 0.315, wF: 0.19, wR: 0.225, trackF: 0.685, trackR: 0.7, sill: 0.2, tumble: 0.12,
-    hw: [[1.97, 0.5], [1.9, 0.66], [1.75, 0.76], [1.5, 0.8], [1.15, 0.81], [0.7, 0.795], [0, 0.785], [-0.7, 0.79], [-1.0, 0.815], [-1.25, 0.83], [-1.6, 0.815], [-1.95, 0.74], [-2.12, 0.62], [-2.18, 0.5]],
+    hw: [[1.97, 0.5], [1.9, 0.66], [1.75, 0.76], [1.5, 0.8], [1.15, 0.81], [0.7, 0.795], [0, 0.785], [-0.7, 0.79], [-1.0, 0.815], [-1.25, 0.83], [-1.6, 0.815], [-1.95, 0.76], [-2.12, 0.71], [-2.18, 0.68]],
     ys: [[1.97, 0.44], [1.9, 0.56], [1.75, 0.7], [1.58, 0.79], [1.3, 0.785], [1.0, 0.775], [0.7, 0.775], [0, 0.8], [-0.7, 0.81], [-1.1, 0.84], [-1.35, 0.845], [-1.75, 0.8], [-2.0, 0.73], [-2.18, 0.62]],
     yc: [[1.97, 0.44], [1.9, 0.5], [1.7, 0.58], [1.4, 0.65], [1.0, 0.72], [0.7, 0.78], [0, 0.8], [-0.7, 0.81], [-1.1, 0.83], [-1.5, 0.82], [-1.85, 0.79], [-2.06, 0.77], [-2.18, 0.7]],
     lift: [[1.97, 0.34], [1.85, 0.22], [1.7, 0.2], [-1.98, 0.2], [-2.1, 0.27], [-2.18, 0.36]],
     archF: 0.37, archR: 0.38,
     cabin: {
-      x0: 0.7, x3: -1.95, roofFrom: 0.12, roofTo: -0.62, b: -0.62, c: -1.15, hwRoof: 0.555, glassTo: -1.5,
+      x0: 0.7, x3: -1.95, roofFrom: 0.12, roofTo: -0.62, b: -0.62, c: -1.15, hwRoof: 0.555, glassTo: -1.5, flatGlass: true,
       roof: [[0.7, 0.8], [0.45, 1.06], [0.15, 1.27], [-0.2, 1.315], [-0.6, 1.3], [-1.0, 1.21], [-1.4, 1.06], [-1.75, 0.9], [-1.95, 0.81]],
       hw: [[0.7, 0.7], [0, 0.72], [-1.0, 0.72], [-1.95, 0.62]],
     },
@@ -280,7 +282,7 @@ const DESIGNS: Record<ClassicModel, Design> = {
         add('chrome', rod(v3(0.5, at.belt(0.5), at.side(0.5, at.belt(0.5)) * sd), v3(0.47, at.belt(0.5) + 0.07, (at.side(0.5, at.belt(0.5)) + 0.07) * sd), 0.012))
         add('chrome', new THREE.SphereGeometry(0.055, 12, 8).scale(0.6, 1, 1).translate(0.47, at.belt(0.5) + 0.1, (at.side(0.5, at.belt(0.5)) + 0.09) * sd))
         // the engine lid's louvres and the rear lamps
-        add('tail', box(0.02, 0.07, 0.36, -2.165, 0.55, 0.42 * sd))
+        add('tail', box(0.03, 0.09, 0.3, -2.185, 0.55, 0.47 * sd))
       }
       add('chrome', new THREE.CylinderGeometry(0.05, 0.05, 0.012, 16).translate(1.3, at.ys(1.3) + 0.004, -0.6))
       // the engine lid's cooling grille on the slope: black slats across the car in a chrome frame
@@ -302,7 +304,11 @@ const DESIGNS: Record<ClassicModel, Design> = {
       zone('rw')
       add('plain', box(0.12, 0.13, 1.4, -2.14, 0.34, 0))
       add('black', box(0.02, 0.03, 1.36, -2.205, 0.36, 0))
-      add('tail', box(0.012, 0.04, 0.5, -2.172, 0.55, 0))
+      // the full-width red reflector band between the tail lamps, and the number plate in the bumper with its light
+      add('tail', box(0.012, 0.05, 1.18, -2.18, 0.55, 0))
+      add('black', box(0.03, 0.135, 0.56, -2.2, 0.34, 0))
+      add('lamp', box(0.006, 0.11, 0.52, -2.218, 0.34, 0))
+      add('chrome', box(0.04, 0.02, 0.16, -2.205, 0.42, 0))
       // the ducktail: a lip along the top of the engine lid, black rubber edge
       add('plain', (() => {
         const sh = new THREE.Shape()
@@ -422,7 +428,7 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
   const cab = (x: number): Station => {
     const yb = at.belt(x) - 0.04
     const yc = Math.max(at.roof(x), yb + 0.05)
-    return { x, hw: at.cabinHw(x), yb, ys: Math.max(yc - 0.05, yb + 0.03), yc, tumble: 1 - C.hwRoof / at.cabinHw(x), k: 2.2 }
+    return { x, hw: at.cabinHw(x), yb, ys: Math.max(yc - 0.05, yb + 0.03), yc, tumble: 1 - C.hwRoof / at.cabinHw(x), k: 2.2, flat: C.flatGlass }
   }
   const cs: Station[] = []
   const CN = Math.round((C.x0 - C.x3) / 0.03)
@@ -431,6 +437,27 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
   add('glass', skin(cs.filter((s) => s.x >= glassTo - 0.031).map((s) => ({ x: s.x, pts: ring(s) })), true))
   // a rear-engined fastback: below the rear window the slope is the painted engine lid
   if (C.glassTo !== undefined) add('paint', skin(cs.filter((s) => s.x <= glassTo + 0.031).map((s) => ({ x: s.x, pts: ring(s) })), true))
+  // framed flat side windows: the rain gutter along the roof edge, the chrome sill of the window, and the
+  // divider between the door glass and the fixed rear side window
+  if (C.flatGlass) {
+    const sideAt = (st: Station, sd: number) => {
+      const { pts, shoulder } = halfSection(st)
+      return { low: v3(st.x, pts[3][1], (pts[3][0] + 0.006) * sd), high: v3(st.x, pts[shoulder][1] + 0.01, (pts[shoulder][0] + 0.012) * sd) }
+    }
+    const rail = cs.filter((st) => st.x <= C.x0 - 0.06 && st.x >= C.c + 0.05)
+    for (const sd of [1, -1]) {
+      for (let i = 1; i < rail.length; i += 2) {
+        const a = sideAt(rail[i - 1], sd)
+        const b = sideAt(rail[Math.min(rail.length - 1, i + 1)], sd)
+        add('chrome', rod(a.high, b.high, 0.011, 6))
+        add('chrome', rod(a.low, b.low, 0.008, 6))
+      }
+      const bx = cs.reduce((p, st) => (Math.abs(st.x - D.door[1]) < Math.abs(p.x - D.door[1]) ? st : p))
+      const d = sideAt(bx, sd)
+      add('black', rod(d.low, d.high, 0.022, 6))
+      add('chrome', rod(d.low.clone().add(v3(0, 0, 0.012 * sd)), d.high.clone().add(v3(0, 0, 0.012 * sd)), 0.008, 6))
+    }
+  }
   // the painted roof, and the broad rear pillars down the sides of the rear glass
   add('paint', skin(cs.filter((s) => s.x <= C.roofFrom && s.x >= C.roofTo).map((s) => ({ x: s.x, pts: topStrip(s) })), false))
   for (const sd of [1, -1]) add('plain', skin(cs.filter((s) => s.x <= C.c).map((s) => ({ x: s.x, pts: sideStrip(s, sd) })), false))
@@ -782,8 +809,13 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   const dy = (at.belt(dx) + Math.max(D.sill, at.yb(dx))) / 2 + 0.02
   for (const sd of [1, -1]) {
     const d = new THREE.Mesh(rg, rm)
-    d.position.set(dx, dy, (at.side(dx, dy) + 0.006) * sd)
+    // the door bulges out below its middle: lean the roundel with the door and clear its widest point
+    const lean = Math.atan2(at.side(dx, dy - 0.1) - at.side(dx, dy + 0.1), 0.2)
+    let zMax = 0
+    for (let k = -4; k <= 4; k++) zMax = Math.max(zMax, at.side(dx, dy + k * 0.045) + Math.sin(lean) * k * 0.045)
+    d.position.set(dx, dy, (zMax + 0.008) * sd)
     if (sd < 0) d.rotation.y = Math.PI
+    d.rotation.x = -sd * lean
     body.add(d)
   }
   const hx = D.cabin.x0 + (D.nose - D.cabin.x0) * 0.42
