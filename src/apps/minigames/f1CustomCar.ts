@@ -66,7 +66,7 @@ export function buildCustomCar(model: ClassicModel, team: Team, num: number, sh:
     return x
   }
   const light = own(new THREE.MeshStandardMaterial({ color: 0x400000, emissive: 0xff2020, emissiveIntensity: 0.4 }))
-  const paint = own(new THREE.MeshPhysicalMaterial({ color: team.color, roughness: 0.26, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.04 }))
+  const paint = own(new THREE.MeshPhysicalMaterial({ color: team.color, roughness: 0.26, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.04, side: THREE.DoubleSide }))
   const glass = own(new THREE.MeshPhysicalMaterial({ color: 0x1a2630, roughness: 0.03, metalness: 0.2, transparent: true, opacity: 0.5, depthWrite: false, clearcoat: 1 }))
   const lamp = own(new THREE.MeshStandardMaterial({ color: 0xfff6e0, emissive: 0xfff1cc, emissiveIntensity: 0.35, roughness: 0.1 }))
   // glTF (front +Z, Y up) into the game's frame (front +X): a quarter turn about Y

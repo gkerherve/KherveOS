@@ -19,7 +19,7 @@ type Zone = 'body' | 'fw' | 'rw'
 type Part =
   | 'paint' | 'plain' | 'decal' | 'stripe' | 'glass' | 'chrome' | 'black' | 'lamp' | 'amber' | 'tail' | 'helmet' | 'interior'
   /** What the cockpit camera hides (its own wheel, dials and hands are drawn instead). */
-  | 'cockpit' | 'shoulders'
+  | 'cockpit' | 'shoulders' | 'cage'
 type Add = (k: Part, g: THREE.BufferGeometry) => void
 type KF = [number, number][]
 
@@ -444,7 +444,7 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
       const { pts, shoulder } = halfSection(st)
       return { low: v3(st.x, pts[3][1], (pts[3][0] + 0.006) * sd), high: v3(st.x, pts[shoulder][1] + 0.01, (pts[shoulder][0] + 0.012) * sd) }
     }
-    const rail = cs.filter((st) => st.x <= C.x0 - 0.06 && st.x >= C.c + 0.05)
+    const rail = cs.filter((st) => st.x <= C.roofFrom && st.x >= C.c + 0.05)
     for (const sd of [1, -1]) {
       for (let i = 1; i < rail.length; i += 2) {
         const a = sideAt(rail[i - 1], sd)
@@ -464,8 +464,13 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
   // pillars: the A pillars along the windscreen's edges, the B pillar behind the door, a chrome window surround
   const edge = (x: number, sd: number, drop = 0.05) => v3(x, at.roof(x) - drop, (C.hwRoof + 0.01) * sd)
   for (const sd of [1, -1]) {
-    const foot = v3(C.x0 - 0.02, at.belt(C.x0), (at.cabinHw(C.x0) - 0.02) * sd)
-    add('plain', rod(foot, edge(C.roofFrom + 0.02, sd), 0.026, 8))
+    // the A pillar: a strip of bodywork following the windscreen's edge (the side's top and the roof's rim)
+    const pillar = (st: Station) => {
+      const { pts, shoulder } = halfSection(st)
+      return pts.slice(shoulder - 2, shoulder + 3).map(([z, y]) => [(z * 1.012 + 0.003) * sd, y + 0.004] as [number, number])
+    }
+    const aStations = cs.filter((st) => st.x <= C.x0 - 0.005 && st.x >= C.roofFrom - 0.03).map((st) => ({ x: st.x, pts: pillar(st) }))
+    if (aStations.length > 1) add('plain', skin(sd > 0 ? aStations : aStations.map((st) => ({ x: st.x, pts: [...st.pts].reverse() })), false))
     if (C.b !== undefined) add('plain', rod(v3(C.b, at.belt(C.b) + 0.02, (at.cabinHw(C.b) + 0.004) * sd), edge(C.b - 0.06, sd, 0.06), C.b > -0.6 && model === 'bavaria' ? 0.012 : 0.03, 8))
     let prev = edge(C.roofFrom + 0.02, sd, 0.055)
     for (let x = C.roofFrom; x >= C.c; x -= 0.12) {
@@ -509,15 +514,15 @@ function details(add: Add, D: Design, at: Surface) {
     const hy = at.belt(hx) - 0.08
     add('chrome', box(0.12, 0.02, 0.02, hx, hy, (at.side(hx, hy) + 0.008) * sd))
     // the roll cage, seen through the glass
-    add('chrome', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX - 0.42, eyeY + 0.12, 0.38 * sd), 0.018))
-    add('chrome', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX + 0.55, at.belt(eyeX) - 0.05, 0.44 * sd), 0.016))
+    add('cage', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX - 0.42, eyeY + 0.12, 0.38 * sd), 0.018))
+    add('cage', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX + 0.55, at.belt(eyeX) - 0.05, 0.44 * sd), 0.016))
     // a sticker on each front wing
     const sx = D.front + 0.52
     const sy = at.yb(sx) + 0.12
     add('decal', new THREE.PlaneGeometry(0.42, 0.09).rotateY(sd < 0 ? Math.PI : 0).translate(sx, sy, (at.side(sx, sy) + 0.012) * sd))
   }
-  add('chrome', rod(v3(eyeX - 0.42, eyeY + 0.12, 0.38), v3(eyeX - 0.42, eyeY + 0.12, -0.38), 0.018))
-  add('chrome', rod(v3(eyeX - 0.42, eyeY + 0.12, 0.38), v3(eyeX - 0.42, at.belt(eyeX) - 0.1, -0.42), 0.014))
+  add('cage', rod(v3(eyeX - 0.42, eyeY + 0.12, 0.38), v3(eyeX - 0.42, eyeY + 0.12, -0.38), 0.018))
+  add('cage', rod(v3(eyeX - 0.42, eyeY + 0.12, 0.38), v3(eyeX - 0.42, at.belt(eyeX) - 0.1, -0.42), 0.014))
   // the bucket seat; the steering wheel and the shoulders (the cockpit camera draws its own)
   add('interior', box(0.12, 0.55, 0.42, eyeX - 0.3, eyeY - 0.38, eyeZ))
   add('cockpit', new THREE.TorusGeometry(0.17, 0.018, 6, 20).rotateY(Math.PI / 2).rotateZ(-0.45).translate(eyeX + 0.42, eyeY - 0.17, eyeZ))
@@ -748,6 +753,7 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
     decal: new THREE.MeshStandardMaterial({ map: stickerTexture(team), transparent: true, roughness: 0.4, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }),
     glass: new THREE.MeshPhysicalMaterial({ color: 0x0c1218, roughness: 0.02, metalness: 0.45, transparent: true, opacity: 0.62, depthWrite: false, clearcoat: 1, envMapIntensity: 2.2 }),
     chrome: sh.metal,
+    cage: sh.metal,
     black: sh.black,
     lamp: new THREE.MeshPhysicalMaterial({ map: lens, color: 0xffffff, emissive: 0xfff1cc, emissiveMap: lens, emissiveIntensity: 0.35, roughness: 0.05, clearcoat: 1 }),
     amber: new THREE.MeshStandardMaterial({ color: 0xffa020, emissive: 0x6a3a00, roughness: 0.2 }),
