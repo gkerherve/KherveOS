@@ -411,6 +411,12 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
     stations.push({ x, pts: ring({ x, hw: at.hw(x), yb: at.yb(x), ys: at.ys(x), yc: at.yc(x), tumble: D.tumble, k: at.ys(x) > at.yc(x) ? 3.5 : 2.2 }) })
   }
   add('paint', skin(stations, true))
+  // the floor pan: the arches are cut across the whole width, so without it the underside shows a
+  // tunnel from wheel to wheel (which looks like a second set of wheels from below)
+  {
+    const inner = Math.min(D.trackF - D.wF / 2, D.trackR - D.wR / 2) - 0.03
+    add('black', box(D.nose - D.tail - 0.25, 0.02, 2 * inner, (D.nose + D.tail) / 2, D.sill - 0.012, 0))
+  }
   // the glasshouse
   const C = D.cabin
   const cab = (x: number): Station => {
@@ -475,10 +481,6 @@ function details(add: Add, D: Design, at: Surface) {
     const hx = D.door[1] + 0.18
     const hy = at.belt(hx) - 0.08
     add('chrome', box(0.12, 0.02, 0.02, hx, hy, (at.side(hx, hy) + 0.008) * sd))
-    // dark wheel wells behind the tyres
-    for (const [x, track, w, A] of [[D.front, D.trackF, D.wF, D.archF], [D.rear, D.trackR, D.wR, D.archR]] as [number, number, number, number][]) {
-      add('black', new THREE.CylinderGeometry(A - 0.01, A - 0.01, 0.25, 22, 1, true, -Math.PI / 2, Math.PI).rotateX(Math.PI / 2).translate(x, D.r, (track - w / 2 - 0.1) * sd))
-    }
     // the roll cage, seen through the glass
     add('chrome', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX - 0.42, eyeY + 0.12, 0.38 * sd), 0.018))
     add('chrome', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX + 0.55, at.belt(eyeX) - 0.05, 0.44 * sd), 0.016))
