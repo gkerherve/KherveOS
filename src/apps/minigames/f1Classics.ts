@@ -428,7 +428,7 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
   const cab = (x: number): Station => {
     const yb = at.belt(x) - 0.04
     const yc = Math.max(at.roof(x), yb + 0.05)
-    return { x, hw: at.cabinHw(x), yb, ys: Math.max(yc - 0.05, yb + 0.03), yc, tumble: 1 - C.hwRoof / at.cabinHw(x), k: 2.2, flat: C.flatGlass }
+    return { x, hw: at.cabinHw(x), yb, ys: Math.max(yc - 0.05, yb + 0.03), yc, tumble: 1 - C.hwRoof / at.cabinHw(x), k: C.flatGlass ? 4 : 2.2, flat: C.flatGlass }
   }
   const cs: Station[] = []
   const CN = Math.round((C.x0 - C.x3) / 0.03)
@@ -465,12 +465,25 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
   const edge = (x: number, sd: number, drop = 0.05) => v3(x, at.roof(x) - drop, (C.hwRoof + 0.01) * sd)
   for (const sd of [1, -1]) {
     // the A pillar: a strip of bodywork following the windscreen's edge (the side's top and the roof's rim)
+    // a broad metal post: down the side glass a little and over the windscreen's edge, so the
+    // windscreen and the door glass are two panes with metal between them
     const pillar = (st: Station) => {
       const { pts, shoulder } = halfSection(st)
-      return pts.slice(shoulder - 2, shoulder + 3).map(([z, y]) => [(z * 1.012 + 0.003) * sd, y + 0.004] as [number, number])
+      return pts.slice(shoulder - 3, shoulder + 4).map(([z, y]) => [(z * 1.015 + 0.006) * sd, y + 0.007] as [number, number])
     }
     const aStations = cs.filter((st) => st.x <= C.x0 - 0.005 && st.x >= C.roofFrom - 0.03).map((st) => ({ x: st.x, pts: pillar(st) }))
-    if (aStations.length > 1) add('plain', skin(sd > 0 ? aStations : aStations.map((st) => ({ x: st.x, pts: [...st.pts].reverse() })), false))
+    if (aStations.length > 1) {
+      add('paint', skin(sd > 0 ? aStations : aStations.map((st) => ({ x: st.x, pts: [...st.pts].reverse() })), false))
+      // the windscreen's chrome surround along the pillar's inner edge, and the door glass's front edge
+      for (let i = 1; i < aStations.length; i++) {
+        const a = aStations[i - 1].pts
+        const b = aStations[i].pts
+        const ia = a.length - 1
+        add('chrome', rod(v3(aStations[i - 1].x, a[ia][1] + 0.003, a[ia][0]), v3(aStations[i].x, b[ia][1] + 0.003, b[ia][0]), 0.007, 5))
+        const ja = 0
+        add('black', rod(v3(aStations[i - 1].x, a[ja][1], a[ja][0]), v3(aStations[i].x, b[ja][1], b[ja][0]), 0.006, 5))
+      }
+    }
     if (C.b !== undefined) add('plain', rod(v3(C.b, at.belt(C.b) + 0.02, (at.cabinHw(C.b) + 0.004) * sd), edge(C.b - 0.06, sd, 0.06), C.b > -0.6 && model === 'bavaria' ? 0.012 : 0.03, 8))
     let prev = edge(C.roofFrom + 0.02, sd, 0.055)
     for (let x = C.roofFrom; x >= C.c; x -= 0.12) {
