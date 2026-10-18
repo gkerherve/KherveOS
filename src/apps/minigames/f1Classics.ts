@@ -469,9 +469,9 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
     // windscreen and the door glass are two panes with metal between them
     const pillar = (st: Station) => {
       const { pts, shoulder } = halfSection(st)
-      return pts.slice(shoulder - 3, shoulder + 4).map(([z, y]) => [(z * 1.015 + 0.006) * sd, y + 0.007] as [number, number])
+      return pts.slice(shoulder - 1, shoulder + 3).map(([z, y]) => [(z * 1.01 + 0.004) * sd, y + 0.005] as [number, number])
     }
-    const aStations = cs.filter((st) => st.x <= C.x0 - 0.005 && st.x >= C.roofFrom - 0.03).map((st) => ({ x: st.x, pts: pillar(st) }))
+    const aStations = cs.filter((st) => st.x <= C.x0 - 0.06 && st.x >= C.roofFrom - 0.03).map((st) => ({ x: st.x, pts: pillar(st) }))
     if (aStations.length > 1) {
       add('paint', skin(sd > 0 ? aStations : aStations.map((st) => ({ x: st.x, pts: [...st.pts].reverse() })), false))
       // the windscreen's chrome surround along the pillar's inner edge, and the door glass's front edge
@@ -526,6 +526,33 @@ function details(add: Add, D: Design, at: Surface) {
     const hx = D.door[1] + 0.18
     const hy = at.belt(hx) - 0.08
     add('chrome', box(0.12, 0.02, 0.02, hx, hy, (at.side(hx, hy) + 0.008) * sd))
+    // wheel wells: a dark liner over each tyre and a wall inboard of it, so the arch is closed (the
+    // body is open inside the arches, and without them you see through the car)
+    for (const [xw, track, w, A] of [[D.front, D.trackF, D.wF, D.archF], [D.rear, D.trackR, D.wR, D.archR]] as [number, number, number, number][]) {
+      const zIn = track - w / 2 - 0.04
+      const zOut = at.side(xw, D.r + A * 0.7) - 0.01
+      const N = 20
+      const pos: number[] = []
+      for (let i = 0; i < N; i++) {
+        const a0 = (i / N) * Math.PI
+        const a1 = ((i + 1) / N) * Math.PI
+        const P = (a: number, z: number) => [xw + Math.cos(a) * A, D.r + Math.sin(a) * A, z * sd]
+        const q = [P(a0, zIn), P(a1, zIn), P(a1, zOut), P(a0, zOut)]
+        // both faces, so it shows from any side
+        for (const [i0, i1, i2] of [[0, 1, 2], [0, 2, 3], [0, 2, 1], [0, 3, 2]]) pos.push(...q[i0], ...q[i1], ...q[i2])
+      }
+      const liner = new THREE.BufferGeometry()
+      liner.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+      liner.computeVertexNormals()
+      add('black', liner)
+      const wall = new THREE.Shape()
+      wall.moveTo(A, 0)
+      wall.absarc(0, 0, A, 0, Math.PI, false)
+      wall.lineTo(A, 0)
+      const wg = new THREE.ShapeGeometry(wall, 20)
+      add('black', wg.clone().translate(xw, D.r, zIn * sd))
+      add('black', wg.rotateY(Math.PI).translate(xw, D.r, zIn * sd))
+    }
     // the roll cage, seen through the glass
     add('cage', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX - 0.42, eyeY + 0.12, 0.38 * sd), 0.018))
     add('cage', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX + 0.55, at.belt(eyeX) - 0.05, 0.44 * sd), 0.016))
