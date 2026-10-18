@@ -15,6 +15,7 @@ import { RaceMusic } from './f1Music.ts'
 import { multiLineup, packCar, unpackCar, type CarState, type RaceStart } from './f1Net.ts'
 import { DIFFICULTY, Session, TEAMS, fmtLap, setRaceSeries, teamsOf, type Classified, type ClassicModel, type Difficulty, type RaceCar, type SessionEvent } from './f1Race.ts'
 import { buildClassic, classicCams } from './f1Classics.ts'
+import { buildCustomCar, loadCustomCars } from './f1CustomCar.ts'
 import { buildCar, buildCarGeometry, sharedMaterials, teamLook, type CarGeometry, type CarModel, type Shared, type TeamLook } from './f1Models.ts'
 import { buildWorld, type World } from './f1World.ts'
 
@@ -234,6 +235,17 @@ export class GrandPrixEngine {
       this.sparks.push({ s: sp, life: 0, v: new THREE.Vector3() })
     }
     this.setTrack('park')
+    void this.reloadCustomCars()
+  }
+
+  /** Look for classics shaped in KherveCAD on the server; rebuild the cars when some are there (not mid-session). */
+  async reloadCustomCars(fresh = false) {
+    const found = await loadCustomCars(fresh)
+    if ((found.length || fresh) && SERIES === 'classic' && this.stage === 'menu') {
+      this.buildCars()
+      this.setTrack(this.settings.track, true)
+    }
+    return found
   }
 
   // ---------------------------------------------------------------- set-up
@@ -251,7 +263,11 @@ export class GrandPrixEngine {
       const t = TEAMS[team]
       // (the modern liveries were made in the menu's order: find this team's)
       const look = this.looks[Math.max(0, teamsOf('modern').findIndex((x) => x.name === t.name))]
-      const m = SERIES === 'classic' && t.model ? buildClassic(t.model, t, nums[i], this.shared) : buildCar(this.geo, look, this.shared, t, nums[i], i % 2 === 1)
+      // a classic shaped in KherveCAD (a .glb on the server) replaces the one built here
+      const m =
+        SERIES === 'classic' && t.model
+          ? (buildCustomCar(t.model, t, nums[i], this.shared) ?? buildClassic(t.model, t, nums[i], this.shared))
+          : buildCar(this.geo, look, this.shared, t, nums[i], i % 2 === 1)
       this.models.push(m)
       this.scene.add(m.root)
     }

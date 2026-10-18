@@ -19,12 +19,16 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import re
+from pathlib import Path
 import random
 import socket
 import time
 from dataclasses import dataclass, field
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
 
 from .auth import websocket_user
 
@@ -165,6 +169,32 @@ def list_rooms():
             for r in rooms.values()
         ]
     }
+
+
+def cars_dir() -> Path:
+    """Where cars shaped in KherveCAD wait for the game: a .glb per classic model."""
+    return Path(os.environ.get("KHERVEOS_GP_CARS", str(Path.home() / "Documents" / "Kherve Grand Prix cars")))
+
+
+CAR_NAMES = ("stoccarda", "dieppe", "bavaria")
+
+
+@router.get("/cars")
+def list_cars():
+    """The classic models that have a KherveCAD car (<model>.glb) in the cars folder."""
+    folder = cars_dir()
+    return {"cars": [n for n in CAR_NAMES if (folder / f"{n}.glb").is_file()], "folder": str(folder)}
+
+
+@router.get("/cars/{name}.glb")
+def car_file(name: str):
+    """One car's glTF binary (read-only, only the known model names)."""
+    if not re.fullmatch(r"[a-z]+", name) or name not in CAR_NAMES:
+        raise HTTPException(status_code=404, detail="No such car.")
+    path = cars_dir() / f"{name}.glb"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="No such car.")
+    return FileResponse(path, media_type="model/gltf-binary", headers={"Cache-Control": "no-store"})
 
 
 @router.get("/info")

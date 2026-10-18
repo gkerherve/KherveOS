@@ -768,6 +768,8 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
     const g = merge(list)
     owned.push(g)
     const m = new THREE.Mesh(g, mats[k])
+    // named by what it is: a KherveCAD round trip (and the GLB loader) finds the parts by name
+    m.name = k
     m.castShadow = k !== 'glass' && k !== 'lamp' && k !== 'decal'
     m.receiveShadow = k === 'paint' || k === 'plain'
     if (k === 'glass') m.renderOrder = 2
@@ -777,11 +779,13 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   // the bumpers (and the Bavaria's wing) hang from pivots at their ends, so a crash can bend them or knock them off
   const piece = (z: 'fw' | 'rw', px: number, py: number) => {
     const g = new THREE.Group()
+    g.name = z === 'fw' ? 'bumper_front' : 'bumper_rear'
     g.position.set(px, py, 0)
     for (const [k, list] of pieces[z]) {
       const geom = merge(list)
       owned.push(geom)
       const m = new THREE.Mesh(geom, mats[k])
+      m.name = k
       m.position.set(-px, -py, 0)
       m.castShadow = true
       g.add(m)
@@ -795,6 +799,7 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   owned.push(shade.geometry, shade.material as THREE.Material)
   // the driver: open-face helmet, the face, suit and harness, hands on the wheel (ten to two)
   const driver = buildDriver({ team, num, classic: true, wheel: { x: 0.44, y: -0.15, r: 0.17, tilt: 0.45 }, black: sh.black, carbon: sh.black })
+  driver.group.name = 'driver'
   driver.group.position.set(D.eye[0], D.eye[1] - 0.02, D.eye[2])
   body.add(driver.group)
   hideInCockpit.push(driver.group)
@@ -850,10 +855,12 @@ export function buildClassic(model: ClassicModel, team: Team, num: number, sh: S
   const wheels: CarModel['wheels'] = []
   for (const [x, z, isFront] of [[D.front, D.trackF, true], [D.front, -D.trackF, true], [D.rear, D.trackR, false], [D.rear, -D.trackR, false]] as [number, number, boolean][]) {
     const pivot = new THREE.Group()
+    pivot.name = `wheel_${isFront ? 'f' : 'r'}${z > 0 ? 'r' : 'l'}`
     pivot.position.set(x, D.r, z)
     const spin = new THREE.Group()
     pivot.add(spin)
     const tyre = new THREE.Mesh(isFront ? tF : tR, sh.tyre.medium)
+    tyre.name = 'tyre'
     tyre.castShadow = true
     spin.add(tyre)
     const w = isFront ? D.wF : D.wR

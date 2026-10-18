@@ -63,3 +63,14 @@ def test_host_join_start_and_relay(client):
             b.send_json({"t": "leave"})
             assert a.receive_json() == {"t": "left", "id": joined["you"]}
             assert len(a.receive_json()["players"]) == 1
+
+
+def test_cars_from_khervecad_are_served_read_only(client, tmp_path, monkeypatch):
+    monkeypatch.setenv("KHERVEOS_GP_CARS", str(tmp_path))
+    assert client.get("/api/gp/cars").json()["cars"] == []
+    (tmp_path / "stoccarda.glb").write_bytes(b"glTF-test")
+    assert client.get("/api/gp/cars").json()["cars"] == ["stoccarda"]
+    r = client.get("/api/gp/cars/stoccarda.glb")
+    assert r.status_code == 200 and r.content == b"glTF-test"
+    assert client.get("/api/gp/cars/dieppe.glb").status_code == 404
+    assert client.get("/api/gp/cars/..%2Fsecret.glb").status_code == 404
