@@ -192,7 +192,7 @@ interface Design {
   archF: number
   archR: number
   /** The glasshouse: from the windscreen's foot (x0) to where the rear glass meets the deck (x3). */
-  cabin: { x0: number; x3: number; roof: KF; hw: KF; hwRoof: number; roofFrom: number; roofTo: number; b?: number; c: number }
+  cabin: { x0: number; x3: number; roof: KF; hw: KF; hwRoof: number; roofFrom: number; roofTo: number; b?: number; c: number; /** Where the rear window ends: behind it the slope is the painted engine lid (a rear-engined fastback). */ glassTo?: number }
   eye: [number, number, number]
   roofCam: [number, number, number]
   /** Doors (front and rear edges), exhaust pipes (z). */
@@ -264,7 +264,7 @@ const DESIGNS: Record<ClassicModel, Design> = {
     lift: [[1.97, 0.34], [1.85, 0.22], [1.7, 0.2], [-1.98, 0.2], [-2.1, 0.27], [-2.18, 0.36]],
     archF: 0.37, archR: 0.38,
     cabin: {
-      x0: 0.7, x3: -1.95, roofFrom: 0.12, roofTo: -0.62, b: -0.62, c: -1.15, hwRoof: 0.555,
+      x0: 0.7, x3: -1.95, roofFrom: 0.12, roofTo: -0.62, b: -0.62, c: -1.15, hwRoof: 0.555, glassTo: -1.5,
       roof: [[0.7, 0.8], [0.45, 1.06], [0.15, 1.27], [-0.2, 1.315], [-0.6, 1.3], [-1.0, 1.21], [-1.4, 1.06], [-1.75, 0.9], [-1.95, 0.81]],
       hw: [[0.7, 0.7], [0, 0.72], [-1.0, 0.72], [-1.95, 0.62]],
     },
@@ -283,7 +283,18 @@ const DESIGNS: Record<ClassicModel, Design> = {
         add('tail', box(0.02, 0.07, 0.36, -2.165, 0.55, 0.42 * sd))
       }
       add('chrome', new THREE.CylinderGeometry(0.05, 0.05, 0.012, 16).translate(1.3, at.ys(1.3) + 0.004, -0.6))
-      for (let k = 0; k < 9; k++) add('black', box(0.16, 0.008, 0.035, -1.82 + k * 0.0, at.yc(-1.82) + 0.006, -0.32 + k * 0.08))
+      // the engine lid's cooling grille on the slope: black slats across the car in a chrome frame
+      const lidY = (x: number) => at.roof(x) + 0.004
+      const slope = Math.atan2(lidY(-1.6) - lidY(-1.9), 0.3)
+      const gx0 = -1.6
+      const gx1 = -1.88
+      for (let k = 0; k <= 12; k++) {
+        const x = gx0 + ((gx1 - gx0) * k) / 12
+        add('black', box(0.016, 0.012, 0.58, x, lidY(x) + 0.004, 0, 0, 0, slope))
+      }
+      add('black', box(Math.hypot(gx0 - gx1, lidY(gx0) - lidY(gx1)) + 0.02, 0.004, 0.6, (gx0 + gx1) / 2, (lidY(gx0) + lidY(gx1)) / 2 - 0.002, 0, 0, 0, slope))
+      for (const z of [-0.31, 0.31]) add('chrome', rod(v3(gx0 + 0.015, lidY(gx0 + 0.015) + 0.006, z), v3(gx1 - 0.015, lidY(gx1 - 0.015) + 0.006, z), 0.007, 6))
+      for (const x of [gx0 + 0.015, gx1 - 0.015]) add('chrome', rod(v3(x, lidY(x) + 0.006, -0.31), v3(x, lidY(x) + 0.006, 0.31), 0.007, 6))
       // bumpers: body colour with a black rubber strip, the red lamp band across the tail
       zone('fw')
       add('plain', box(0.09, 0.1, 1.3, 1.93, 0.31, 0))
@@ -410,7 +421,10 @@ function buildShape(model: ClassicModel, add: Add, zone: (z: Zone) => void) {
   const cs: Station[] = []
   const CN = Math.round((C.x0 - C.x3) / 0.03)
   for (let i = 0; i <= CN; i++) cs.push(cab(C.x0 - (i / CN) * (C.x0 - C.x3)))
-  add('glass', skin(cs.map((s) => ({ x: s.x, pts: ring(s) })), true))
+  const glassTo = C.glassTo ?? -Infinity
+  add('glass', skin(cs.filter((s) => s.x >= glassTo - 0.031).map((s) => ({ x: s.x, pts: ring(s) })), true))
+  // a rear-engined fastback: below the rear window the slope is the painted engine lid
+  if (C.glassTo !== undefined) add('paint', skin(cs.filter((s) => s.x <= glassTo + 0.031).map((s) => ({ x: s.x, pts: ring(s) })), true))
   // the painted roof, and the broad rear pillars down the sides of the rear glass
   add('paint', skin(cs.filter((s) => s.x <= C.roofFrom && s.x >= C.roofTo).map((s) => ({ x: s.x, pts: topStrip(s) })), false))
   for (const sd of [1, -1]) add('plain', skin(cs.filter((s) => s.x <= C.c).map((s) => ({ x: s.x, pts: sideStrip(s, sd) })), false))
@@ -464,7 +478,6 @@ function details(add: Add, D: Design, at: Surface) {
     // dark wheel wells behind the tyres
     for (const [x, track, w, A] of [[D.front, D.trackF, D.wF, D.archF], [D.rear, D.trackR, D.wR, D.archR]] as [number, number, number, number][]) {
       add('black', new THREE.CylinderGeometry(A - 0.01, A - 0.01, 0.25, 22, 1, true, -Math.PI / 2, Math.PI).rotateX(Math.PI / 2).translate(x, D.r, (track - w / 2 - 0.1) * sd))
-      add('black', new THREE.CircleGeometry(A - 0.01, 22, 0, Math.PI).translate(x, D.r, (track - w / 2 - 0.22) * sd))
     }
     // the roll cage, seen through the glass
     add('chrome', rod(v3(eyeX - 0.42, at.belt(eyeX) - 0.1, 0.42 * sd), v3(eyeX - 0.42, eyeY + 0.12, 0.38 * sd), 0.018))
