@@ -244,14 +244,15 @@ function C(p: THREE.Object3D, m: THREE.Material, r: number, len: number, x: numb
   return mesh
 }
 
-/** A cartridge standing on its base: brass case, copper bullet. Length ~ `len`. */
+/** A cartridge lying as in a magazine, centred at (x, y, z), bullet forward (-z): brass case, copper bullet. Length ~ `len`. */
 function cartridge(p: THREE.Object3D, r: number, len: number, x: number, y: number, z: number) {
   const g = new THREE.Group()
   C(g, M.brass, r, len * 0.62, 0, len * 0.31, 0, 'y')
   const tip = new THREE.Mesh(new THREE.ConeGeometry(r * 0.92, len * 0.42, 10), M.copper)
   tip.position.y = len * 0.62 + len * 0.18
   g.add(tip)
-  g.position.set(x, y, z)
+  g.rotation.x = -Math.PI / 2 // its +y (base to tip) becomes -z, along the barrel
+  g.position.set(x, y, z + len * 0.5)
   p.add(g)
   return g
 }
@@ -263,13 +264,13 @@ export function makeMag(kind: 'pistol' | 'rifle'): THREE.Group {
     B(g, M.mag, 0.024, 0.1, 0.034, 0, 0, 0)
     B(g, M.plate, 0.03, 0.014, 0.042, 0, -0.054, 0)
     B(g, M.steel, 0.026, 0.004, 0.036, 0, 0.049, 0)
-    for (const [dx, dz] of [[-0.005, -0.008], [0.005, 0.008]] as const) cartridge(g, 0.0042, 0.026, dx, 0.05, dz)
+    for (const [dx, dy, dz] of [[-0.0045, 0.0052, -0.002], [0.0045, 0.0042, 0.002]] as const) cartridge(g, 0.0042, 0.026, dx, 0.049 + dy, dz)
   } else {
     B(g, M.mag, 0.034, 0.13, 0.058, 0, 0, 0)
     for (let i = 0; i < 4; i++) B(g, M.black, 0.036, 0.004, 0.06, 0, -0.04 + i * 0.026, 0)
     B(g, M.plate, 0.04, 0.014, 0.066, 0, -0.07, 0)
     B(g, M.steel, 0.032, 0.004, 0.054, 0, 0.065, 0)
-    for (const [dx, dz] of [[-0.008, -0.012], [0.008, 0.012], [-0.008, 0.012], [0.008, -0.012]] as const) cartridge(g, 0.0046, 0.03, dx, 0.066, dz)
+    for (const [dx, dy, dz] of [[-0.0055, 0.0058, -0.003], [0.0055, 0.0048, 0.003]] as const) cartridge(g, 0.0046, 0.03, dx, 0.065 + dy, dz)
   }
   return g
 }

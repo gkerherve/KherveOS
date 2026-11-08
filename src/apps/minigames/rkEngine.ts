@@ -12,6 +12,8 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { noise, sfx, tone } from './sound'
+import { HorrorMusic } from './horrorMusic'
+import { gunshot, setGunRoom } from './gunSound'
 import { LEVELS, MONSTERS, STEP, type Ent, type ItemKind, type Key, type MonsterKind } from './rkMaps'
 import { Level, portalMaterial } from './rkLevel'
 import {
@@ -79,6 +81,26 @@ export interface RKSave {
   owned: WeaponId[]
   score: number
   totalKills: number
+  /** Saved inside the level, after a room was cleared: where the player stood and what is done already. */
+  room?: RKRoom
+}
+
+/** A checkpoint inside a level: the room it was saved in and the state of the level then. */
+export interface RKRoom {
+  /** How many rooms of this level have been saved (for the Continue label). */
+  n: number
+  pos: [number, number, number]
+  yaw: number
+  weapon: WeaponId
+  /** Indexes (in the level's monsters and items) of the dead and the taken. */
+  dead: number[]
+  taken: number[]
+  keys: Key[]
+  secrets: number[]
+  /** Doors unlocked by a keycard. */
+  doors: number[]
+  kills: number
+  levelTime: number
 }
 
 export interface RKResult {
@@ -372,10 +394,45 @@ export class RuneKeepEngine {
     }
   }
 
-  /** Called with a checkpoint each time a level (after the first) begins. */
+  /** Called with a checkpoint each time a level (after the first) begins, and each time a room is cleared. */
   onCheckpoint: ((s: RKSave) => void) | null = null
 
-  /** Start again from a checkpoint. */
+  /** A fight is on (some monster hunts the player): a room is cleared when it ends. */
+  private fighting = false
+  private roomN = 0
+  private lastRoomSave = -99
+  /** How many items the level itself placed (dropped ones come after, and are not saved). */
+  private itemBase = 0
+
+  /** The fight in this room is over: save here. */
+  private roomCheckpoint(): boolean {
+    if (this.stage !== 'play' || this.time - this.lastRoomSave < 4 || this.health <= 0) return false
+    this.lastRoomSave = this.time
+    this.roomN++
+    const map = this.level.map
+    this.onCheckpoint?.({
+      level: this.levelIndex, levelName: map.name, health: Math.ceil(this.health), armor: this.armor, armorType: this.armorType,
+      ammo: { ...this.ammo }, owned: [...this.owned], score: this.score, totalKills: this.totalKills,
+      room: {
+        n: this.roomN,
+        pos: [this.pos.x, this.pos.y, this.pos.z],
+        yaw: this.yaw,
+        weapon: this.weapon,
+        dead: this.mons.flatMap((m, i) => (m.state === 'dead' ? [i] : [])),
+        taken: this.items.slice(0, this.itemBase).flatMap((it, i) => (it.taken ? [i] : [])),
+        keys: [...this.keysHeld],
+        secrets: [...this.secretsFound],
+        doors: this.level.doors.flatMap((d, i) => (d.unlocked && map.doors[i]?.key ? [i] : [])),
+        kills: this.kills,
+        levelTime: this.levelTime,
+      },
+    })
+    this.message('Checkpoint saved')
+    sfx('saved', () => [660, 880].forEach((f, i) => tone({ freq: f, dur: 0.18, type: 'sine', vol: 0.06, at: i * 0.1 })), 1)
+    return true
+  }
+
+  /** Start again from a checkpoint: the start of its level, or the room it was saved in. */
   continueFrom(s: RKSave) {
     this.score = s.score
     this.totalKills = s.totalKills
@@ -384,7 +441,33 @@ export class RuneKeepEngine {
     this.armorType = s.armorType
     this.ammo = { ...s.ammo }
     this.owned = new Set(s.owned)
-    this.loadLevel(clamp(s.level, 0, LEVELS.length - 1))
+    this.loadLevel(clamp(s.level, 0, LEVELS.length - 1), false)
+    const r = s.room
+    if (!r) return
+    this.health = clamp(s.health, 35, 100)
+    for (const i of r.dead) {
+      const m = this.mons[i]
+      if (!m) continue
+      m.state = 'dead'
+      m.deadT = 99
+      m.rig.root.visible = false
+    }
+    for (const i of r.taken) {
+      const it = this.items[i]
+      if (!it) continue
+      it.taken = true
+      it.group.removeFromParent()
+    }
+    for (const k of r.keys) this.keysHeld.add(k)
+    for (const x of r.secrets) this.secretsFound.add(x)
+    for (const i of r.doors) if (this.level.doors[i]) this.level.doors[i].unlocked = true
+    this.pos.set(...r.pos)
+    this.yaw = r.yaw
+    this.kills = r.kills
+    this.levelTime = r.levelTime
+    this.roomN = r.n
+    if (this.owned.has(r.weapon)) this.selectWeapon(r.weapon, true)
+    this.say(`${this.level.map.name} — checkpoint`, 2.5)
   }
 
   newGame() {
@@ -398,8 +481,11 @@ export class RuneKeepEngine {
     this.loadLevel(0)
   }
 
-  private loadLevel(i: number) {
+  private loadLevel(i: number, checkpoint = true) {
     this.clearLevel()
+    this.fighting = false
+    this.roomN = 0
+    this.lastRoomSave = this.time
     this.levelIndex = i
     const map = LEVELS[i]()
     this.level = new Level(map)
@@ -414,6 +500,7 @@ export class RuneKeepEngine {
     this.quadT = 0
     this.flow = new Int16Array(map.w * map.h).fill(-1)
     for (const e of map.ents) this.spawnEnt(e)
+    this.itemBase = this.items.length
     const start = map.ents.find((e) => e.kind === 'start')!
     this.pos.set(start.x, map.cells[Math.floor(start.z) * map.w + Math.floor(start.x)].f, start.z)
     this.vel.set(0, 0, 0)
@@ -423,7 +510,7 @@ export class RuneKeepEngine {
     this.say(map.name, 3)
     this.message(`Level ${i + 1}: ${map.name}`)
     // a checkpoint at every level after the first
-    if (i > 0)
+    if (i > 0 && checkpoint)
       this.onCheckpoint?.({
         level: i, levelName: map.name, health: Math.min(100, Math.max(this.health, 50)), armor: this.armor, armorType: this.armorType,
         ammo: { ...this.ammo }, owned: [...this.owned], score: this.score, totalKills: this.totalKills,
@@ -600,8 +687,15 @@ export class RuneKeepEngine {
     dt = Math.min(dt, 0.05)
     if (mode === 'playing') this.update(dt)
     else if (mode === 'attract') this.attract(dt)
+    // the score: as tense as the number of them hunting the player
+    const hunting = mode === 'playing' ? this.mons.filter((m) => m.awake && m.state !== 'dead').length : 0
+    const tense = mode === 'playing' ? clamp(0.15 + hunting / 6, 0, 1) : 0.15
+    this.music.intensity += (tense - this.music.intensity) * Math.min(1, dt * 0.5)
+    this.music.tick(dt)
     this.composer.render()
   }
+
+  private music = new HorrorMusic({ volume: 0.9 })
 
   snapshot(): RKHud {
     const w = WEAPONS.find((x) => x.id === this.weapon)!
@@ -633,6 +727,7 @@ export class RuneKeepEngine {
   }
 
   dispose() {
+    this.music.dispose()
     this.clearLevel()
     this.composer.dispose()
     this.scene.traverse((o) => {
@@ -699,6 +794,11 @@ export class RuneKeepEngine {
 
   private updateWorld(dt: number) {
     const lv = this.level
+    // a room is cleared when the last monster hunting the player is dead
+    const hunting = this.mons.some((m) => m.awake && m.state !== 'dead')
+    if (hunting) this.fighting = true
+    // (too soon after the last save: it saves a moment later)
+    else if (this.fighting && this.stage === 'play' && this.roomCheckpoint()) this.fighting = false
     // doors: keys and the "you need" message
     for (const [i, d] of lv.doors.entries()) {
       const def = lv.map.doors[i]
@@ -1005,6 +1105,9 @@ export class RuneKeepEngine {
 
   private fire(id: WeaponId) {
     const quad = this.quadT > 0 ? 4 : 1
+    // a big hall rings longer than a corridor
+    const cell = this.level.cell(this.pos.x, this.pos.z)
+    setGunRoom(cell ? clamp(0.55 + (cell.c - cell.f) * 0.05, 0.55, 1) : 0.8)
     const vm = this.vms.get(id)!
     const eye = this.eyePos()
     this.kick = 1
@@ -1042,9 +1145,10 @@ export class RuneKeepEngine {
         flash(two ? 0.45 : 0.32)
         this.punch += two ? 0.07 : 0.035
         sfx('shot', () => {
-          noise({ dur: two ? 0.4 : 0.28, freq: 2600, to: 220, filter: 'lowpass', vol: two ? 0.7 : 0.5 })
-          tone({ freq: 90, to: 35, dur: 0.25, type: 'sine', vol: 0.4 })
-          noise({ dur: 0.8, freq: 500, to: 100, filter: 'lowpass', vol: 0.08, at: 0.05 })
+          gunshot(two ? 'shotgun' : 'autoshotgun', two ? 1.15 : 1)
+          // the pump racked
+          noise({ dur: 0.06, freq: 1100, to: 1800, filter: 'bandpass', q: 1.5, vol: 0.12, at: two ? 0.45 : 0.3 })
+          noise({ dur: 0.05, freq: 1700, filter: 'bandpass', q: 2, vol: 0.14, at: two ? 0.58 : 0.42 })
         }, 0.05)
         break
       }
@@ -1057,14 +1161,14 @@ export class RuneKeepEngine {
         this.spawnProj('nail', start, this.aimDir().multiplyScalar(45), (sup ? 18 : 9) * quad, true)
         flash(0.18, 0xffe0a0)
         this.punch += 0.006
-        sfx('nail', () => noise({ dur: 0.06, freq: sup ? 1800 : 2600, filter: 'bandpass', q: 1.5, vol: 0.18 }), 0.04)
+        sfx('nail', () => gunshot(sup ? 'minigun' : 'rifle', sup ? 0.85 : 1), 0.04)
         break
       }
       case 'grenadel': {
         const d = this.aimDir()
         this.spawnProj('grenade', eye.clone().addScaledVector(d, 0.5).add(new THREE.Vector3(0, -0.15, 0)), d.multiplyScalar(17).add(new THREE.Vector3(0, 4.5, 0)), 120 * quad, true)
         flash(0.3)
-        sfx('gren', () => noise({ dur: 0.18, freq: 700, to: 200, filter: 'lowpass', vol: 0.35 }))
+        sfx('gren', () => gunshot('launcher'))
         break
       }
       case 'rocketl': {
@@ -1072,20 +1176,14 @@ export class RuneKeepEngine {
         this.spawnProj('rocket', eye.clone().addScaledVector(d, 0.6).add(new THREE.Vector3(0, -0.12, 0)), d.multiplyScalar(30), 110 * quad, true)
         flash(0.4)
         this.punch += 0.03
-        sfx('rocket', () => {
-          noise({ dur: 0.4, freq: 900, to: 300, filter: 'lowpass', vol: 0.4 })
-          noise({ dur: 0.6, freq: 2500, to: 800, filter: 'bandpass', vol: 0.1 })
-        })
+        sfx('rocket', () => gunshot('rocket'))
         break
       }
       case 'pistol': {
         this.pellets(eye, 1, 0.008, 0.008, 16 * quad)
         flash(0.2)
         this.punch += 0.02
-        sfx('pistol', () => {
-          noise({ dur: 0.14, freq: 2400, to: 500, filter: 'bandpass', q: 0.8, vol: 0.35 })
-          tone({ freq: 150, to: 50, dur: 0.1, type: 'sine', vol: 0.25 })
-        }, 0.04)
+        sfx('pistol', () => gunshot('pistol'), 0.04)
         break
       }
       case 'railgun': {
@@ -1109,11 +1207,7 @@ export class RuneKeepEngine {
         this.railTrail(from, wall ? wall.point : eye.clone().addScaledVector(d, far))
         flash(0.5, 0x60d0ff)
         this.punch += 0.09
-        sfx('rail', () => {
-          tone({ freq: 2400, to: 300, dur: 0.5, type: 'sawtooth', vol: 0.12 })
-          noise({ dur: 0.5, freq: 3000, to: 400, filter: 'bandpass', vol: 0.3 })
-          tone({ freq: 70, to: 30, dur: 0.4, type: 'sine', vol: 0.35 })
-        }, 0.1)
+        sfx('rail', () => gunshot('rail'), 0.1)
         break
       }
       case 'thunder': {
@@ -1122,10 +1216,7 @@ export class RuneKeepEngine {
         const wall = this.level.ray(eye, d, 40)
         if (hit && (!wall || hit.t < wall.dist)) this.hurtMonster(hit.m, 30 * quad, d, hit.point)
         else if (wall) this.emit(this.sparks, wall.point, wall.normal, 6, 3, 0.25)
-        sfx('zap', () => {
-          noise({ dur: 0.12, freq: 4000, filter: 'highpass', vol: 0.12 })
-          tone({ freq: 60, dur: 0.12, type: 'sawtooth', vol: 0.12 })
-        }, 0.09)
+        sfx('zap', () => gunshot('arc'), 0.09)
         this.dynWant.push({ p: eye.clone().addScaledVector(d, 3), color: 0x6080ff, power: 3 })
         break
       }
@@ -1367,10 +1458,7 @@ export class RuneKeepEngine {
     this.boomLight = { p: at.clone(), t: 0.35 }
     const d = this.camera.position.distanceTo(at)
     this.shake = Math.max(this.shake, clamp(0.12 - d * 0.008, 0, 0.12))
-    this.play3d('boom', at, (v) => {
-      noise({ dur: 0.9, freq: 1400, to: 90, filter: 'lowpass', vol: 0.7 * v })
-      tone({ freq: 70, to: 28, dur: 0.6, type: 'sine', vol: 0.5 * v })
-    })
+    this.play3d('boom', at, (v) => gunshot('explosion', 0.25 + v * 0.85))
     this.noiseAt(at, 25)
     for (const m of this.mons) {
       if (m.state === 'dead') continue
@@ -1485,6 +1573,8 @@ export class RuneKeepEngine {
 
   private wake(m: Mon) {
     if (m.awake || m.state === 'dead') return
+    // the first of them to see the player: the music jumps
+    if (!this.mons.some((o) => o.awake && o.state !== 'dead')) this.music.stinger(0.55)
     m.awake = true
     m.state = 'chase'
     this.play3d('sight', m.pos, (v) => {
@@ -1755,10 +1845,8 @@ export class RuneKeepEngine {
     }
     if (m.actKind !== 'range') return
     if (m.kind === 'grunt') {
-      this.play3d('mshot', from, (v) => {
-        noise({ dur: 0.25, freq: 2200, to: 300, filter: 'lowpass', vol: 0.4 * v })
-        tone({ freq: 100, to: 40, dur: 0.2, type: 'sine', vol: 0.25 * v })
-      })
+      // a burst from the soldier's rifle
+      this.play3d('mshot', from, (v) => [0, 0.09, 0.18].forEach((at) => window.setTimeout(() => gunshot('rifle', 0.2 + v * 0.6), at * 1000)))
       this.dynWant.push({ p: from, color: 0xffc070, power: 3 })
       if (!this.level.clear(from, eye)) return
       const acc = clamp(1 - dist / 35, 0.2, 0.9)

@@ -474,7 +474,7 @@ export default function RuneKeep({ win }: AppProps) {
             {phase === 'ready' && save ? (
               <div className="rk-buttons">
                 <button className="k-btn rk-go" onClick={continueGame}>
-                  Continue — level {save.level + 1}, {save.levelName}
+                  Continue — level {save.level + 1}, {save.levelName}{save.room ? ` (room ${save.room.n})` : ''}
                 </button>
                 <button className="k-btn" onClick={engage}>
                   New game
@@ -548,7 +548,7 @@ export default function RuneKeep({ win }: AppProps) {
             <div className="rk-buttons">
               {save && !result.won && (
                 <button className="k-btn rk-go" onClick={continueGame}>
-                  Continue — level {save.level + 1}, {save.levelName}
+                  Continue — level {save.level + 1}, {save.levelName}{save.room ? ` (room ${save.room.n})` : ''}
                 </button>
               )}
               <button className={save && !result.won ? 'k-btn' : 'k-btn rk-go'} onClick={newGame}>

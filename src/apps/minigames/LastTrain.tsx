@@ -29,7 +29,8 @@ const CONTROLS: [string, string][] = [
   ['Mouse', 'Look · left click to shoot · right click to aim'],
   ['W A S D', 'Move · W W or Shift run · Space jump'],
   ['← → ↑ ↓', 'Turn · look up and down'],
-  ['E', 'At a chained gate (top of the stairs): break it, go out'],
+  ['E', 'At a chained gate (top of the stairs): break it, go out into the street'],
+  ['Outside', 'More of them (dogs, screamers, packs) and supplies · the avenue east walks you to the next station'],
   ['1–7 · Q · wheel', 'Pistol, rifle, shotgun — one more gun found at each station'],
   ['R', 'Reload'],
   ['F', 'Full screen'],
@@ -123,7 +124,7 @@ export default function LastTrain({ win }: AppProps) {
     let engine: LastTrainEngine | null = null
     let ro: ResizeObserver | null = null
     retainAudio()
-    void Promise.all([import('./lastTrainEngine'), import('./rkModels').then((m) => m.loadModels(['zombie']).catch(() => {}))])
+    void Promise.all([import('./lastTrainEngine'), import('./rkModels').then((m) => m.loadModels(['zombie', 'hound']).catch(() => {}))])
       .then(([{ LastTrainEngine }]) => {
         if (!alive || !canvasRef.current) return
         engine = new LastTrainEngine(canvasRef.current, (r) => {
@@ -341,6 +342,7 @@ export default function LastTrain({ win }: AppProps) {
           weapon: h.weapon,
           ammo: h.reserve < 0 ? `${h.mag}/endless` : `${h.mag}/${h.reserve}`,
           enemies_left: h.left,
+          street_horde: h.horde,
           kills: h.kills,
         }),
         high_scores: list.slice(0, 5).map((s) => ({ name: s.name, score: s.score, summary: s.summary })),
@@ -439,6 +441,11 @@ export default function LastTrain({ win }: AppProps) {
                   Left <b>{hud.left}</b>
                 </span>
               )}
+              {hud.horde > 0 && (
+                <span className="lt-horde">
+                  Horde <b>{hud.horde}</b>
+                </span>
+              )}
             </div>
             {hud.message && (
               <div className="lt-message" key={hud.message + hud.sub}>
@@ -487,7 +494,7 @@ export default function LastTrain({ win }: AppProps) {
             {phase === 'ready' ? (
               <>
                 <div className="lt-title">Last Train</div>
-                <p className="lt-tag">The stations are overrun and the street gates are chained shut. Clear each wave, board the train, and ride it on — to the last station, where the way up is open.</p>
+                <p className="lt-tag">The stations are overrun and the street gates are chained shut. Clear each wave, board the train, and ride it on — to the last station, where the way up is open. Or break a chain and take your chances in the street: the avenue goes on foot to the next station, through far more of them.</p>
               </>
             ) : (
               <div className="lt-title lt-small">Paused</div>

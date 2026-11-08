@@ -28,6 +28,11 @@ export function stairSlope(z: number): number {
 }
 /** The street above the station, behind the gates: ground at the landing's height. */
 export const STREET = { x0: -46.5, x1: 46.5, z0: LANDING.endZ + 0.3, z1: 60.5, y: LANDING.y }
+/**
+ * The avenue that leaves the street at its east end, along the road: the way overground to the next
+ * station (or, from the last one, out of the city). Walking past `go` sets off on foot.
+ */
+export const AVENUE = { x0: STREET.x1 - 1, x1: STREET.x1 + 16, z0: 34.6, z1: 45.4, go: STREET.x1 + 11 }
 /** How far along the track a player can walk into a tunnel before the dark stops them (|x|). */
 export const TUNNEL_STOP = 92
 /**
