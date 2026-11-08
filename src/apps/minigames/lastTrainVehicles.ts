@@ -330,9 +330,9 @@ function bodyShape(s: Spec): THREE.Shape {
   return sh
 }
 
-function extrude(shape: THREE.Shape, width: number, bevel: number, segs = 3): THREE.BufferGeometry {
+function extrude(shape: THREE.Shape, width: number, bevel: number, segs = 2): THREE.BufferGeometry {
   const depth = Math.max(0.01, width - bevel * 2)
-  const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel * 0.8, bevelSegments: segs, curveSegments: 10 })
+  const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel * 0.8, bevelSegments: segs, curveSegments: 6 })
   g.translate(0, 0, -depth / 2)
   return g
 }
@@ -345,7 +345,7 @@ function tyreGeo(r: number, w: number): THREE.BufferGeometry {
     const pts = [
       [inner, -hw * 0.9], [r - 0.05, -hw], [r - 0.012, -hw * 0.85], [r, -hw * 0.55], [r, hw * 0.55], [r - 0.012, hw * 0.85], [r - 0.05, hw], [inner, hw * 0.9],
     ].map(([x, y]) => new THREE.Vector2(x, y))
-    const g = new THREE.LatheGeometry(pts, 28)
+    const g = new THREE.LatheGeometry(pts, 16)
     g.rotateX(Math.PI / 2)
     return g
   })
@@ -356,13 +356,13 @@ function rimGeo(r: number, w: number): THREE.BufferGeometry {
   return geo(`rim${r}:${w}`, () => {
     const rr = r * 0.66
     const parts: THREE.BufferGeometry[] = []
-    const barrel = new THREE.CylinderGeometry(rr, rr, w * 0.85, 24, 1, true)
+    const barrel = new THREE.CylinderGeometry(rr, rr, w * 0.85, 14, 1, true)
     barrel.rotateX(Math.PI / 2)
     parts.push(barrel)
-    const lip = new THREE.TorusGeometry(rr, 0.018, 6, 24)
+    const lip = new THREE.TorusGeometry(rr, 0.018, 4, 14)
     lip.translate(0, 0, w * 0.42)
     parts.push(lip)
-    const hub = new THREE.CylinderGeometry(rr * 0.22, rr * 0.26, 0.06, 12)
+    const hub = new THREE.CylinderGeometry(rr * 0.22, rr * 0.26, 0.06, 8)
     hub.rotateX(Math.PI / 2)
     hub.translate(0, 0, w * 0.36)
     parts.push(hub)
@@ -373,7 +373,7 @@ function rimGeo(r: number, w: number): THREE.BufferGeometry {
       parts.push(s)
     }
     // the dark of the wheel behind the spokes
-    const back = new THREE.CircleGeometry(rr, 24)
+    const back = new THREE.CircleGeometry(rr, 14)
     back.translate(0, 0, w * 0.2)
     parts.push(back)
     return merge(parts)

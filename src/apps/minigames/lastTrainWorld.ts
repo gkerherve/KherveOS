@@ -26,18 +26,23 @@ export function stairY(z: number): number {
 export function stairSlope(z: number): number {
   return THREE.MathUtils.clamp(((z - STAIR.z0) / (LANDING.z0 - STAIR.z0)) * LANDING.y + 0.08, 0, LANDING.y)
 }
-/** The street above the station, behind the gates: ground at the landing's height. */
-export const STREET = { x0: -46.5, x1: 46.5, z0: LANDING.endZ + 0.3, z1: 60.5, y: LANDING.y }
 /**
- * The avenue that leaves the street at its east end, along the road: the way overground to the next
+ * The city above the station, behind the gates (or out through a ticket hall's way out): ground at the
+ * landing's height. Its streets and blocks are laid out in lastTrainPlan.ts; these are its bounds.
+ */
+export const STREET = { x0: -202, x1: 202, z0: LANDING.endZ + 0.3, z1: 244, y: LANDING.y }
+/**
+ * The avenue that leaves the city at the east end of Station Road: the way overground to the next
  * station (or, from the last one, out of the city). Walking past `go` sets off on foot.
  */
-export const AVENUE = { x0: STREET.x1 - 1, x1: STREET.x1 + 16, z0: 34.6, z1: 45.4, go: STREET.x1 + 11 }
+export const AVENUE = { x0: STREET.x1 - 1, x1: STREET.x1 + 38, z0: 34.6, z1: 45.4, go: STREET.x1 + 24 }
 /** How far along the track a player can walk into a tunnel before the dark stops them (|x|). */
 export const TUNNEL_STOP = 92
 /**
  * The ticket hall above each landing: through the staff door in the landing's left wall (x = sx - 2),
  * up a short flight, into a hall with a line of ticket gates. Measured by u = sx - 2 - x (into the hall).
+ * At its far end, under the WAY OUT sign, the torn shutter opens on the way out: a passage, ten steps down
+ * northwards and a pair of doors in the station's front onto Station Road.
  */
 export const HALL = {
   doorZ0: 16.2, doorZ1: 17.2, laneZ: 16.7,
@@ -48,13 +53,19 @@ export const HALL = {
   /** The line of ticket gates across the hall, and the wide gate in the middle (z = laneZ ± laneW). */
   gatesU: 9, laneW: 0.85,
   y: LANDING.y + 2,
+  /** The way out: the passage beyond the shutter (u1 … outU), its opening in the far wall (z), where its steps go down, its doors. */
+  outU: 18.7, openZ0: 15.2, openZ1: 18.2, outStepZ: 18.4, doorZ: LANDING.endZ, doorW: 2.4,
 }
-/** The stairway whose hall (x, z) is in, and how far into it: null on the platform and the stairs. */
+/** The middle of a hall's way out across the passage (u), and where its doors are (x) for the stairway at sx. */
+export const OUT_U = (HALL.u1 + HALL.outU) / 2
+export const outDoorX = (sx: number) => sx - 2 - OUT_U
+/** The stairway whose hall (or way out) (x, z) is in, and how far into it: null on the platform and the stairs. */
 export function hallAt(x: number, z: number): { sx: number; u: number } | null {
-  if (z < HALL.z0 - 0.5 || z > HALL.z1 + 0.5) return null
+  if (z < HALL.z0 - 0.5 || z > HALL.doorZ + 0.05) return null
   for (const sx of STAIRS) {
     const u = sx - 2 - x
-    if (u > -0.05 && u < HALL.u1 + 0.5) return { sx, u }
+    if (z > HALL.z1 + 0.5 && u < HALL.u1 - 0.05) continue
+    if (u > -0.05 && u < HALL.outU + 0.5) return { sx, u }
   }
   return null
 }
@@ -64,6 +75,14 @@ export function hallY(u: number, smooth = false): number {
   if (k <= 0) return LANDING.y
   if (k >= 1) return HALL.y
   return LANDING.y + (smooth ? k * HALL.steps : Math.floor(k * HALL.steps) + 1) * HALL.rise
+}
+/** The floor anywhere in a hall or its way out: past the shutter it goes down the steps to the street. */
+export function hallFloor(u: number, z: number, smooth = false): number {
+  if (u < HALL.u1 + 0.02) return hallY(u, smooth)
+  const k = (z - HALL.outStepZ) / 0.3
+  if (k <= 0) return HALL.y
+  const y = smooth ? HALL.y - k * HALL.rise : HALL.y - (Math.floor(k) + 1) * HALL.rise
+  return Math.max(LANDING.y, y)
 }
 /** The cars: the train rides three of them, each with its own floor. */
 export const CAR = { x0: -9.55, x1: 9.55, z0: -2.85, z1: -0.62 }

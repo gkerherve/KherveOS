@@ -8,7 +8,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import {
   archWallGeometry, box, canvas, ceilingTiles, CEIL_Y, concrete, cyl, FINAL_STATION, floorTexture, graffiti, gravel, LAMP_PITCH, LANDING,
   lineMap, panel, poster, REACH, rng, shade, stain, stairY, STAIR, STAIRS, stationAt, std, tactile, texture, tiles, tmpBox, tmpCyl, TRACK_Y,
-  vaultGeometry, vaultY, vines, wallTexture, words, HALL,
+  vaultGeometry, vaultY, vines, wallTexture, words, HALL, OUT_U,
 } from './lastTrainWorld'
 import { STYLES, type Decor, type StationStyle } from './lastTrainStyles'
 import { buildStreet, type StreetBuild } from './lastTrainCity'
@@ -38,10 +38,15 @@ export interface ExitBuild {
   hallSpawn: THREE.Vector3
   /** The red emergency light of the ticket hall (it flickers). */
   hallLight: THREE.PointLight
+  /** The ticket hall's way out: where its doors are onto Station Road, and 0 shut … 1 open (they swing out). */
+  outDoor: { x: number; z: number }
+  setDoor(k: number): void
   /** Where the crowd stands behind the gate: [x, z] in station coordinates, y is the landing. */
   crowd: [number, number][]
   /** Hide the painted street behind the gate: the real street is there once the gate is forced. */
   showStreet(): void
+  /** Everything of this stairway (its steps, landing, gate, hall and way out). */
+  root: THREE.Group
   /** The things that rattle (the gate halves). */
   gate: THREE.Object3D
   /** The group the crowd is added to (it leaves with the station). */
@@ -830,10 +835,10 @@ function buildExit(c: ExitCtx): ExitBuild {
   stencil.position.set(wx + 0.08, top + 2.35, doorZ)
   stencil.rotation.y = Math.PI / 2
   g.add(stencil)
-  const hallLight = buildHall(c, g, wallD)
+  const { light: hallLight, setDoor } = buildHall(c, g, wallD)
   const spawn = new THREE.Vector3(sx - 1.25, top, doorZ + 0.25)
-  /** The far end of the ticket hall, where the broken shutter lets them in. */
-  const hallSpawn = new THREE.Vector3(sx - 2 - (HALL.u1 - 0.8), HALL.y, (HALL.z0 + HALL.z1) / 2)
+  /** The foot of the way out beyond the ticket hall: what comes in from the street comes up from there. */
+  const hallSpawn = new THREE.Vector3(sx - 2 - OUT_U, LANDING.y, HALL.doorZ - 1.0)
 
   // the street behind the gate
   const night = new THREE.Mesh(new THREE.PlaneGeometry(4, 3.0), own(new THREE.MeshBasicMaterial({ map: own(streetTexture(false, 500 + sx)), color: 0xbbbbbb })))
@@ -893,7 +898,6 @@ function buildExit(c: ExitCtx): ExitBuild {
   const crowd: [number, number][] = [
     [-1.3, 0.62], [-0.65, 0.55], [0, 0.68], [0.65, 0.55], [1.3, 0.62],
     [-0.95, 1.55], [-0.3, 1.5], [0.35, 1.58], [1.0, 1.5],
-    [-1.4, 2.5], [0, 2.6], [1.3, 2.5],
   ].map(([dx, dz]) => [sx + dx + (r() - 0.5) * 0.12, gateZ + dz + (r() - 0.5) * 0.1])
   const crowdGroup = new THREE.Group()
   g.add(crowdGroup)
@@ -917,12 +921,12 @@ function buildExit(c: ExitCtx): ExitBuild {
     day.visible = false
   }
 
-  return { x: sx, setOpen, showStreet, spawn, hallSpawn, crowd, gate: gateGroup, crowdGroup, light, hallLight }
+  return { x: sx, root: g, setOpen, showStreet, spawn, hallSpawn, crowd, gate: gateGroup, crowdGroup, light, hallLight, setDoor, outDoor: { x: sx - 2 - OUT_U, z: HALL.doorZ } }
 }
 
-/** The stairwell behind the staff door and the ticket hall above it: its gates, its broken shutter. */
-function buildHall(c: ExitCtx, g: THREE.Group, wallD: THREE.Material): THREE.PointLight {
-  const { solids, blocks, own, floorMat, darkMetal, metal, black, sx, style } = c
+/** The stairwell behind the staff door and the ticket hall above it: its gates, the torn shutter, the way out beyond it. */
+function buildHall(c: ExitCtx, g: THREE.Group, wallD: THREE.Material): { light: THREE.PointLight; setDoor(k: number): void } {
+  const { solids, blocks, own, floorMat, darkMetal, metal, sx, style } = c
   const add = (m: THREE.Mesh) => (solids.push(m), m)
   const X = (u: number) => sx - 2 - u
   const top = LANDING.y
@@ -980,7 +984,9 @@ function buildHall(c: ExitCtx, g: THREE.Group, wallD: THREE.Material): THREE.Poi
   wallU(H.flightU1, H.z0, H.flightZ0, H.y, ceil)
   wallU(H.flightU1, H.flightZ1, H.z1, H.y, ceil)
   wallU(H.flightU1, H.flightZ0, H.flightZ1, H.y + 2.5, ceil)
-  wallU(H.u1, H.z0, H.z1, H.y, ceil)
+  // the far wall: the way out opens in it (its other side is the passage's)
+  wallU(H.u1, H.z0, H.openZ0, H.y, ceil)
+  wallU(H.u1, H.openZ0, H.openZ1, H.y + 2.6, ceil)
   wallZ(H.z0, H.flightU1, H.u1, H.y, ceil)
   wallZ(H.z1, H.flightU1, H.u1, H.y, ceil)
   // ceiling strip lights, all dead but one
@@ -1066,28 +1072,92 @@ function buildHall(c: ExitCtx, g: THREE.Group, wallD: THREE.Material): THREE.Poi
   out.position.set(X(H.u1) + 0.03, H.y + 2.9, lane)
   g.add(out)
 
-  // -- the street shutter at the far end, torn up from the bottom: darkness, and what comes out of it
-  const hole = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 2.6), black)
-  hole.rotation.y = Math.PI / 2
-  hole.position.set(X(H.u1) + 0.02, H.y + 1.3, lane)
-  g.add(hole)
+  // -- the shutter over the way out, wound up and torn: a few slats hang crooked from its box
   const slatTex = own(stain(77 + sx, '40,30,20'))
   const slat = own(std({ color: 0x777b7d, roughness: 0.55, metalness: 0.7, bumpMap: slatTex, bumpScale: 2 }))
-  for (let i = 0; i < 9; i++) {
-    const y = H.y + 2.55 - i * 0.12
-    const m = add(box(g, slat, 0.04, 0.1, 3.0, X(H.u1) + 0.06, y, lane))
-    // the bottom slats buckled
-    if (i > 5) {
-      m.rotation.x = (i - 5) * 0.12 * (i % 2 ? 1 : -1)
-      m.position.x += (i - 5) * 0.05
-    }
+  const ow = H.openZ1 - H.openZ0
+  const oz = (H.openZ0 + H.openZ1) / 2
+  box(g, darkMetal, 0.5, 0.42, ow + 0.3, X(H.u1) - 0.2, H.y + 2.85, oz)
+  for (let i = 0; i < 3; i++) {
+    const m = box(g, slat, 0.04, 0.1, i === 2 ? ow * 0.45 : ow, X(H.u1) - 0.05, H.y + 2.55 - i * 0.11, i === 2 ? H.openZ0 + ow * 0.22 : oz)
+    m.rotation.x = i === 2 ? 0.35 : (i - 1) * 0.04
   }
-  box(g, darkMetal, 0.12, 0.3, 3.2, X(H.u1) + 0.07, H.y + 2.75, lane)
   // blood dragged in across the floor
   const smear = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.6), own(new THREE.MeshStandardMaterial({ map: own(stain(91 + sx)), transparent: true, depthWrite: false, roughness: 0.4 })))
   smear.rotation.x = -Math.PI / 2
   smear.position.set(X(12), H.y + 0.006, lane + 0.2)
   g.add(smear)
+
+  // -- the way out: a passage beyond the shutter, ten steps down to the north, the doors onto Station Road
+  const top2 = LANDING.y
+  const uo = H.outU
+  const zd = H.doorZ - 0.25
+  const stepsEnd = H.outStepZ + 0.3 * 9
+  flat(floorMat, H.u1 - 0.02, uo, H.openZ0, H.outStepZ, H.y)
+  flat(floorMat, H.u1 - 0.02, uo, stepsEnd, zd + 0.02, top2)
+  for (let i = 0; i < 9; i++) {
+    const yTop = H.y - H.rise * (i + 1)
+    const z0 = H.outStepZ + i * 0.3
+    add(box(g, floorMat, uo - H.u1, yTop - top2 + 0.05, 0.3, X((H.u1 + uo) / 2), (yTop + top2) / 2 - 0.025, z0 + 0.15))
+    box(g, nosing, uo - H.u1, 0.025, 0.06, X((H.u1 + uo) / 2), yTop + 0.002, z0 + 0.03)
+  }
+  // the riser under the level part, facing down the steps
+  wallZ(H.outStepZ, H.u1, uo, top2, H.y)
+  // walls: the far side, the near side (the hall's far wall from the other side, down to the steps), the end, the ceiling
+  wallU(uo, H.openZ0, zd, top2 - 0.1, ceil)
+  wallU(H.u1, H.openZ1, zd, top2 - 0.1, ceil)
+  wallZ(H.openZ0, H.u1, uo, H.y, ceil)
+  flat(roofMat, H.u1, uo, H.openZ0, zd, ceil, true)
+  // a handrail down the steps, a caged lamp, a green WAY OUT sign over the doors
+  const rail2 = cyl(g, metal, 0.03, Math.hypot(2.0, 2.7), X(uo) + 0.08, top2 + 1.0 + 1.0, H.outStepZ + 1.35, 'z')
+  rail2.rotation.x = Math.PI / 2 + Math.atan2(2.0, 2.7)
+  box(g, darkMetal, 0.2, 0.12, 0.5, X(uo) + 0.1, H.y + 2.6, H.outStepZ + 1.2)
+  box(g, bulb, 0.12, 0.07, 0.36, X(uo) + 0.14, H.y + 2.52, H.outStepZ + 1.2)
+  const outSign = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.4, 0.36),
+    own(std({ color: 0x000000, emissive: 0xffffff, emissiveIntensity: 1.7, emissiveMap: own(words('WAY OUT ↑', 320, 84, '#118a3a', '#fff', 'bold 50px Helvetica, Arial, sans-serif')) })),
+  )
+  outSign.rotation.y = Math.PI
+  outSign.position.set(X(OUT_U), top2 + 3.0, zd - 0.05)
+  g.add(outSign)
+  const streetSign = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.5, 0.34),
+    own(std({ color: 0x000000, emissive: 0xffffff, emissiveIntensity: 1.5, emissiveMap: own(words('STATION ROAD', 320, 72, '#1a3d8f', '#fff', 'bold 40px Helvetica, Arial, sans-serif')) })),
+  )
+  streetSign.rotation.y = Math.PI / 2
+  streetSign.position.set(X(uo) + 0.03, H.y + 2.4, H.openZ0 + 1.4)
+  g.add(streetSign)
+  const passLight = new THREE.PointLight(0xffe2b8, 4, 9, 1.6)
+  passLight.position.set(X(OUT_U), H.y + 2.2, H.outStepZ + 1.2)
+  g.add(passLight)
+  // the doors: two glass leaves in steel frames, push bars, hinged at the sides of the opening; they swing out
+  const dx = X(OUT_U)
+  const dw = H.doorW / 2
+  const leafMat = own(std({ color: 0x2a3034, roughness: 0.4, metalness: 0.7 }))
+  const paneMat = own(std({ color: 0x9fb8c0, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.3, depthWrite: false }))
+  const hinges: THREE.Group[] = []
+  for (const s of [-1, 1]) {
+    const hg = new THREE.Group()
+    hg.position.set(dx + s * dw, top2, H.doorZ - 0.12)
+    g.add(hg)
+    hinges.push(hg)
+    const w = dw - 0.02
+    const leaf = new THREE.Group()
+    leaf.position.x = -s * (w / 2)
+    hg.add(leaf)
+    add(box(leaf, leafMat, w, 0.12, 0.06, 0, 0.06, 0))
+    add(box(leaf, leafMat, w, 0.1, 0.06, 0, 2.5, 0))
+    for (const e of [-1, 1]) add(box(leaf, leafMat, 0.08, 2.55, 0.06, (e * (w - 0.08)) / 2, 1.28, 0))
+    add(box(leaf, paneMat, w - 0.16, 2.3, 0.02, 0, 1.3, 0))
+    box(leaf, metal, w - 0.3, 0.06, 0.06, 0, 1.0, -0.08)
+    box(leaf, metal, w - 0.3, 0.06, 0.06, 0, 1.0, 0.08)
+  }
+  const setDoor = (k: number) => {
+    const e = k * k * (3 - 2 * k)
+    hinges[0].rotation.y = -e * 1.45
+    hinges[1].rotation.y = e * 1.45
+  }
+  setDoor(0)
 
   // -- the emergency light, red, over the gates
   box(g, darkMetal, 0.5, 0.1, 0.24, X(H.gatesU), ceil - 0.06, lane)
@@ -1096,7 +1166,7 @@ function buildHall(c: ExitCtx, g: THREE.Group, wallD: THREE.Material): THREE.Poi
   light.position.set(X(H.gatesU), ceil - 0.5, lane)
   g.add(light)
   void style
-  return light
+  return { light, setDoor }
 }
 
 function solid3<T extends THREE.Mesh>(m: T, solids: THREE.Object3D[]): T {

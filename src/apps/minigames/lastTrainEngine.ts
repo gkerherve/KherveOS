@@ -19,11 +19,13 @@ import { HorrorMusic } from './horrorMusic'
 import { gunshot, setGunRoom, type GunKind } from './gunSound'
 import { hasModel, instanceModel, type ModelInstance } from './rkModels'
 import {
-  AVENUE, CAR_L, CAR_PITCH, CAR_W, CAR_XS, CAR_Z, DOORS, drawBoard, FINAL_STATION, HALL, hallAt, hallY, LANDING, STREET, TUNNEL_STOP, PLATFORM, rng, sprite, STAIR, stairSlope, stairY, STAIRS, stationAt, texture,
+  AVENUE, CAR_L, CAR_PITCH, CAR_W, CAR_XS, CAR_Z, DOORS, drawBoard, FINAL_STATION, HALL, hallAt, hallFloor, LANDING, OUT_U, STREET, TUNNEL_STOP, PLATFORM, rng, sprite, STAIR, stairSlope, stairY, STAIRS, stationAt, texture,
   TRACK_Y, TRAVEL,
 } from './lastTrainWorld'
 import { buildStation, type ExitBuild, type StationBuild } from './lastTrainStation'
 import { NIGHT_FOG } from './lastTrainCity'
+import { EW, NavGrid, NS, NS_HALF, STATION_FRONT, type BlockKind } from './lastTrainPlan'
+import type { Block } from './lastTrainStation'
 import { buildTrain, setTrainDisplay, updateTrainMap, type TrainBuild } from './lastTrainCars'
 import {
   buildGuns, magReloadTime, makeMag, poseReload, PUMP_T, restGun, SHELL_LEAD, SHELL_T, type Gun, type Pose, type ReloadEvent, type ReloadState,
@@ -89,6 +91,13 @@ interface Zombie {
   ride: boolean
   /** Staggered (thrown back by a gate swinging open): it stands reeling this long. */
   daze: number
+  /** One of the street's horde that has not noticed the player: it shambles about the city. */
+  idle: boolean
+  /** Where an idle one is wandering to, and how long before it picks somewhere else; when it next looks about. */
+  wx: number
+  wz: number
+  wt: number
+  look: number
 }
 
 /** A sheet of paper blowing about the platform. */
@@ -127,8 +136,14 @@ const KINDS: Record<Kind, { hp: number; speed: number; dmg: number; scale: numbe
   /** Pale and gaunt with a red throat: when it sees you it shrieks, and a pack answers. */
   screamer: { hp: 150, speed: 1.75, dmg: 10, scale: 1.02, points: 400 },
 }
-/** The street's horde: how many at once (by wave), the most there can ever be, the seconds between surges. */
-const HORDE = { base: 10, perWave: 2.5, max: 30, hard: 40, surge: [30, 45] as [number, number], dmg: 0.7 }
+/**
+ * The city's horde: how many roam at once (by wave), the most there can ever be, the seconds between packs, how hard
+ * they hit, how many are already wandering about when the street is opened. Few, spread over a big city: most of them
+ * have not seen you yet.
+ */
+const HORDE = { base: 5, perWave: 1, max: 13, hard: 20, surge: [75, 115] as [number, number], dmg: 0.7, seed: 7 }
+/** How far an idle one sees you (in the open, nothing in between), and how far a gunshot carries to them. */
+const SIGHT = { hound: 30, screamer: 26, other: 19, shot: 42 }
 /** How far a bloater's burst reaches, and what it does to the player at its centre. */
 const BURST = { r: 3.4, dmg: 42 }
 
@@ -154,8 +169,10 @@ export interface Hud {
   station: string
   stationColor: string
   stage: Stage
-  /** The street's horde still on its feet while the player is out there (0 inside). */
+  /** The street's horde hunting the player while they are out there (0 inside). */
   horde: number
+  /** Out in the city above the station. */
+  outside: boolean
   message: string
   sub: string
 }
@@ -166,6 +183,8 @@ export interface HudEls {
   scope?: HTMLElement | null
   hit: HTMLElement | null
   hurt: HTMLElement | null
+  /** The map of the city round the player (shown while out there). */
+  map?: HTMLCanvasElement | null
 }
 
 /** The state on arrival at a station: where Continue picks up. */
@@ -227,16 +246,24 @@ const ease = {
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 
 /** The door, the flight and the hall of a stairway as walkable rectangles, kept r from the walls. */
-function hallRects(sx: number, r: number): Rect[] {
+function hallRects(sx: number, r: number, out = false): Rect[] {
   const X = (u: number) => sx - 2 - u
   const H = HALL
-  return [
+  const dx = X(OUT_U)
+  const rects: Rect[] = [
     [X(H.flightU0 + 0.1), X(-0.45), H.doorZ0 + r - 0.15, H.doorZ1 - r + 0.15],
     [X(H.flightU1 + 0.2), X(0.1), H.flightZ0 + r, H.flightZ1 - r],
     [X(H.u1 - r), X(H.flightU1 + r - 0.15), H.z0 + r, H.z1 - r],
+    // through the torn shutter into the way out, and down its steps to the doors (out through them once they are open)
+    [X(H.u1 + 0.8), X(H.u1 - 0.8), H.openZ0 + r, H.openZ1 - r],
+    [X(H.outU - r), X(H.u1 + r), H.openZ0 + r, H.doorZ - 0.25 - r],
   ]
+  if (out) rects.push([dx - H.doorW / 2 + r, dx + H.doorW / 2 - r, H.doorZ - 0.6, H.doorZ + 0.7])
+  return rects
 }
 const RIDE_TIME = 7
+/** The map's picture of the city: what it covers, and its pixels a metre. */
+const MAP = { x0: -215, x1: 250, z0: 8, z1: 252, px: 2 }
 
 export class LastTrainEngine {
   readonly renderer: THREE.WebGLRenderer
@@ -353,8 +380,32 @@ export class LastTrainEngine {
   private gateK: number[] = [0, 0]
   private shownOpen: number[] = [-1, -1]
   private streetSpawnT = 0
-  /** The next surge of the street's horde. */
+  /** The next pack of the street's horde. */
   private surgeT = 0
+  /** Each ticket hall's way out: its doors pushed open (E), and how far open they swing. */
+  private outOpen: boolean[] = [false, false]
+  private outK: number[] = [0, 0]
+  private shownOut: number[] = [-1, -1]
+  private doorTold = false
+  /** The street is open (a gate forced or a way out's doors pushed) and the player has been out: its supplies are down, its dead wander. */
+  private streetLive = false
+  /** The city's walking grid and when its flow was last worked out; the last gunshot out there. */
+  private nav: NavGrid | null = null
+  private navT = 0
+  private noiseAt = { x: 0, z: 0, t: -99 }
+  /** Footprints by 8 m cell, for pushing things out of walls quickly. */
+  private blockCells = new Map<number, Block[]>()
+  private blockCellsOf: Block[] | null = null
+  private blockCellsN = 0
+  private mapT = 0
+  /** The sky's light: the station's soft fill below, the night sky's (stronger, bluer) out in the city. */
+  private hemi = new THREE.HemisphereLight(0xc8e6d8, 0x1a1712, 0.32)
+  /** The station's own meshes down below (hidden while the player is out in the city, where none of it can be seen; its lights stay). */
+  private below: THREE.Object3D[] = []
+  private belowShown = true
+  /** The whole city drawn once for the map (2 px a metre), and for which station. */
+  private mapBase: HTMLCanvasElement | null = null
+  private mapDrawn = -1
   /** The walk overground: its footsteps, whether the next station is up, the fade in after it. */
   private trekStepT = 0
   private trekDone = false
@@ -395,7 +446,7 @@ export class LastTrainEngine {
     pmrem.dispose()
     this.scene.environment = this.env
     this.scene.environmentIntensity = 0.28
-    this.scene.add(new THREE.HemisphereLight(0xc8e6d8, 0x1a1712, 0.32))
+    this.scene.add(this.hemi)
 
     this.composer = new EffectComposer(
       this.renderer,
@@ -497,6 +548,25 @@ export class LastTrainEngine {
     this.exitOpen = 0
     this.gateHurtT = 0
     this.gateTold = false
+    this.outOpen = [false, false]
+    this.outK = [0, 0]
+    this.shownOut = [-1, -1]
+    this.doorTold = false
+    this.streetLive = false
+    this.nav = null
+    this.blockCellsOf = null
+    this.mapDrawn = -1
+    const keep = new Set<THREE.Object3D>([this.station.street.group, this.station.litter, ...this.station.exits.map((e) => e.root)])
+    this.below = []
+    this.belowShown = true
+    const collect = (o: THREE.Object3D) => {
+      for (const ch of o.children) {
+        if (keep.has(ch) || (ch as THREE.Light).isLight) continue
+        if ((ch as THREE.Mesh).isMesh || (ch as THREE.Sprite).isSprite || (ch as THREE.Points).isPoints) this.below.push(ch)
+        else collect(ch)
+      }
+    }
+    collect(this.station.group)
     this.forced = [false, false]
     this.gateK = [0, 0]
     this.shownOpen = [-1, -1]
@@ -751,7 +821,8 @@ export class LastTrainEngine {
       station: st.name,
       stationColor: st.color,
       stage: this.stage,
-      horde: this.outside ? this.zombies.filter((z) => z.street && z.state !== 'dead').length : 0,
+      horde: this.outside ? this.zombies.filter((z) => z.street && !z.idle && z.state !== 'dead').length : 0,
+      outside: this.outside,
       message: this.messageT > 0 ? this.message : '',
       sub: this.messageT > 0 ? this.sub : '',
     }
@@ -769,7 +840,7 @@ export class LastTrainEngine {
     if (/^Digit[1-9]$/.test(code)) this.switchTo(Number(code.slice(5)) - 1)
     else if (code === 'KeyQ') this.cycleGun(-1)
     else if (code === 'KeyR') this.startReload()
-    else if (code === 'KeyE') this.breakGate()
+    else if (code === 'KeyE') this.interact()
     else if (code === 'Space' && this.onGround && this.stage !== 'escaped') {
       this.vel.y = 6.4
       this.onGround = false
@@ -923,9 +994,112 @@ export class LastTrainEngine {
     this.music.stinger(0.7)
     this.say(
       'The chain snaps',
-      this.station.final ? 'The street is full of them — the avenue east leads out of the city' : `The street is full of them — the avenue east goes on foot to ${stationAt(this.stationIndex + 1).name}`,
+      this.station.final ? 'Out into the city — Station Road east leads out of it' : `Out into the city — Station Road east goes on foot to ${stationAt(this.stationIndex + 1).name}`,
       5,
     )
+  }
+
+  /** E: push open the doors of a ticket hall's way out (from either side), or break a gate's chain. */
+  private interact() {
+    if (this.stage === 'dying' || this.stage === 'escaped' || this.stage === 'trek') return
+    const i = this.station.exits.findIndex((e, k) => !this.outOpen[k] && this.atOutDoor(e))
+    if (i >= 0) return this.openOut(i)
+    this.breakGate()
+  }
+
+  /** Close enough to a way out's doors to push them (inside at the foot of its steps, or outside on the pavement). */
+  private atOutDoor(e: ExitBuild): boolean {
+    return Math.abs(this.pos.x - e.outDoor.x) < 1.8 && Math.abs(this.pos.z - e.outDoor.z) < 1.9 && Math.abs(this.pos.y - LANDING.y) < 0.9
+  }
+
+  /** The bar is pushed, the doors swing out onto Station Road: the city is open from here on. */
+  private openOut(i: number) {
+    this.outOpen[i] = true
+    this.shake = Math.max(this.shake, 0.025)
+    sfx('pushbar', () => {
+      noise({ dur: 0.08, freq: 1800, filter: 'bandpass', q: 3, vol: 0.16 })
+      tone({ freq: 150, to: 90, dur: 0.18, type: 'square', vol: 0.06 })
+      noise({ dur: 0.7, freq: 400, to: 250, filter: 'lowpass', vol: 0.06, at: 0.1 })
+    }, 0.2)
+    const inside = this.pos.z < HALL.doorZ
+    if (inside)
+      this.say(
+        'Station Road',
+        this.station.final ? 'The city — Station Road east leads out of it. Fewer of them up here, but they hunt by sight and sound' : `The city — Station Road east goes on foot to ${stationAt(this.stationIndex + 1).name}`,
+        5,
+      )
+    else this.say('The doors swing open', 'The way down to the trains: up the steps, through the ticket hall', 4)
+    this.refreshTargets()
+  }
+
+  /** The city is open: by a forced gate, a way out's doors, or the last station's gate. */
+  private get streetOpen(): boolean {
+    return this.forced.some(Boolean) || this.outOpen.some(Boolean) || this.exitOpen > 0.9
+  }
+
+  /** The first time out: the supplies people left about the city, and the dead that already wander it. */
+  private liven() {
+    if (this.streetLive) return
+    this.streetLive = true
+    for (const [k, [x, y, z]] of this.station.street.supplies.entries()) this.drop(new THREE.Vector3(x, y, z), k % 3 === 1 ? 'health' : 'ammo')
+    this.surgeT = HORDE.surge[0]
+    this.streetSpawnT = 6
+    const nav = this.navGrid()
+    for (let k = 0; k < HORDE.seed + Math.min(5, Math.floor(this.wave / 2)); k++) {
+      const at = nav.around(this.pos.x, Math.max(this.pos.z, 60), 35, 150)
+      if (at) this.streetZombie(this.streetKind(), at[0], at[1], false)
+    }
+    this.refreshTargets()
+  }
+
+  /** The city's walking grid, made from every footprint once the station (and its city) is built. */
+  private navGrid(): NavGrid {
+    if (!this.nav) this.nav = new NavGrid(this.station.blocks)
+    return this.nav
+  }
+
+  /** Where the horde in the city heads: the player out there, or the ways in they took. */
+  private updateNav(dt: number) {
+    this.navT -= dt
+    if (this.navT > 0) return
+    this.navT = 0.35
+    const nav = this.navGrid()
+    if (this.pos.z > LANDING.endZ + 0.1) nav.flow([[this.pos.x, this.pos.z]])
+    else nav.flow(this.entrances())
+  }
+
+  /** The open ways into the station, on the street side: the forced gates' entrances and the ways out's doors. */
+  private entrances(): [number, number][] {
+    const out: [number, number][] = []
+    this.station.exits.forEach((e, i) => {
+      if (this.openAt(i) > 0.9) out.push([e.x, LANDING.endZ + 0.9])
+      if (this.outK[i] > 0.85) out.push([e.outDoor.x, HALL.doorZ + 0.9])
+    })
+    return out
+  }
+
+  /** The footprints near (x, z) (cells of 8 m, each with every footprint that reaches into it, padded a metre). */
+  private blocksNear(x: number, z: number): Block[] {
+    const all = this.station.blocks
+    if (this.blockCellsOf !== all || this.blockCellsN !== all.length) {
+      this.blockCellsOf = all
+      this.blockCellsN = all.length
+      this.blockCells.clear()
+      for (const b of all) {
+        const i0 = Math.floor((b.x0 - 1 + 400) / 8)
+        const i1 = Math.floor((b.x1 + 1 + 400) / 8)
+        const j0 = Math.floor((b.z0 - 1 + 100) / 8)
+        const j1 = Math.floor((b.z1 + 1 + 100) / 8)
+        for (let i = i0; i <= i1; i++)
+          for (let j = j0; j <= j1; j++) {
+            const k = i * 1000 + j
+            const l = this.blockCells.get(k)
+            if (l) l.push(b)
+            else this.blockCells.set(k, [b])
+          }
+      }
+    }
+    return this.blockCells.get(Math.floor((x + 400) / 8) * 1000 + Math.floor((z + 100) / 8)) ?? []
   }
 
   /** A gate stands open from now on: the crowd behind it becomes part of the street's horde, and the street's supplies can be reached. */
@@ -948,99 +1122,184 @@ export class LastTrainEngine {
     }
     this.crowd = this.crowd.filter((c) => c.exit !== i)
     if (first) {
-      // what people left behind up there: worth the risk
-      const spots: [number, number][] = [[-31, 29], [-8, 31.5], [9, 48.5], [27, 30], [40, 52], [-40, 50], [STREET.x1 + 6, 37]]
-      for (const [k, [x, zz]] of spots.entries()) this.drop(new THREE.Vector3(x, STREET.y, zz), k % 3 === 1 ? 'health' : 'ammo')
       this.surgeT = HORDE.surge[0]
       this.streetSpawnT = 6
     }
     this.refreshTargets()
   }
 
-  /** Out in the street (or the avenue): past the top of the stairways. */
+  /** Out in the city (or the avenue): past the station's front. */
   private get outside(): boolean {
-    return this.pos.z > LANDING.endZ - 1 && this.stage !== 'trek'
+    return this.pos.z > LANDING.endZ + 0.2 && this.stage !== 'trek'
   }
 
-  /** One of the street's horde, at (x, z). */
-  private streetZombie(kind: Kind, x: number, zz: number): Zombie {
+  /** The crowd behind a gate that is still shut: the player came round from the street behind them, and they turn and pour out. */
+  private releaseCrowd(i: number) {
+    const ex = this.station.exits[i]
+    for (const c of this.crowd.filter((c) => c.exit === i)) {
+      const z = c.z
+      this.world.attach(z.root)
+      z.crowd = false
+      z.street = true
+      z.idle = false
+      z.state = 'chase'
+      z.shadow.visible = !z.model
+      z.root.position.set(ex.x + (Math.random() - 0.5) * 2.6, STREET.y, LANDING.endZ + 0.8 + c.rank * 0.45)
+      z.daze = 0.3 + c.rank * 0.2
+      this.zombies.push(z)
+    }
+    this.crowd = this.crowd.filter((c) => c.exit !== i)
+    this.music.stinger(0.6)
+    this.say('They turn round', 'The crowd at the gate has seen you', 2.5)
+    this.refreshTargets()
+  }
+
+  /** One of the street's horde, at (x, z): hunting the player (aware) or shambling about until it notices them. */
+  private streetZombie(kind: Kind, x: number, zz: number, aware = true): Zombie {
     const z = this.makeZombie(kind)
     this.arm(z)
     z.state = 'chase'
     z.street = true
+    z.idle = !aware
+    z.wx = x
+    z.wz = zz
+    z.wt = Math.random() * 4
+    z.look = Math.random() * 0.5
     z.root.position.set(x, STREET.y, zz)
-    z.root.rotation.y = Math.atan2(this.pos.x - x, this.pos.z - zz)
+    z.root.rotation.y = aware ? Math.atan2(this.pos.x - x, this.pos.z - zz) : Math.random() * Math.PI * 2
     this.world.add(z.root)
     this.zombies.push(z)
     return z
   }
 
-  /** A place at the edge of the street (or down the avenue) at least `min` from the player. */
-  private streetEdge(min: number, side?: number): [number, number] | null {
-    for (let tries = 0; tries < 12; tries++) {
-      const where = side ?? Math.floor(Math.random() * 4)
-      let x: number
-      let zz: number
-      if (where === 0) [x, zz] = [STREET.x0 + Math.random() * (STREET.x1 - STREET.x0), STREET.z1 - 0.5] // the far pavement
-      else if (where === 1) [x, zz] = [STREET.x0 + 0.5, STREET.z0 + 4 + Math.random() * (STREET.z1 - STREET.z0 - 4)] // the west end
-      else if (where === 2) [x, zz] = [STREET.x1 - 0.5, STREET.z0 + 4 + Math.random() * (STREET.z1 - STREET.z0 - 4)] // the east end
-      else [x, zz] = [AVENUE.x1 - 1 - Math.random() * 3, AVENUE.z0 + 0.6 + Math.random() * (AVENUE.z1 - AVENUE.z0 - 1.2)] // down the avenue
-      if (Math.hypot(x - this.pos.x, zz - this.pos.z) >= min) return [x, zz]
-    }
-    return null
+  /** A free place in the city between `min` and `max` metres from the player, or null. */
+  private streetSpot(min: number, max: number): [number, number] | null {
+    return this.navGrid().around(this.pos.x, this.pos.z, min, max)
   }
 
   private streetKind(): Kind {
     const roll = Math.random()
     const screamers = this.zombies.filter((z) => z.kind === 'screamer' && z.state !== 'dead').length
-    if (roll < 0.3) return 'walker'
-    if (roll < 0.55) return 'runner'
-    if (roll < 0.71) return 'hound'
-    if (roll < 0.81) return 'brute'
-    if (roll < 0.88) return 'bloater'
-    if (roll < 0.94 || screamers >= 2) return 'spitter'
+    if (roll < 0.38) return 'walker'
+    if (roll < 0.6) return 'runner'
+    if (roll < 0.74) return 'hound'
+    if (roll < 0.83) return 'brute'
+    if (roll < 0.89) return 'bloater'
+    if (roll < 0.96 || screamers >= 1) return 'spitter'
     return 'screamer'
   }
 
-  /** A pack comes at a run: hounds and runners, from one side. */
-  private pack(n: number, side?: number) {
+  /** Which way something at (x, z) is from the player, in words. */
+  private quarter(x: number, z: number): string {
+    const a = Math.atan2(x - this.pos.x, z - this.pos.z)
+    const k = Math.round(a / (Math.PI / 2))
+    // (+x is east, the station's front faces south)
+    return ['From the south', 'From the east', 'From the north', 'From the west'][((k % 4) + 4) % 4]
+  }
+
+  /** A pack comes at a run: hounds and runners, from one way, already on the player's scent. */
+  private pack(n: number): string {
     const all = this.zombies.filter((z) => z.street && z.state !== 'dead').length
     n = Math.min(n, HORDE.hard - all)
-    const s = side ?? Math.floor(Math.random() * 4)
+    let from = ''
+    const first = this.streetSpot(32, 48)
+    if (!first) return from
+    from = this.quarter(first[0], first[1])
     for (let i = 0; i < n; i++) {
-      const at = this.streetEdge(20, s) ?? this.streetEdge(20)
-      if (!at) break
+      const at = i === 0 ? first : (this.navGrid().around(first[0], first[1], 1, 6) ?? first)
       this.streetZombie(Math.random() < 0.45 ? 'hound' : 'runner', at[0], at[1])
     }
     this.refreshTargets()
+    return from
   }
 
-  /** While the player is out in the street, it keeps filling: a horde from every side, and now and then a surge. */
+  /** While the player is out in the city it stirs: a few more of them now and then, and every minute or two a pack. */
   private updateStreet(dt: number) {
-    if (!this.forced.some(Boolean) || this.stage === 'dying' || this.stage === 'escaped' || this.stage === 'depart' || this.stage === 'arrive' || this.stage === 'trek') return
+    if (!this.streetOpen || this.stage === 'dying' || this.stage === 'escaped' || this.stage === 'depart' || this.stage === 'arrive' || this.stage === 'trek') return
     this.streetSpawnT -= dt
+    if (this.zombies.some((z) => z.street) || this.outside) this.updateNav(dt)
     if (!this.outside) return
+    if (!this.streetLive) this.liven()
+    // the ones that wandered far away, never having seen the player: gone (others come in their place, nearer)
+    let gone = false
+    for (const z of this.zombies)
+      if (z.street && z.idle && z.state !== 'dead' && Math.hypot(z.root.position.x - this.pos.x, z.root.position.z - this.pos.z) > 120) {
+        this.removeZombie(z)
+        z.state = 'dead'
+        z.deadT = 99
+        gone = true
+      }
+    if (gone) this.zombies = this.zombies.filter((z) => !(z.street && z.idle && z.deadT === 99))
     this.surgeT -= dt
     if (this.surgeT <= 0) {
       this.surgeT = HORDE.surge[0] + Math.random() * (HORDE.surge[1] - HORDE.surge[0])
-      const side = Math.floor(Math.random() * 4)
-      this.pack(4 + Math.min(4, Math.ceil(this.wave / 2)), side)
-      this.music.stinger(0.6)
-      sfx('howl', () => {
-        tone({ freq: 380, to: 620, dur: 0.9, type: 'sawtooth', vol: 0.03 })
-        tone({ freq: 300, to: 520, dur: 1.1, type: 'sawtooth', vol: 0.025, at: 0.2 })
-        noise({ dur: 1.4, freq: 600, filter: 'bandpass', q: 2, vol: 0.05 })
-      }, 1)
-      this.say('A pack!', ['From the far side', 'From the west', 'From the east', 'Down the avenue'][side], 2.5)
+      const from = this.pack(2 + Math.min(3, Math.ceil(this.wave / 3)))
+      if (from) {
+        this.music.stinger(0.6)
+        sfx('howl', () => {
+          tone({ freq: 380, to: 620, dur: 0.9, type: 'sawtooth', vol: 0.03 })
+          tone({ freq: 300, to: 520, dur: 1.1, type: 'sawtooth', vol: 0.025, at: 0.2 })
+          noise({ dur: 1.4, freq: 600, filter: 'bandpass', q: 2, vol: 0.05 })
+        }, 1)
+        this.say('A pack!', from, 2.5)
+      }
     }
     if (this.streetSpawnT > 0) return
     const out = this.zombies.filter((z) => z.street && z.state !== 'dead').length
     if (out >= Math.min(HORDE.max, HORDE.base + this.wave * HORDE.perWave)) return
-    this.streetSpawnT = 0.6 + Math.random() * 0.8
-    const at = this.streetEdge(22)
+    this.streetSpawnT = 3.5 + Math.random() * 3.5
+    const at = this.streetSpot(38, 75)
     if (!at) return
-    this.streetZombie(this.streetKind(), at[0], at[1])
+    this.streetZombie(this.streetKind(), at[0], at[1], false)
     this.refreshTargets()
+  }
+
+  /**
+   * Where one of the horde out in the city heads: if it has not seen the player, wherever it is wandering; if it has,
+   * straight at them when nothing is between, else along the walking grid round the blocks (or, if the player is
+   * back inside, to the way in they took, and through it).
+   */
+  private streetTarget(z: Zombie, p: THREE.Vector3, dt: number): [number, number] {
+    const nav = this.navGrid()
+    if (z.idle) {
+      z.wt -= dt
+      if (z.wt <= 0 || Math.hypot(z.wx - p.x, z.wz - p.z) < 0.8) {
+        z.wt = 5 + Math.random() * 7
+        const to = nav.around(p.x, p.z, 4, 14, 8)
+        if (to) [z.wx, z.wz] = to
+      }
+      return [z.wx, z.wz]
+    }
+    const out = this.pos.z > LANDING.endZ + 0.1
+    if (out) {
+      const d = Math.hypot(this.pos.x - p.x, this.pos.z - p.z)
+      if (d < 3.5 || (d < 18 && nav.los(p.x, p.z, this.pos.x, this.pos.z))) return [this.pos.x, this.pos.z]
+    } else {
+      // at a way in: through it
+      for (const [i, e] of this.station.exits.entries()) {
+        if (this.openAt(i) > 0.9 && Math.abs(p.x - e.x) < 2.6 && p.z < LANDING.endZ + 2.6) return Math.abs(p.x - e.x) > 1.3 ? [e.x, LANDING.endZ + 1.2] : [e.x, LANDING.endZ - 2]
+        if (this.outK[i] > 0.85 && Math.abs(p.x - e.outDoor.x) < 2.4 && p.z < HALL.doorZ + 2.6) return Math.abs(p.x - e.outDoor.x) > 0.8 ? [e.outDoor.x, HALL.doorZ + 1.0] : [e.outDoor.x, HALL.doorZ - 1.2]
+      }
+    }
+    const st = nav.step(p.x, p.z)
+    if (!st) return out ? [this.pos.x, this.pos.z] : this.route(p)
+    return [p.x + st[0] * 1.5, p.z + st[1] * 1.5]
+  }
+
+  /** An idle one looks about now and then: it notices the player close by, in plain sight, or when a shot goes off near it. */
+  private notice(z: Zombie, dist: number, dt: number) {
+    z.look -= dt
+    if (z.look > 0 && z.hitT <= 0) return
+    z.look = 0.3 + Math.random() * 0.2
+    const p = z.root.position
+    const t = performance.now() * 0.001
+    const heard = t - this.noiseAt.t < 1.2 && Math.hypot(this.noiseAt.x - p.x, this.noiseAt.z - p.z) < SIGHT.shot
+    const sight = z.kind === 'hound' ? SIGHT.hound : z.kind === 'screamer' ? SIGHT.screamer : SIGHT.other
+    const seen = this.pos.z > LANDING.endZ - 1 && dist < sight && this.navGrid().los(p.x, p.z, this.pos.x, this.pos.z)
+    if (dist < 4.5 || seen || heard || z.hitT > 0) {
+      z.idle = false
+      z.groan = Math.min(z.groan, 0.2)
+    }
   }
 
   /** A screamer that has seen the player stops, throws its head back and shrieks: a pack answers. */
@@ -1058,7 +1317,7 @@ export class LastTrainEngine {
     this.shake = Math.max(this.shake, 0.03 * vol)
     this.music.stinger(0.5)
     this.say('A screamer!', 'Kill it before it calls more', 2.2)
-    this.pack(2 + Math.min(3, Math.ceil(this.wave / 3)))
+    this.pack(1 + Math.min(3, Math.ceil(this.wave / 3)))
   }
 
   /** Along the avenue on foot: the screen goes dark, the city goes by, and the next station (or the city limits) comes up. */
@@ -1106,24 +1365,21 @@ export class LastTrainEngine {
     this.setStation(this.stationIndex + 1)
     const bonus = 750 * this.wave
     this.score += bonus
-    // in at the west end of the next street: its nearest gate already broken, its horde waiting
-    this.pos.set(STREET.x0 + 3, STREET.y, 40)
+    // in along Station Road from the west, the next station ahead on the right: the doors of its middle way out stand open
+    this.pos.set(STATION_FRONT.x0 - 16, STREET.y, 40)
     this.vel.set(0, 0, 0)
-    this.yaw = -Math.PI / 2 + 0.35
+    this.yaw = -Math.PI / 2 + 0.3
     this.pitch = 0
-    this.forceGate(0)
-    this.gateK[0] = 1
-    for (let i = 0; i < 3 + Math.ceil(this.wave / 2); i++) {
-      const at = this.streetEdge(22)
-      if (at) this.streetZombie(this.streetKind(), at[0], at[1])
-    }
+    this.outOpen[1] = true
+    this.outK[1] = 1
+    this.liven()
     this.onCheckpoint?.({
       wave: this.wave, station: this.stationIndex, stationName: stationAt(this.stationIndex).name, health: Math.max(50, Math.ceil(this.health)),
       score: this.score, kills: this.kills, guns: this.guns.map((g) => ({ mag: g.mag, reserve: g.reserve })),
     })
     this.startWave()
     const found = this.guns.findIndex((g) => g.def.from === this.stationIndex)
-    this.say(stationAt(this.stationIndex).name, found >= 0 ? `+${bonus} overground — found: ${this.guns[found].def.name} (${found + 1})` : `+${bonus} overground — down the stairs, wave ${this.wave}`, 5)
+    this.say(stationAt(this.stationIndex).name, found >= 0 ? `+${bonus} overground — found: ${this.guns[found].def.name} (${found + 1})` : `+${bonus} overground — in under WAY OUT, down to the trains: wave ${this.wave}`, 5)
     this.fadeIn = 0
   }
 
@@ -1394,7 +1650,7 @@ export class LastTrainEngine {
       case 'exit': {
         // the gate slides open, daylight comes down the stairs; walk out through it
         const ex = this.nearestExit()
-        if (this.pos.z > LANDING.gateZ + 0.9 && Math.abs(this.pos.x - ex.x) < 2) {
+        if ((this.pos.z > LANDING.gateZ + 0.9 && Math.abs(this.pos.x - ex.x) < 2) || this.pos.z > LANDING.endZ + 0.5) {
           this.stage = 'escaped'
           this.stageT = 0
           this.escapeT = 0
@@ -1594,7 +1850,7 @@ export class LastTrainEngine {
     if (z < PLATFORM.z0 - 0.02 && !this.train.group.visible) return TRACK_Y
     if (z > STAIR.z0 && STAIRS.some((sx) => Math.abs(x - sx) < 2)) return stairY(z)
     const h = hallAt(x, z)
-    if (h) return hallY(h.u)
+    if (h) return hallFloor(h.u, z)
     return 0
   }
 
@@ -1605,11 +1861,12 @@ export class LastTrainEngine {
     const plat: Rect = [PLATFORM.x0, PLATFORM.x1, PLATFORM.z0, PLATFORM.z1]
     // the stairways: up the steps, over the landing, as far as the gate (or out into the street, once it is open)
     const stairs = STAIRS.map((sx, i) => [sx - STAIR.halfW + 0.1, sx + STAIR.halfW - 0.1, 9.0, this.openAt(i) > 0.9 ? LANDING.endZ + 0.6 : LANDING.gateZ - 0.55] as Rect)
-    if (STAIRS.some((_, i) => this.openAt(i) > 0.9)) stairs.push([STREET.x0, STREET.x1, STREET.z0, STREET.z1], [AVENUE.x0, AVENUE.x1, AVENUE.z0, AVENUE.z1])
+    // the city (reached through an open gate or a way out's doors)
+    stairs.push([STREET.x0, STREET.x1, STREET.z0, STREET.z1], [AVENUE.x0, AVENUE.x1, AVENUE.z0, AVENUE.z1])
     // down on the track and into the tunnels, while no train is in
     if (!this.train.group.visible) stairs.push([-TUNNEL_STOP, TUNNEL_STOP, -3.6, PLATFORM.z0 + 0.01])
     // through the staff door, up the flight, into the ticket hall
-    for (const sx of STAIRS) stairs.push(...hallRects(sx, 0.3))
+    for (const [i, sx] of STAIRS.entries()) stairs.push(...hallRects(sx, 0.3, this.outK[i] > 0.85))
     const train = (doors: boolean) => this.carRects(doors)
     const docked = this.docked
     if (this.stage === 'depart' || this.stage === 'arrive') return train(false)
@@ -1721,7 +1978,7 @@ export class LastTrainEngine {
 
   /** Push a point (radius r) out of the furniture and clutter standing on the platform. */
   private pushBlocks(p: { x: number; z: number }, r: number) {
-    for (const b of this.station.blocks) {
+    for (const b of this.blocksNear(p.x, p.z)) {
       const nx = clamp(p.x, b.x0, b.x1)
       const nz = clamp(p.z, b.z0, b.z1)
       const dx = p.x - nx
@@ -2099,6 +2356,7 @@ export class LastTrainEngine {
     const g = this.gun
     const d = g.def
     g.mag--
+    this.noiseAt = { x: this.pos.x, z: this.pos.z, t: performance.now() * 0.001 }
     this.cooldown = 60 / d.rpm
     this.kickT = 1
     const k = d.kick * (1 - this.aim * 0.4)
@@ -2283,13 +2541,13 @@ export class LastTrainEngine {
     z.speed = KINDS[kind].speed * (1 + (w - 1) * 0.04) * (0.85 + Math.random() * 0.3)
     // nothing comes out of the tunnels while a train is still in the station
     const where = this.leaving >= 0 || this.train.group.visible ? 0 : Math.random()
-    if (where < 0.22) {
-      // in through the shutter at the far end of a ticket hall, through its gates, down to the platform
+    if (where < 0.12) {
+      // up from the street by a ticket hall's way out, through the hall and its gates, down to the platform
       const ex = this.station.exits[Math.floor(Math.random() * this.station.exits.length)]
       z.state = 'chase'
       z.root.position.copy(ex.hallSpawn)
       z.root.position.z += (Math.random() - 0.5) * 2.4
-    } else if (where < 0.42) {
+    } else if (where < 0.34) {
       // out of the staff door on a landing and down the stairs: the stairway farther from the player first
       const exits = this.station.exits
       const far = exits.filter((e) => Math.hypot(this.pos.x - e.spawn.x, this.pos.z - e.spawn.z) > 7)
@@ -2421,7 +2679,7 @@ export class LastTrainEngine {
     Object.assign(z, {
       kind, root, hips, spine, head: neck, arms, fores, thighs, shins, mats, eyes, meshes, shadow,
       hp: 100, maxHp: 100, speed: 1, state: 'chase', t: 0, phase: r() * 10, attack: 0, hitT: 0, flash: 0,
-      deadT: 0, fall: r() < 0.5 ? -1 : 1, groan: 1 + r() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2, street: false, scream: 0, ride: false, daze: 0,
+      deadT: 0, fall: r() < 0.5 ? -1 : 1, groan: 1 + r() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2, street: false, scream: 0, ride: false, daze: 0, idle: false, wx: 0, wz: 0, wt: 0, look: 0,
     })
     return z as Zombie
   }
@@ -2440,7 +2698,7 @@ export class LastTrainEngine {
       kind, model, root, hips: dummy(), spine: dummy(), head: dummy(), arms: [dummy(), dummy()], fores: [dummy(), dummy()],
       thighs: [dummy(), dummy()], shins: [dummy(), dummy()], mats: model.mats, eyes: [], meshes: model.meshes, shadow,
       hp: 100, maxHp: 100, speed: 1, state: 'chase', t: 0, phase: Math.random() * 10, attack: 0, hitT: 0, flash: 0,
-      deadT: 0, fall: 1, groan: 1 + Math.random() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2, street: false, scream: 0, ride: false, daze: 0,
+      deadT: 0, fall: 1, groan: 1 + Math.random() * 4, goalX: 0, stairX: 0, points: KINDS[kind].points, crowd: false, next: 0, spit: 2 + Math.random() * 2, street: false, scream: 0, ride: false, daze: 0, idle: false, wx: 0, wz: 0, wt: 0, look: 0,
     } as unknown as Zombie
     const extra: THREE.Mesh[] = []
     this.dress(kind, model.root, extra, model.mats, model.height)
@@ -2540,6 +2798,7 @@ export class LastTrainEngine {
       this.zombies.push(z)
     }
     if (!fromCrowd) z.hp -= dmg
+    z.idle = false
     z.flash = 1
     z.hitT = 0.25
     this.emit(this.blood, at, dir.clone().multiplyScalar(-0.3).add(new THREE.Vector3(0, 0.4, 0)), head ? 16 : 8, 2.2, 0.7)
@@ -2662,20 +2921,35 @@ export class LastTrainEngine {
     return Math.max(this.exitOpen, this.gateK[i] ?? 0)
   }
 
-  /** Where a zombie heads: through an open gate when one of them is in the street and the other not. */
+  /** Where a zombie heads: through an open gate or a way out's doors when one of them is in the street and the other not. */
   private route(p: THREE.Vector3): [number, number] {
     const out = (z: number) => z > LANDING.endZ + 0.1
     const zs = out(p.z)
     if (zs === out(this.pos.z)) return this.routeTo(p, this.pos.x, this.pos.z)
-    const open = this.station.exits.filter((_, i) => this.openAt(i) > 0.9)
-    if (!open.length) return this.routeTo(p, this.pos.x, this.pos.z)
-    const ex = open.reduce((a, b) => (Math.abs(a.x - p.x) <= Math.abs(b.x - p.x) ? a : b)).x
-    // from the street: to the entrance, then down
-    if (zs) return Math.abs(p.x - ex) > 1.3 ? [ex, LANDING.endZ + 1.2] : [ex, LANDING.endZ - 2]
-    // from inside: out of a hall first, up the stairs, through the gate
+    const exits = this.station.exits
+    const gates = exits.filter((_, i) => this.openAt(i) > 0.9)
+    const doors = exits.filter((_, i) => this.outK[i] > 0.85)
+    if (!gates.length && !doors.length) return this.routeTo(p, this.pos.x, this.pos.z)
+    if (zs) {
+      // from the street: in by the nearest way
+      const g = gates.length ? gates.reduce((a, b) => (Math.abs(a.x - p.x) <= Math.abs(b.x - p.x) ? a : b)) : null
+      const d = doors.length ? doors.reduce((a, b) => (Math.abs(a.outDoor.x - p.x) <= Math.abs(b.outDoor.x - p.x) ? a : b)) : null
+      if (d && (!g || Math.hypot(d.outDoor.x - p.x, HALL.doorZ - p.z) < Math.hypot(g.x - p.x, LANDING.endZ - p.z)))
+        return Math.abs(p.x - d.outDoor.x) > 0.8 ? [d.outDoor.x, HALL.doorZ + 1.0] : [d.outDoor.x, HALL.doorZ - 1.2]
+      const ex = g!.x
+      return Math.abs(p.x - ex) > 1.3 ? [ex, LANDING.endZ + 1.2] : [ex, LANDING.endZ - 2]
+    }
+    // from inside: out through the way out of the hall it is in (or the nearest one, if no gate is open)
     const h = hallAt(p.x, p.z)
+    const door = doors.find((e) => h && h.sx === e.x && h.u > 0.05) ?? (gates.length ? undefined : doors.reduce((a, b) => (Math.abs(a.x - p.x) <= Math.abs(b.x - p.x) ? a : b)))
+    if (door) {
+      if (h && h.sx === door.x && h.u > HALL.u1 - 0.05) return [door.outDoor.x, HALL.doorZ + 1.0]
+      return this.routeTo(p, door.x - 2 - OUT_U, HALL.outStepZ - 0.6)
+    }
+    const ex = gates.reduce((a, b) => (Math.abs(a.x - p.x) <= Math.abs(b.x - p.x) ? a : b)).x
+    // out of a hall first, up the stairs, through the gate
     if (h && h.u > 0.05) return this.routeTo(p, ex, 14)
-    if (p.z < STAIR.z0 + 0.3 || Math.abs(p.x - ex) > STAIR.halfW - 0.2) return [ex, STAIR.z0 + 1]
+    if (p.z < STAIR.z0 + 0.3 || Math.abs(p.x - ex) > STAIR.halfW - 0.2) return Math.abs(p.x - ex) > 2.5 && p.z < STAIR.z0 ? [ex, 7.2] : [ex, STAIR.z0 + 1]
     return [ex, LANDING.endZ + 1.5]
   }
 
@@ -2683,11 +2957,11 @@ export class LastTrainEngine {
   private routeTo(p: THREE.Vector3, tx: number, tz: number): [number, number] {
     const H = HALL
     const lane = H.laneZ
-    // cells: 0 platform and stairs, 1 the flight, 2 the hall this side of the gates, 3 beyond them
+    // cells: 0 platform and stairs, 1 the flight, 2 the hall this side of the gates, 3 beyond them, 4 the way out
     const cell = (x: number, z: number): [number, number] => {
       const h = hallAt(x, z)
       if (!h || h.u < 0.05) return [0, STAIRS.reduce((a, b) => (Math.abs(a - x) < Math.abs(b - x) ? a : b))]
-      return [h.u < H.flightU1 ? 1 : h.u < H.gatesU ? 2 : 3, h.sx]
+      return [h.u < H.flightU1 ? 1 : h.u < H.gatesU ? 2 : h.u < H.u1 ? 3 : 4, h.sx]
     }
     const X = (sx: number, u: number) => sx - 2 - u
     const [zc, zsx] = cell(p.x, p.z)
@@ -2695,19 +2969,25 @@ export class LastTrainEngine {
     if (zc === pc && (zc === 0 || zsx === psx)) return [tx, tz]
     // the cell to go to next, and through which hall
     const sx = zc === 0 ? psx : zsx
-    const want = zc !== 0 && (pc === 0 || psx !== zsx) ? zc - 1 : zc + 1
+    const want = zc !== 0 && (pc === 0 || psx !== zsx) ? zc - 1 : zc === 0 || pc > zc ? zc + 1 : zc - 1
     const lz = (z: number) => clamp(z, lane - 0.4, lane + 0.4)
+    // (the shutter's opening is wider than the lanes; at the foot of the way out's steps, climb them first)
+    if (zc === 4 && p.z > H.outStepZ + 0.4 && want === 3) return [X(sx, OUT_U), H.outStepZ - 0.6]
     if (zc === 0) {
-      // up the stairs to the staff door
-      if (Math.abs(p.x - sx) > STAIR.halfW - 0.2 || p.z < STAIR.z0 + 0.3) return [sx, STAIR.z0 + 1]
-      if (p.z < LANDING.z0 - 0.2) return [sx - 0.8, LANDING.z0 + 0.4]
+      // up the stairs to the staff door (from along the platform: out in front of the stairs first, clear of the benches)
+      const onLanding = p.z > LANDING.z0 - 0.2 && Math.abs(p.x - sx) < STAIR.halfW + 0.6
+      if (!onLanding) {
+        if (Math.abs(p.x - sx) > STAIR.halfW - 0.2 || p.z < STAIR.z0 + 0.3) return Math.abs(p.x - sx) > 2.5 ? [sx, 7.2] : [sx, STAIR.z0 + 1]
+        if (p.z < LANDING.z0 - 0.2) return [sx - 0.8, LANDING.z0 + 0.4]
+      }
       // line up with the doorway, then go through it
       const lined = Math.abs(p.z - lane) < 0.36 && p.x < X(sx, -0.9)
       return lined || p.x < X(sx, -0.3) ? [X(sx, 1.2), lane] : [X(sx, -0.6), lane]
     }
     const u = sx - 2 - p.x
     // the portal between this cell and the wanted one, and a point just past it
-    const portal = Math.max(zc, want) === 1 ? 0 : Math.max(zc, want) === 2 ? H.flightU1 : H.gatesU
+    const m = Math.max(zc, want)
+    const portal = m === 1 ? 0 : m === 2 ? H.flightU1 : m === 3 ? H.gatesU : H.u1
     const dir = want > zc ? 1 : -1
     const before = portal - dir * (portal === H.gatesU ? 1.0 : 0.6)
     if (Math.abs(u - before) < 0.5 || (dir > 0 ? u > before : u < before)) return [X(sx, portal + dir * 1.2), lz(p.z)]
@@ -2718,7 +2998,7 @@ export class LastTrainEngine {
   private navClamp(p: THREE.Vector3) {
     const h = hallAt(p.x, p.z)
     if (h && h.u > 0.05) {
-      const rects = hallRects(h.sx, 0.35)
+      const rects = hallRects(h.sx, 0.35, this.outK[STAIRS.indexOf(h.sx)] > 0.85)
       const [nx, nz] = this.free(p.x, p.z, rects) ? [p.x, p.z] : this.nearestFree(p.x, p.z, rects)
       p.x = nx
       p.z = nz
@@ -2818,7 +3098,8 @@ export class LastTrainEngine {
         }
       } else {
         // chase (through the halls if need be), keeping apart from the others and out of the pillars
-        const [tx0, tz0] = z.ride ? this.rideTarget(p) : this.route(p)
+        if (z.street && z.idle) this.notice(z, dist, dt)
+        const [tx0, tz0] = z.ride ? this.rideTarget(p) : z.street && p.z > LANDING.endZ + 0.1 ? this.streetTarget(z, p, dt) : this.route(p)
         move.set(tx0 - p.x, 0, tz0 - p.z).normalize()
         if (Math.hypot(tx0 - this.pos.x, tz0 - this.pos.z) > 0.01) face = Math.atan2(move.x, move.z)
         for (const o of this.zombies) {
@@ -2841,6 +3122,8 @@ export class LastTrainEngine {
           }
         }
         if (dist < 1.05 * KINDS[z.kind].scale) speed = 0
+        // shambling about, not yet hunting
+        if (z.idle) speed *= z.kind === 'hound' ? 0.32 : 0.38
         if (z.daze > 0) {
           z.daze -= dt
           speed = 0
@@ -2876,7 +3159,7 @@ export class LastTrainEngine {
         }
         // attack
         z.attack -= dt
-        if (dist < 1.25 * KINDS[z.kind].scale && Math.abs(p.y - player.y) < 1.4 && z.attack <= 0 && this.stage !== 'dying' && this.stage !== 'escaped') {
+        if (!z.idle && dist < 1.25 * KINDS[z.kind].scale && Math.abs(p.y - player.y) < 1.4 && z.attack <= 0 && this.stage !== 'dying' && this.stage !== 'escaped') {
           z.attack = z.kind === 'runner' ? 0.75 : 1.15
           z.t = 0
           window.setTimeout(() => {
@@ -2895,11 +3178,11 @@ export class LastTrainEngine {
       if (z.ride) this.rideClamp(z)
       else if (z.state === 'chase' && this.navClamp(p)) {
         const h = hallAt(p.x, p.z)!
-        p.y += (hallY(h.u, true) - p.y) * Math.min(1, dt * 10)
+        p.y += (hallFloor(h.u, p.z, true) - p.y) * Math.min(1, dt * 10)
         this.pushBlocks(p, 0.38)
       } else if (z.state === 'chase' && p.z > LANDING.endZ - 0.2) {
         // the street (and the avenue off its east end): in through an open entrance only
-        const door = this.station.exits.some((e, i) => this.openAt(i) > 0.9 && Math.abs(p.x - e.x) < 1.5)
+        const door = this.station.exits.some((e, i) => (this.openAt(i) > 0.9 && Math.abs(p.x - e.x) < 1.5) || (this.outK[i] > 0.85 && Math.abs(p.x - e.outDoor.x) < HALL.doorW / 2 - 0.3))
         const avenue = p.z > AVENUE.z0 && p.z < AVENUE.z1
         p.x = clamp(p.x, STREET.x0, avenue ? AVENUE.x1 : STREET.x1)
         p.z = clamp(p.z, door ? LANDING.endZ - 0.5 : STREET.z0 + 0.1, STREET.z1)
@@ -2914,7 +3197,10 @@ export class LastTrainEngine {
         if (nl > 1e-4 && speed > 0) {
           let tx = -nz / nl
           let tz = nx / nl
-          if (tx * dx + tz * dz < 0 || (Math.abs(tx * dx + tz * dz) < 0.2 && z.fall < 0)) {
+          // slide along it the way it was going (round a block that may be away from the player)
+          const wx = move.lengthSq() > 1e-8 ? move.x : dx
+          const wz = move.lengthSq() > 1e-8 ? move.z : dz
+          if (tx * wx + tz * wz < 0 || (Math.abs(tx * wx + tz * wz) < 0.2 * Math.hypot(wx, wz) && z.fall < 0)) {
             tx = -tx
             tz = -tz
           }
@@ -2980,13 +3266,43 @@ export class LastTrainEngine {
         e.setOpen(k)
       }
     }
+    // the ways out's doors swing open once pushed; standing at a shut pair, the player is told how
+    for (const [i, e] of exits.entries()) {
+      if (this.outOpen[i] && this.outK[i] < 1) this.outK[i] = Math.min(1, this.outK[i] + dt / 0.7)
+      if (this.outK[i] !== this.shownOut[i]) {
+        this.shownOut[i] = this.outK[i]
+        e.setDoor(this.outK[i])
+      }
+      if (!this.outOpen[i] && !this.doorTold && this.atOutDoor(e) && this.stage !== 'trek') {
+        this.doorTold = true
+        this.say(this.pos.z < HALL.doorZ ? 'Doors onto Station Road' : 'A way into the station', 'Press E to push them open', 4)
+      }
+      // the crowd at a shut gate, come upon from the street behind them
+      if (this.outside && this.openAt(i) < 0.5 && Math.abs(this.pos.x - e.x) < 6 && this.pos.z < LANDING.endZ + 7 && this.crowd.some((c) => c.exit === i && c.z.root.visible) && !this.station.final)
+        this.releaseCrowd(i)
+    }
     this.station.street.fire.intensity = 12 + Math.sin(t * 13) * 2.5 + Math.random() * 3
-    this.station.street.update(t)
+    // the city's lights shine once the player is up where they could reach (not down in the station, through its roof)
+    const hh = hallAt(this.pos.x, this.pos.z)
+    const lit = this.pos.z > LANDING.endZ - 1.5 || (hh !== null && hh.u > HALL.u1 - 1) || (this.pos.z > LANDING.gateZ - 2 && STAIRS.some((sx) => Math.abs(this.pos.x - sx) < 2.2))
+    this.station.street.update(t, this.pos, lit || this.stage === 'trek')
     // the street is only drawn once the player is near enough the stairs to see it
     this.station.street.group.visible = this.pos.z > 6.5 || this.stage === 'trek'
+    const show = !(this.pos.z > LANDING.endZ + 4 && this.stage !== 'trek')
+    if (show !== this.belowShown) {
+      this.belowShown = show
+      for (const o of this.below) {
+        if (!show) {
+          o.userData.wasVisible = o.visible
+          o.visible = false
+        } else o.visible = o.userData.wasVisible ?? true
+      }
+    }
     // up on the landing and out in the street: the moon lights it, the night air is clearer than the station's
     const up = clamp((this.pos.z - LANDING.z0) / 5, 0, 1) * (this.stage === 'trek' ? 0 : 1)
     this.station.street.moon.intensity = up * 1.7
+    this.hemi.intensity = 0.32 + up * 0.5
+    this.hemi.color.setRGB(0.78 - up * 0.2, 0.9 - up * 0.25, 0.85 - up * 0.08)
     const fog = this.scene.fog as THREE.FogExp2
     fog.density = THREE.MathUtils.lerp(0.021, 0.011, up)
     fog.color.copy(this.stationFog).lerp(this.nightFog, up)
@@ -3319,7 +3635,156 @@ export class LastTrainEngine {
     void dt
   }
 
+  /** The city's plan in flat colours: streets, what stands on each block, the station and its ways in, the street names. */
+  private drawMapBase() {
+    const S = MAP.px
+    const plan = this.station.street.plan
+    const c = this.mapBase ?? document.createElement('canvas')
+    this.mapBase = c
+    c.width = Math.ceil((MAP.x1 - MAP.x0) * S)
+    c.height = Math.ceil((MAP.z1 - MAP.z0) * S)
+    const g = c.getContext('2d')!
+    const X = (x: number) => (x - MAP.x0) * S
+    const Z = (z: number) => (z - MAP.z0) * S
+    const rect = (x0: number, x1: number, z0: number, z1: number, col: string) => {
+      g.fillStyle = col
+      g.fillRect(X(x0), Z(z0), (x1 - x0) * S, (z1 - z0) * S)
+    }
+    g.fillStyle = '#121312'
+    g.fillRect(0, 0, c.width, c.height)
+    // the streets: pavements, then the roads
+    for (const e of EW) rect(STREET.x0, e === EW[0] ? AVENUE.x1 : STREET.x1, e.b0, e.b1, '#4a4c4e')
+    for (const n of NS) rect(n.x - NS_HALF, n.x + NS_HALF, EW[0].b1 - 1, EW[EW.length - 1].b0 + 1, '#4a4c4e')
+    for (const e of EW) rect(STREET.x0, e === EW[0] ? AVENUE.x1 : STREET.x1, e.r0, e.r1, '#6a6d70')
+    for (const n of NS) rect(n.x - 5, n.x + 5, EW[0].r1, EW[EW.length - 1].r0, '#6a6d70')
+    rect(STREET.x1, AVENUE.x1, AVENUE.z0, AVENUE.z1, '#6a6d70')
+    const tint: Record<BlockKind, string> = {
+      buildings: '#262320', park: '#2f5a2c', square: '#7a6e58', church: '#4f4060', petrol: '#6f5f1c', carpark: '#3e3f42', works: '#6f4a1c', mart: '#1f5a58', hospital: '#5d6d80',
+    }
+    for (const b of plan.blocks) rect(b.x0, b.x1, b.z0, b.z1, tint[b.kind])
+    // the station: its front, the gates' entrances and the ways out
+    rect(STATION_FRONT.x0, STATION_FRONT.x1, LANDING.endZ - 9, LANDING.endZ, '#6a1a14')
+    g.font = `bold ${5 * S}px Helvetica, Arial, sans-serif`
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    g.fillStyle = '#f0e6d8'
+    g.fillText('STATION', X((STATION_FRONT.x0 + STATION_FRONT.x1) / 2), Z(LANDING.endZ - 4.5))
+    // the names of the streets and of what stands on the blocks
+    g.font = `${3.2 * S}px Helvetica, Arial, sans-serif`
+    g.fillStyle = 'rgba(235,235,225,0.75)'
+    for (const e of EW) for (const x of [-96, 96]) g.fillText(e.name.toUpperCase(), X(x), Z((e.r0 + e.r1) / 2))
+    for (const n of NS) {
+      g.save()
+      g.translate(X(n.x), Z(140))
+      g.rotate(-Math.PI / 2)
+      g.fillText(n.name.toUpperCase(), 0, 0)
+      g.restore()
+    }
+    const label: Partial<Record<BlockKind, string>> = { park: 'PARK', square: 'SQUARE', church: 'CHURCH', petrol: 'PETROL', carpark: 'CAR PARK', works: 'SITE', mart: 'MART', hospital: 'HOSPITAL' }
+    g.font = `bold ${3.6 * S}px Helvetica, Arial, sans-serif`
+    for (const b of plan.blocks)
+      if (label[b.kind]) {
+        g.fillStyle = 'rgba(255,255,240,0.85)'
+        g.fillText(label[b.kind]!, X((b.x0 + b.x1) / 2), Z((b.z0 + b.z1) / 2))
+      }
+    g.fillStyle = 'rgba(255,255,240,0.85)'
+    g.fillText('CITY HALL', X(0), Z(EW[EW.length - 1].b1 + 6))
+    // the way on, east along the avenue
+    g.fillStyle = '#2fbf71'
+    g.fillText(this.station.final ? 'OUT →' : `${stationAt(this.stationIndex + 1).name.toUpperCase()} →`, X(AVENUE.x1 - 18), Z(AVENUE.z0 - 3))
+    this.mapDrawn = this.stationIndex
+  }
+
+  /** The map round the player, turned the way they face: the city, the open ways into the station, supplies, the dead hunting them. */
+  private drawMap() {
+    const cv = this.hud.map
+    if (!cv) return
+    const show = this.outside || (hallAt(this.pos.x, this.pos.z)?.u ?? 0) > HALL.u1 - 0.5
+    cv.style.opacity = show ? '1' : '0'
+    if (!show) return
+    if (this.mapDrawn !== this.stationIndex || !this.mapBase) this.drawMapBase()
+    const g = cv.getContext('2d')!
+    const W = cv.width
+    const S = MAP.px
+    const cx = W / 2
+    g.clearRect(0, 0, W, W)
+    g.save()
+    g.beginPath()
+    g.arc(cx, cx, cx - 2, 0, Math.PI * 2)
+    g.clip()
+    g.fillStyle = '#0c0d0c'
+    g.fillRect(0, 0, W, W)
+    // turned so the way the player faces is up
+    const fx = -Math.sin(this.yaw)
+    const fz = -Math.cos(this.yaw)
+    const phi = Math.atan2(fx, -fz)
+    g.translate(cx, cx)
+    g.rotate(-phi)
+    g.drawImage(this.mapBase!, -(this.pos.x - MAP.x0) * S, -(this.pos.z - MAP.z0) * S)
+    const at = (x: number, z: number): [number, number] => [(x - this.pos.x) * S, (z - this.pos.z) * S]
+    const R = cx - 2
+    // the open ways in
+    g.fillStyle = '#3cff8a'
+    this.station.exits.forEach((e, i) => {
+      for (const [x, z, on] of [[e.x, LANDING.endZ, this.openAt(i) > 0.9], [e.outDoor.x, HALL.doorZ, this.outK[i] > 0.85]] as [number, number, boolean][]) {
+        if (!on) continue
+        const [sx, sy] = at(x, z)
+        g.fillRect(sx - 4, sy - 4, 8, 8)
+      }
+    })
+    // supplies
+    g.fillStyle = '#ffd040'
+    for (const p of this.pickups) {
+      const [sx, sy] = at(p.mesh.position.x, p.mesh.position.z)
+      if (Math.hypot(sx, sy) < R - 4) g.fillRect(sx - 2.5, sy - 2.5, 5, 5)
+    }
+    // the dead hunting the player, and (dim) the others close by
+    for (const z of this.zombies) {
+      if (!z.street || z.state === 'dead') continue
+      const [sx, sy] = at(z.root.position.x, z.root.position.z)
+      if (Math.hypot(sx, sy) > R) continue
+      if (z.idle && Math.hypot(z.root.position.x - this.pos.x, z.root.position.z - this.pos.z) > 30) continue
+      g.fillStyle = z.idle ? 'rgba(200,60,50,0.55)' : '#ff3a2a'
+      g.beginPath()
+      g.arc(sx, sy, z.idle ? 3 : 4.5, 0, Math.PI * 2)
+      g.fill()
+    }
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    // the player, always facing up
+    g.fillStyle = '#ffffff'
+    g.beginPath()
+    g.moveTo(cx, cx - 11)
+    g.lineTo(cx + 7, cx + 8)
+    g.lineTo(cx, cx + 4)
+    g.lineTo(cx - 7, cx + 8)
+    g.closePath()
+    g.fill()
+    g.restore()
+    // the rim, and N where north is (north is away from the city, behind the station)
+    g.strokeStyle = 'rgba(255,255,255,0.35)'
+    g.lineWidth = 3
+    g.beginPath()
+    g.arc(cx, cx, cx - 2, 0, Math.PI * 2)
+    g.stroke()
+    const nx = cx - Math.sin(phi) * (cx - 16)
+    const ny = cx - Math.cos(phi) * (cx - 16)
+    g.fillStyle = 'rgba(0,0,0,0.6)'
+    g.beginPath()
+    g.arc(nx, ny, 12, 0, Math.PI * 2)
+    g.fill()
+    g.fillStyle = '#fff'
+    g.font = 'bold 18px Helvetica, Arial, sans-serif'
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    g.fillText('N', nx, ny + 1)
+  }
+
   private updateHudEls(dt: number) {
+    this.mapT -= dt
+    if (this.mapT <= 0) {
+      this.mapT = 0.08
+      this.drawMap()
+    }
     this.hitT = Math.max(0, this.hitT - dt)
     const ch = this.hud.crosshair
     if (ch) {
