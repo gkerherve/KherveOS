@@ -25,7 +25,7 @@
 // fires, and shop lights) nearest the player.
 
 import * as THREE from 'three'
-import { AVENUE, canvas, concrete, FINAL_STATION, LANDING, outDoorX, rng, stationAt, STAIRS, STREET, texture, words } from './lastTrainWorld'
+import { AVENUE, canvas, concrete, FINAL_STATION, HALL, LANDING, outDoorX, rng, stationAt, STAIRS, STREET, texture, words } from './lastTrainWorld'
 import { makeBus, vehicleMats, type CarKind, type CarState } from './lastTrainVehicles'
 import {
   add, ARCH, asphalt, ashlar, barkTex, Batch, beacon, bin, boardTex, bollard, BOX, brick, building, chunkOf, CYL, faience, ironTex, kiosk, kioskTex, lamp, local, metres,
@@ -68,8 +68,11 @@ export interface StreetCtx {
 /** The colour the night fades to in the street (the engine blends the fog to it out there). */
 export const NIGHT_FOG = 0x14161c
 
-/** How many real lights the street has (they go to the light spots nearest the player). */
-const POOL = 6
+/**
+ * How many real lights the street has (they go to the light spots nearest the player). Every light costs every lit
+ * pixel of the whole scene, the station's included, so there are few.
+ */
+const POOL = 4
 
 /**
  * Merge every plain mesh of the group by material and by chunk of the city: one draw call per material per chunk.
@@ -679,7 +682,7 @@ export function buildStreet(sc: StreetCtx): StreetBuild {
       g.add(s)
       smoke.push({ s, base: new THREE.Vector3(x, y + 0.5, z), t: k / 5 })
     }
-    c.lights.push({ p: new THREE.Vector3(x, y + 0.9, z), color: 0xff7a30, power: 14 * size, range: 14 + size * 6 })
+    c.lights.push({ p: new THREE.Vector3(x, y + 0.9, z), color: 0xff7a30, power: 14 * size, range: 14 + size * 6, flicker: true })
   }
   const barrels: [number, number][] = [[-14, 27], [3, 29], [14, 26.5], [NS[2].x + 7, EW[1].b1 + 2], [NS[5].x - 7, EW[2].b0 - 2], [NS[1].x + 8, EW[2].b1 + 2.5], [-120, SR.r0 - 4]]
   for (const [x, z] of barrels) {
@@ -693,13 +696,10 @@ export function buildStreet(sc: StreetCtx): StreetBuild {
   const wreck = std({ color: 0x1a1512, roughness: 0.95, metalness: 0.3 })
   add(c, BOX, wreck, local(STREET.x1 + 4, y0 + 0.6, AVENUE.z1 - 1.4, 4.2, 1.2, 1.9))
   blocks.push({ x0: STREET.x1 + 1.9, x1: STREET.x1 + 6.1, z0: AVENUE.z1 - 2.35, z1: AVENUE.z1 })
+  // (the fires' light comes from the pool below; this one is kept for the engine's flicker but not in the scene)
   const fireLight = new THREE.PointLight(0xff7a30, 14, 24, 1.5)
-  fireLight.position.set(1, y0 + 1.8, 31)
-  // (the lights hang on the station's group: they stay put while the street is hidden, so no shader is rebuilt)
-  group.add(fireLight)
-  const avLight = new THREE.PointLight(0xff7a30, 10, 18, 1.6)
-  avLight.position.set(STREET.x1 + 4, y0 + 2.4, AVENUE.z1 - 2)
-  group.add(avLight)
+  // the lamps of the ticket halls' ways out (lit from the pool when the player is in there)
+  for (const sx of STAIRS) c.lights.push({ p: new THREE.Vector3(outDoorX(sx), HALL.y + 2.2, HALL.outStepZ + 1.2), color: 0xffe2b8, power: 5, range: 10 })
 
   // ---------------------------------------------------------------- the way on: overground to the next station, or out of the city
   const last = index >= FINAL_STATION
@@ -760,7 +760,9 @@ export function buildStreet(sc: StreetCtx): StreetBuild {
   group.add(moon, moon.target)
 
   // ---------------------------------------------------------------- the few real lights: they go to the light spots nearest the eye
+  // (they hang on the station's group: they stay put while the street is hidden, so no shader is rebuilt)
   const pool: THREE.PointLight[] = []
+  const lighting: (LightSpot | null)[] = []
   for (let k = 0; k < POOL; k++) {
     const l = new THREE.PointLight(0xffc890, 0, 20, 1.4)
     l.position.set(0, -50, 0)
@@ -811,7 +813,6 @@ export function buildStreet(sc: StreetCtx): StreetBuild {
         f.s.position.set(f.base.x + Math.sin(t * 3 + f.ph) * 0.06 * f.size, f.base.y + (0.2 + k * 0.12) * f.size, f.base.z)
         f.s.scale.set(f.size * (0.7 + k * 0.15), f.size * (1.2 + k * 0.3), 1)
       }
-      avLight.intensity = on ? 9 + Math.sin(t * 11) * 2 + Math.random() * 2 : 0
       for (const s of smoke) {
         const k = ((t * 0.12 + s.t) % 1 + 1) % 1
         s.s.position.set(s.base.x + k * 1.5, s.base.y + k * 7, s.base.z + Math.sin(k * 6 + s.t * 9) * 0.4)
@@ -831,7 +832,8 @@ export function buildStreet(sc: StreetCtx): StreetBuild {
           .slice(0, POOL)
         pool.forEach((l, k) => {
           const b = best[k]
-          if (!b || !on) {
+          lighting[k] = b && on ? b.s : null
+          if (!lighting[k]) {
             l.intensity = 0
             return
           }
@@ -841,11 +843,16 @@ export function buildStreet(sc: StreetCtx): StreetBuild {
           l.distance = b.s.range
         })
       }
+      // fires flicker
+      pool.forEach((l, k) => {
+        const s = lighting[k]
+        if (s?.flicker) l.intensity = s.power * (0.8 + Math.sin(t * 13 + k) * 0.12 + Math.random() * 0.15)
+      })
       // what is lost in the haze is not drawn
       farT -= dt
       if (farT <= 0) {
         farT = 0.2
-        for (const f of far) f.o.visible = Math.hypot(f.c.x - eye.x, f.c.z - eye.z) - f.r < 185
+        for (const f of far) f.o.visible = Math.hypot(f.c.x - eye.x, f.c.z - eye.z) - f.r < 150
       }
     },
   }

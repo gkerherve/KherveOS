@@ -1127,9 +1127,6 @@ function buildHall(c: ExitCtx, g: THREE.Group, wallD: THREE.Material): { light: 
   streetSign.rotation.y = Math.PI / 2
   streetSign.position.set(X(uo) + 0.03, H.y + 2.4, H.openZ0 + 1.4)
   g.add(streetSign)
-  const passLight = new THREE.PointLight(0xffe2b8, 4, 9, 1.6)
-  passLight.position.set(X(OUT_U), H.y + 2.2, H.outStepZ + 1.2)
-  g.add(passLight)
   // the doors: two glass leaves in steel frames, push bars, hinged at the sides of the opening; they swing out
   const dx = X(OUT_U)
   const dw = H.doorW / 2

@@ -792,12 +792,26 @@ export class LastTrainEngine {
   }
 
   resize(w: number, h: number, dpr: number) {
-    const pr = Math.min(dpr, 1.75)
+    this.size = [w, h, dpr]
+    this.applySize()
+  }
+
+  /** The window's size (css px) and its device pixel ratio; how much of that ratio is drawn (it adapts to the frame rate). */
+  private size: [number, number, number] = [800, 600, 1]
+  private scale = 1
+  private frameTimes: number[] = []
+  private scaleT = 0
+
+  private applySize() {
+    const [w, h, dpr] = this.size
+    // never more than 1.5 device pixels a pixel; less when the frames come slowly
+    const pr = Math.max(0.4, Math.min(dpr, 1.5) * this.scale)
     this.renderer.setPixelRatio(pr)
     this.renderer.setSize(w, h, false)
     this.composer.setPixelRatio(pr)
     this.composer.setSize(w, h)
-    this.bloom.resolution.set(w * pr * 0.5, h * pr * 0.5)
+    // the glow is soft anyway: worked out at a quarter of the picture's size, not half
+    this.bloom.setSize(Math.round(w * pr * 0.5), Math.round(h * pr * 0.5))
     this.camera.aspect = w / Math.max(1, h)
     this.camera.updateProjectionMatrix()
   }
@@ -889,8 +903,43 @@ export class LastTrainEngine {
     this.cycleGun(dy > 0 ? 1 : -1)
   }
 
+  /**
+   * Keep the frame rate up: if frames take too long, draw fewer pixels (down to half the screen's); when there is
+   * time to spare, more again. Measured over a couple of seconds, changed a step at a time.
+   */
+  private adapt(dt: number, mode: string) {
+    if (mode !== 'playing' || dt <= 0 || dt > 0.25 || document.hidden) {
+      this.frameTimes = []
+      return
+    }
+    this.frameTimes.push(dt)
+    this.scaleT += dt
+    if (this.scaleT < 2) return
+    this.scaleT = 0
+    const sorted = [...this.frameTimes].sort((a, b) => a - b)
+    this.frameTimes = []
+    const typical = sorted[Math.floor(sorted.length * 0.6)] ?? 0
+    let next = this.scale
+    if (typical > 1 / 40) {
+      // too slow: fewer pixels; at 60 % of them, the glow goes too
+      if (this.scale > 0.6) next = Math.max(0.6, this.scale - (typical > 1 / 25 ? 0.2 : 0.1))
+      else if (this.bloom.enabled) this.bloom.enabled = false
+      else next = Math.max(0.45, this.scale - 0.1)
+    } else if (typical < 1 / 55) {
+      // keeping up with the screen (60 Hz or more): the glow back first, then the pixels
+      if (!this.bloom.enabled && this.scale >= 0.6) this.bloom.enabled = true
+      else if (this.scale < 1) next = Math.min(1, this.scale + 0.1)
+    }
+    next = Math.round(next * 100) / 100
+    if (next !== this.scale) {
+      this.scale = next
+      this.applySize()
+    }
+  }
+
   /** One animation frame. `playing` false: the scene is drawn, nothing moves (or the attract camera glides). */
   frame(dt: number, mode: 'attract' | 'playing' | 'still') {
+    this.adapt(dt, mode)
     dt = Math.min(dt, 0.05)
     if (mode === 'playing') this.update(dt)
     else if (mode === 'attract') this.attract(dt)
@@ -3287,8 +3336,13 @@ export class LastTrainEngine {
     const lit = this.pos.z > LANDING.endZ - 1.5 || (hh !== null && hh.u > HALL.u1 - 1) || (this.pos.z > LANDING.gateZ - 2 && STAIRS.some((sx) => Math.abs(this.pos.x - sx) < 2.2))
     this.station.street.update(t, this.pos, lit || this.stage === 'trek')
     // the street is only drawn once the player is near enough the stairs to see it
-    this.station.street.group.visible = this.pos.z > 6.5 || this.stage === 'trek'
-    const show = !(this.pos.z > LANDING.endZ + 4 && this.stage !== 'trek')
+    // the city is only drawn where it can be seen: out there, in a way out's passage, or up an open stairway
+    // (from the platform and the ticket halls it is all behind walls, and it is most of what there is to draw)
+    const hall = hallAt(this.pos.x, this.pos.z)
+    const upOpen = exits.some((e, i) => this.openAt(i) > 0.02 && this.pos.z > 5 && Math.abs(this.pos.x - e.x) < 6 && !(hall && hall.u > 0.3))
+    this.station.street.group.visible = this.stage === 'trek' || this.pos.z > LANDING.endZ - 0.5 || (hall !== null && hall.u > HALL.u1 - 0.3) || upOpen
+    // and the platform below is not drawn from the city, nor from the halls and their ways out
+    const show = !((this.pos.z > LANDING.endZ + 4 || (hall !== null && hall.u > 1)) && this.stage !== 'trek')
     if (show !== this.belowShown) {
       this.belowShown = show
       for (const o of this.below) {
@@ -3304,7 +3358,7 @@ export class LastTrainEngine {
     this.hemi.intensity = 0.32 + up * 0.5
     this.hemi.color.setRGB(0.78 - up * 0.2, 0.9 - up * 0.25, 0.85 - up * 0.08)
     const fog = this.scene.fog as THREE.FogExp2
-    fog.density = THREE.MathUtils.lerp(0.021, 0.011, up)
+    fog.density = THREE.MathUtils.lerp(0.021, 0.0135, up)
     fog.color.copy(this.stationFog).lerp(this.nightFog, up)
     ;(this.scene.background as THREE.Color).copy(fog.color)
     const alive = this.zombies.filter((z) => z.state !== 'dead').length

@@ -791,6 +791,8 @@ export interface LightSpot {
   color: number
   power: number
   range: number
+  /** A fire: its light flickers. */
+  flicker?: boolean
 }
 
 export interface Ctx {
