@@ -486,6 +486,13 @@ class QLayoutItem(Inert):
         return self if self.kind in ("stretch", "spacing") else None
 
 
+def _kc_detach(w):
+    """As in Qt, a widget placed somewhere new leaves the layout it was in."""
+    lay = getattr(w, "__dict__", {}).pop("_kc_in_layout", None)
+    if lay is not None and any(i.obj is w for i in lay._kc_items):
+        lay.removeWidget(w)
+
+
 class QLayout(InertObject, KcBase):
     def __init__(self, *args, **kwargs):
         parent = args[0] if args else None
@@ -523,14 +530,18 @@ class QLayout(InertObject, KcBase):
     def addWidget(self, w, stretch=0, alignment=0, *a):
         if w is None:
             return
+        _kc_detach(w)
         self._kc_items.append(QLayoutItem("w", w, stretch, alignment))
+        w.__dict__["_kc_in_layout"] = self
         self._kc_adopt(w)
         self._kc_dirty()
 
     def insertWidget(self, index, w, stretch=0, alignment=0):
+        _kc_detach(w)
         if index < 0:
             index = len(self._kc_items)
         self._kc_items.insert(index, QLayoutItem("w", w, stretch, alignment))
+        w.__dict__["_kc_in_layout"] = self
         self._kc_adopt(w)
         self._kc_dirty()
 
@@ -3222,6 +3233,7 @@ class QToolBar(QWidget, _ActionContainer):
         return act
 
     def addWidget(self, w):
+        _kc_detach(w)
         act = QWidgetAction(self)
         act._kc_widget = w
         self._kc_widgets[act._kc_id] = w
@@ -3231,6 +3243,7 @@ class QToolBar(QWidget, _ActionContainer):
         return act
 
     def insertWidget(self, before, w):
+        _kc_detach(w)
         act = QWidgetAction(self)
         act._kc_widget = w
         self._kc_widgets[act._kc_id] = w

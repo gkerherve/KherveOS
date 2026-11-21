@@ -1226,3 +1226,12 @@
 .kc-mainwin-menu:hover {
   background: var(--k-button-hover);
 }
+
+/* A toolbar sizes to what it holds: a widget in one (the ribbon) must
+   not collapse to 0 high under the flex rules meant for filled panels */
+.kc-toolbar .kc-li,
+.kc-toolbar .kc-x,
+.kc-toolbar .kc-w {
+  min-height: auto;
+  flex-basis: auto;
+}
