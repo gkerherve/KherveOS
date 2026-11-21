@@ -1,3 +1,4 @@
+import { APPS } from '@/os/registry'
 import { useEffect } from 'react'
 import { useThemeEffect } from '@/os/themes'
 import { startServerWatch } from '@/os/server'
@@ -12,9 +13,17 @@ import { useShellUi } from './ui'
 import { useShutdown } from '@/os/shutdown'
 import { ShutdownScreen } from './ShutdownScreen'
 
+const PLAY = new URLSearchParams(location.search).get('play')
+
 export function Shell() {
   useThemeEffect()
   useEffect(() => startServerWatch(), [])
+  // ?play=<id>: just that game in the page, no desktop around it (links from khervetools.com).
+  useEffect(() => {
+    if (!PLAY) return
+    document.title = APPS.find((a) => a.id === PLAY)?.name ?? 'KherveOS'
+    void import('@/os').then(({ os }) => os.open(PLAY))
+  }, [])
   // ?app=<id> (e.g. ?app=grandprix): open that app filling the screen, for links from khervetools.com.
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('app')
@@ -38,6 +47,13 @@ export function Shell() {
   const off = useShutdown((s) => s.off)
   // Shut down: the whole desktop goes away (apps, frames, workers stop with it).
   if (off) return <ShutdownScreen />
+  if (PLAY)
+    return (
+      <div className="k-shell k-play">
+        <WindowLayer />
+        <OverlayHosts />
+      </div>
+    )
   return (
     <div className="k-shell">
       <Desktop />

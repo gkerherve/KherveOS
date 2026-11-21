@@ -854,3 +854,13 @@
 .k-window.k-game-full .k-titlebar {
   display: none !important;
 }
+
+/* ?play=<id>: one game alone in the page — its window fills it, no title bar, no desktop */
+.k-play { background: #000; }
+.k-play .k-window {
+  position: fixed !important; inset: 0 !important; width: auto !important; height: auto !important;
+  max-width: none !important; max-height: none !important; transform: none !important; animation: none !important;
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+}
+.k-play .k-titlebar { display: none !important; }
+.k-play .k-window-body { position: absolute !important; inset: 0 !important; }
