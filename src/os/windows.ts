@@ -1,6 +1,7 @@
 // The window manager: which windows are open, where they are, which one is
 // in front. Purely state — the shell renders it (src/shell/WindowFrame.tsx).
 
+import { countAppOpen } from './analytics'
 import { create } from 'zustand'
 import { getApp } from './registry'
 import type { AppArgs } from './types'
@@ -105,6 +106,7 @@ export const useWindows = create<WMState>((set, get) => ({
       minimized: false, maximized: small, snapped: null, restore: null,
     }
     set({ windows: [...windows, win], focusedId: id })
+    countAppOpen(appId)
     return id
   },
 

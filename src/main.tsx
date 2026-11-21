@@ -5,10 +5,13 @@ import { Shell } from './shell/Shell'
 import { fs } from './os/vfs'
 import { installCrashReporter } from './os/crash'
 import { startUiScale } from './os/uiScale'
+import { startAnalytics } from './os/analytics'
 
 installCrashReporter()
 // Interface size (Settings › Appearance › Desktop): scales the whole OS.
 startUiScale()
+// Visitor counts on the public site (GoatCounter, no cookies).
+startAnalytics()
 
 const root = createRoot(document.getElementById('root')!)
 
