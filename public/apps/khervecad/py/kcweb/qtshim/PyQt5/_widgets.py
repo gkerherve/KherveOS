@@ -2971,7 +2971,12 @@ class QTabWidget(QWidget):
 
     def setTabText(self, i, t):
         if 0 <= i < len(self._kc_pages):
-            self._kc_pages[i]["label"] = str(t)
+            page = self._kc_pages[i]
+            if not t and page["label"]:
+                # icon-only tabs (SolidWorks / Fusion styles) paint their
+                # icons, which the web side cannot show: keep the name
+                page["name"] = page["label"].replace("&", "")
+            page["label"] = str(t)
             self._touch()
 
     def setTabToolTip(self, i, tip):

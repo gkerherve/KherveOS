@@ -467,7 +467,10 @@ def _node(w):
                 for t in w._kc_own]
         return {"t": "tabs", "tabs": tabs, "idx": w._kc_cur, "page": None}
     if isinstance(w, QTabWidget):
-        tabs = [{"label": p["label"], **({"tip": p["tip"]} if p["tip"]
+        # an icon-only tab whose icon is painted (SolidWorks / Fusion
+        # styles) would show nothing here: its name comes from the tip
+        tabs = [{"label": p["label"] or p.get("name", ""),
+                 **({"tip": p["tip"]} if p["tip"]
                                           else {}),
                  **({"icon": p["icon"]} if p["icon"] else {}),
                  **({"dis": 1} if not p["enabled"] else {}),

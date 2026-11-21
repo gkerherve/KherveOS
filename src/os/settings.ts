@@ -61,7 +61,7 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       theme: 'Kherve Green',
-      wallpaper: 'ktools-lab',
+      wallpaper: 'periodic',
       wallpaperOpacity: 1,
       wallpaperFit: 'fill',
       uiScale: 1,
@@ -78,7 +78,7 @@ export const useSettings = create<SettingsState>()(
     {
       name: 'kherveos.settings',
       storage: safeStorage,
-      version: 14,
+      version: 15,
       migrate: (old, version) => {
         let s = { ...((old ?? {}) as Partial<SettingsState>) }
         // Version 1 had a blue/Auto look: move early installs to the dark look.
@@ -125,6 +125,8 @@ export const useSettings = create<SettingsState>()(
         if (version < 13 && !s.wallpaper) s.wallpaper = 'ktools-lab'
         // Version 14: the Dock magnifies further (up to 192 px); the old 128 px maximum moves up.
         if (version < 14 && (s.dockZoom === undefined || s.dockZoom >= 128)) s.dockZoom = 160
+        // Version 15: the periodic table is the default wallpaper (a wallpaper picked by hand is kept).
+        if (version < 15 && (!s.wallpaper || s.wallpaper === 'ktools-lab')) s.wallpaper = 'periodic'
         return s as SettingsState
       },
     },

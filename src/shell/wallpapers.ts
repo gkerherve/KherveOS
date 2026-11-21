@@ -40,7 +40,7 @@ export const WALLPAPER_FITS: { id: WallpaperFit; name: string; tip: string }[] =
 ]
 
 /** `centreSize`: the picture's size at "Centre" (a preview passes a scaled-down one). */
-export function wallpaperCss(fit: WallpaperFit = 'fill', centreSize?: string, id = 'ktools-lab'): string {
+export function wallpaperCss(fit: WallpaperFit = 'fill', centreSize?: string, id = 'periodic'): string {
   const w = wallpaperOf(id)
   const url = `url('/wallpapers/${w.file}')`
   if (fit === 'fit') return `50% 50% / contain no-repeat ${url}, ${BASE}`
