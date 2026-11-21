@@ -758,6 +758,139 @@ QRadialGradient = QLinearGradient
 QConicalGradient = QLinearGradient
 
 
+
+class QPixmap(Inert):
+    """A pixmap that keeps what is painted on it: a QPainter on it records
+    into `_kc_ops` (the web side replays them on a canvas), so a painted
+    icon (khervecad.icons_cad) can be shown."""
+
+    def __init__(self, *a, **k):
+        self._kc_ops = []
+        self._kc_w = self._kc_h = 0
+        self._kc_path = None
+        if a and isinstance(a[0], str):
+            self._kc_path = a[0]
+        elif a and hasattr(a[0], "width") and hasattr(a[0], "height") \
+                and not isinstance(a[0], (int, float)):
+            try:
+                self._kc_w, self._kc_h = int(a[0].width()), int(a[0].height())
+            except Exception:
+                pass
+        elif a:
+            try:
+                self._kc_w = int(a[0])
+                self._kc_h = int(a[1]) if len(a) > 1 else self._kc_w
+            except Exception:
+                pass
+
+    def width(self):
+        return self._kc_w
+
+    def height(self):
+        return self._kc_h
+
+    def size(self):
+        from ._core import QSize
+        return QSize(self._kc_w, self._kc_h)
+
+    def isNull(self):
+        return not (self._kc_w and self._kc_h) and not self._kc_path
+
+    def fill(self, *a):
+        self._kc_ops.clear()
+
+    def devicePixelRatio(self):
+        return 1.0
+
+    def setDevicePixelRatio(self, *a):
+        pass
+
+
+def _ops_bounds(ops):
+    """The bounding box of recorded paint commands, in the device's
+    coordinates (each command's points through the transform then)."""
+    tf = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+    stack = []
+    xs, ys = [], []
+
+    def add(x, y):
+        try:
+            x, y = float(x), float(y)
+        except (TypeError, ValueError):
+            return
+        xs.append(tf[0] * x + tf[2] * y + tf[4])
+        ys.append(tf[1] * x + tf[3] * y + tf[5])
+
+    def box(x, y, w, h):
+        try:
+            x, y, w, h = float(x), float(y), float(w), float(h)
+        except (TypeError, ValueError):
+            return
+        for px, py in ((x, y), (x + w, y), (x, y + h), (x + w, y + h)):
+            add(px, py)
+
+    for op in ops:
+        kind = op[0] if op else None
+        if kind == "tf":
+            tf = [float(v) for v in op[1:7]]
+        elif kind == "save":
+            stack.append(tf)
+        elif kind == "restore":
+            if stack:
+                tf = stack.pop()
+        elif kind in ("line",):
+            add(op[1], op[2])
+            add(op[3], op[4])
+        elif kind == "point":
+            add(op[1], op[2])
+        elif kind == "poly":
+            pts = op[1] or []
+            for i in range(0, len(pts) - 1, 2):
+                add(pts[i], pts[i + 1])
+        elif kind in ("path", "fillpath"):
+            for sub in op[1] or []:
+                for i in range(0, len(sub) - 1, 2):
+                    add(sub[i], sub[i + 1])
+        elif kind in ("rect", "rrect", "fill"):
+            box(*op[1:5])
+        elif kind in ("ellipse", "arc"):
+            try:
+                cx, cy, rx, ry = (float(v) for v in op[1:5])
+            except (TypeError, ValueError):
+                continue
+            box(cx - rx, cy - ry, 2 * rx, 2 * ry)
+        elif kind in ("text", "textr"):
+            add(op[1], op[2])
+    if not xs:
+        return None
+    return min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
+
+
+class QPicture(Inert):
+    """Records what is painted on it; boundingRect() measures the ink
+    (khervecad.icons_cad centres its drawings with it)."""
+
+    def __init__(self, *a, **k):
+        self._kc_ops = []
+
+    def boundingRect(self):
+        from ._core import QRect
+        got = _ops_bounds(self._kc_ops)
+        if got is None:
+            return QRect()
+        x, y, w, h = got
+        return QRect(int(math.floor(x)), int(math.floor(y)),
+                     int(math.ceil(w)), int(math.ceil(h)))
+
+    def isNull(self):
+        return not self._kc_ops
+
+    def play(self, painter):
+        ops = getattr(painter, "ops", None)
+        if isinstance(ops, list):
+            ops.extend(self._kc_ops)
+        return True
+
 def __getattr__(name):
     if name.startswith("__"):
         raise AttributeError(name)

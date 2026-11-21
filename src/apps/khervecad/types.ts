@@ -320,6 +320,8 @@ export interface MainNode {
 /** What Python answers to every request. */
 export interface Reply {
   title: string
+  /** painted icons ("paint:<id>"), each sent once: id -> {s: size, ops} */
+  painted?: Record<string, { s: number; ops: unknown[] }>
   /** the menu bar: its menus in order, and those that changed */
   menubar?: { order: number[]; menus: MenuNode[] }
   main: MainNode

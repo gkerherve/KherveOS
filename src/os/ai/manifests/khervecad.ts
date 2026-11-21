@@ -10,7 +10,7 @@ const anyObject = (description: string): Schema => ({ type: 'object', descriptio
 
 export const KHERVECAD_TOOL_SET: AppToolSet = {
   app: 'khervecad',
-  name: 'KherveCAD',
+  name: 'kCAD',
   summary: 'the OpenSCAD-powered CAD app (object tree ↔ OpenSCAD program, 2D sketch, 3D view, a part library of ~2,300 parts).',
   keywords: ['khervecad', 'cad', 'openscad', 'scad', '3d model', '3d print', 'cube', 'cylinder', 'extrude', 'stl', 'kcad', 'bracket', 'enclosure'],
   tools: [

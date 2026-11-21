@@ -1235,3 +1235,15 @@
   min-height: auto;
   flex-basis: auto;
 }
+
+/* Qt's text-under-icon tool buttons (the ribbon's large ones) */
+.kc-tbutton.under {
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.kc-tbutton.under .kc-tbutton-text {
+  white-space: pre-line;
+  text-align: center;
+  line-height: 1.15;
+}

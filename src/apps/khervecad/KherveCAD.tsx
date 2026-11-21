@@ -29,6 +29,7 @@ import { QtContext, type QtApi } from './qt/context'
 import { CUSTOM, QtNode, StatusBar, comboPick } from './qt/QtNode'
 import { Tips } from './qt/Tips'
 import { View3D } from './View3D'
+import { PAINTED, type Painted } from './MdiIcon'
 import { Sketch } from './Sketch'
 import { AskDialog, WindowFrame, filterExtensions } from './dialogs'
 import { createViews, type ViewsStore } from './store'
@@ -117,6 +118,7 @@ export default function KherveCAD({ win, args }: AppProps) {
         return
       }
       if (r.errors?.length) console.warn('[khervecad] desktop code raised:', r.errors)
+      if (r.painted) for (const [id, p] of Object.entries(r.painted)) PAINTED.set(`paint:${id}`, p as Painted)
       win.setTitle(r.title)
       dirty.current = r.dirty
       win.setDocumentPath(r.path ?? null)

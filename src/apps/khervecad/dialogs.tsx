@@ -188,7 +188,15 @@ export function WindowFrame({ w, index, onClose }: { w: WindowNode; index: numbe
     <div
       ref={frame}
       className={`kc-window${w.modal ? ' modal' : ''}`}
-      style={{ left: pos?.x ?? 0, top: pos?.y ?? 0, visibility: pos ? 'visible' : 'hidden', minWidth: 280 }}
+      style={{
+        left: pos?.x ?? 0,
+        top: pos?.y ?? 0,
+        visibility: pos ? 'visible' : 'hidden',
+        minWidth: 280,
+        // the size the desktop asked for (resize), within the window; more content can still grow it
+        ...(w.w > 0 ? { width: `min(${w.w}px, calc(100% - 16px))` } : {}),
+        ...(w.h > 0 ? { minHeight: `min(${w.h + 32}px, calc(100% - 16px))` } : {}),
+      }}
       role="dialog"
       aria-label={w.title}
     >

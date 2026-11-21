@@ -483,7 +483,7 @@ const ALL_APPS: AppManifest[] = [
   },
   {
     id: 'khervecad',
-    name: 'KherveCAD',
+    name: 'kCAD',
     icon: Box,
     color: '#3776ab',
     image: '/icons/apps/khervecad.png',

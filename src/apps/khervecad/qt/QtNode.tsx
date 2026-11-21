@@ -194,7 +194,9 @@ export function ToolButton({ n, size = 18 }: { n: Node; size?: number }) {
   const { send, menu } = useQt()
   const split = !!n.menu && n.popup === 1
   const instant = !!n.menu && !split
-  const showText = n.style === 2 || n.style === 1 || !n.icon
+  // Qt's ToolButtonStyle: 1 text only, 2 text beside, 3 text under the icon
+  const showText = n.style === 1 || n.style === 2 || n.style === 3 || !n.icon
+  const under = n.style === 3 && !!n.icon
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
   const stop = () => {
     if (timer.current) clearInterval(timer.current)
@@ -205,7 +207,7 @@ export function ToolButton({ n, size = 18 }: { n: Node; size?: number }) {
     <span className={`kc-tbutton-wrap${split ? ' split' : ''}`}>
       <button
         type="button"
-        className={`kc-tbutton${n.chk ? ' checked' : ''}`}
+        className={`kc-tbutton${n.chk ? ' checked' : ''}${under ? ' under' : ''}`}
         disabled={!!n.dis}
         onPointerDown={(e) => {
           if (!n.rep || e.button !== 0) return
@@ -223,7 +225,7 @@ export function ToolButton({ n, size = 18 }: { n: Node; size?: number }) {
           else send({ op: 'click', id: n.id })
         }}
       >
-        {n.icon && <MdiIcon name={n.icon} size={size} />}
+        {n.icon && <MdiIcon name={n.icon} size={under ? Math.max(size, 30) : size} />}
         {showText && n.text ? <span className="kc-tbutton-text">{plainText(n.text)}</span> : null}
         {instant && <ChevronDown size={10} className="kc-chev" />}
       </button>

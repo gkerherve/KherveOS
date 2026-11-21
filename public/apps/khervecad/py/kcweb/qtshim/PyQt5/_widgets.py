@@ -59,12 +59,53 @@ def _icon_name(icon):
     return getattr(icon, "_kc_name", None) if icon is not None else None
 
 
+#: painted icons: id -> (size, ops), sent to the web side once each
+#: (kcweb.app) and drawn there on a canvas (MdiIcon, "paint:<id>")
+PAINTED = {}
+PAINTED_SENT = set()
+_painted_ids = iter(range(1, 1 << 62))
+
+
+def _plain_op(value):
+    """A recorded paint command as plain JSON (odd values become None)."""
+    if isinstance(value, (list, tuple)):
+        return [_plain_op(v) for v in value]
+    if isinstance(value, float):
+        return round(value, 2)
+    if isinstance(value, (str, int, bool)) or value is None:
+        return value
+    return None
+
+
 class QIcon(Inert):
-    """An icon that remembers its MDI name (khervecad.icons.icon)."""
+    """An icon that remembers its MDI name (khervecad.icons.icon), or the
+    drawing of a pixmap painted for it (khervecad.icons_cad)."""
 
     def __init__(self, *a, **k):
         self._kc_name = a[0] if a and isinstance(a[0], str) else None
         self._kc_color = None
+        if a and isinstance(getattr(a[0], "_kc_ops", None), list):
+            self.addPixmap(a[0])
+        elif a and isinstance(a[0], QIcon):
+            self._kc_name = a[0]._kc_name
+
+    def addPixmap(self, pix, *a):
+        """Keep the drawing of the largest painted size (up to 64 px)."""
+        ops = getattr(pix, "_kc_ops", None)
+        size = max(getattr(pix, "_kc_w", 0), getattr(pix, "_kc_h", 0))
+        if not ops or not size:
+            return
+        best = self.__dict__.get("_kc_paint_size", 0)
+        if best and (size <= best or size > 64):
+            return
+        pid = self.__dict__.get("_kc_paint_id")
+        if pid is None:
+            pid = self._kc_paint_id = next(_painted_ids)
+        self._kc_paint_size = size
+        PAINTED[pid] = (size, [_plain_op(op) for op in ops])
+        PAINTED_SENT.discard(pid)
+        if not self._kc_name or self._kc_name.startswith("paint:"):
+            self._kc_name = "paint:%d" % pid
 
     def isNull(self):
         return not self._kc_name

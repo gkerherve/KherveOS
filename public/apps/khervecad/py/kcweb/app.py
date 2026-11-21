@@ -615,6 +615,15 @@ class Session:
         timers = [t for t in _core._PENDING if t._active and not t._single]
         if timers:
             out["tick"] = max(16, min(t._interval or 16 for t in timers))
+        # painted icons (the ribbon's), each drawing sent once
+        if full:
+            _widgets.PAINTED_SENT.clear()
+        fresh = {pid: {"s": size, "ops": ops}
+                 for pid, (size, ops) in _widgets.PAINTED.items()
+                 if pid not in _widgets.PAINTED_SENT}
+        if fresh:
+            out["painted"] = fresh
+            _widgets.PAINTED_SENT.update(fresh)
         return out
 
     def _main(self):
