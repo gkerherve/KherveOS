@@ -465,7 +465,7 @@ class QPainterPath(Lenient):
         return QPointF()
 
     def quadTo(self, c, e, *more):
-        if not isinstance(c, QPointF):
+        if more or not hasattr(c, "x"):
             c, e = QPointF(c, e), QPointF(*more)
         p0 = self.currentPosition()
         for i in range(1, 9):
@@ -475,7 +475,7 @@ class QPainterPath(Lenient):
                         a * p0.y() + b * c.y() + d * e.y())
 
     def cubicTo(self, c1, c2, e, *more):
-        if not isinstance(c1, QPointF):
+        if more or not hasattr(c1, "x"):
             vals = (c1, c2, e) + more
             c1, c2, e = (QPointF(vals[0], vals[1]), QPointF(vals[2], vals[3]),
                          QPointF(vals[4], vals[5]))

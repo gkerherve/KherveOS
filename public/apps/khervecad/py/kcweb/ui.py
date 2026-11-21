@@ -459,6 +459,13 @@ def _node(w):
             if w._kc_checked:
                 n["chk"] = 1
         return _with_layout(w, n)
+    if isinstance(w, _widgets.QTabBar) and w._kc_tabs is None:
+        # a standalone tab bar (the ribbon's): tabs without pages
+        tabs = [{"label": t[0], **({"tip": t[3]} if t[3] else {}),
+                 **({"dis": 1} if not t[2] else {}),
+                 **({"hid": 1} if not t[1] else {})}
+                for t in w._kc_own]
+        return {"t": "tabs", "tabs": tabs, "idx": w._kc_cur, "page": None}
     if isinstance(w, QTabWidget):
         tabs = [{"label": p["label"], **({"tip": p["tip"]} if p["tip"]
                                           else {}),
@@ -948,6 +955,9 @@ def dispatch(ev):
             w.setCurrentIndex(int(ev.get("index", 0)))
             if isinstance(w, QTabWidget):
                 w.tabBarClicked.emit(int(ev.get("index", 0)))
+        elif isinstance(w, _widgets.QTabBar):
+            w.tabBarClicked.emit(int(ev.get("index", 0)))
+            w.setCurrentIndex(int(ev.get("index", 0)))
         return
     if op == "splitter":
         if isinstance(w, QSplitter):

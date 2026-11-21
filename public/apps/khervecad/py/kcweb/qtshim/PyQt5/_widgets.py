@@ -2715,18 +2715,143 @@ class QAbstractScrollArea(QScrollArea):
 
 
 class QTabBar(QWidget):
+    """The tab row of a QTabWidget, or a standalone tab bar (the ribbon's)
+    keeping its own tabs."""
     currentChanged = pyqtSignal(int)
     tabCloseRequested = pyqtSignal(int)
+    tabBarClicked = pyqtSignal(int)
+    RoundedNorth, RoundedSouth, RoundedWest, RoundedEast = 0, 1, 2, 3
+    TriangularNorth, TriangularSouth = 4, 5
 
     def __init__(self, tabs=None, *a):
-        super().__init__(*a)
-        self._kc_tabs = tabs
+        if isinstance(tabs, QTabWidget):
+            super().__init__(*a)
+            self._kc_tabs = tabs
+        else:
+            super().__init__(*((tabs,) + a if tabs is not None else a))
+            self._kc_tabs = None
+        self._kc_own = []          # [text, visible, enabled, tip, data]
+        self._kc_cur = -1
+
+    # -- standalone tabs
+    def addTab(self, *a):
+        text = a[-1] if a else ""
+        return self.insertTab(len(self._kc_own), *a[:-1], text)
+
+    def insertTab(self, index, *a):
+        text = str(a[-1]) if a else ""
+        index = max(0, min(int(index), len(self._kc_own)))
+        self._kc_own.insert(index, [text, True, True, "", None])
+        if self._kc_cur < 0:
+            self._kc_cur = 0
+            self._kc_touch()
+            self.currentChanged.emit(0)
+        elif index <= self._kc_cur:
+            self._kc_cur += 1
+        self._kc_touch()
+        return index
+
+    def removeTab(self, i):
+        if self._kc_tabs:
+            return self._kc_tabs.removeTab(i)
+        if 0 <= i < len(self._kc_own):
+            del self._kc_own[i]
+            if self._kc_cur >= len(self._kc_own):
+                self._kc_cur = len(self._kc_own) - 1
+                self.currentChanged.emit(self._kc_cur)
+            self._kc_touch()
+
+    def _kc_touch(self):
+        self._touch()
+
+    def currentIndex(self):
+        if self._kc_tabs:
+            return self._kc_tabs.currentIndex()
+        return self._kc_cur
+
+    def setCurrentIndex(self, i):
+        if self._kc_tabs:
+            return self._kc_tabs.setCurrentIndex(i)
+        i = int(i)
+        if 0 <= i < len(self._kc_own) and i != self._kc_cur:
+            self._kc_cur = i
+            self._kc_touch()
+            self.currentChanged.emit(i)
+
+    def _kc_tab(self, i):
+        return self._kc_own[i] if 0 <= i < len(self._kc_own) else None
+
+    def setTabText(self, i, text):
+        if self._kc_tabs:
+            return self._kc_tabs.setTabText(i, text)
+        t = self._kc_tab(i)
+        if t:
+            t[0] = str(text)
+            self._kc_touch()
+
+    def isTabVisible(self, i):
+        if self._kc_tabs:
+            f = getattr(self._kc_tabs, "isTabVisible", None)
+            return f(i) if callable(f) else True
+        t = self._kc_tab(i)
+        return bool(t and t[1])
+
+    def setTabVisible(self, i, on):
+        if self._kc_tabs:
+            f = getattr(self._kc_tabs, "setTabVisible", None)
+            return f(i, on) if callable(f) else None
+        t = self._kc_tab(i)
+        if t:
+            t[1] = bool(on)
+            self._kc_touch()
+
+    def isTabEnabled(self, i):
+        t = self._kc_tab(i)
+        return bool(t[2]) if t else not self._kc_tabs is None
+
+    def setTabEnabled(self, i, on):
+        if self._kc_tabs:
+            f = getattr(self._kc_tabs, "setTabEnabled", None)
+            return f(i, on) if callable(f) else None
+        t = self._kc_tab(i)
+        if t:
+            t[2] = bool(on)
+            self._kc_touch()
+
+    def setTabToolTip(self, i, tip):
+        t = self._kc_tab(i)
+        if t:
+            t[3] = str(tip or "")
+
+    def tabToolTip(self, i):
+        t = self._kc_tab(i)
+        return t[3] if t else ""
+
+    def setTabData(self, i, data):
+        t = self._kc_tab(i)
+        if t:
+            t[4] = data
+
+    def tabData(self, i):
+        t = self._kc_tab(i)
+        return t[4] if t else None
+
+    def setShape(self, *a):
+        pass
+
+    def shape(self):
+        return 0
 
     def count(self):
-        return self._kc_tabs.count() if self._kc_tabs else 0
+        if self._kc_tabs:
+            return self._kc_tabs.count()
+        return len(self._kc_own)
 
     def tabText(self, i):
-        return self._kc_tabs.tabText(i) if self._kc_tabs else ""
+        if self._kc_tabs:
+            return self._kc_tabs.tabText(i)
+        t = self._kc_tab(i)
+        return t[0] if t else ""
 
     def setTabTextColor(self, *a):
         pass

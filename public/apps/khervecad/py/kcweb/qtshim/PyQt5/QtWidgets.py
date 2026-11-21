@@ -53,9 +53,15 @@ CLIPBOARD = _Clipboard()
 
 
 class QApplication(InertObject):
+    _kc_app = None
+
     @staticmethod
     def instance():
-        return None
+        # one application object, made on first use (the desktop code
+        # installs event filters and reads properties on it)
+        if QApplication._kc_app is None:
+            QApplication._kc_app = QApplication()
+        return QApplication._kc_app
 
     @staticmethod
     def clipboard():
