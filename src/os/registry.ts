@@ -12,7 +12,7 @@ import { AudioWaveform, ChartScatter, Microscope, Mountain, Rainbow, Ruler, Wave
 import { BarChart3, Beaker, CalendarDays, Cpu, LineChart, Thermometer } from 'lucide-react'
 import type { AppManifest } from './types'
 
-export const APPS: AppManifest[] = [
+const ALL_APPS: AppManifest[] = [
   {
     id: 'files',
     name: 'Files',
@@ -1072,6 +1072,12 @@ export const APPS: AppManifest[] = [
     singleton: true,
   },
 ]
+
+/** Apps that need the KherveOS server; left out of the public web build (VITE_WEB=1),
+ *  which runs with no server behind it. */
+const SERVER_ONLY = new Set(['messages', 'email', 'browser', 'planetcraft', 'simai', 'madsci', 'facecraft'])
+export const WEB_BUILD = import.meta.env.VITE_WEB === '1'
+export const APPS: AppManifest[] = WEB_BUILD ? ALL_APPS.filter((a) => !SERVER_ONLY.has(a.id)) : ALL_APPS
 
 /** The Applications menu's submenus, in order. */
 export const GROUPS: AppManifest['group'][] = [

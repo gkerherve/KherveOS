@@ -15,6 +15,15 @@ import { ShutdownScreen } from './ShutdownScreen'
 export function Shell() {
   useThemeEffect()
   useEffect(() => startServerWatch(), [])
+  // ?app=<id> (e.g. ?app=grandprix): open that app filling the screen, for links from khervetools.com.
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('app')
+    if (!id) return
+    void import('@/os').then(({ os }) => {
+      const win = os.open(id)
+      if (win) void import('@/os/windows').then(({ useWindows }) => useWindows.getState().snap(win, 'max'))
+    })
+  }, [])
   // Web links anywhere open in the KherveOS Browser, never in a new browser tab.
   useEffect(() => startLinkCatcher(), [])
   // Message notifications from the start, even before Messages is opened.
