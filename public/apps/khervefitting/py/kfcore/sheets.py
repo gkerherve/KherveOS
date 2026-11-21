@@ -208,7 +208,133 @@ def is_part_of_doublet(current_label, next_label):
     return False
 
 
+# ── Starting an added peak matched to the data (PeakFittingGrid, dev-AI v1.242)
+# grid columns that set the width of each model (default: the FWHM column)
+WIDTH_COLUMNS = {
+    "LA*G (Area, σ/γ, γ)": (4, 9),
+    "TLA (A, σ, γ, Wg)": (4, 9),
+    "ExpGauss.(Area, σ, γ)": (7,),
+    "DL (A, σ, γ, aDL)": (7, 8),
+    "DS (A, σ, γ)": (7,),
+    "DS*G (A, σ, γ, S)": (7, 8),
+    "Voigt (Area, L/G, σ)": (7,),
+    "Voigt (Area, σ, γ)": (7, 8),
+    "Voigt (Area, L/G, σ, S)": (7,),
+}
+_COLUMN_KEY = {3: 'Height', 4: 'FWHM', 6: 'Area', 7: 'Sigma', 8: 'Gamma', 9: 'Skew'}
+NOT_A_PEAK = {"SB (Height)"}
+
+
+def _fwhm_at(residual, peak_x, peak_y, x_values):
+    """Width at half of peak_y of ``residual`` around peak_x (None if a side
+    is never crossed)."""
+    x = np.asarray(x_values, float)
+    r = np.asarray(residual, float)
+    if len(x) != len(r) or len(x) < 3 or peak_y <= 0:
+        return None
+    i = int(np.argmin(np.abs(x - peak_x)))
+    half = peak_y / 2.0
+    j = i
+    while j > 0 and r[j] > half:
+        j -= 1
+    k = i
+    while k < len(r) - 1 and r[k] > half:
+        k += 1
+    if r[j] > half or r[k] > half or j == i or k == i:
+        return None
+
+    def cross(a, b):
+        ya, yb = r[a], r[b]
+        return x[a] + (half - ya) * (x[b] - x[a]) / (yb - ya) if yb != ya else x[a]
+    return abs(cross(k - 1, k) - cross(j + 1, j))
+
+
+def _added_shape(window, row):
+    """(apex, FWHM) of one peak as the envelope sees it."""
+    from .curves import peak_curve
+    x = np.asarray(window.x_values, float)
+    y = peak_curve(window, row, x, envelope=True)
+    if y is None:
+        return None
+    y = np.asarray(y, float)
+    apex = float(np.nanmax(y))
+    if not apex > 0:
+        return None
+    top = x[y >= apex / 2.0]
+    return apex, float(np.nanmax(top) - np.nanmin(top))
+
+
+def _match_added_width(window, row, peak, target):
+    g = window.peak_params_grid
+    model = g.GetCellValue(row, 13)
+    if not target or target <= 0 or model in NOT_A_PEAK:
+        return
+    cols = WIDTH_COLUMNS.get(model, (4,))
+    for _ in range(4):
+        shape = _added_shape(window, row)
+        if not shape or not shape[1]:
+            return
+        factor = target / shape[1]
+        if abs(factor - 1.0) < 0.01:
+            return
+        factor = min(max(factor, 0.2), 5.0)
+        for c in cols:
+            try:
+                v = float(g.GetCellValue(row, c))
+            except ValueError:
+                continue
+            if v <= 0:
+                continue
+            nv = v * factor
+            g.SetCellValue(row, c, f"{nv:.4g}")
+            if isinstance(peak, dict):
+                peak[_COLUMN_KEY[c]] = nv
+
+
+def _match_added_height(window, row, peak, height):
+    g = window.peak_params_grid
+    if g.GetCellValue(row, 13) in NOT_A_PEAK or not height or height <= 0:
+        return
+    for _ in range(3):
+        shape = _added_shape(window, row)
+        if not shape:
+            return
+        factor = height / shape[0]
+        if abs(factor - 1.0) < 0.005:
+            return
+        by_height = "(Height)" in g.GetCellValue(row, 13)
+        for c in ((3,) if by_height else (6,)):   # area models scale the area
+            try:
+                v = float(g.GetCellValue(row, c))
+            except ValueError:
+                continue
+            if v <= 0:
+                continue
+            nv = v * factor
+            g.SetCellValue(row, c, format_intensity(nv))
+            if isinstance(peak, dict):
+                peak[_COLUMN_KEY[c]] = nv
+    if "(Height)" not in g.GetCellValue(row, 13):
+        g.SetCellValue(row, 3, format_intensity(height))
+        if isinstance(peak, dict):
+            peak['Height'] = height
+
+
 # ── Choosing a core level ───────────────────────────────────────────────
+def _migrate_model_names(core_level_data):
+    """Sheet_Operations._migrate_model_names: peaks saved under a model's old
+    name get its current one (TLA was 'TLA (A, mu, alpha, Wg)')."""
+    from .grid import RENAMED_MODELS
+    try:
+        peaks = core_level_data['Fitting']['Peaks']
+    except (KeyError, TypeError):
+        return
+    if isinstance(peaks, dict):
+        for peak in peaks.values():
+            if isinstance(peak, dict) and peak.get('Fitting Model') in RENAMED_MODELS:
+                peak['Fitting Model'] = RENAMED_MODELS[peak['Fitting Model']]
+
+
 def select_sheet(window, selected_sheet):
     """Sheet_Operations.on_sheet_selected: rebuild the peak table from Data."""
     window.sheet_combobox.SetValue(selected_sheet)
@@ -223,6 +349,7 @@ def select_sheet(window, selected_sheet):
     grid.DeleteRows(0, grid.GetNumberRows())
 
     core_level_data = window.Data['Core levels'].get(selected_sheet)
+    _migrate_model_names(core_level_data)
     if core_level_data is None or 'Raw Data' not in core_level_data:
         window.load_view()
         return
@@ -396,18 +523,27 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
     window.bg_min_energy = float(window.bg_min_energy)
     window.bg_max_energy = float(window.bg_max_energy)
 
+    residual_for_width = None
     if custom_peak_x is not None and custom_peak_y is not None:
         peak_x, peak_y = custom_peak_x, custom_peak_y
     else:
+        # only inside the background range (dev-AI v1.243): a sloping
+        # spectrum (Raman fluorescence, FTIR) had its highest point at an end
+        xs = np.asarray(window.x_values, float)
+        lo, hi = sorted((window.bg_min_energy, window.bg_max_energy))
+        inside = (xs >= lo) & (xs <= hi)
+        if not inside.any():
+            inside = np.ones_like(xs, dtype=bool)
         if num_peaks == 0 or residual is None:
             bkg = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
             res = window.y_values - bkg
-            peak_y = res[np.argmax(res)]
-            peak_x = window.x_values[np.argmax(res)]
         else:
-            peak_y = residual.max()
-            peak_x = window.x_values[np.argmax(residual)]
+            res = np.asarray(residual, float)
+        masked = np.where(inside[:len(res)], res, -np.inf)
+        peak_y = res[np.argmax(masked)]
+        peak_x = window.x_values[np.argmax(masked)]
         peak_x, peak_y = float(peak_x), float(peak_y)
+        residual_for_width = res
 
     window.peak_count = num_peaks + 1  # (the desktop counts from its own counter)
     grid.AppendRows(2)
@@ -449,7 +585,11 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
         set_(row, 5, "50"); set_(row, 7, "2.7"); set_(row, 8, '2.7'); set_(row, 9, '30')
     elif method == "DL (A, σ, γ, aDL)":
         set_(row, 5, "0"); set_(row, 7, "0.4"); set_(row, 8, '1.0'); set_(row, 9, '1.5')
-    elif method == "TLA (A, μ, α, Wg)":
+    elif method == "BWF Fano (Area, 1/q)":
+        set_(row, 5, "0"); set_(row, 7, "-0.1"); set_(row, 8, '0'); set_(row, 9, '0')
+    elif method == "Pearson VII (Area, m)":
+        set_(row, 5, "0"); set_(row, 7, "1.5"); set_(row, 8, '0'); set_(row, 9, '0')
+    elif method == "TLA (A, σ, γ, Wg)":
         set_(row, 4, "1.0"); set_(row, 5, "0"); set_(row, 7, "20"); set_(row, 8, '1'); set_(row, 9, '0.8')
     elif method == "SB (Height)":
         set_(row, 5, "30"); set_(row, 7, "0"); set_(row, 8, '0'); set_(row, 9, '0')
@@ -503,7 +643,11 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
         set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "0.01:10"); set_(row + 1, 8, "0.01:10"); set_(row + 1, 9, "Fixed")
     elif method == "DL (A, σ, γ, aDL)":
         set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "0.05:3"); set_(row + 1, 8, "0.05:3"); set_(row + 1, 9, "1:5")
-    elif method == "TLA (A, μ, α, Wg)":
+    elif method == "BWF Fano (Area, 1/q)":
+        set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "-0.5:0.5"); set_(row + 1, 8, "Fixed"); set_(row + 1, 9, "Fixed")
+    elif method == "Pearson VII (Area, m)":
+        set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "0.6:20"); set_(row + 1, 8, "Fixed"); set_(row + 1, 9, "Fixed")
+    elif method == "TLA (A, σ, γ, Wg)":
         set_(row + 1, 4, "0.3:3.5"); set_(row + 1, 5, "Fixed"); set_(row + 1, 7, "0.1:200")
         set_(row + 1, 8, "Fixed"); set_(row + 1, 9, "0.2:3")
     elif method == "SB (Height)":
@@ -588,7 +732,13 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
     elif method == "Voigt (Area, L/G, S)":
         peak_data.update({'L/G': 30, 'Sigma': 0.0, 'Gamma': 0.0, 'Skew': 0.0,
                           'Constraints': _c("5:80", "0.3:3", "0.3:3", "0.01:0.7")})
-    elif method == "TLA (A, μ, α, Wg)":
+    elif method == "BWF Fano (Area, 1/q)":
+        peak_data.update({'L/G': 0, 'Sigma': -0.1, 'Gamma': 0, 'Skew': 0,
+                          'Constraints': _c("Fixed", "-0.5:0.5", "Fixed", "Fixed")})
+    elif method == "Pearson VII (Area, m)":
+        peak_data.update({'L/G': 0, 'Sigma': 1.5, 'Gamma': 0, 'Skew': 0,
+                          'Constraints': _c("Fixed", "0.6:20", "Fixed", "Fixed")})
+    elif method == "TLA (A, σ, γ, Wg)":
         peak_data.update({'FWHM': 1.0, 'L/G': 0, 'Sigma': 20.0, 'Gamma': 1.0, 'Skew': 0.8,
                           'Constraints': _c("Fixed", "0.1:200", "Fixed", "0.2:3")})
     elif method == "SB (Height)":
@@ -609,6 +759,19 @@ def add_peak(window, custom_peak_x=None, custom_peak_y=None, residual=None):
                                             fwhm=f"{_bound(scale['fwhm_min'])}:{_bound(scale['fwhm_max'])}")})
 
     cl['Fitting']['Peaks'][core_level_name + f" p{window.peak_count}"] = peak_data
+    # dev-AI v1.241/1.242: the added peak starts matched to the data - its
+    # width columns scaled until its FWHM is the data's width at half height,
+    # then its area until its apex is the height in the grid
+    peak = cl['Fitting']['Peaks'][core_level_name + f" p{window.peak_count}"]
+    try:
+        if residual_for_width is not None:
+            _match_added_width(window, row, peak, _fwhm_at(residual_for_width, peak_x, peak_y, window.x_values))
+    except Exception as e:
+        print(f"Added-peak width match skipped ({e})")
+    try:
+        _match_added_height(window, row, peak, peak_y)
+    except Exception as e:
+        print(f"Added-peak height match skipped ({e})")
     window.update_ratios()
     return num_peaks
 
@@ -1502,7 +1665,16 @@ def peak_cell_changed(window, row, col):
                         window.peak_params_grid.SetCellValue(row + 1, 7, "0.05:3")  # Lorentzian width
                         window.peak_params_grid.SetCellValue(row + 1, 8, "0.05:3")  # Gaussian FWHM
                         window.peak_params_grid.SetCellValue(row + 1, 9, "1:5")  # asymmetry a_dl
-                    elif new_value == "TLA (A, μ, α, Wg)":
+                    elif new_value in ("BWF Fano (Area, 1/q)", "Pearson VII (Area, m)"):
+                        fraction = 0.0
+                        sigma = -0.1 if new_value.startswith("BWF") else 1.5
+                        gamma = 0.0
+                        skew = 0.0
+                        window.peak_params_grid.SetCellValue(row + 1, 5, "Fixed")
+                        window.peak_params_grid.SetCellValue(row + 1, 7, "-0.5:0.5" if new_value.startswith("BWF") else "0.6:20")
+                        window.peak_params_grid.SetCellValue(row + 1, 8, "Fixed")
+                        window.peak_params_grid.SetCellValue(row + 1, 9, "Fixed")
+                    elif new_value == "TLA (A, σ, γ, Wg)":
                         # CasaXPS TLA
                         fraction = 0.0
                         sigma = 20.0

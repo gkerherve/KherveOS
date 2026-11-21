@@ -477,7 +477,13 @@ class Session:
                 raise ValueError("Row must be provided for Voigt (Area) model")
             fraction = float(self.peak_params_grid.GetCellValue(row, 5))
             return float(PeakFunctions.voigt_simple(0.0, 0.0, area, fwhm, fraction))
-        elif model == "TLA (A, μ, α, Wg)":
+        elif model in ("BWF Fano (Area, 1/q)", "Pearson VII (Area, m)"):
+            if row is None:
+                raise ValueError("Row must be provided for this model")
+            shape = float(self.peak_params_grid.GetCellValue(row, 7))
+            f = PeakFunctions.BWF if model.startswith("BWF") else PeakFunctions.PearsonVII
+            return area * f(0.0, 0.0, 1.0, fwhm, shape)
+        elif model == "TLA (A, σ, γ, Wg)":
             if row is None:
                 raise ValueError("Row must be provided for TLA model")
             mu = float(self.peak_params_grid.GetCellValue(row, 7))
@@ -581,7 +587,8 @@ class Session:
                                                                "γ)", "Voigt (Area, L/G, σ, S)", "DS (A, σ, γ)", "DS*G (A, σ, "
                                                                                                                 "γ, S)",
                        "A*GL (Area, a, b)", "A*SGL (Area, a, b)", "LF (Area, σ, γ, w)",
-                       "DL (A, σ, γ, aDL)", "TLA (A, μ, α, Wg)"]:
+                       "DL (A, σ, γ, aDL)", "TLA (A, σ, γ, Wg)",
+                       "BWF Fano (Area, 1/q)", "Pearson VII (Area, m)"]:
             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
             skew = float(self.peak_params_grid.GetCellValue(row, 9))
@@ -646,7 +653,14 @@ class Session:
             unit_apex = float(PeakFunctions.voigt_simple(0.0, 0.0, 1.0, fwhm, fraction))
             area = height / unit_apex if unit_apex > 0 else 0.0
             return round_sig(area)
-        elif model == "TLA (A, μ, α, Wg)":
+        elif model in ("BWF Fano (Area, 1/q)", "Pearson VII (Area, m)"):
+            bwf = model.startswith("BWF")
+            shape = sigma if sigma is not None else (-0.1 if bwf else 1.5)
+            f = PeakFunctions.BWF if bwf else PeakFunctions.PearsonVII
+            unit_apex = f(0.0, 0.0, 1.0, fwhm, shape)
+            area = height / unit_apex if unit_apex > 0 else 0.0
+            return round_sig(area)
+        elif model == "TLA (A, σ, γ, Wg)":
             mu = sigma if sigma is not None else 20.0
             alpha = gamma if gamma is not None else 1.0
             wg = skew if skew is not None else 0.8

@@ -39,9 +39,9 @@ import { libOpen, libSave } from './peaklib'
 import { exportData, exportPlotPng, exportPlotSvg } from './exporting'
 
 /** The desktop this edition follows. */
-export const CORE_SOURCE = 'KherveFitting-AI v1.93 (KherveFittingPro dev-AI)'
+export const CORE_SOURCE = 'KherveFitting-AI v2.05 (KherveFittingPro dev-AI v1.251)'
 /** Config_Edition.WINDOW_TITLE of the paid edition. */
-export const WINDOW_TITLE = 'KherveFitting-AI-v1.93 - Cite this Paper ---> DOI: 10.1002/sia.70032'
+export const WINDOW_TITLE = 'KherveFitting-AI-v2.05 - Cite this Paper ---> DOI: 10.1002/sia.70032'
 
 const MAC = /Mac|iPhone|iPad/.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
 const STATUS: Record<KernelStatus, string> = { off: 'Python off', starting: 'Starting Python…', idle: 'Python ready', busy: 'Python working…', dead: 'Python stopped' }
@@ -104,6 +104,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
   const [examples, setExamples] = useState<ExampleMenu[] | 'loading' | 'error'>('loading')
   const [prefs, setPrefsState] = useState<UiPrefs>(readPrefs)
   const [compact, setCompact] = useState(true)
+  const [showErrors, setShowErrors] = useState(false)
   const [rightHidden, setRightHidden] = useState(false)
   const [opts, setOpts] = useState<PlotOptions>(DEFAULT_OPTIONS)
   const [mode, setMode] = useState<PlotMode>('none')
@@ -501,6 +502,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
         doc.set({ loading: 'Monte Carlo (100 refits)…' })
         void feature('monte_carlo', { n: 100 }).then((a) => {
           doc.set({ loading: null })
+          if (a.ok) setShowErrors(true)
           const r = a.report as { columns?: string[]; rows?: unknown[][] } | undefined
           if (a.ok && r?.columns && r.rows)
             void os.dialog.alert(
@@ -757,7 +759,8 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
     'GL (Area)', 'SGL (Area)', 'LA (Area, \u03c3/\u03b3, \u03b3)', 'Voigt (Area, L/G, \u03c3)', 'LA (Area, \u03c3, \u03b3)', 'DS*G (A, \u03c3, \u03b3, S)',
     'Voigt (Area, L/G, \u03c3, S)', 'ExpGauss.(Area, \u03c3, \u03b3)', 'Voigt (Area, \u03c3, \u03b3)', 'LA*G (Area, \u03c3/\u03b3, \u03b3)', 'Pseudo-Voigt (Area)',
     'GL (Height)', 'SGL (Height)', 'DS (A, \u03c3, \u03b3)', 'A*GL (Area, a, b)', 'A*SGL (Area, a, b)', 'LF (Area, \u03c3, \u03b3, w)', 'DL (A, \u03c3, \u03b3, aDL)',
-    'Voigt (Area)', 'Voigt (Area, L/G, S)', 'TLA (A, \u03bc, \u03b1, Wg)', 'SB (Height)',
+    'Voigt (Area)', 'Voigt (Area, L/G, S)', 'TLA (A, \u03c3, \u03b3, Wg)', 'SB (Height)',
+    'BWF Fano (Area, 1/q)', 'Pearson VII (Area, m)',
   ]
   const peakGridMenu = async (e: { clientX: number; clientY: number }, row: number, col: number) => {
     const grid = view?.grid ?? []
@@ -948,6 +951,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
       <ResultsGrid
         rows={view?.resultsGrid ?? []}
         compact={compact}
+        showErrors={showErrors}
         selectedRow={resultRow}
         onSelectRow={setResultRow}
         onToggle={(key, checked) => void doc.call('results_set', { key, field: 'checked', value: checked })}
@@ -956,6 +960,7 @@ export default function KherveFitting({ win, args, doc: given }: KherveFittingPr
         onContextMenu={(e) =>
           os.contextMenu(e, [
             { label: 'Export Fitting Grid', disabled: !hasData, onClick: exportCurrent },
+            { label: showErrors ? 'Hide Uncertainty \u00b1' : 'Show Uncertainty \u00b1', onClick: () => setShowErrors((v) => !v) },
             '-',
             { label: 'Remove All Lines', onClick: () => deleteResults('all') },
             { label: 'Remove First Line', onClick: () => deleteResults('first') },

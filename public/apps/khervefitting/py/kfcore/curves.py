@@ -130,9 +130,13 @@ def peak_curve(window, row, x_values, envelope=False):
         peak_model = lmfit.Model(PeakFunctions.DL)
         params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), sigma=float(g(row, 7)),
                                         gamma=float(g(row, 8)), a_dl=float(g(row, 9)))
-    elif fitting_model in ("TLA (A, μ, α, Wg)", "TLA (A, μ, Wg, α)"):
-        # (the desktop's plot_peak tests the second spelling, which no peak
-        # carries, so only its envelope draws TLA; both are drawn here)
+    elif fitting_model == "BWF Fano (Area, 1/q)":
+        peak_model = lmfit.Model(PeakFunctions.BWF)
+        params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), fwhm=fwhm, q_inv=float(g(row, 7)))
+    elif fitting_model == "Pearson VII (Area, m)":
+        peak_model = lmfit.Model(PeakFunctions.PearsonVII)
+        params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), fwhm=fwhm, m=float(g(row, 7)))
+    elif fitting_model == "TLA (A, σ, γ, Wg)":
         peak_model = lmfit.Model(PeakFunctions.TLA)
         params = peak_model.make_params(center=x, amplitude=float(g(row, 6)), fwhm=fwhm, mu=float(g(row, 7)),
                                         wg=float(g(row, 9)), alpha=float(g(row, 8)))

@@ -95,7 +95,7 @@ test('grids: the desktop columns, compact view and display order', () => {
   assert.equal(new Set(RESULT_ORDER).size, 38)
   const visible = RESULT_ORDER.filter((c) => !RESULT_EXTRA_COLUMNS.includes(c)).map((c) => RESULT_COLUMNS[c].label.split('\n')[0])
   assert.deepEqual(visible.slice(0, 10), ['Peak', 'Position', '± Position', 'FWHM', '± FWHM', 'Area', '± Area', 'Atomic', '± Atomic', 'Error'])
-  assert.equal(GRID_MODELS.length, 20)
+  assert.equal(GRID_MODELS.length, 22)
   assert.ok(BACKGROUND_METHODS.includes('Iterated Shirley') && BACKGROUND_METHODS.includes('Active Tougaard'))
 })
 

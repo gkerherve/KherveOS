@@ -152,7 +152,7 @@ export function AboutView({ source }: { source: string }) {
   return (
     <div className="kf-doc">
       <p>
-        <b>KherveFitting</b> — XPS peak fitting. Web edition for KherveOS of the desktop KherveFitting-AI v1.93 (LG4X-V3) by Gwilherm Kerherve, Imperial
+        <b>KherveFitting</b> — XPS peak fitting. Web edition for KherveOS of the desktop KherveFitting-AI v2.05 (LG4X-V3) by Gwilherm Kerherve, Imperial
         College London, built on LG4X by Hideki Nakajima and LG4X-V2 by Julian A. Hochhaus.
       </p>
       <p>

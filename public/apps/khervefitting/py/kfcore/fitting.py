@@ -599,7 +599,7 @@ def fit_peaks(window, peak_params_grid, evaluate=False):
                     params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary)
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
                     params.add(f'{prefix}a_dl', value=a_dl, min=a_min, max=a_max, vary=a_vary)
-                elif peak_model_choice == "TLA (A, \u03bc, \u03b1, Wg)":
+                elif peak_model_choice == "TLA (A, \u03c3, \u03b3, Wg)":
                     # CasaXPS TLA: mu (tail) in sigma column, exponent alpha in
                     # gamma column, Gaussian width wg in the W_g/skew column
                     peak_model = lmfit.Model(PeakFunctions.TLA, prefix=prefix)
@@ -634,6 +634,32 @@ def fit_peaks(window, peak_params_grid, evaluate=False):
                     params.add(f'{prefix}mu', value=mu, min=mu_min, max=mu_max, vary=mu_vary)
                     params.add(f'{prefix}wg', value=wg, min=wg_min, max=wg_max, vary=wg_vary)
                     params.add(f'{prefix}alpha', value=alpha, min=al_min, max=al_max, vary=al_vary)
+                elif peak_model_choice == "BWF Fano (Area, 1/q)":
+                    peak_model = lmfit.Model(PeakFunctions.BWF, prefix=prefix)
+                    amplitude = float(peak_params_grid.GetCellValue(row, 6))
+                    q_inv = float(peak_params_grid.GetCellValue(row, 7))
+                    p_min, p_max, p_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 7),
+                                q_inv, peak_params_grid, i, "Sigma")
+                    p_min = evaluate_constraint(p_min, peak_params_grid, 'sigma', q_inv)
+                    p_max = evaluate_constraint(p_max, peak_params_grid, 'sigma', q_inv)
+                    p_min, p_max = safe_bounds(p_min, p_max)
+                    params.add(f'{prefix}amplitude', value=amplitude, min=area_min, max=area_max, vary=area_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}q_inv', value=q_inv, min=p_min, max=p_max, vary=p_vary)
+                elif peak_model_choice == "Pearson VII (Area, m)":
+                    peak_model = lmfit.Model(PeakFunctions.PearsonVII, prefix=prefix)
+                    amplitude = float(peak_params_grid.GetCellValue(row, 6))
+                    m = float(peak_params_grid.GetCellValue(row, 7))
+                    p_min, p_max, p_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 7),
+                                m, peak_params_grid, i, "Sigma")
+                    p_min = evaluate_constraint(p_min, peak_params_grid, 'sigma', m)
+                    p_max = evaluate_constraint(p_max, peak_params_grid, 'sigma', m)
+                    p_min, p_max = safe_bounds(p_min, p_max)
+                    params.add(f'{prefix}amplitude', value=amplitude, min=area_min, max=area_max, vary=area_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}m', value=m, min=p_min, max=p_max, vary=p_vary)
                 elif peak_model_choice == "SB (Height)":
                     # Shirley-background component: sigmoid step of a Voigt bell
                     peak_model = lmfit.Model(PeakFunctions.SB_voigt, prefix=prefix)
@@ -686,7 +712,7 @@ def fit_peaks(window, peak_params_grid, evaluate=False):
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max, vary=lg_ratio_vary)
-                    params.add(f'{prefix}fwhm_g', value=fwhm_g, min=fwhm_g_min, max=fwhm_g_max,vary=True)
+                    params.add(f'{prefix}fwhm_g', value=fwhm_g, min=fwhm_g_min, max=fwhm_g_max, vary=fwhm_g_vary)
 
                     # Add constraint to calculate sigma from L/G ratio and gamma
                     params.add(f'{prefix}sigma',expr=f'({prefix}fraction / 100) * {prefix}gamma / (1 -{prefix}fraction / 100)')
@@ -1250,7 +1276,7 @@ def fit_peaks(window, peak_params_grid, evaluate=False):
                         idx = np.where(y_hr >= np.max(y_hr) / 2)[0]
                         fwhm = abs(x_hr[idx[-1]] - x_hr[idx[0]]) if len(idx) >= 2 else sigma + gamma
                         fraction = 0.0
-                    elif peak_model_choice == "TLA (A, μ, α, Wg)":
+                    elif peak_model_choice == "TLA (A, σ, γ, Wg)":
                         area = result.params[f'{prefix}amplitude'].value
                         center = result.params[f'{prefix}center'].value
                         fwhm = result.params[f'{prefix}fwhm'].value
@@ -1261,6 +1287,28 @@ def fit_peaks(window, peak_params_grid, evaluate=False):
                         y_values = PeakFunctions.TLA(x_values, center, area, fwhm, sigma, skew, gamma)
                         height = np.max(y_values)
                         # FOR RSD calc
+                        existing_peaks[peak_label]['y_values'] = y_values
+                        fraction = 0.0
+                    elif peak_model_choice == "BWF Fano (Area, 1/q)":
+                        area = result.params[f'{prefix}amplitude'].value
+                        center = result.params[f'{prefix}center'].value
+                        fwhm = result.params[f'{prefix}fwhm'].value
+                        sigma = result.params[f'{prefix}q_inv'].value   # q_inv in the sigma column
+                        gamma = 0.0
+                        skew = 0.0
+                        y_values = PeakFunctions.BWF(x_values, center, area, fwhm, sigma)
+                        height = np.max(y_values)
+                        existing_peaks[peak_label]['y_values'] = y_values
+                        fraction = 0.0
+                    elif peak_model_choice == "Pearson VII (Area, m)":
+                        area = result.params[f'{prefix}amplitude'].value
+                        center = result.params[f'{prefix}center'].value
+                        fwhm = result.params[f'{prefix}fwhm'].value
+                        sigma = result.params[f'{prefix}m'].value   # m in the sigma column
+                        gamma = 0.0
+                        skew = 0.0
+                        y_values = PeakFunctions.PearsonVII(x_values, center, area, fwhm, sigma)
+                        height = np.max(y_values)
                         existing_peaks[peak_label]['y_values'] = y_values
                         fraction = 0.0
                     elif peak_model_choice == "SB (Height)":
@@ -1482,11 +1530,17 @@ def fit_peaks(window, peak_params_grid, evaluate=False):
                         gamma = round(float(gamma), 3)
                         skew = round(float(skew), 3)
                         area = round_sig(area)
-                    elif peak_model_choice == "TLA (A, μ, α, Wg)":
+                    elif peak_model_choice == "TLA (A, σ, γ, Wg)":
                         # sigma = mu, gamma = wg, skew = alpha - no width scaling
                         sigma = round(float(sigma), 3)
                         gamma = round(float(gamma), 3)
                         skew = round(float(skew), 3)
+                        area = round_sig(area)
+                    elif peak_model_choice == "BWF Fano (Area, 1/q)":
+                        sigma = round(float(sigma), 3)
+                        area = round_sig(area)
+                    elif peak_model_choice == "Pearson VII (Area, m)":
+                        sigma = round(float(sigma), 3)
                         area = round_sig(area)
                     elif peak_model_choice in ["Voigt (Area)", "Voigt (Area, L/G, S)"]:
                         # sigma/gamma columns show the derived Gaussian/Lorentzian FWHMs
@@ -1522,13 +1576,14 @@ def fit_peaks(window, peak_params_grid, evaluate=False):
                                              "A*GL (Area, a, b)", "A*SGL (Area, a, b)",
                                              "LF (Area, \u03c3, \u03b3, w)", "DL (A, \u03c3, \u03b3, aDL)",
                                              "Voigt (Area)", "Voigt (Area, L/G, S)",
-                                             "TLA (A, \u03bc, Wg, \u03b1)"]:
+                                             "TLA (A, \u03c3, \u03b3, Wg)",
+                                             "BWF Fano (Area, 1/q)", "Pearson VII (Area, m)"]:
                         peak_params_grid.SetCellValue(row, 7, f"{sigma:.3f}")
                         peak_params_grid.SetCellValue(row, 8, f"{gamma:.3f}")
                         if peak_model_choice in ["Voigt (Area, L/G, \u03c3, S)", "Voigt (Area, L/G, S)",
                                                  "DS (A, \u03c3, \u03b3)", "DS*G (A, \u03c3, \u03b3, S)",
                                                  "LF (Area, \u03c3, \u03b3, w)", "DL (A, \u03c3, \u03b3, aDL)",
-                                                 "TLA (A, \u03bc, Wg, \u03b1)"]:
+                                                 "TLA (A, \u03c3, \u03b3, Wg)"]:
                             peak_params_grid.SetCellValue(row, 9, f"{skew:.3f}")
 
                     elif peak_model_choice in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:

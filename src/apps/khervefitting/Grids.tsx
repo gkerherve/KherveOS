@@ -7,7 +7,7 @@
 // create_results_grid, Grid_Operations.populate_results_grid).
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { GRID_MODELS, PEAK_COLUMNS, PEAK_EXTRA_COLUMNS, RESULT_COLUMNS, RESULT_EXTRA_COLUMNS, RESULT_KEY_COLUMNS, RESULT_ORDER, isEditable } from './model'
+import { GRID_MODELS, PEAK_COLUMNS, PEAK_EXTRA_COLUMNS, RESULT_COLUMNS, RESULT_ERROR_COLUMNS, RESULT_EXTRA_COLUMNS, RESULT_KEY_COLUMNS, RESULT_ORDER, isEditable } from './model'
 
 const COLOURS: Record<string, string> = { g: 'rgb(128, 128, 128)', w: 'rgb(255, 255, 255)', c: 'var(--kf-cons)', k: 'rgb(27, 140, 60)' }
 
@@ -210,14 +210,16 @@ export interface ResultsGridProps {
   onDeleteKey?: () => void
   /** Right-click (MyFrame.on_results_grid_right_click). */
   onContextMenu?: (e: { clientX: number; clientY: number }) => void
+  /** Show the ± columns (after a Monte Carlo, or the Show Uncertainty toggle). */
+  showErrors?: boolean
 }
 
 /** Results cells the user may change: the label, RSF and TXFN (setup_grid_editability). */
 const RESULT_EDIT: Record<number, 'name' | 'rsf' | 'txfn'> = { 0: 'name', 8: 'rsf', 9: 'txfn' }
 
-export function ResultsGrid({ rows, compact, selectedRow, onSelectRow, onToggle, onSet, onDeleteKey, onContextMenu }: ResultsGridProps) {
+export function ResultsGrid({ rows, compact, showErrors = false, selectedRow, onSelectRow, onToggle, onSet, onDeleteKey, onContextMenu }: ResultsGridProps) {
   const [edit, setEdit] = useState<{ r: number; c: number; text: string } | null>(null)
-  const cols = RESULT_ORDER.filter((c) => !compact || !RESULT_EXTRA_COLUMNS.includes(c)).map((i) => ({ ...RESULT_COLUMNS[i], i }))
+  const cols = RESULT_ORDER.filter((c) => (!compact || !RESULT_EXTRA_COLUMNS.includes(c)) && (showErrors || !RESULT_ERROR_COLUMNS.includes(c))).map((i) => ({ ...RESULT_COLUMNS[i], i }))
   const commit = () => {
     if (!edit) return
     const row = rows[edit.r]

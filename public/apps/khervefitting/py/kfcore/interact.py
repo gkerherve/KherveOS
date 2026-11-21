@@ -906,7 +906,7 @@ def add_peak_with_model(window, model_name, row=None):
                 'Skew': "0.01:0.7"
             }
         }
-    elif model_name == "TLA (A, μ, α, Wg)":
+    elif model_name == "TLA (A, σ, γ, Wg)":
         # CasaXPS TLA: mu (tail) in sigma column, Gaussian width in gamma column,
         # exponent alpha in skew column
         new_peak_data = {
@@ -933,6 +933,37 @@ def add_peak_with_model(window, model_name, row=None):
                 'Sigma': "0.1:200",
                 'Gamma': "Fixed",
                 'Skew': "0.2:3"
+            }
+        }
+    elif model_name in ("BWF Fano (Area, 1/q)", "Pearson VII (Area, m)"):
+        from .peak_functions import PeakFunctions
+        bwf = model_name.startswith("BWF")
+        shape = -0.1 if bwf else 1.5
+        unit_apex = (PeakFunctions.BWF if bwf else PeakFunctions.PearsonVII)(0.0, 0.0, 1.0, 1.6, shape)
+        new_peak_data = {
+            'Position': peak_x,
+            'Height': peak_y,
+            'FWHM': 1.6,
+            'L/G': 0,
+            'Area': round_sig(peak_y / unit_apex) if unit_apex > 0 else 0.0,
+            'Sigma': shape,
+            'Gamma': 0.0,
+            'Skew': 0.0,
+            'Fitting Model': model_name,
+            'Bkg Type': window.background_method,
+            'Bkg Low': window.bg_min_energy,
+            'Bkg High': window.bg_max_energy,
+            'Bkg Offset Low': window.offset_l,
+            'Bkg Offset High': window.offset_h,
+            'Constraints': {
+                'Position': position_constraint,
+                'Height': "0:1e7",
+                'FWHM': "0.3:3.5",
+                'L/G': "Fixed",
+                'Area': '0:1e7',
+                'Sigma': "-0.5:0.5" if bwf else "0.6:20",
+                'Gamma': "Fixed",
+                'Skew': "Fixed"
             }
         }
     elif model_name == "SB (Height)":

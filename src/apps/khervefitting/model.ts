@@ -136,6 +136,9 @@ export const RESULT_ORDER: number[] = (() => {
 /** Results columns hidden in the compact view (toggle_Col_1, columns2 + ± Height / ± L/G). */
 export const RESULT_EXTRA_COLUMNS = [2, 4, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 32, 34]
 
+/** The ± (1σ) columns and "Error from": hidden until a Monte Carlo is run or Show Uncertainty is ticked (dev-AI v1.124 / v1.178). */
+export const RESULT_ERROR_COLUMNS = [31, 32, 33, 34, 35, 36, 37]
+
 /** Results cells shown green and bold (Atomic %, Corr. Area, Weight %). */
 export const RESULT_KEY_COLUMNS = [6, 13, 29]
 
@@ -149,16 +152,18 @@ export function isEditable(row: number, col: number): boolean {
 export const GRID_MODELS = [
   'GL (Area)', 'SGL (Area)', 'Voigt (Area)', 'Voigt (Area, L/G, S)', 'LA (Area, \u03c3/\u03b3, \u03b3)', 'Voigt (Area, L/G, \u03c3)', 'Voigt (Area, \u03c3, \u03b3)',
   'Voigt (Area, L/G, \u03c3, S)', 'LA (Area, \u03c3, \u03b3)', 'LA*G (Area, \u03c3/\u03b3, \u03b3)', 'Pseudo-Voigt (Area)', 'ExpGauss.(Area, \u03c3, \u03b3)',
-  'GL (Height)', 'SGL (Height)', 'A*GL (Area, a, b)', 'A*SGL (Area, a, b)', 'LF (Area, \u03c3, \u03b3, w)', 'DL (A, \u03c3, \u03b3, aDL)', 'TLA (A, \u03bc, \u03b1, Wg)', 'SB (Height)',
+  'GL (Height)', 'SGL (Height)', 'A*GL (Area, a, b)', 'A*SGL (Area, a, b)', 'LF (Area, \u03c3, \u03b3, w)', 'DL (A, \u03c3, \u03b3, aDL)', 'TLA (A, \u03c3, \u03b3, Wg)', 'SB (Height)',
+  'BWF Fano (Area, 1/q)', 'Pearson VII (Area, m)',
 ]
 
 /** The Fitting tab's model combo (Fitting_Screen.init_fitting_tab), section headers included. */
 export const MODEL_GROUPS: { name: string; models: string[] }[] = [
   { name: 'Best Models', models: ['SGL (Area)', 'GL (Area)', 'LA (Area, \u03c3/\u03b3, \u03b3)', 'Voigt (Area, L/G, \u03c3)'] },
-  { name: 'Asymmetric', models: ['LA (Area, \u03c3, \u03b3)', 'DL (A, \u03c3, \u03b3, aDL)', 'TLA (A, \u03bc, \u03b1, Wg)', 'DS*G (A, \u03c3, \u03b3, S)', 'DS (A, \u03c3, \u03b3)', 'ExpGauss.(Area, \u03c3, \u03b3)'] },
+  { name: 'Asymmetric', models: ['LA (Area, \u03c3, \u03b3)', 'DL (A, \u03c3, \u03b3, aDL)', 'TLA (A, \u03c3, \u03b3, Wg)', 'DS*G (A, \u03c3, \u03b3, S)', 'DS (A, \u03c3, \u03b3)', 'ExpGauss.(Area, \u03c3, \u03b3)'] },
   { name: 'Voigt', models: ['Voigt (Area)', 'Voigt (Area, L/G, S)', 'Voigt (Area, L/G, \u03c3)', 'Voigt (Area, \u03c3, \u03b3)', 'Voigt (Area, L/G, \u03c3, S)'] },
   { name: 'LA', models: ['LA (Area, \u03c3/\u03b3, \u03b3)', 'LA (Area, \u03c3, \u03b3)', 'LA*G (Area, \u03c3/\u03b3, \u03b3)', 'LF (Area, \u03c3, \u03b3, w)'] },
   { name: 'Others', models: ['Pseudo-Voigt (Area)', 'GL (Height)', 'SGL (Height)', 'A*GL (Area, a, b)', 'A*SGL (Area, a, b)', 'SB (Height)'] },
+  { name: 'Raman / FTIR', models: ['BWF Fano (Area, 1/q)', 'Pearson VII (Area, m)'] },
   { name: 'Beta', models: ['Voigt (Area, L/G, \u03c3, S)'] },
 ]
 
