@@ -314,7 +314,21 @@ const ALL_APPS: AppManifest[] = [
     brand: { label: 'kTeX', from: '#3d8bff', to: '#1554c4' },
     category: 'kherve',
     group: 'Office',
-    description: 'WYSIWYG documents typeset with LaTeX',
+    description: 'Write like in Word, publish in LaTeX (the React kTeX)',
+    load: () => import('@/apps/ktexreact/KTeXReact'),
+    defaultSize: { w: 1180, h: 760 },
+    minSize: { w: 640, h: 420 },
+  },
+  {
+    id: 'khervetex-classic',
+    name: 'kTeX classic',
+    icon: Sigma,
+    color: '#1f6fd6',
+    image: '/icons/apps/khervetex.png',
+    brand: { label: 'kTeX', from: '#3d8bff', to: '#1554c4' },
+    category: 'kherve',
+    group: 'Office',
+    description: 'The earlier KherveOS kTeX: opens .ktex files from Files and compiles through the KherveOS server',
     load: () => import('@/apps/khervetex/KherveTeX'),
     defaultSize: { w: 1100, h: 720 },
     minSize: { w: 560, h: 380 },
@@ -1075,7 +1089,7 @@ const ALL_APPS: AppManifest[] = [
 
 /** Apps that need the KherveOS server; left out of the public web build (VITE_WEB=1),
  *  which runs with no server behind it. */
-const SERVER_ONLY = new Set(['messages', 'email', 'browser', 'planetcraft', 'simai', 'madsci', 'facecraft'])
+const SERVER_ONLY = new Set(['khervetex-classic', 'messages', 'email', 'browser', 'planetcraft', 'simai', 'madsci', 'facecraft'])
 export const WEB_BUILD = import.meta.env.VITE_WEB === '1'
 export const APPS: AppManifest[] = WEB_BUILD ? ALL_APPS.filter((a) => !SERVER_ONLY.has(a.id)) : ALL_APPS
 

@@ -70,9 +70,13 @@ QUANTITIES = ('Position', 'Height', 'FWHM', 'L/G', 'Area')
 # amplitude that is not an area: DS, and the Height models).
 _AMPLITUDE_IS_AREA = {
     "ExpGauss.(Area, σ, γ)", "LA (Area, σ, γ)", "LF (Area, σ, γ, w)",
-    "DL (A, σ, γ, aDL)", "TLA (A, μ, α, Wg)", "DS*G (A, σ, γ, S)",
+    "DL (A, σ, γ, aDL)", "TLA (A, σ, γ, Wg)", "DS*G (A, σ, γ, S)",
     "LA (Area, σ/γ, γ)", "LA*G (Area, σ/γ, γ)",
+    "BWF Fano (Area, 1/q)", "Pearson VII (Area, m)",
 }
+# Models whose amplitude is proportional to the area only for the same shape:
+# Area links are made only between two peaks of the same such model.
+_AMPLITUDE_SCALES_AREA = {"DS (A, σ, γ)"}
 _HEIGHT_MODELS = {"GL (Height)", "SGL (Height)", "SB (Height)"}
 # Models whose 'fraction' parameter is the grid's L/G value, in the same units
 _FRACTION_IS_LG = {
@@ -109,6 +113,10 @@ def _lmfit_name(params, prefix, model, quantity):
         if usable(f'{prefix}area'):
             return f'{prefix}area'
         if model in _AMPLITUDE_IS_AREA and usable(f'{prefix}amplitude'):
+            return f'{prefix}amplitude'
+        # DS amplitude is not the area, but between two DS peaks sharing
+        # sigma/gamma (a doublet) the amplitude ratio equals the area ratio
+        if model in _AMPLITUDE_SCALES_AREA and usable(f'{prefix}amplitude'):
             return f'{prefix}amplitude'
         return None
     if quantity == 'FWHM':
@@ -163,7 +171,9 @@ def apply_peak_links(params, grid, num_peaks):
                 continue
             # Height, L/G and the line-shape values only between peaks of the
             # same model (units differ)
-            if (quantity in ('Height', 'L/G') or pname) and models[i] != models[j]:
+            if ((quantity in ('Height', 'L/G') or pname
+                 or (quantity == 'Area' and _AMPLITUDE_SCALES_AREA & {models[i], models[j]}))
+                    and models[i] != models[j]):
                 continue
             if pname:
                 target, ref = f'{prefix}{pname}', f'peak{j}_{pname}'
@@ -645,6 +655,60 @@ RESULT_ERROR_COLUMNS = [
 ]
 RESULT_ERROR_FIRST_COL = 31
 RESULT_ERROR_COL_SIZES = [60, 60, 55, 55, 70, 60, 110]
+
+
+def has_monte_carlo(window):
+    """True when a peak of any core level carries a Monte Carlo result."""
+    try:
+        for sheet in (window.Data.get('Core levels') or {}).values():
+            peaks = ((sheet or {}).get('Fitting') or {}).get('Peaks') or {}
+            if any(isinstance(p, dict) and p.get('Errors_MC') for p in peaks.values()):
+                return True
+    except AttributeError:
+        pass
+    return False
+
+
+def uncertainty_shown(window):
+    """The ± columns of the Results grid: hidden by default - also when the
+    project holds Monte Carlo results; they come on when a Monte Carlo is run
+    in this session or with the ribbon toggle (window.show_uncertainty)."""
+    return bool(getattr(window, 'show_uncertainty', False))
+
+
+def apply_uncertainty_columns(window):
+    grid = getattr(window, 'results_grid', None)
+    if grid is None:
+        return
+    try:
+        show = uncertainty_shown(window)
+        n = grid.GetNumberCols()
+        for k in range(len(RESULT_ERROR_COLUMNS)):
+            c = RESULT_ERROR_FIRST_COL + k
+            if c >= n:
+                break
+            if show and not grid.IsColShown(c):
+                grid.ShowCol(c)
+                if grid.GetColSize(c) <= 0:
+                    grid.SetColSize(c, RESULT_ERROR_COL_SIZES[k])
+            elif not show and grid.IsColShown(c):
+                grid.HideCol(c)
+        grid.ForceRefresh()
+    except RuntimeError:
+        pass
+
+
+def toggle_uncertainty_columns(window):
+    window.show_uncertainty = not uncertainty_shown(window)
+    apply_uncertainty_columns(window)
+
+
+def wx_call_after(fn, *args):
+    try:
+        import wx
+        wx.CallAfter(fn, *args)
+    except Exception:
+        pass
 
 
 def fmt_err(value):

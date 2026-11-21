@@ -159,6 +159,11 @@ def _tla_unit_profile(t, fwhm, mu, wg, alpha):
     return y / area if area > 0 else y
 
 
+
+# Raman / FTIR peak models (names shared by every module that handles models)
+BWF_MODEL = "BWF Fano (Area, 1/q)"
+PEARSON_MODEL = "Pearson VII (Area, m)"
+
 class PeakFunctions:
 
     @staticmethod
@@ -687,6 +692,42 @@ class PeakFunctions:
         return height * peak_shape
 
     @staticmethod
+    def BWF(x, center=0.0, amplitude=1.0, fwhm=1.0, q_inv=-0.1):
+        """Breit-Wigner-Fano line (Raman: graphite / graphene G band,
+        nanotubes, doped Si):  I(w) ~ (1 + e/q)^2 / (1 + e^2),
+        e = 2 (w - w0) / Gamma, written with 1/q (sigma column) so that
+        1/q = 0 is exactly a Lorentzian of FWHM Gamma (fwhm column); 1/q
+        typically -0.1 to -0.3 (negative: tail to lower shift).
+        The Fano wings level off at 1/q^2 instead of falling to zero, so
+        'amplitude' is defined as the area of the Lorentzian of the same
+        width and peak height (height = 2 amplitude / (pi Gamma)), which is
+        finite and window-independent. Re-anchored so 'center' is the
+        maximum."""
+        x_arr = np.atleast_1d(np.asarray(x, dtype=float))
+        g = max(float(fwhm), 1e-9)
+        qi = float(q_inv)
+        e = 2.0 * (x_arr - center) / g + qi          # maximum at e = qi
+        profile = (1.0 + e * qi) ** 2 / (1.0 + e ** 2) / (1.0 + qi * qi)   # max = 1
+        out = amplitude * 2.0 / (np.pi * g) * profile
+        return out if np.ndim(x) else float(out[0])
+
+    @staticmethod
+    def PearsonVII(x, center=0.0, amplitude=1.0, fwhm=1.0, m=1.5):
+        """Pearson VII (Raman, FTIR, XRD): one shape from Lorentzian (m = 1)
+        to nearly Gaussian (m ~ 10; Gaussian as m -> inf), of FWHM 'fwhm'
+        (fwhm column) and exponent m (sigma column). Analytically
+        normalised: 'amplitude' is the area."""
+        from scipy.special import gammaln
+        x_arr = np.atleast_1d(np.asarray(x, dtype=float))
+        w = max(float(fwhm), 1e-9) / 2.0
+        m = max(float(m), 0.501)
+        k = 2.0 ** (1.0 / m) - 1.0
+        log_norm = (gammaln(m) - gammaln(m - 0.5)) + 0.5 * np.log(k / np.pi) - np.log(w)
+        y = np.exp(log_norm) * (1.0 + k * ((x_arr - center) / w) ** 2) ** (-m)
+        out = amplitude * y
+        return out if np.ndim(x) else float(out[0])
+
+    @staticmethod
     def DL(x, center=0.0, amplitude=1.0, sigma=0.4, gamma=1.0, a_dl=1.5):
         """Double Lorentzian (Herrera-Gomez et al., JVST A 41, 043208 (2023)).
 
@@ -1172,7 +1213,11 @@ class PeakFunctions:
         elif model == "DL (A, σ, γ, aDL)":
             # skew grid column holds the asymmetry a_dl
             y_values = PeakFunctions.DL(x_high_res, position, area, sigma, gamma, skew)
-        elif model == "TLA (A, μ, α, Wg)":
+        elif model == BWF_MODEL:
+            y_values = PeakFunctions.BWF(x_high_res, position, area, grid_fwhm, sigma)
+        elif model == PEARSON_MODEL:
+            y_values = PeakFunctions.PearsonVII(x_high_res, position, area, grid_fwhm, sigma)
+        elif model == "TLA (A, σ, γ, Wg)":
             # sigma column = mu, gamma column = alpha, W_g/skew column = wg
             y_values = PeakFunctions.TLA(x_high_res, position, area, grid_fwhm, sigma, skew, gamma)
         elif model == "GL (Height)":
@@ -1277,13 +1322,72 @@ class PeakFunctions:
 
 class OtherCalc:
     @staticmethod
-    def smooth_and_differentiate(x_values, y_values, smooth_width=2.0, pre_smooth=1, diff_width=1.0, post_smooth=1, algorithm="Gaussian"):
+    def fourier_cutoff(lnC):
+        """Signal / noise cut-off of a Fourier spectrum ln|C_n|.
+
+        Two straight lines are fitted to ln|C_n|: one to the low-frequency
+        coefficients (the data, falling off) and one to the high-frequency
+        ones (the noise floor). The breakpoint between them is the one with
+        the least total squared error, and the cut-off is where the two
+        fitted lines intersect. Returns (n_c, (a1, b1), (a2, b2)), lines as
+        ln|C| = a + b n."""
+        import numpy as np
+        lnC = np.asarray(lnC, dtype=float)
+        M = len(lnC)
+        n = np.arange(M, dtype=float)
+        if M < 8:
+            return max(1.0, M / 2.0), (0.0, 0.0), (0.0, 0.0)
+        lo, hi = 1, M                      # n = 0 is the mean: left out
+        best = None
+        for b in range(lo + 3, hi - 3):
+            p1 = np.polyfit(n[lo:b], lnC[lo:b], 1)
+            p2 = np.polyfit(n[b:hi], lnC[b:hi], 1)
+            sse = (np.sum((np.polyval(p1, n[lo:b]) - lnC[lo:b]) ** 2)
+                   + np.sum((np.polyval(p2, n[b:hi]) - lnC[b:hi]) ** 2))
+            if best is None or sse < best[0]:
+                best = (sse, b, p1, p2)
+        _sse, b, p1, p2 = best
+        # intersection of a1 + b1 n and a2 + b2 n (polyfit gives [slope, a])
+        if abs(p1[0] - p2[0]) > 1e-12:
+            n_c = (p2[1] - p1[1]) / (p1[0] - p2[0])
+        else:
+            n_c = float(b)
+        n_c = float(np.clip(n_c, 1.0, M - 1.0))
+        return n_c, (p1[1], p1[0]), (p2[1], p2[0])
+
+    @staticmethod
+    def fourier_gaussian_filter(data, slope=3.0):
+        """Low-pass the data in the Fourier domain: a flat-topped half-Gaussian
+        (as in the FFT filter) whose roll-off starts at the cut-off where the
+        fitted signal and noise lines of ln|C_n| intersect. A straight line
+        between the end points is taken off first so the ends do not ring."""
+        import numpy as np
+        y = np.asarray(data, dtype=float)
+        N = len(y)
+        if N < 8:
+            return y.copy()
+        base = np.linspace(y[0], y[-1], N)
+        coeffs = np.fft.rfft(y - base)
+        n_c, _l1, _l2 = OtherCalc.fourier_cutoff(np.log(np.abs(coeffs) + 1e-12))
+        M = len(coeffs)
+        k = np.arange(M)
+        sigma = max(1.5, n_c / slope)
+        H = np.ones(M)
+        tail = k > n_c
+        H[tail] = np.exp(-0.5 * ((k[tail] - n_c) / sigma) ** 2)
+        return np.fft.irfft(coeffs * H, n=N) + base
+
+    @staticmethod
+    def smooth_and_differentiate(x_values, y_values, smooth_width=2.0, pre_smooth=1, diff_width=1.0, post_smooth=1, algorithm="Gaussian",
+                                 normalize=True):
         from scipy.ndimage import gaussian_filter
         from scipy.signal import savgol_filter, wiener
         import numpy as np
 
         # Smoothing function based on algorithm
         def apply_smooth(data, width, algorithm):
+            if algorithm == "Fourier (Gaussian)":
+                return OtherCalc.fourier_gaussian_filter(data)
             if algorithm == "Gaussian":
                 return gaussian_filter(data, width)
             elif algorithm == "Savitsky-Golay":
@@ -1308,6 +1412,10 @@ class OtherCalc:
         # Post-smoothing passes
         for _ in range(int(post_smooth)):
             derivative = apply_smooth(derivative, diff_width, algorithm)
+
+        # AES wants the true dN/dE (counts per eV, sign as measured)
+        if not normalize:
+            return -derivative
 
         # Normalize derivative to data range
         data_range = np.max(y_values) - np.min(y_values)
