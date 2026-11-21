@@ -594,7 +594,7 @@ export default function GrandPrix({ win }: AppProps) {
         <div className="gp-wrap gp-menu">
           <div className="gp-card gp-wide">
             <div className="gp-title">
-              KHERVE <span>GRAND PRIX</span>
+              GRAND PRIX <span>CRAFT</span>
             </div>
             <p className="gp-tag">Qualify — your best lap decides your place on the grid. Then race: five red lights, tyres that wear, a pit stop to change them, and the chequered flag.</p>
             <div className="gp-options">

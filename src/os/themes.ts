@@ -21,10 +21,10 @@ export const ALL_THEMES: Record<string, Record<string, string>> = { ...KHERVEOS_
 export const THEME_NAMES = Object.keys(ALL_THEMES)
 export const KHERVEOS_THEME_NAMES = Object.keys(KHERVEOS_THEMES)
 
-/** The desktop's look, chosen in Settings › Appearance: black and green (the default) or white and green. */
-export const THEME = 'Kherve Green'
-export const DEFAULT_DARK = THEME
+/** The desktop's look, chosen in Settings › Appearance: white and green (the default) or black and green. */
+export const DEFAULT_DARK = 'Kherve Green'
 export const DEFAULT_LIGHT = 'Kherve Light'
+export const THEME = DEFAULT_LIGHT
 export const DESKTOP_LOOKS = [
   { id: DEFAULT_DARK, name: 'Dark' },
   { id: DEFAULT_LIGHT, name: 'Light' },
@@ -71,7 +71,7 @@ export function themeVars(name: string): Record<string, string> {
   }
 }
 
-/** The desktop's theme, as chosen in Settings › Appearance (dark by default). */
+/** The desktop's theme, as chosen in Settings › Appearance (light by default). */
 export function useResolvedTheme(): string {
   const look = useSettings((s) => s.theme)
   return ALL_THEMES[look] ? look : THEME

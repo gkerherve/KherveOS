@@ -60,7 +60,7 @@ const safeStorage = createJSONStorage(() => {
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
-      theme: 'Kherve Green',
+      theme: 'Kherve Light',
       wallpaper: 'periodic',
       wallpaperOpacity: 1,
       wallpaperFit: 'fill',
@@ -78,7 +78,7 @@ export const useSettings = create<SettingsState>()(
     {
       name: 'kherveos.settings',
       storage: safeStorage,
-      version: 15,
+      version: 16,
       migrate: (old, version) => {
         let s = { ...((old ?? {}) as Partial<SettingsState>) }
         // Version 1 had a blue/Auto look: move early installs to the dark look.
@@ -127,6 +127,8 @@ export const useSettings = create<SettingsState>()(
         if (version < 14 && (s.dockZoom === undefined || s.dockZoom >= 128)) s.dockZoom = 160
         // Version 15: the periodic table is the default wallpaper (a wallpaper picked by hand is kept).
         if (version < 15 && (!s.wallpaper || s.wallpaper === 'ktools-lab')) s.wallpaper = 'periodic'
+        // Version 16: the whole OS is light (white and green) by default; Dark stays in Settings › Appearance.
+        if (version < 16 && (!s.theme || s.theme === 'Kherve Green')) s.theme = 'Kherve Light'
         return s as SettingsState
       },
     },

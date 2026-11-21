@@ -324,9 +324,9 @@ class Session:
         _patch_view3d()
         from khervecad import language as lang
         from khervecad import mainwindow, style
-        # KherveOS is dark: the desktop's Dark tokens unless a theme was
-        # picked in View ▸ Theme
-        style._current = str((settings or {}).get("theme") or "Dark")
+        # the desktop's look (Light or Dark, sent by the web side) unless
+        # a theme was picked in View ▸ Theme
+        style._current = str((settings or {}).get("theme") or "Light")
         if style._current not in style.THEMES:
             style._current = "Dark"
         _patch_style()

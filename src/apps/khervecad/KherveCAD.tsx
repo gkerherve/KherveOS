@@ -13,6 +13,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import { os, type AppProps, type MenuBarMenu } from '@/os'
 import { fs } from '@/os/vfs'
+import { isDarkTheme } from '@/os/themes'
+import { useSettings } from '@/os/settings'
 import { HOME } from '@/os/path'
 import { extname } from '@/os/path'
 import { DRAG_MIME } from '@/os/fileActions'
@@ -213,6 +215,8 @@ export default function KherveCAD({ win, args }: AppProps) {
     }
     void seedSamples()
     const settings = loadSettings()
+    // no theme picked in View ▸ Theme: follow the desktop's look
+    if (!settings.theme) settings.theme = isDarkTheme(useSettings.getState().theme) ? 'Dark' : 'Light'
     bridge
       .boot({ settings, language: typeof settings.language === 'string' ? settings.language : 'en' })
       .then(() => {
