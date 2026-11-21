@@ -13,13 +13,21 @@ export function startAnalytics(): void {
   s.async = true
   s.src = 'https://gc.zgo.at/count.js'
   s.dataset.goatcounter = `https://${CODE}.goatcounter.com/count`
+  // apps opened before the script arrived (?app=... at start) count now
+  s.addEventListener('load', () => pending.splice(0).forEach(countAppOpen))
   document.head.append(s)
 }
+
+const pending: string[] = []
 
 /** One event per app window opened ("app/khervecad"). */
 export function countAppOpen(appId: string): void {
   if (!CODE) return
   const gc = (window as unknown as { goatcounter?: GoatCounter }).goatcounter
+  if (!gc?.count) {
+    if (pending.length < 20) pending.push(appId)
+    return
+  }
   try {
     gc?.count?.({ path: `app/${appId}`, title: appId, event: true })
   } catch {
