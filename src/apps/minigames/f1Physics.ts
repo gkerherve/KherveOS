@@ -1,4 +1,4 @@
-// Kherve Grand Prix: how a car moves. The player's car is a bicycle model
+// Grand Prix Craft: how a car moves. The player's car is a bicycle model
 // (front and rear axle, slip angles, a Pacejka-like tyre curve, downforce
 // growing with speed, drag, weight on each axle, the friction circle), run in
 // small steps. The AI drives the speed profile of the racing line: the fastest

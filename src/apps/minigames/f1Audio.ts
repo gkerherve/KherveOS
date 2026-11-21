@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the sound, synthesised with WebAudio (no sound files).
+// Grand Prix Craft: the sound, synthesised with WebAudio (no sound files).
 // An engine is its firing frequency (revs / 20 for six cylinders) played
 // through a waveform shaped for that engine (a high, rasping turbo V6 for the
 // single-seaters, a deeper flat-six with an uneven burble for the coupés),

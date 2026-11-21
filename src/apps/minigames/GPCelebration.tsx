@@ -1,4 +1,4 @@
-// Kherve Grand Prix — the podium after the race: the top three on their steps
+// Grand Prix Craft — the podium after the race: the top three on their steps
 // with their trophies, confetti, champagne and, for a win, fireworks over the
 // circuit, the fanfare and the crowd cheering. Also the short burst of
 // confetti for a pole position.

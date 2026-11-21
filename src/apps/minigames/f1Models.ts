@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the models, all built from code. The car is a modern
+// Grand Prix Craft: the models, all built from code. The car is a modern
 // single-seater: a lofted monocoque and nose, sidepods and airbox (smooth
 // super-ellipse sections), floor and diffuser, a three-element front wing,
 // a rear wing with a DRS flap that opens, the halo, wishbones, mirrors, the

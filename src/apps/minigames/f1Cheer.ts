@@ -1,4 +1,4 @@
-// Kherve Grand Prix — the sounds of a celebration, all synthesised: a brass
+// Grand Prix Craft — the sounds of a celebration, all synthesised: a brass
 // fanfare for the winner, the crowd cheering and whistling, firework bangs
 // and crackles, and the pop of the champagne cork.
 

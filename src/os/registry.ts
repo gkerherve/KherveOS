@@ -918,7 +918,7 @@ const ALL_APPS: AppManifest[] = [
   },
   {
     id: 'grandprix',
-    name: 'Kherve Grand Prix',
+    name: 'Grand Prix Craft',
     icon: CarFront,
     color: '#22c55e',
     brand: { label: 'GP', from: '#8af0b4', to: '#0b3d1c' },

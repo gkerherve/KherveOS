@@ -1,4 +1,4 @@
-// Kherve Grand Prix — a classic car shaped in KherveCAD. KherveCAD exports a
+// Grand Prix Craft — a classic car shaped in KherveCAD. KherveCAD exports a
 // glTF binary (File > Export for Other CAD > glTF, or export_document .glb)
 // with one named node per part; the KherveOS server serves the files in
 // ~/Documents/Kherve Grand Prix cars (/api/gp/cars), and a file named after a

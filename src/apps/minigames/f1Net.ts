@@ -1,4 +1,4 @@
-// Kherve Grand Prix multiplayer: the connection to a race room on the
+// Grand Prix Craft multiplayer: the connection to a race room on the
 // KherveOS server (server/kherveos_server/grandprix.py), and the packing of
 // car states. Every player's game drives its own car and sends it about
 // twenty times a second; the host's game also drives the AI cars and sends

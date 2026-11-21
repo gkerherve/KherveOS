@@ -1,4 +1,4 @@
-// Kherve Grand Prix — the drivers. A modern driver wears a full-face helmet
+// Grand Prix Craft — the drivers. A modern driver wears a full-face helmet
 // (the team's design, number and name painted on it, an air scoop on top, a
 // little spoiler at the back, a smoked iridescent visor with its pivots and
 // tear-off tab, chin vents) over a white fireproof balaclava: the eyes look

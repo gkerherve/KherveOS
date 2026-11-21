@@ -1,4 +1,4 @@
-// Kherve Grand Prix — the engine sound, built the way an engine makes it.
+// Grand Prix Craft — the engine sound, built the way an engine makes it.
 //
 // The crank turns at the revs; every time a cylinder fires, its exhaust valve
 // opens and a pressure pulse (a sharp blow-down, then a decay, with the

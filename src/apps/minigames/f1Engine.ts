@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the engine. Builds the circuit (f1Track), its scenery
+// Grand Prix Craft: the engine. Builds the circuit (f1Track), its scenery
 // (f1World) and the twelve cars (f1Models), runs the sessions (f1Race) and
 // draws them: cameras (chase, T-cam, cockpit, trackside TV; a cinematic tour
 // behind the menu, over a demo race), the pit crews at work, tyre smoke and

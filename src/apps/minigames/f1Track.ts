@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the two circuits. A circuit is a closed centripetal
+// Grand Prix Craft: the two circuits. A circuit is a closed centripetal
 // Catmull-Rom spline through control points (x, z, height), resampled every
 // ~2 m into flat arrays: centre, tangent, right-hand normal, curvature, the
 // run-off to the barriers on each side, kerbs, gravel, the pit lane, a racing

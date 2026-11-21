@@ -1,4 +1,4 @@
-// Kherve Grand Prix: a 3D racing game. Qualify (your best lap sets your
+// Grand Prix Craft: a 3D racing game. Qualify (your best lap sets your
 // place on the grid), then race: five red lights, tyres that wear, pit stops
 // to change them, the chequered flag. Two circuits. The game is in
 // f1Engine.ts (loaded on demand with three.js); this is the window: the
@@ -26,7 +26,7 @@ import { GPNet, type RoomState } from './f1Net'
 import './grandPrix.css'
 
 const ID = 'grandprix'
-const NAME = 'Kherve Grand Prix'
+const NAME = 'Grand Prix Craft'
 type Phase = 'loading' | 'ready' | 'playing' | 'paused' | 'results'
 const SETTINGS_KEY = 'kherveos.grandprix.settings'
 const POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1, 0, 0]

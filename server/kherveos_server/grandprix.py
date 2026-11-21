@@ -1,4 +1,4 @@
-"""Kherve Grand Prix multiplayer: race rooms on this server.
+"""Grand Prix Craft multiplayer: race rooms on this server.
 
 A player hosts a room (a four-digit code); others on the same KherveOS server
 (the same computer, or a tablet or phone on the network that opened

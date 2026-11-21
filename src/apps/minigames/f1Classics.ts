@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the classic coupés of the Classics series, built from
+// Grand Prix Craft: the classic coupés of the Classics series, built from
 // code to the proportions of the real cars of the early 1970s: a body
 // generated from its side profile, plan and cross-sections (sides that tuck
 // in towards the top, wings that stand above a low bonnet, real wheel arches

@@ -1,4 +1,4 @@
-"""Kherve Grand Prix race rooms: host, join, start (the grid), relay, leave."""
+"""Grand Prix Craft race rooms: host, join, start (the grid), relay, leave."""
 
 from conftest import make_user
 

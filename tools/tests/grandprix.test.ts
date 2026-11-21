@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the circuits, the car and the sessions, without a browser.
+// Grand Prix Craft: the circuits, the car and the sessions, without a browser.
 // A simple driver (pure pursuit on the racing line at a share of the speed
 // profile) sits in the player's car.
 // Run:  node --test tools/tests/grandprix.test.ts

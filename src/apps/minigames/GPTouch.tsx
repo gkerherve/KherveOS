@@ -1,4 +1,4 @@
-// Kherve Grand Prix — controls for a touch screen (tablet, phone): the pedals
+// Grand Prix Craft — controls for a touch screen (tablet, phone): the pedals
 // bottom left (brake, throttle), the steering bottom right (one pad: the
 // thumb on its left half steers left, on its right half right, and can slide
 // across), the handbrake above it, and small buttons along the top for the

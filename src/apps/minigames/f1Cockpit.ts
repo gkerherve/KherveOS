@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the view from the driver's seat. Its own little scene,
+// Grand Prix Craft: the view from the driver's seat. Its own little scene,
 // fixed to the cockpit camera and drawn after the world (the depth cleared,
 // so the cockpit is always in front, yet solid within itself), lit like the
 // world around it. In a classic coupé: a padded, curved dashboard with five

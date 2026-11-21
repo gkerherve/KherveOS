@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the classic cars as OBJ + MTL in named, coloured parts (mm, Z up, front towards -Y),
+// Grand Prix Craft: the classic cars as OBJ + MTL in named, coloured parts (mm, Z up, front towards -Y),
 // to open in KherveCAD (File > Import mesh: one Object, a group per part). Export a car back from KherveCAD
 // as glTF (File > Export for Other CAD > .glb) named stoccarda.glb, dieppe.glb or bavaria.glb into
 // ~/Documents/Kherve Grand Prix cars, and the game races it instead of the one it builds (f1CustomCar.ts).
@@ -49,7 +49,7 @@ for (const model of Object.keys(CLASSIC_MODELS)) {
     for (let i = 0; i < p.count; i += 3) g.lines.push(`f ${base + i} ${base + i + 1} ${base + i + 2}`)
   })
   const mtl: string[] = []
-  const obj = [`# ${CLASSIC_MODELS[model].name} from Kherve Grand Prix (KherveOS): mm, Z up, front towards -Y`, `mtllib ${model}.mtl`, ...verts]
+  const obj = [`# ${CLASSIC_MODELS[model].name} from Grand Prix Craft (KherveOS): mm, Z up, front towards -Y`, `mtllib ${model}.mtl`, ...verts]
   for (const [name, g] of groups) {
     const h = g.color.replace('#', '')
     const kd = [0, 2, 4].map((i) => (parseInt(h.slice(i, i + 2), 16) / 255).toFixed(4)).join(' ')

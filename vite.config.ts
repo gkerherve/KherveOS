@@ -9,7 +9,7 @@ import type { Plugin } from 'vite'
 // one origin and the session cookie just works.
 const SERVER = process.env.KHERVEOS_SERVER ?? 'http://127.0.0.1:8787'
 
-// This computer's network addresses, for games played across devices (Kherve Grand Prix
+// This computer's network addresses, for games played across devices (Grand Prix Craft
 // multiplayer shows them: "tell your friend to open http://192.168.1.20:5173"), and
 // whether other devices can reach this dev server at all (only with `vite --host`).
 function lanInfo(): Plugin {

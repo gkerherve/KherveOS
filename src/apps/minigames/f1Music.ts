@@ -1,4 +1,4 @@
-// Kherve Grand Prix — the music, composed here and played by WebAudio
+// Grand Prix Craft — the music, composed here and played by WebAudio
 // instruments (no sound files). Two pieces:
 //  - "Pole Position" for the single-seaters: driving electronic rock in
 //    A minor at 132 bpm — four-on-the-floor drums, an octave bass, a

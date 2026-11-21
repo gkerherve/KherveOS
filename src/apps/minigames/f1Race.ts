@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the sessions. Qualifying (cars leave the garages, out
+// Grand Prix Craft: the sessions. Qualifying (cars leave the garages, out
 // lap, flying laps, back to the garage; the best lap sets the grid) and the
 // race (five red lights, laps, pit stops for tyres, the chequered flag). The
 // player's car runs on the physics (f1Physics.ts) except in the pit lane,

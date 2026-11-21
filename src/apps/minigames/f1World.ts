@@ -1,4 +1,4 @@
-// Kherve Grand Prix: the place. A sky with its sun (and the same sky as the
+// Grand Prix Craft: the place. A sky with its sun (and the same sky as the
 // cars' reflections), rolling terrain that sits the circuit in the land, the
 // asphalt (rubbered in along the racing line, white lines), red and white
 // kerbs, mown grass run-off, gravel traps, Armco and Tecpro barriers with
